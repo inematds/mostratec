@@ -4,7 +4,7 @@ Análise de 16/10/2026 sobre o documento [docs/ideias-original.md](docs/ideias-o
 
 ## Resumo
 
-**Dá para fazer, mas só o MVP sem foto e com moldes prontos.** O que limita é o calendário: a MOSTRATEC costuma ser na segunda quinzena de outubro (em 2024 foi de 21 a 24/10, na Fenac, em Novo Hamburgo). A data de 2026 ainda não foi confirmada. Se ela se repetir, faltam de **1 a 2 semanas**. Isso dá tempo para a página e o PDF. Não dá tempo para testar com segurança um molde mecânico nem para a revisão jurídica do fluxo com foto.
+**Dá para fazer, mas só o MVP sem foto e com moldes prontos.** O que limita é o calendário: a MOSTRATEC 2026 vai de **27 a 30/10** (data confirmada pelo Nei em 16/10). Faltam **11 dias**, e o material impresso precisa estar pronto até 26/10. Isso dá tempo para a página e o PDF. Não dá tempo para testar com segurança um molde mecânico nem para a revisão jurídica do fluxo com foto.
 
 > Primeira ação: confirmar com a Fundação Liberato a data e se pode distribuir material no estande ou na circulação.
 
