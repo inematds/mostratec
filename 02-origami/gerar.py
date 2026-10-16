@@ -18,16 +18,16 @@ S = 190.0            # lado do quadrado em mm
 OX, OY = 10.0, 10.0  # posição do quadrado na folha A4
 AMARELO, PRETO, TINTA = "#FACC15", "#0c0c10", "#2A2620"
 
-MASCOTES = ["CIÊNCIA", "CÓDIGO", "ARTE", "ROBÔS"]  # TL, TR, BR, BL (horário)
-MISSOES = [
-    "Crie um robô que ajude alguém da sua escola.",
-    "Peça para uma IA explicar algo difícil e confira se ela acertou.",
-    "Invente um jogo e ensine para três amigos.",
-    "Desenhe a cidade do futuro e explique uma invenção dela.",
-    "Faça uma pergunta científica e teste com um experimento.",
-    "Monte um agente de IA que organize as suas tarefas.",
-    "Ensine para alguém uma coisa que você aprendeu hoje.",
-    "Escreva uma história com a IA e desenhe o final você mesmo.",
+MASCOTES = ["CIÊNCIA", "CÓDIGO", "DESIGN", "ROBÓTICA"]  # TL, TR, BR, BL (horário)
+MISSOES = [  # público: ensino médio (expositores e visitantes da MOSTRATEC)
+    "Peça à IA 3 falhas do seu projeto antes que a banca ache.",
+    "Treine a apresentação com a IA fingindo ser o avaliador.",
+    "Crie um app de uma tela conversando com a IA.",
+    "Monte um agente que resuma 5 artigos do seu tema.",
+    "Peça uma hipótese ousada à IA e tente derrubá-la com dados.",
+    "Ache a fonte de uma resposta da IA. Sem fonte, desconfie.",
+    "Descubra uma profissão que ainda não existe e o que estudar.",
+    "Use a IA para transformar seus dados num gráfico claro.",
 ]
 
 # ---- simetrias do quadrado (em torno do centro) ----
@@ -106,13 +106,13 @@ def mascote(tipo):
                  f'<path d="M-15 2 Q-13 8 -6 8" fill="none" stroke="{PRETO}" stroke-width="0.9"/>'
                  f'<circle cx="-6" cy="8" r="1" fill="{PRETO}"/>'
                  f'<text x="0" y="-7" font-family="JetBrains Mono, monospace" font-size="3.4" font-weight="700" text-anchor="middle" fill="{PRETO}">&lt;/&gt;</text>')
-    elif tipo == "ARTE":    # boina + pincel
+    elif tipo == "DESIGN":    # boina + pincel
         extra = (f'<ellipse cx="-3" cy="-11.5" rx="10" ry="3.2" fill="#e0736f" stroke="{PRETO}" stroke-width="0.8" transform="rotate(-10 -3 -11.5)"/>'
                  f'<circle cx="-3" cy="-14.5" r="1.1" fill="{PRETO}"/>'
                  f'<line x1="14" y1="13" x2="19" y2="4" stroke="{PRETO}" stroke-width="1.2"/>'
                  f'<path d="M19 4 l1.6 -3 l1 1.6 z" fill="#3b82f6" stroke="{PRETO}" stroke-width="0.5"/>'
                  f'<circle cx="-9" cy="5" r="1.3" fill="#e0736f"/><circle cx="9" cy="5" r="1.3" fill="#e0736f"/>')
-    elif tipo == "ROBÔS":   # parafusos + engrenagem
+    elif tipo == "ROBÓTICA":   # parafusos + engrenagem
         extra = ("".join(f'<circle cx="{x}" cy="{y}" r="1" fill="none" stroke="{PRETO}" stroke-width="0.6"/>'
                          for x, y in ((-10.5, -8.5), (10.5, -8.5), (-10.5, 7.5), (10.5, 7.5)))
                  + "".join(f'<rect x="-0.9" y="-9.3" width="1.8" height="2.2" fill="{PRETO}" transform="rotate({a} 0 -7)"/>'
@@ -205,7 +205,7 @@ ol {{ margin:1.5mm 0 1.5mm 4.5mm; padding:0 }} li {{ margin:0.4mm 0 }}
   <div class="jogo"><b>Como jogar:</b> {html.escape(JOGO)}</div>
   <div class="aviso">Imprima em 100% (sem "ajustar à página"). Linha contínua = cortar · tracejada = dobrar.</div>
  </div>
- <div class="lado">{qr}<div class="marca">INEMA.CLUB</div>Aprenda a criar com IA, de graça.</div>
+ <div class="lado">{qr}<div class="marca">INEMA.CLUB</div>Trilhas grátis de IA para o seu projeto.</div>
 </div></div></body></html>"""
 
 def main():

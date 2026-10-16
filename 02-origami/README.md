@@ -26,6 +26,6 @@ Essa divisão foi calculada pela geometria das dobras. **Ainda falta dobrar uma 
 ## Pendências
 
 - [ ] Imprimir em 100% (papel A4 de 90 g e de 120 g) e dobrar.
-- [ ] Medir o tempo de dobra com uma criança de 10 a 12 anos.
+- [ ] Medir o tempo de dobra com alunos do ensino médio (público da feira).
 - [ ] Definir a URL final do QR (hoje é `https://inema.club/?src=mostratec`).
 - [ ] Revisar o texto das 8 missões com o Nei.
