@@ -56,3 +56,10 @@ Análise de 16/10/2026 sobre o documento [docs/ideias-original.md](docs/ideias-o
 - Qual personagem/molde base vira o carro-chefe.
 - Domínio da página (`inematds.github.io/mostratec/` ou um subdomínio do inema.club).
 - Confirmar que a opção com foto fica fora de 2026.
+
+## Decisões do Nei (16/10/2026)
+
+- **2 (origami):** pode fazer. O mascote vira o Oráculo do Futuro (quem-quem) → [02-origami/](02-origami/).
+- **6 (avatar com foto):** entra só como **demonstração**. A parte jurídica fica para depois → [06-avatar-foto-demo/](06-avatar-foto-demo/).
+- **9 (quiz):** precisa ser algo que forme fila → propostas em [09-atracao/](09-atracao/).
+- **1 (robô que anda):** ainda a bolar → três mecanismos em [01-robo-que-anda/](01-robo-que-anda/).
