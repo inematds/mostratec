@@ -42,3 +42,7 @@ Esta demo **não** cumpre os requisitos abaixo, que vêm da seção de privacida
 - [ ] **Sem reconhecimento facial.** Não identificar pessoas, não comparar rostos e não montar banco de rostos.
 - [ ] **Segurança.** Link de download não público e com prazo de validade, EXIF removido e nenhuma galeria coletiva por padrão.
 - [ ] **Revisão jurídica e técnica** do aviso de privacidade, do fluxo para menores e do processo de exclusão antes do evento (27 a 30/10/2026).
+
+## Direção do Nei (17/10/2026)
+
+Avatar **criativo e impactante**, com imagens do Codex (assinatura) ou do flux local. QR → bateria de perguntas simples (só clicar em respostas prontas) → o resultado aparece com a imagem. Versão para o público **sem foto e sem envio de dados**: banco de imagens geradas antes e escolha feita no navegador (ver `quiz/`). Robôs nas imagens seguem a regra V12 do design (humanoide industrial/realista, nunca mascote).

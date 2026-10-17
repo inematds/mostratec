@@ -23,3 +23,12 @@ Um quiz no celular sozinho não forma fila. Fila se forma quando: (1) a pessoa *
 
 ## Recomendação
 **A + C no estande**, com o Oráculo (02) como brinde impresso e a foto-avatar (06) como demonstração separada. A proposta B fica se sobrar tempo, ou para 2027.
+
+## Direção do Nei (17/10/2026) — a discutir antes de construir
+
+QR → formulário: upload da foto do desenho + nome, e-mail e outros dados (**a analisar se vamos coletar**) → o desenho é processado e a animação aparece numa página/tela (Agnes vídeo ou animação por código).
+
+Perguntas abertas:
+- Onde o upload é processado: num computador no estande ou num servidor? GitHub Pages não recebe arquivos; um serviço de formulário ou de vídeo é API e precisa de autorização explícita.
+- Coletar nome/e-mail de menores exige base legal (LGPD/ECA). Alternativa: só um apelido e um código para achar a animação.
+- Agnes (fila, custo, tempo por vídeo) × animação por código no navegador (instantânea, grátis, menos "uau").

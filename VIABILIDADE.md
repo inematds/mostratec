@@ -63,3 +63,12 @@ Análise de 16/10/2026 sobre o documento [docs/ideias-original.md](docs/ideias-o
 - **6 (avatar com foto):** entra só como **demonstração**. A parte jurídica fica para depois → [06-avatar-foto-demo/](06-avatar-foto-demo/).
 - **9 (quiz):** precisa ser algo que forme fila → propostas em [09-atracao/](09-atracao/).
 - **1 (robô que anda):** ainda a bolar → três mecanismos em [01-robo-que-anda/](01-robo-que-anda/).
+
+## Decisões do Nei (17/10/2026, rodada 2)
+
+- **Estande:** a única demonstração física é o **braço robô SO-101**. O resto são **telas** (site na TV) e **vários QR Codes colados nas mesas**. Nada de maquete, protótipo físico ou impressão na hora. Plano em [ESTANDE.md](ESTANDE.md).
+- **11 (soluções práticas):** não montamos nada de verdade. Viram uma **página promocional** + **uma página de orientação por solução** (desenho do circuito, peças, passo a passo, ficha de negócio) para o aluno pegar e seguir.
+- **01 (robô que anda):** protótipos **teóricos**. Mostramos como fazer; o aluno monta, testa e registra o que não deu certo para melhorar a versão. Entram mais dois robôs: **robô assistente de voz** da casa (tipo Alexa, ligado a um modelo de IA como o ChatGPT) e **robô vigia** que percorre sempre o mesmo circuito, detecta intrusão não autorizada e imprevistos (obstáculo), e segue o caminho.
+- **06 (avatar):** tem de ser **criativo e impactante**, com imagens do Codex (assinatura) ou do flux local. QR → bateria de perguntas simples (só clicar em respostas prontas) → resultado com a imagem. Versão sem envio de dados: o resultado é escolhido no navegador a partir de um banco de imagens geradas antes.
+- **09 (desenho que ganha vida):** QR → formulário com upload do desenho (nome, e-mail e outros dados **a analisar se vamos pegar**) → processado e exibido numa página/tela com a animação (Agnes ou animação por código). **Detalhes a discutir depois — nada construído ainda.**
+- **02:** pensar desafios para quem é muito bom (expositores, alunos avançados), sempre com QR e resposta no site. Em proposta.
