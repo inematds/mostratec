@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Roube o Ovo — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5 }
+  html,body { margin:0; height:100%; background:var(--preto); color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  canvas { display:block; width:100vw; height:100vh }
+  #hud { position:fixed; top:10px; left:12px; right:12px; display:flex; justify-content:space-between; gap:8px;
+         pointer-events:none; font-weight:800; font-size:clamp(13px,2.2vw,20px); text-shadow:0 2px 4px #000 }
+  #botoes { position:fixed; right:14px; bottom:16px; display:flex; flex-direction:column; gap:10px }
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800;
+         padding:12px 16px; font-size:clamp(13px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207 }
+  .btn:disabled { background:#555; color:#bbb; box-shadow:none }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.88); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); text-align:center; padding:22px; border:1px solid #333; border-radius:16px; background:#14141b }
+  #tela h1 { margin:.2em 0; font-size:clamp(28px,6vw,46px); color:var(--amarelo) }
+  #tela p { line-height:1.45; color:#d4d4d8 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #tela table { margin:10px auto; border-collapse:collapse; font-size:17px }
+  #tela td { padding:4px 12px; text-align:left }
+  #aviso { position:fixed; left:50%; top:52px; transform:translateX(-50%); background:#000c; padding:8px 14px; border-radius:10px;
+           font-weight:700; pointer-events:none; opacity:0; transition:opacity .3s; white-space:nowrap; font-size:clamp(12px,2vw,16px) }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:40vh; font-size:12px }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><span id="hud-moedas">🪙 0</span><span id="hud-tempo">3:00</span><span id="hud-pets">🐣 0</span></div>
+<div id="aviso"></div>
+<div id="botoes" class="hidden">
+  <button class="btn" id="b-tranca">🔒 Trancar</button>
+  <button class="btn sec" id="b-turbo">⚡ Turbo</button>
+</div>
+<div id="tela"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   ROUBE O OVO — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione um chefão que..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Roube o Ovo",
+  duracaoRodada: 180,          // segundos de cada partida
+  velocidadeJogador: 240,      // pixels por segundo
+  velocidadeRobos: [165, 185, 205],
+  pedestaisPorBase: 6,         // quantos ovos/pets cabem na base
+  tempoChocar: 5,              // segundos para o ovo virar pet
+  intervaloOvos: 1.3,          // de quanto em quanto tempo nasce um ovo no ninho
+  maxOvosNoNinho: 7,
+  tempoTranca: 8,              // segundos com a base trancada
+  recargaTranca: 25,           // segundos até poder trancar de novo
+  turboCustoInicial: 25,       // moedas para o primeiro turbo
+  turboGanho: 0.12,            // +12% de velocidade por turbo
+  raridades: [
+    { nome: "Comum",    cor: "#9ca3af", chance: 60, moedas: 1 },
+    { nome: "Raro",     cor: "#3b82f6", chance: 25, moedas: 3 },
+    { nome: "Épico",    cor: "#a855f7", chance: 12, moedas: 8 },
+    { nome: "Lendário", cor: "#FACC15", chance: 3,  moedas: 25 },
+  ],
+  nomesPets: ["Byte","Pixel","Turbo","Neura","Glitch","Volt","Quark","Bit","Chip","Nano","Prompt","Token","Cache","Loop","Robozito","Faísca"],
+  cenario: { chao: "#173225", grade: "#1d3d2d", ninho: "#5b4636" },
+  robos: [
+    { nome: "Robô Azul",  cor: "#3b82f6" },
+    { nome: "Robô Rosa",  cor: "#ec4899" },
+    { nome: "Robô Verde", cor: "#22c55e" },
+  ],
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const W = 1600, H = 1000;
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");          // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const CODIGO_OVO = (params.get("ovo") || "").toUpperCase();
+
+let escala = 1, ox = 0, oy = 0;
+function redimensiona() {
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  escala = Math.min(cv.width / W, cv.height / H);
+  ox = (cv.width - W * escala) / 2; oy = (cv.height - H * escala) / 2;
+}
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function sorteiaRaridade() {
+  const total = CONFIG.raridades.reduce((s, r) => s + r.chance, 0);
+  let x = Math.random() * total;
+  for (let i = 0; i < CONFIG.raridades.length; i++) { x -= CONFIG.raridades[i].chance; if (x <= 0) return i; }
+  return 0;
+}
+const novoPetNome = () => CONFIG.nomesPets[Math.floor(Math.random() * CONFIG.nomesPets.length)];
+let avisoTimer = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoTimer = 2.4; }
+
+// ---------- mundo ----------
+const NINHO = { x: W / 2, y: H / 2, r: 120 };
+let bases, agentes, soltos, jogador, tempo, rodando, timerOvo, turbos;
+
+function criaBase(x, y, nome, cor, dono) {
+  const b = { x, y, w: 300, h: 150, nome, cor, dono, moedas: 0, trancadaAte: 0, recargaAte: 0, pedestais: [] };
+  const n = CONFIG.pedestaisPorBase, cols = Math.ceil(n / 2);
+  for (let i = 0; i < n; i++) {
+    const c = i % cols, l = Math.floor(i / cols);
+    b.pedestais.push({ x: x - b.w / 2 + (c + 0.5) * (b.w / cols), y: y - 30 + l * 60, item: null });
+  }
+  return b;
+}
+const dentroDaBase = (p, b) => Math.abs(p.x - b.x) < b.w / 2 && Math.abs(p.y - b.y) < b.h / 2;
+
+function novaPartida() {
+  bases = [
+    criaBase(W / 2, H - 95, "Você", "#FACC15", "jogador"),
+    criaBase(190, H / 2, CONFIG.robos[0].nome, CONFIG.robos[0].cor, "robo"),
+    criaBase(W - 190, H / 2, CONFIG.robos[1].nome, CONFIG.robos[1].cor, "robo"),
+    criaBase(W / 2, 95, CONFIG.robos[2].nome, CONFIG.robos[2].cor, "robo"),
+  ];
+  jogador = { x: W / 2, y: H - 200, vel: CONFIG.velocidadeJogador, carregando: null, base: bases[0], atordoado: 0, cor: "#FACC15", nome: "Você", ehJogador: true };
+  agentes = [jogador];
+  for (let i = 0; i < 3; i++) {
+    const b = bases[i + 1];
+    agentes.push({ x: b.x, y: b.y, vel: CONFIG.velocidadeRobos[i], carregando: null, base: b, atordoado: 0,
+                   cor: b.cor, nome: b.nome, alvo: null, pensa: 0 });
+  }
+  soltos = []; tempo = CONFIG.duracaoRodada; timerOvo = 0; turbos = 0;
+  if (DEMO) jogador.alvo = null, jogador.pensa = 0;
+  // ovo da feira: ?ovo=L-XXXX começa com um pet dessa raridade na sua base
+  const letra = CODIGO_OVO[0], idx = { C: 0, R: 1, E: 2, L: 3 }[letra];
+  if (idx !== undefined) {
+    bases[0].pedestais[0].item = { tipo: "pet", rar: idx, nome: novoPetNome(), t: 0 };
+    aviso(`O seu ovo da feira chocou: pet ${CONFIG.raridades[idx].nome.toUpperCase()}!`);
+  }
+  rodando = true;
+  $("botoes").classList.toggle("hidden", DEMO);
+  $("tela").classList.add("hidden");
+}
+
+// ---------- entrada (teclado + toque) ----------
+const teclas = {};
+addEventListener("keydown", e => { teclas[e.key.toLowerCase()] = true;
+  if (e.key === " ") trancar(); if (e.key.toLowerCase() === "t") turbo(); });
+addEventListener("keyup", e => { teclas[e.key.toLowerCase()] = false; });
+const joy = { ativo: false, id: null, x0: 0, y0: 0, dx: 0, dy: 0 };
+cv.addEventListener("pointerdown", e => { joy.ativo = true; joy.id = e.pointerId; joy.x0 = e.clientX; joy.y0 = e.clientY; joy.dx = joy.dy = 0; });
+addEventListener("pointermove", e => { if (joy.ativo && e.pointerId === joy.id) { joy.dx = e.clientX - joy.x0; joy.dy = e.clientY - joy.y0; } });
+addEventListener("pointerup", e => { if (e.pointerId === joy.id) { joy.ativo = false; joy.dx = joy.dy = 0; } });
+$("b-tranca").onclick = () => trancar();
+$("b-turbo").onclick = () => turbo();
+
+function trancar(b = bases?.[0]) {
+  if (!rodando || !b || tempo > CONFIG.duracaoRodada) return;
+  const agora = CONFIG.duracaoRodada - tempo;
+  if (agora < b.recargaAte) return;
+  b.trancadaAte = agora + CONFIG.tempoTranca; b.recargaAte = agora + CONFIG.recargaTranca;
+  if (b.dono === "jogador") aviso("Base trancada! Ninguém rouba por " + CONFIG.tempoTranca + " s");
+}
+const custoTurbo = () => Math.round(CONFIG.turboCustoInicial * Math.pow(2, turbos));
+function turbo() {
+  if (!rodando || bases[0].moedas < custoTurbo()) return;
+  bases[0].moedas -= custoTurbo(); turbos++;
+  jogador.vel *= 1 + CONFIG.turboGanho;
+  aviso(`⚡ Turbo ${turbos}! Mais rápido.`);
+}
+
+// ---------- regras ----------
+function pegaDoChao(a) {
+  for (let i = 0; i < soltos.length; i++) {
+    if (dist(a, soltos[i]) < 34) { a.carregando = soltos[i].item; soltos.splice(i, 1); return true; }
+  }
+  return false;
+}
+function roubaPedestal(a) {
+  const agora = CONFIG.duracaoRodada - tempo;
+  for (const b of bases) {
+    if (b === a.base || b.trancadaAte > agora || !dentroDaBase(a, b)) continue;
+    for (const p of b.pedestais) {
+      if (p.item && dist(a, p) < 40) {
+        a.carregando = p.item; p.item = null;
+        if (b.dono === "jogador") aviso(`🚨 ${a.nome} roubou seu ${a.carregando.tipo === "pet" ? "pet" : "ovo"}!`);
+        if (a.ehJogador) aviso(`Você roubou de ${b.nome}! Corre pra base!`);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function guardaNaBase(a) {
+  if (!dentroDaBase(a, a.base)) return;
+  const livre = a.base.pedestais.find(p => !p.item);
+  if (!livre) return;
+  livre.item = a.carregando; livre.item.t = 0; a.carregando = null;
+}
+function derruba(a) {
+  if (!a.carregando) return;
+  const ang = rnd(0, Math.PI * 2);
+  soltos.push({ x: clamp(a.x + Math.cos(ang) * 50, 30, W - 30), y: clamp(a.y + Math.sin(ang) * 50, 30, H - 30), item: a.carregando });
+  a.carregando = null; a.atordoado = 1.0;
+}
+
+// ---------- robôs ----------
+function pensaRobo(r) {
+  const agora = CONFIG.duracaoRodada - tempo;
+  if (r.carregando) { r.alvo = { x: r.base.x, y: r.base.y }; return; }
+  const opcoes = [];
+  for (const s of soltos) opcoes.push({ x: s.x, y: s.y, peso: 1 + s.item.rar * 1.5 - dist(r, s) / 400 });
+  for (const b of bases) {
+    if (b === r.base || b.trancadaAte > agora) continue;
+    for (const p of b.pedestais) if (p.item)
+      opcoes.push({ x: p.x, y: p.y, peso: 0.6 + p.item.rar * 1.2 + (p.item.tipo === "pet" ? 0.8 : 0) - dist(r, p) / 500 + (b.dono === "jogador" ? 0.4 : 0) });
+  }
+  // caçar quem está carregando (para fazer derrubar)
+  for (const o of agentes) if (o !== r && o.carregando) opcoes.push({ x: o.x, y: o.y, persegue: o, peso: 0.8 + o.carregando.rar - dist(r, o) / 350 });
+  opcoes.sort((a, b) => b.peso - a.peso);
+  r.alvo = opcoes.length ? opcoes[Math.min(opcoes.length - 1, Math.floor(Math.random() * 2))] : { x: NINHO.x + rnd(-80, 80), y: NINHO.y + rnd(-80, 80) };
+  // tranca a base se tem inimigo perto
+  if (agentes.some(o => o.base !== r.base && !o.carregando && dist(o, r.base) < 260) && r.base.pedestais.some(p => p.item)) trancar(r.base);
+}
+
+// ---------- ciclo ----------
+let ultimo = performance.now();
+function passo(dt) {
+  if (avisoTimer > 0 && (avisoTimer -= dt) <= 0) $("aviso").style.opacity = 0;
+  if (!rodando) return;
+  tempo -= dt;
+  if (tempo <= 0) { tempo = 0; fimDePartida(); return; }
+
+  // ovos nascem no ninho
+  timerOvo -= dt;
+  if (timerOvo <= 0 && soltos.length < CONFIG.maxOvosNoNinho) {
+    const a = rnd(0, Math.PI * 2), rr = rnd(0, NINHO.r - 20);
+    soltos.push({ x: NINHO.x + Math.cos(a) * rr, y: NINHO.y + Math.sin(a) * rr, item: { tipo: "ovo", rar: sorteiaRaridade(), t: 0 } });
+    timerOvo = CONFIG.intervaloOvos;
+  }
+
+  // movimento
+  for (const a of agentes) {
+    a.atordoado = Math.max(0, a.atordoado - dt);
+    let dx = 0, dy = 0;
+    if (a.ehJogador && !DEMO) {
+      if (teclas["arrowleft"] || teclas["a"]) dx -= 1;
+      if (teclas["arrowright"] || teclas["d"]) dx += 1;
+      if (teclas["arrowup"] || teclas["w"]) dy -= 1;
+      if (teclas["arrowdown"] || teclas["s"]) dy += 1;
+      if (joy.ativo && Math.hypot(joy.dx, joy.dy) > 8) { dx = joy.dx; dy = joy.dy; }
+    } else {
+      if ((a.pensa -= dt) <= 0 || !a.alvo) { pensaRobo(a); a.pensa = rnd(0.5, 1.1); }
+      const alvo = a.alvo.persegue || a.alvo;
+      dx = alvo.x - a.x; dy = alvo.y - a.y;
+      if (Math.hypot(dx, dy) < 6) dx = dy = 0;
+    }
+    const m = Math.hypot(dx, dy);
+    if (m > 0 && a.atordoado <= 0) {
+      const v = a.vel * (a.carregando ? 0.78 : 1);
+      a.x = clamp(a.x + dx / m * v * dt, 20, W - 20);
+      a.y = clamp(a.y + dy / m * v * dt, 20, H - 20);
+    }
+    if (a.atordoado > 0) continue;
+    if (a.carregando) guardaNaBase(a);
+    else if (!pegaDoChao(a)) roubaPedestal(a);
+  }
+
+  // esbarrão: quem está de mãos vazias derruba quem carrega
+  for (let i = 0; i < agentes.length; i++) for (let j = i + 1; j < agentes.length; j++) {
+    const a = agentes[i], b = agentes[j];
+    if (dist(a, b) > 34) continue;
+    if (a.carregando && !b.carregando && b.atordoado <= 0) { derruba(a); if (a.ehJogador) aviso(`💥 ${b.nome} te derrubou!`); }
+    else if (b.carregando && !a.carregando && a.atordoado <= 0) { derruba(b); if (a.ehJogador) aviso(`💥 Você derrubou ${b.nome}!`); }
+  }
+
+  // chocar e render moedas
+  for (const b of bases) for (const p of b.pedestais) {
+    const it = p.item; if (!it) continue;
+    it.t += dt;
+    if (it.tipo === "ovo" && it.t >= CONFIG.tempoChocar) {
+      it.tipo = "pet"; it.nome = novoPetNome(); it.t = 0;
+      if (b.dono === "jogador") aviso(`🐣 Chocou! ${it.nome} — ${CONFIG.raridades[it.rar].nome.toUpperCase()}`);
+    }
+    if (it.tipo === "pet") b.moedas += CONFIG.raridades[it.rar].moedas * dt;
+  }
+
+  // HUD
+  const s = Math.ceil(tempo);
+  $("hud-moedas").textContent = "🪙 " + Math.floor(bases[0].moedas);
+  $("hud-tempo").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  $("hud-pets").textContent = "🐣 " + bases[0].pedestais.filter(p => p.item?.tipo === "pet").length;
+  const agora = CONFIG.duracaoRodada - tempo;
+  $("b-tranca").disabled = agora < bases[0].recargaAte;
+  $("b-tranca").textContent = agora < bases[0].trancadaAte ? "🔒 Trancada" : agora < bases[0].recargaAte ? `🔒 ${Math.ceil(bases[0].recargaAte - agora)}s` : "🔒 Trancar";
+  $("b-turbo").disabled = bases[0].moedas < custoTurbo();
+  $("b-turbo").textContent = `⚡ Turbo (${custoTurbo()})`;
+}
+
+// ---------- desenho ----------
+function desenhaOvo(x, y, rar, s = 1, t = 0) {
+  const c = CONFIG.raridades[rar].cor;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  if (rar >= 2) { ctx.shadowColor = c; ctx.shadowBlur = 18 + Math.sin(t * 6) * 6; }
+  ctx.fillStyle = c; ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(0, 0, 13, 17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0; ctx.fillStyle = "#ffffff99";
+  ctx.beginPath(); ctx.arc(-4, -6, 3, 0, 7); ctx.arc(5, 3, 2.2, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function desenhaPet(x, y, rar, s = 1, t = 0) {
+  const c = CONFIG.raridades[rar].cor, pulo = Math.abs(Math.sin(t * 4)) * 4;
+  ctx.save(); ctx.translate(x, y - pulo); ctx.scale(s, s);
+  if (rar >= 2) { ctx.shadowColor = c; ctx.shadowBlur = 16; }
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(0, -24); ctx.stroke();
+  ctx.fillStyle = c; ctx.beginPath(); ctx.arc(0, -26, 3.5, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(-17, -16, 34, 28, 8); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0; ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.arc(-7, -3, 5, 0, 7); ctx.arc(7, -3, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = "#0c0c10"; ctx.beginPath(); ctx.arc(-6, -2, 2.4, 0, 7); ctx.arc(8, -2, 2.4, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 4, 5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  if (rar === 3) { ctx.fillStyle = "#FACC15"; ctx.beginPath(); ctx.moveTo(-10, -16); ctx.lineTo(-6, -24); ctx.lineTo(0, -18); ctx.lineTo(6, -24); ctx.lineTo(10, -16); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.restore();
+}
+function desenhaItem(it, x, y, s, t) { it.tipo === "ovo" ? desenhaOvo(x, y, it.rar, s, t) : desenhaPet(x, y, it.rar, s, t); }
+
+function desenha(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#0c0c10"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(escala, 0, 0, escala, ox, oy);
+  // chão
+  ctx.fillStyle = CONFIG.cenario.chao; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = CONFIG.cenario.grade; ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 80) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 80) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  // ninho
+  ctx.fillStyle = CONFIG.cenario.ninho; ctx.beginPath(); ctx.arc(NINHO.x, NINHO.y, NINHO.r, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#8b6b4f"; ctx.lineWidth = 6; ctx.setLineDash([14, 10]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#ffffff55"; ctx.font = "700 22px system-ui"; ctx.textAlign = "center"; ctx.fillText("NINHO", NINHO.x, NINHO.y - NINHO.r - 10);
+  if (!bases) return;
+  const agora = CONFIG.duracaoRodada - tempo;
+  // bases
+  for (const b of bases) {
+    ctx.fillStyle = b.cor + "22"; ctx.strokeStyle = b.cor; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 18); ctx.fill(); ctx.stroke();
+    for (const p of b.pedestais) {
+      ctx.fillStyle = "#00000055"; ctx.beginPath(); ctx.ellipse(p.x, p.y + 14, 22, 8, 0, 0, 7); ctx.fill();
+      if (p.item) {
+        desenhaItem(p.item, p.x, p.y, 1, t);
+        if (p.item.tipo === "ovo") { // barra de chocar
+          const f = clamp(p.item.t / CONFIG.tempoChocar, 0, 1);
+          ctx.fillStyle = "#000a"; ctx.fillRect(p.x - 18, p.y + 22, 36, 5);
+          ctx.fillStyle = "#FACC15"; ctx.fillRect(p.x - 18, p.y + 22, 36 * f, 5);
+        }
+      }
+    }
+    ctx.fillStyle = "#fff"; ctx.font = "800 20px system-ui"; ctx.textAlign = "center";
+    const ry = b.y < H / 2 && b.x === W / 2 ? b.y + b.h / 2 + 24 : b.y - b.h / 2 - 12;
+    ctx.fillText(`${b.nome} · 🪙 ${Math.floor(b.moedas)}`, b.x, ry);
+    if (b.trancadaAte > agora) {
+      ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3; ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.3;
+      for (let x = b.x - b.w / 2 + 10; x < b.x + b.w / 2; x += 22) { ctx.beginPath(); ctx.moveTo(x, b.y - b.h / 2); ctx.lineTo(x, b.y + b.h / 2); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+  }
+  // itens soltos
+  for (const s of soltos) desenhaItem(s.item, s.x, s.y, 1, t);
+  // agentes
+  for (const a of agentes) {
+    ctx.save(); ctx.translate(a.x, a.y);
+    if (a.atordoado > 0) ctx.rotate(Math.sin(t * 30) * 0.3);
+    ctx.fillStyle = "#00000066"; ctx.beginPath(); ctx.ellipse(0, 20, 18, 6, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = a.cor; ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-7, -4, 5, 0, 7); ctx.arc(7, -4, 5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#0c0c10"; ctx.beginPath(); ctx.arc(-6, -3, 2.5, 0, 7); ctx.arc(8, -3, 2.5, 0, 7); ctx.fill();
+    if (a.ehJogador) { ctx.fillStyle = "#fff"; ctx.font = "800 15px system-ui"; ctx.textAlign = "center"; ctx.fillText("VOCÊ", 0, -30); }
+    ctx.restore();
+    if (a.carregando) desenhaItem(a.carregando, a.x, a.y - (a.ehJogador ? 52 : 36), 0.9, t);
+  }
+  // joystick
+  if (joy.ativo && !DEMO) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); const d = devicePixelRatio || 1;
+    ctx.strokeStyle = "#ffffff66"; ctx.lineWidth = 3 * d;
+    ctx.beginPath(); ctx.arc(joy.x0 * d, joy.y0 * d, 50 * d, 0, 7); ctx.stroke();
+    const m = Math.min(1, 50 / (Math.hypot(joy.dx, joy.dy) || 1));
+    ctx.fillStyle = "#FACC1599"; ctx.beginPath(); ctx.arc((joy.x0 + joy.dx * m) * d, (joy.y0 + joy.dy * m) * d, 22 * d, 0, 7); ctx.fill();
+  }
+}
+
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
+  passo(dt); desenha(agora / 1000);
+  requestAnimationFrame(laco);
+}
+
+// ---------- telas ----------
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function telaInicio() {
+  tela(`<h1>🥚 ${CONFIG.titulo}</h1>
+    <p>Pegue ovos no <b>ninho</b> e leve para a <b>sua base</b> (embaixo). Eles chocam em pets que dão moedas.
+    Roube ovos e pets das bases dos robôs — e proteja os seus!</p>
+    <p><b>Mover:</b> setas/WASD ou arraste o dedo · <b>Trancar base:</b> espaço · <b>Turbo:</b> T<br>
+    Esbarre em quem está carregando para fazer derrubar.</p>
+    <div class="linha"><button class="btn" onclick="novaPartida()">▶ Jogar</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    <p style="font-size:12px;color:#888;margin-top:14px">Fábrica de Jogos INEMA · v${VERSAO} · inspirado em jogos de "roubar ovo"</p>`);
+}
+function fimDePartida() {
+  rodando = false; $("botoes").classList.add("hidden");
+  const rank = [...bases].sort((a, b) => b.moedas - a.moedas);
+  const pos = rank.indexOf(bases[0]) + 1;
+  let recorde = 0; try { recorde = +localStorage.getItem("roube-ovo-recorde") || 0; } catch (e) {}
+  const pontos = Math.floor(bases[0].moedas), novo = pontos > recorde;
+  if (novo) try { localStorage.setItem("roube-ovo-recorde", pontos); } catch (e) {}
+  if (DEMO) { setTimeout(novaPartida, 6000); }
+  tela(`<h1>${pos === 1 ? "🏆 Você venceu!" : `Você ficou em ${pos}º`}</h1>
+    <table>${rank.map((b, i) => `<tr><td>${i + 1}º</td><td style="color:${b.cor}">${b.nome}</td><td>🪙 ${Math.floor(b.moedas)}</td></tr>`).join("")}</table>
+    <p>${novo ? "⭐ Novo recorde seu!" : `Seu recorde: 🪙 ${recorde}`}</p>
+    <div class="linha"><button class="btn" onclick="novaPartida()">↻ Jogar de novo</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>`);
+}
+function telaCriar() {
+  rodando = false;
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: nomes, cores, velocidade, raridades.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo, adicione um chefão que aparece no
+último minuto e rouba 2 pets de cada vez.
+Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-roube-o-ovo.html"; a.click();
+}
+
+if (DEMO) novaPartida(); else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
