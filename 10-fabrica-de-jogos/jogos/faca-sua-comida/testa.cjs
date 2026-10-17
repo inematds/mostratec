@@ -115,7 +115,7 @@ async function atende(page, erra = false) {
     if (botaoCompra) { await botaoCompra.click(); await espera(200); }
     const depois = (await estado(page)).up;
     ok(!botaoCompra || JSON.stringify(antes) !== JSON.stringify(depois), `compra na loja: ${JSON.stringify(antes)} → ${JSON.stringify(depois)}`);
-    await page.click("text=▶ Voltar ao jogo"); await espera(300);
+    await page.click("#tela >> text=▶ Voltar ao jogo"); await espera(300);
     ok(!(await estado(page)).pausado, "volta da loja");
     const salvo = await page.evaluate(() => localStorage.getItem("faca-sua-comida"));
     ok(salvo && JSON.parse(salvo).nivel >= 2, "progresso salvo no localStorage: " + salvo);
@@ -150,12 +150,12 @@ async function atende(page, erra = false) {
     await page.goto(URL);
     await page.click("text=🛠️ Criar a minha versão");
     await page.screenshot({ path: path.join(SHOTS, "criar-1280.png") });
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("text=⬇ Baixar o jogo")]);
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#tela >> text=⬇ Baixar o jogo")]);
     const destino = path.join(SHOTS, "baixado.html"); await dl.saveAs(destino);
     const a = fs.statSync(ARQ).size, b = fs.statSync(destino).size;
     ok(Math.abs(a - b) / a < 0.03, `download ${b} bytes vs arquivo ${a} bytes`);
     const txt = fs.readFileSync(destino, "utf8");
-    ok(txt.includes('const VERSAO = "0.1.0"') && txt.includes("cardapios:") && txt.includes("missoes:"), "download traz VERSAO, cardápios e missões");
+    ok(txt.includes('const VERSAO = "0.2.0"') && txt.includes('id="tpl-qr"') && txt.includes("cardapios:") && txt.includes("missoes:"), "download traz VERSAO, cardápios e missões");
     await ctx.close();
   }
 
@@ -175,6 +175,31 @@ async function atende(page, erra = false) {
     ok((await estado(page)).atendidos === 1, "celular: toque atende o cliente");
     const sobra = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok(sobra <= 0, "celular sem rolagem lateral");
+    // faixa INEMA.CLUB visível embaixo, sem cobrir os ingredientes nem o ENTREGAR
+    const fx = await page.evaluate(() => { const r = document.getElementById("puxador").getBoundingClientRect(); return { top: r.top, bottom: r.bottom, h: r.height }; });
+    ok(fx.h === 46 && Math.abs(fx.bottom - 844) <= 1, "celular: faixa amarela visível embaixo " + JSON.stringify(fx));
+    const lay3 = await page.evaluate(() => jogo.layout());
+    const fundo = Math.max(...lay3.ingr.map(g => g.y + g.h), lay3.entregar.y + lay3.entregar.h, lay3.limpar.y + lay3.limpar.h);
+    ok(fundo <= fx.top, `celular: ingredientes e botões acima da faixa (fundo ${Math.round(fundo)} ≤ ${Math.round(fx.top)})`);
+    const rod = await page.evaluate(() => document.getElementById("rodape").getBoundingClientRect().bottom);
+    ok(rod <= fx.top && (await page.textContent("#rodape")).includes("v0.2.0"), "celular: rodapé v0.2.0 acima da faixa");
+    // tocar no puxador → rola até o painel com o QR
+    await page.tap("#puxador"); await espera(1200);
+    const pn = await page.evaluate(() => ({ y: scrollY, topo: Math.min(document.getElementById("painel").offsetTop, document.documentElement.scrollHeight - innerHeight),  // painel curto: para no fim da página
+      qr: (() => { const r = document.querySelector("#qr-painel svg").getBoundingClientRect(); return { top: r.top, bottom: r.bottom, w: r.width }; })() }));
+    ok(Math.abs(pn.y - pn.topo) <= 2 && pn.qr.w > 150 && pn.qr.top >= 0 && pn.qr.bottom <= 844, "celular: puxador rola até o painel com QR visível " + JSON.stringify(pn));
+    await page.screenshot({ path: path.join(SHOTS, "painel-390.png") });
+    // Voltar ao jogo → topo
+    await page.tap("#p-voltar"); await espera(1200);
+    ok(await page.evaluate(() => scrollY) === 0, "celular: Voltar ao jogo volta a scrollY 0");
+    // ainda dá para atender outro cliente
+    const at0 = (await estado(page)).atendidos;
+    const e3 = await esperaCliente(page), lay4 = await page.evaluate(() => jogo.layout());
+    for (const id of e3.cliente.pedido) { const g = lay4.ingr.find(b => b.id === id); await page.touchscreen.tap(g.x + g.w / 2, g.y + g.h / 2); await espera(120); }
+    await espera(800);
+    await page.touchscreen.tap(lay4.entregar.x + lay4.entregar.w / 2, lay4.entregar.y + lay4.entregar.h / 2); await espera(400);
+    ok((await estado(page)).atendidos === at0 + 1, "celular: depois do painel ainda atende cliente");
+    await page.screenshot({ path: path.join(SHOTS, "jogo-390-depois.png") });
     ok(erros.length === 0, "celular sem erros " + (erros.join(" | ") || ""));
     await ctx.close();
     const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
