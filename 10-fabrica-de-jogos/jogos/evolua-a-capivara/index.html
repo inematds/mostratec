@@ -44,7 +44,15 @@
   .btn:active { transform:translateY(3px); box-shadow:0 2px 0 #a16207 }
   .btn.sec { background:#1f2937; color:#fff; box-shadow:0 5px 0 #000 }
   .btn.apagado { filter:saturate(.35) brightness(.85) }
-  #b-comprar { flex:0 1 340px; white-space:nowrap }
+  #b-comprar { flex:0 1 340px; white-space:nowrap; padding:8px 14px; line-height:1.1 }
+  #b-comprar small { display:block; font-size:.72em; opacity:.9 }
+  /* contador de renascimentos (aparece depois do 1º renascer) */
+  #h-ren { flex:0 0 auto; font-weight:800; font-size:13px; display:flex; flex-direction:column; justify-content:center;
+           align-items:center; padding:4px 7px; line-height:1.25; color:#86efac }
+  /* botão Renascer: aparece quando há uma Capivara Lendária */
+  #b-renascer { position:fixed; left:50%; transform:translateX(-50%); bottom:96px; z-index:3; background:#4ade80;
+                box-shadow:0 5px 0 #15803d; animation:chama 1.2s infinite; white-space:nowrap; padding:10px 18px }
+  @keyframes chama { 50% { filter:brightness(1.15); transform:translateX(-50%) scale(1.05) } }
   .treme { animation:treme .35s }
   @keyframes treme { 25% { transform:translateX(-6px) } 75% { transform:translateX(6px) } }
   #rodape { position:fixed; bottom:4px; left:0; right:0; text-align:center; font-size:11px; color:#ffffffb0;
@@ -54,9 +62,59 @@
            font-size:clamp(13px,3.6vw,17px); border:2px solid var(--amarelo) }
 
   /* ---------- telas (início, criar) ---------- */
-  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.8); z-index:5 }
-  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 32px); overflow:auto; text-align:center; padding:20px;
-                 border:2px solid #333; border-radius:18px; background:#14141b; box-sizing:border-box }
+  #tela { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; background:rgba(12,12,16,.86); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); margin:auto; flex:0 1 auto; min-height:0; overflow:auto; text-align:center;
+                 padding:16px; border:2px solid #333; border-radius:18px; background:#14141b; box-sizing:border-box }
+  #tela.larga .caixa { max-width:940px }
+  #tela .caixa.duas { display:grid; grid-template-columns:1fr; gap:6px 18px; align-items:center }
+  @media (min-width:760px) { #tela .caixa.duas { grid-template-columns:1fr 230px } }
+  @media (min-width:1000px) and (min-height:700px) { #tela .caixa.duas { grid-template-columns:1fr 270px } #tela .qr svg { width:240px; height:240px } }
+
+  /* ---------- faixa INEMA.CLUB (tela inicial e tela de fim) ---------- */
+  #faixa { flex:0 0 auto; width:100%; box-sizing:border-box; background:var(--amarelo); color:#1a1206; text-align:center;
+           padding:12px 14px; border-bottom:4px solid var(--preto); font-family:Sora,"Segoe UI",Arial,sans-serif;
+           font-weight:800; font-size:clamp(19px,5.2vw,34px); line-height:1.2; letter-spacing:-.01em }
+  #faixa .nw { white-space:nowrap }
+  #faixa b { display:inline-block; background:var(--preto); color:var(--amarelo); padding:1px 10px; border-radius:8px; margin-top:4px }
+
+  /* ---------- QR code "Jogue no seu celular" ---------- */
+  .qr { background:#fff; color:#0c0c10; border-radius:14px; padding:10px 10px 6px; display:inline-block; margin:6px auto 0;
+        font-weight:800; font-size:16px; line-height:1.2 }
+  .qr svg { width:180px; height:180px; display:block; margin:0 auto 4px }
+  .lado { display:flex; flex-direction:column; align-items:center; gap:4px }
+
+  /* ---------- botões pequenos, abas, tabelas ---------- */
+  .btn.mini { padding:9px 13px; font-size:15px; box-shadow:0 4px 0 #000 }
+  .abas { display:flex; gap:6px; justify-content:center; margin:8px 0 }
+  .abas button { flex:1; max-width:220px; font:inherit; font-weight:800; font-size:15px; padding:9px; border-radius:12px; cursor:pointer;
+                 border:2px solid #333; background:#1f2937; color:#fff }
+  .abas button.on { background:var(--amarelo); color:#1a1206; border-color:var(--amarelo) }
+  table.top { width:100%; border-collapse:collapse; font-size:16px; margin:4px 0 }
+  table.top td { padding:6px 8px; border-bottom:1px solid #2a2a33; text-align:left }
+  table.top td:first-child { width:2.2em; color:#a1a1aa; font-weight:800 }
+  table.top td:last-child { text-align:right; font-weight:800; color:var(--amarelo) }
+  table.top tr.novo td { background:var(--amarelo); color:#1a1206 }
+  table.top tr.novo td:last-child { color:#1a1206 }
+  .apelido { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px }
+  .apelido input { font:inherit; font-size:18px; font-weight:800; padding:10px 12px; border-radius:12px; border:2px solid var(--amarelo);
+                   background:#0b0b0f; color:#fff; width:10.5ch; text-align:center; user-select:text; -webkit-user-select:text; touch-action:auto }
+  .erro { color:#fca5a5; font-weight:800; min-height:1.2em; margin:4px 0 0 }
+  .placar { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 }
+  .placar div { background:#0b0b0f; border:2px solid #333; border-radius:12px; padding:8px 14px; font-weight:800 }
+  .placar b { color:var(--amarelo); font-size:22px; display:block }
+
+  /* ---------- loja e ajuda ---------- */
+  .grade { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; margin:8px 0 }
+  .item { background:#0b0b0f; border:2px solid #333; border-radius:14px; padding:6px; display:flex; flex-direction:column; align-items:center; gap:3px }
+  .item.equipada { border-color:#4ade80 }
+  .item canvas { width:100%; height:92px }
+  .item b { font-size:14px }
+  .item small { font-size:12px; font-weight:800 }
+  .item .btn { padding:7px 10px; font-size:14px; width:100%; box-shadow:0 3px 0 #a16207 }
+  .evos { display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:6px; margin:6px 0 }
+  .evos div { background:#0b0b0f; border-radius:12px; padding:4px; font-size:12px; font-weight:800 }
+  .evos canvas { width:100%; height:70px; display:block }
+  .ajuda p { text-align:left }
   #tela h1 { margin:.15em 0; font-size:clamp(28px,7vw,44px); color:var(--amarelo); line-height:1.1 }
   #tela p { line-height:1.45; color:#d4d4d8; margin:.6em 0 }
   #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
@@ -73,6 +131,8 @@
   <div class="linha1">
     <div id="h-moedas" class="pilula">🪙 <b id="h-m">0</b> <small id="h-r">+0/s</small></div>
     <div class="pilula nivel"><span id="h-nv">Nível 1</span><div class="barra-xp"><i id="h-xp"></i></div><small id="h-cen">🌿 Lagoa</small></div>
+    <div id="h-ren" class="pilula hidden" title="Renascimentos e sementes"><span id="h-ren1">♻️ 0</span><span id="h-ren2">🌱 0</span></div>
+    <button id="b-ajuda" class="btn-icone" title="Ajuda">❓</button>
     <button id="b-menu" class="btn-icone" title="Menu">☰</button>
   </div>
   <div id="missao" class="pilula"><span id="m-txt">🎯 ...</span><span id="m-prog">0/0</span><div class="barra-m"><i id="m-bar"></i></div></div>
@@ -80,16 +140,23 @@
 
 <div id="barra">
   <button id="b-som" class="btn-icone" title="Som">🔊</button>
-  <button id="b-comprar" class="btn">＋ Capivara · 🪙 10</button>
+  <button id="b-loja" class="btn-icone" title="Loja de skins">🛍️</button>
+  <button id="b-comprar" class="btn">＋ Capivara<small>🪙 10</small></button>
   <button id="b-dica" class="btn-icone" title="Dica">💡</button>
 </div>
+<button id="b-renascer" class="btn hidden">🌱 Renascer</button>
 <div id="aviso"></div>
-<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
-<div id="tela" class="hidden"><div class="caixa" id="tela-conteudo"></div></div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.2.0</div>
+<div id="tela" class="hidden">
+  <div id="faixa" class="hidden"><span class="nw">Aprenda a criar jogos com IA</span> — <span class="nw">de graça — <b>INEMA.CLUB</b></span></div>
+  <div class="caixa" id="tela-conteudo"></div>
+</div>
+<!-- QR code com o endereço do jogo (vem do arquivo qr-jogo.svg; fica aqui dentro para funcionar sem internet) -->
+<template id="tpl-qr"><svg version="1.1" viewBox="0 0 41 41" xmlns="http://www.w3.org/2000/svg"><path d="M2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM5,2H6V3H5zM6,2H7V3H6zM7,2H8V3H7zM8,2H9V3H8zM10,2H11V3H10zM14,2H15V3H14zM15,2H16V3H15zM18,2H19V3H18zM21,2H22V3H21zM22,2H23V3H22zM24,2H25V3H24zM25,2H26V3H25zM30,2H31V3H30zM32,2H33V3H32zM33,2H34V3H33zM34,2H35V3H34zM35,2H36V3H35zM36,2H37V3H36zM37,2H38V3H37zM38,2H39V3H38zM2,3H3V4H2zM8,3H9V4H8zM10,3H11V4H10zM12,3H13V4H12zM14,3H15V4H14zM17,3H18V4H17zM18,3H19V4H18zM19,3H20V4H19zM20,3H21V4H20zM25,3H26V4H25zM27,3H28V4H27zM28,3H29V4H28zM32,3H33V4H32zM38,3H39V4H38zM2,4H3V5H2zM4,4H5V5H4zM5,4H6V5H5zM6,4H7V5H6zM8,4H9V5H8zM12,4H13V5H12zM16,4H17V5H16zM18,4H19V5H18zM21,4H22V5H21zM26,4H27V5H26zM27,4H28V5H27zM28,4H29V5H28zM29,4H30V5H29zM30,4H31V5H30zM32,4H33V5H32zM34,4H35V5H34zM35,4H36V5H35zM36,4H37V5H36zM38,4H39V5H38zM2,5H3V6H2zM4,5H5V6H4zM5,5H6V6H5zM6,5H7V6H6zM8,5H9V6H8zM10,5H11V6H10zM11,5H12V6H11zM13,5H14V6H13zM14,5H15V6H14zM17,5H18V6H17zM19,5H20V6H19zM21,5H22V6H21zM22,5H23V6H22zM24,5H25V6H24zM25,5H26V6H25zM26,5H27V6H26zM27,5H28V6H27zM30,5H31V6H30zM32,5H33V6H32zM34,5H35V6H34zM35,5H36V6H35zM36,5H37V6H36zM38,5H39V6H38zM2,6H3V7H2zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM11,6H12V7H11zM14,6H15V7H14zM15,6H16V7H15zM16,6H17V7H16zM17,6H18V7H17zM19,6H20V7H19zM21,6H22V7H21zM26,6H27V7H26zM27,6H28V7H27zM28,6H29V7H28zM29,6H30V7H29zM30,6H31V7H30zM32,6H33V7H32zM34,6H35V7H34zM35,6H36V7H35zM36,6H37V7H36zM38,6H39V7H38zM2,7H3V8H2zM8,7H9V8H8zM11,7H12V8H11zM12,7H13V8H12zM17,7H18V8H17zM19,7H20V8H19zM20,7H21V8H20zM21,7H22V8H21zM22,7H23V8H22zM28,7H29V8H28zM30,7H31V8H30zM32,7H33V8H32zM38,7H39V8H38zM2,8H3V9H2zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM18,8H19V9H18zM20,8H21V9H20zM22,8H23V9H22zM24,8H25V9H24zM26,8H27V9H26zM28,8H29V9H28zM30,8H31V9H30zM32,8H33V9H32zM33,8H34V9H33zM34,8H35V9H34zM35,8H36V9H35zM36,8H37V9H36zM37,8H38V9H37zM38,8H39V9H38zM10,9H11V10H10zM13,9H14V10H13zM14,9H15V10H14zM18,9H19V10H18zM19,9H20V10H19zM22,9H23V10H22zM24,9H25V10H24zM26,9H27V10H26zM30,9H31V10H30zM2,10H3V11H2zM4,10H5V11H4zM5,10H6V11H5zM7,10H8V11H7zM8,10H9V11H8zM9,10H10V11H9zM15,10H16V11H15zM18,10H19V11H18zM19,10H20V11H19zM20,10H21V11H20zM21,10H22V11H21zM23,10H24V11H23zM25,10H26V11H25zM28,10H29V11H28zM30,10H31V11H30zM32,10H33V11H32zM35,10H36V11H35zM37,10H38V11H37zM38,10H39V11H38zM2,11H3V12H2zM4,11H5V12H4zM5,11H6V12H5zM6,11H7V12H6zM9,11H10V12H9zM10,11H11V12H10zM12,11H13V12H12zM14,11H15V12H14zM17,11H18V12H17zM18,11H19V12H18zM20,11H21V12H20zM21,11H22V12H21zM22,11H23V12H22zM25,11H26V12H25zM27,11H28V12H27zM30,11H31V12H30zM33,11H34V12H33zM35,11H36V12H35zM36,11H37V12H36zM37,11H38V12H37zM4,12H5V13H4zM5,12H6V13H5zM7,12H8V13H7zM8,12H9V13H8zM9,12H10V13H9zM11,12H12V13H11zM13,12H14V13H13zM14,12H15V13H14zM16,12H17V13H16zM17,12H18V13H17zM19,12H20V13H19zM20,12H21V13H20zM22,12H23V13H22zM23,12H24V13H23zM24,12H25V13H24zM25,12H26V13H25zM26,12H27V13H26zM27,12H28V13H27zM30,12H31V13H30zM31,12H32V13H31zM32,12H33V13H32zM33,12H34V13H33zM34,12H35V13H34zM35,12H36V13H35zM3,13H4V14H3zM4,13H5V14H4zM5,13H6V14H5zM6,13H7V14H6zM12,13H13V14H12zM16,13H17V14H16zM17,13H18V14H17zM20,13H21V14H20zM21,13H22V14H21zM25,13H26V14H25zM26,13H27V14H26zM27,13H28V14H27zM29,13H30V14H29zM31,13H32V14H31zM34,13H35V14H34zM35,13H36V14H35zM36,13H37V14H36zM2,14H3V15H2zM7,14H8V15H7zM8,14H9V15H8zM9,14H10V15H9zM10,14H11V15H10zM13,14H14V15H13zM14,14H15V15H14zM15,14H16V15H15zM16,14H17V15H16zM19,14H20V15H19zM25,14H26V15H25zM26,14H27V15H26zM27,14H28V15H27zM28,14H29V15H28zM31,14H32V15H31zM32,14H33V15H32zM34,14H35V15H34zM35,14H36V15H35zM36,14H37V15H36zM37,14H38V15H37zM38,14H39V15H38zM3,15H4V16H3zM4,15H5V16H4zM5,15H6V16H5zM6,15H7V16H6zM7,15H8V16H7zM9,15H10V16H9zM10,15H11V16H10zM11,15H12V16H11zM12,15H13V16H12zM13,15H14V16H13zM17,15H18V16H17zM18,15H19V16H18zM19,15H20V16H19zM21,15H22V16H21zM28,15H29V16H28zM29,15H30V16H29zM30,15H31V16H30zM31,15H32V16H31zM32,15H33V16H32zM33,15H34V16H33zM34,15H35V16H34zM35,15H36V16H35zM37,15H38V16H37zM38,15H39V16H38zM3,16H4V17H3zM4,16H5V17H4zM7,16H8V17H7zM8,16H9V17H8zM10,16H11V17H10zM12,16H13V17H12zM13,16H14V17H13zM15,16H16V17H15zM16,16H17V17H16zM18,16H19V17H18zM21,16H22V17H21zM24,16H25V17H24zM28,16H29V17H28zM30,16H31V17H30zM32,16H33V17H32zM34,16H35V17H34zM36,16H37V17H36zM37,16H38V17H37zM3,17H4V18H3zM5,17H6V18H5zM6,17H7V18H6zM9,17H10V18H9zM12,17H13V18H12zM14,17H15V18H14zM18,17H19V18H18zM21,17H22V18H21zM23,17H24V18H23zM24,17H25V18H24zM25,17H26V18H25zM26,17H27V18H26zM28,17H29V18H28zM29,17H30V18H29zM30,17H31V18H30zM33,17H34V18H33zM34,17H35V18H34zM3,18H4V19H3zM4,18H5V19H4zM5,18H6V19H5zM6,18H7V19H6zM8,18H9V19H8zM9,18H10V19H9zM13,18H14V19H13zM18,18H19V19H18zM20,18H21V19H20zM23,18H24V19H23zM25,18H26V19H25zM27,18H28V19H27zM35,18H36V19H35zM36,18H37V19H36zM37,18H38V19H37zM2,19H3V20H2zM3,19H4V20H3zM4,19H5V20H4zM6,19H7V20H6zM10,19H11V20H10zM12,19H13V20H12zM14,19H15V20H14zM18,19H19V20H18zM20,19H21V20H20zM22,19H23V20H22zM23,19H24V20H23zM24,19H25V20H24zM25,19H26V20H25zM26,19H27V20H26zM27,19H28V20H27zM29,19H30V20H29zM30,19H31V20H30zM32,19H33V20H32zM33,19H34V20H33zM36,19H37V20H36zM37,19H38V20H37zM38,19H39V20H38zM5,20H6V21H5zM6,20H7V21H6zM7,20H8V21H7zM8,20H9V21H8zM9,20H10V21H9zM10,20H11V21H10zM12,20H13V21H12zM16,20H17V21H16zM17,20H18V21H17zM18,20H19V21H18zM19,20H20V21H19zM20,20H21V21H20zM22,20H23V21H22zM24,20H25V21H24zM26,20H27V21H26zM27,20H28V21H27zM28,20H29V21H28zM29,20H30V21H29zM30,20H31V21H30zM31,20H32V21H31zM33,20H34V21H33zM36,20H37V21H36zM37,20H38V21H37zM38,20H39V21H38zM5,21H6V22H5zM7,21H8V22H7zM9,21H10V22H9zM10,21H11V22H10zM11,21H12V22H11zM13,21H14V22H13zM14,21H15V22H14zM19,21H20V22H19zM20,21H21V22H20zM22,21H23V22H22zM24,21H25V22H24zM26,21H27V22H26zM29,21H30V22H29zM31,21H32V22H31zM32,21H33V22H32zM33,21H34V22H33zM34,21H35V22H34zM35,21H36V22H35zM37,21H38V22H37zM2,22H3V23H2zM3,22H4V23H3zM4,22H5V23H4zM8,22H9V23H8zM9,22H10V23H9zM10,22H11V23H10zM12,22H13V23H12zM15,22H16V23H15zM16,22H17V23H16zM18,22H19V23H18zM19,22H20V23H19zM21,22H22V23H21zM22,22H23V23H22zM23,22H24V23H23zM28,22H29V23H28zM31,22H32V23H31zM33,22H34V23H33zM34,22H35V23H34zM38,22H39V23H38zM3,23H4V24H3zM4,23H5V24H4zM6,23H7V24H6zM7,23H8V24H7zM10,23H11V24H10zM15,23H16V24H15zM18,23H19V24H18zM20,23H21V24H20zM21,23H22V24H21zM22,23H23V24H22zM25,23H26V24H25zM27,23H28V24H27zM30,23H31V24H30zM35,23H36V24H35zM37,23H38V24H37zM2,24H3V25H2zM3,24H4V25H3zM8,24H9V25H8zM10,24H11V25H10zM11,24H12V25H11zM12,24H13V25H12zM13,24H14V25H13zM14,24H15V25H14zM18,24H19V25H18zM22,24H23V25H22zM24,24H25V25H24zM25,24H26V25H25zM26,24H27V25H26zM27,24H28V25H27zM30,24H31V25H30zM32,24H33V25H32zM33,24H34V25H33zM4,25H5V26H4zM6,25H7V26H6zM11,25H12V26H11zM14,25H15V26H14zM15,25H16V26H15zM21,25H22V26H21zM22,25H23V26H22zM26,25H27V26H26zM27,25H28V26H27zM28,25H29V26H28zM30,25H31V26H30zM31,25H32V26H31zM32,25H33V26H32zM34,25H35V26H34zM35,25H36V26H35zM36,25H37V26H36zM38,25H39V26H38zM4,26H5V27H4zM5,26H6V27H5zM6,26H7V27H6zM7,26H8V27H7zM8,26H9V27H8zM9,26H10V27H9zM11,26H12V27H11zM13,26H14V27H13zM14,26H15V27H14zM15,26H16V27H15zM19,26H20V27H19zM24,26H25V27H24zM27,26H28V27H27zM28,26H29V27H28zM29,26H30V27H29zM30,26H31V27H30zM31,26H32V27H31zM32,26H33V27H32zM34,26H35V27H34zM36,26H37V27H36zM38,26H39V27H38zM4,27H5V28H4zM7,27H8V28H7zM9,27H10V28H9zM10,27H11V28H10zM11,27H12V28H11zM13,27H14V28H13zM15,27H16V28H15zM16,27H17V28H16zM18,27H19V28H18zM21,27H22V28H21zM23,27H24V28H23zM26,27H27V28H26zM27,27H28V28H27zM29,27H30V28H29zM30,27H31V28H30zM31,27H32V28H31zM32,27H33V28H32zM33,27H34V28H33zM34,27H35V28H34zM37,27H38V28H37zM38,27H39V28H38zM3,28H4V29H3zM8,28H9V29H8zM9,28H10V29H9zM10,28H11V29H10zM11,28H12V29H11zM14,28H15V29H14zM16,28H17V29H16zM17,28H18V29H17zM18,28H19V29H18zM19,28H20V29H19zM20,28H21V29H20zM21,28H22V29H21zM22,28H23V29H22zM26,28H27V29H26zM27,28H28V29H27zM31,28H32V29H31zM33,28H34V29H33zM35,28H36V29H35zM36,28H37V29H36zM37,28H38V29H37zM2,29H3V30H2zM4,29H5V30H4zM5,29H6V30H5zM6,29H7V30H6zM9,29H10V30H9zM11,29H12V30H11zM13,29H14V30H13zM15,29H16V30H15zM16,29H17V30H16zM18,29H19V30H18zM21,29H22V30H21zM23,29H24V30H23zM24,29H25V30H24zM28,29H29V30H28zM30,29H31V30H30zM31,29H32V30H31zM32,29H33V30H32zM33,29H34V30H33zM35,29H36V30H35zM37,29H38V30H37zM38,29H39V30H38zM4,30H5V31H4zM5,30H6V31H5zM7,30H8V31H7zM8,30H9V31H8zM9,30H10V31H9zM10,30H11V31H10zM11,30H12V31H11zM13,30H14V31H13zM15,30H16V31H15zM17,30H18V31H17zM23,30H24V31H23zM24,30H25V31H24zM25,30H26V31H25zM26,30H27V31H26zM27,30H28V31H27zM29,30H30V31H29zM30,30H31V31H30zM31,30H32V31H31zM32,30H33V31H32zM33,30H34V31H33zM34,30H35V31H34zM36,30H37V31H36zM37,30H38V31H37zM10,31H11V32H10zM11,31H12V32H11zM14,31H15V32H14zM16,31H17V32H16zM17,31H18V32H17zM18,31H19V32H18zM20,31H21V32H20zM22,31H23V32H22zM24,31H25V32H24zM25,31H26V32H25zM26,31H27V32H26zM27,31H28V32H27zM28,31H29V32H28zM30,31H31V32H30zM34,31H35V32H34zM36,31H37V32H36zM38,31H39V32H38zM2,32H3V33H2zM3,32H4V33H3zM4,32H5V33H4zM5,32H6V33H5zM6,32H7V33H6zM7,32H8V33H7zM8,32H9V33H8zM10,32H11V33H10zM13,32H14V33H13zM14,32H15V33H14zM17,32H18V33H17zM20,32H21V33H20zM22,32H23V33H22zM23,32H24V33H23zM26,32H27V33H26zM27,32H28V33H27zM30,32H31V33H30zM32,32H33V33H32zM34,32H35V33H34zM36,32H37V33H36zM37,32H38V33H37zM38,32H39V33H38zM2,33H3V34H2zM8,33H9V34H8zM10,33H11V34H10zM11,33H12V34H11zM12,33H13V34H12zM14,33H15V34H14zM15,33H16V34H15zM16,33H17V34H16zM19,33H20V34H19zM20,33H21V34H20zM21,33H22V34H21zM22,33H23V34H22zM24,33H25V34H24zM25,33H26V34H25zM29,33H30V34H29zM30,33H31V34H30zM34,33H35V34H34zM2,34H3V35H2zM4,34H5V35H4zM5,34H6V35H5zM6,34H7V35H6zM8,34H9V35H8zM13,34H14V35H13zM15,34H16V35H15zM16,34H17V35H16zM18,34H19V35H18zM19,34H20V35H19zM21,34H22V35H21zM23,34H24V35H23zM24,34H25V35H24zM25,34H26V35H25zM30,34H31V35H30zM31,34H32V35H31zM32,34H33V35H32zM33,34H34V35H33zM34,34H35V35H34zM35,34H36V35H35zM2,35H3V36H2zM4,35H5V36H4zM5,35H6V36H5zM6,35H7V36H6zM8,35H9V36H8zM10,35H11V36H10zM11,35H12V36H11zM12,35H13V36H12zM13,35H14V36H13zM15,35H16V36H15zM16,35H17V36H16zM17,35H18V36H17zM20,35H21V36H20zM21,35H22V36H21zM22,35H23V36H22zM25,35H26V36H25zM31,35H32V36H31zM32,35H33V36H32zM34,35H35V36H34zM36,35H37V36H36zM37,35H38V36H37zM38,35H39V36H38zM2,36H3V37H2zM4,36H5V37H4zM5,36H6V37H5zM6,36H7V37H6zM8,36H9V37H8zM10,36H11V37H10zM11,36H12V37H11zM13,36H14V37H13zM16,36H17V37H16zM18,36H19V37H18zM19,36H20V37H19zM23,36H24V37H23zM24,36H25V37H24zM25,36H26V37H25zM26,36H27V37H26zM29,36H30V37H29zM30,36H31V37H30zM31,36H32V37H31zM32,36H33V37H32zM34,36H35V37H34zM35,36H36V37H35zM2,37H3V38H2zM8,37H9V38H8zM12,37H13V38H12zM14,37H15V38H14zM16,37H17V38H16zM17,37H18V38H17zM20,37H21V38H20zM21,37H22V38H21zM22,37H23V38H22zM25,37H26V38H25zM26,37H27V38H26zM27,37H28V38H27zM31,37H32V38H31zM33,37H34V38H33zM34,37H35V38H34zM35,37H36V38H35zM36,37H37V38H36zM2,38H3V39H2zM3,38H4V39H3zM4,38H5V39H4zM5,38H6V39H5zM6,38H7V39H6zM7,38H8V39H7zM8,38H9V39H8zM10,38H11V39H10zM11,38H12V39H11zM12,38H13V39H12zM18,38H19V39H18zM19,38H20V39H19zM20,38H21V39H20zM21,38H22V39H21zM22,38H23V39H22zM24,38H25V39H24zM25,38H26V39H25zM26,38H27V39H26zM27,38H28V39H27zM28,38H29V39H28zM31,38H32V39H31zM34,38H35V39H34zM35,38H36V39H35zM36,38H37V39H36zM37,38H38V39H37zM38,38H39V39H38z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none" /></svg></template>
 
 <script>
 /* =====================================================================
-   EVOLUA A CAPIVARA — Fábrica de Jogos INEMA (versão 0.1.0)
+   EVOLUA A CAPIVARA — Fábrica de Jogos INEMA (versão 0.2.0)
    ---------------------------------------------------------------------
    QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
    Salve o arquivo e abra de novo no navegador para ver o efeito.
@@ -162,26 +229,55 @@ const CONFIG = {
   demoAcelera: 3,             // no modo vitrine (?demo=1) o tempo passa X vezes mais rápido
   som: true,                  // começa com som ligado?
 
+  // RENASCER: quem tem uma CAPIVARA LENDÁRIA pode renascer.
+  // O gramado e as moedas voltam ao zero, mas a pessoa ganha sementes 🌱
+  // e um bônus de renda que vale para sempre.
+  sementesPorRenascer: 5,     // sementes 🌱 ganhas a cada renascimento
+  bonusPorRenascer: 0.25,     // +25% de renda para sempre a cada renascimento
+
+  // LOJA DE SKINS: o visual vale para TODAS as capivaras e fica salvo no aparelho.
+  //   id: nome interno (não mude depois de publicar, senão quem comprou perde)
+  //   tipo: qual desenho usar ("nenhum", "palha", "escuros", "bone",
+  //         "arcoiris", "dourada", "pixel")
+  //   preco + moeda: "moedas" (🪙, da partida) ou "sementes" (🌱, de renascer)
+  //   raridade: "comum", "rara", "épica" ou "lendária" (só muda a cor da etiqueta)
+  skins: [
+    { id: "classica", nome: "Clássica",            tipo: "nenhum",   preco: 0,   moeda: "moedas",   raridade: "comum" },
+    { id: "palha",    nome: "Chapéu de palha",     tipo: "palha",    preco: 150, moeda: "moedas",   raridade: "comum" },
+    { id: "escuros",  nome: "Óculos escuros",      tipo: "escuros",  preco: 300, moeda: "moedas",   raridade: "comum" },
+    { id: "bone",     nome: "Boné INEMA",          tipo: "bone",     preco: 600, moeda: "moedas",   raridade: "rara" },
+    { id: "arcoiris", nome: "Capivara arco-íris",  tipo: "arcoiris", preco: 3,   moeda: "sementes", raridade: "rara" },
+    { id: "dourada",  nome: "Astronauta dourada",  tipo: "dourada",  preco: 6,   moeda: "sementes", raridade: "épica" },
+    { id: "pixel",    nome: "Capivara pixel",      tipo: "pixel",    preco: 10,  moeda: "sementes", raridade: "lendária" },
+  ],
+
+  // TOP 10 (salvo só neste aparelho; no ?demo=1 nada é gravado)
+  placarDoDia: true,          // true = o placar zera a cada dia (bom para o estande da feira)
+  tamanhoApelido: 10,         // máximo de letras do apelido (nada de nome completo!)
+
   // Textos da tela inicial
   comoJogar1: "Arraste uma capivara sobre outra <b>igual</b> para ela evoluir.",
   comoJogar2: "Cada capivara dá moedas sozinha: compre mais, cumpra missões e crie a <b>CAPIVARA LENDÁRIA</b>!",
-  promptExemplo: "Neste jogo, adicione um 8º estágio: a CAPIVARA DRAGÃO, " +
-                 "que dá 1000 moedas por segundo. Desenhe asas e uma " +
-                 "chaminha saindo do focinho no acessório dela. " +
+  promptExemplo: "Neste jogo, adicione uma skin nova na loja: a CAPIVARA PIRATA, " +
+                 "com tapa-olho e chapéu de pirata preto com caveirinha, " +
+                 "que custa 4 sementes 🌱 e é rara. Coloque ela no CONFIG.skins " +
+                 "e desenhe no canvas do mesmo jeito que as outras skins. " +
                  "Explique o que você mudou.",
 };
 /* ===================== daqui para baixo é o motor ===================== */
 
-const VERSAO = "0.1.0";
+const VERSAO = "0.2.0";
 const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML; // cópia do jogo para o botão "Baixar"
 const $ = id => document.getElementById(id);
+const QR_SVG = $("tpl-qr").innerHTML;           // o desenho do QR code (fica no <template> lá em cima)
 const cv = $("c"), ctx = cv.getContext("2d");
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo");            // ?demo=1 → o jogo joga sozinho (vitrine do estande)
 const ACEL = DEMO ? CONFIG.demoAcelera : 1;
 const ULTIMO = CONFIG.estagios.length - 1;  // índice do último estágio
 const NVAGAS = 12;                          // 12 lugares no gramado (3×4 no celular, 4×3 no PC)
-const CHAVE = "evolua-a-capivara-v1", CHAVE_RECORDE = "evolua-a-capivara-recorde";
+const CHAVE = "evolua-a-capivara-v2", CHAVE_ANTIGA = "evolua-a-capivara-v1", CHAVE_RECORDE = "evolua-a-capivara-recorde";
+const CHAVE_META = "evolua-a-capivara-meta", CHAVE_TOP = "evolua-a-capivara-top10";
 
 let dpr = 1;
 function redimensiona() {
@@ -244,16 +340,35 @@ let arrasto = null;         // capivara sendo arrastada
 let ocioso = 0, salvaT = 0, tremor = 0, demoReinicia = 0;
 const particulas = [], textos = [], aneis = [], banners = [];
 
+let fimPendente = false;    // chegou na Lendária: mostrar a tela de fim quando a festa acabar
+
+// E = a PARTIDA atual (zera ao renascer). META = o que vale para sempre neste aparelho
+// (sementes, renascimentos, skins compradas, skin em uso, último apelido).
+// "Começar do zero" zera só a partida: as skins e as sementes continuam suas.
+function metaNova() { return { sementes: 0, renascimentos: 0, skins: ["classica"], skin: "classica", apelido: "" }; }
+let META = metaNova();
+function carregaMeta() {
+  if (DEMO) return metaNova();               // a vitrine sempre começa limpa e não grava nada
+  try { return Object.assign(metaNova(), JSON.parse(localStorage.getItem(CHAVE_META) || "{}")); } catch (e) { return metaNova(); }
+}
+function salvaMeta() { if (DEMO) return; try { localStorage.setItem(CHAVE_META, JSON.stringify(META)); } catch (e) {} }
+const multiplicador = () => 1 + META.renascimentos * CONFIG.bonusPorRenascer;   // bônus de renda de renascer
+const rendaDe = e => CONFIG.estagios[e].moedasPorSegundo * multiplicador();       // renda de UMA capivara
+
 function novaCapy(e) { return { e, anim: 0, cai: 0, fase: rnd(0, 6), tf: rnd(0.5, 2) }; }
 function estadoNovo() {
   return { moedas: CONFIG.moedasIniciais, xp: 0, nivel: 1, compras: 0, maior: 0, fusoes: 0, toques: 0, ganho: 0,
-           missaoIdx: 0, missao: null, presente: CONFIG.presenteACada, vagas: Array(NVAGAS).fill(null) };
+           missaoIdx: 0, missao: null, presente: CONFIG.presenteACada, vagas: Array(NVAGAS).fill(null),
+           total: 0,              // todas as moedas ganhas nesta partida (é a pontuação do Top 10)
+           tempo: 0,              // segundos jogados nesta partida
+           tempoLendaria: null,   // em quantos segundos chegou na Lendária (Top 10 de tempo)
+           partida: Date.now().toString(36) + Math.floor(Math.random() * 1e4) };  // "RG" da partida no Top 10
 }
 function novoJogo() {
   E = estadoNovo();
   const ordem = [...Array(NVAGAS).keys()].sort(() => Math.random() - 0.5);
   for (let i = 0; i < CONFIG.capivarasIniciais; i++) poe(0, ordem[i]);
-  cenIdx = cenarioDe(E.nivel); transicao = null; celebra = null; arrasto = null;
+  cenIdx = cenarioDe(E.nivel); transicao = null; celebra = null; arrasto = null; fimPendente = false;
   iniciaMissao();
 }
 function salvar() {
@@ -262,7 +377,13 @@ function salvar() {
 }
 function carrega() {
   try {
-    const s = JSON.parse(localStorage.getItem(CHAVE) || "null");
+    let s = JSON.parse(localStorage.getItem(CHAVE) || "null");
+    if (!s) {                                  // save da versão 0.1.0? traz o progresso para a 0.2.0
+      s = JSON.parse(localStorage.getItem(CHAVE_ANTIGA) || "null");
+      if (s) { s.total = s.ganho || 0;         // a 0.1.0 não tinha "total": usa o que ela tinha
+               s.semTempo = true;               // nem relógio: essa partida fica fora do Top 10 de tempo
+               if (s.maior >= ULTIMO) s.tempoLendaria = 0; }
+    }
     if (!s || !Array.isArray(s.vagas)) return null;
     const est = Object.assign(estadoNovo(), s);
     est.vagas = Array.from({ length: NVAGAS }, (_, i) => s.vagas[i] >= 0 && s.vagas[i] <= ULTIMO ? novaCapy(s.vagas[i]) : null);
@@ -271,7 +392,8 @@ function carrega() {
 }
 function recorde() { try { return +localStorage.getItem(CHAVE_RECORDE) || 0; } catch (e) { return 0; } }
 
-const renda = () => E ? E.vagas.reduce((s, c) => s + (c ? CONFIG.estagios[c.e].moedasPorSegundo : 0), 0) : 0;
+const renda = () => E ? E.vagas.reduce((s, c) => s + (c ? rendaDe(c.e) : 0), 0) : 0;
+const temLendaria = () => !!E && E.maior >= ULTIMO;
 const precoAtual = () => Math.round(CONFIG.precoCapivara * Math.pow(CONFIG.aumentoPreco, E.compras));
 const vagasLivres = () => E.vagas.map((c, i) => c ? -1 : i).filter(i => i >= 0);
 const xpPara = n => CONFIG.xpPrimeiroNivel + CONFIG.xpAumentoPorNivel * (n - 1);
@@ -330,8 +452,8 @@ function comprar() {
 }
 function toca(i) {               // toque rápido numa capivara: moedas na hora
   const c = E.vagas[i]; if (!c) return;
-  const ganho = Math.max(1, CONFIG.estagios[c.e].moedasPorSegundo * CONFIG.bonusToque * ACEL);
-  E.moedas += ganho; E.ganho += ganho; E.toques++;
+  const ganho = Math.max(1, rendaDe(c.e) * CONFIG.bonusToque * ACEL);
+  E.moedas += ganho; E.ganho += ganho; E.total += ganho; E.toques++;
   c.anim = 0.6;
   const p = vagaPos[i];
   flutua(p.x, p.y - tamVaga * 0.35, "+" + fmt(ganho), "#FACC15", 24);
@@ -362,8 +484,9 @@ function funde(de, para) {       // FUSÃO! duas iguais viram o próximo estági
     E.maior = alvo.e;
     celebra = { e: alvo.e, t: 0 };
     som("fanfarra");
-    try { if (alvo.e > recorde()) localStorage.setItem(CHAVE_RECORDE, alvo.e); } catch (e) {}
+    try { if (!DEMO && alvo.e > recorde()) localStorage.setItem(CHAVE_RECORDE, alvo.e); } catch (e) {}
     if (DEMO && alvo.e === ULTIMO) demoReinicia = 9;
+    if (alvo.e === ULTIMO && E.tempoLendaria == null) { E.tempoLendaria = E.tempo; fimPendente = true; }  // chegou ao fim!
   }
 }
 function fundeAutomatico() {     // tecla F / botão 💡 quando não há dica: faz uma fusão
@@ -378,7 +501,7 @@ function ganhaXP(n) {
   while (E.xp >= xpPara(E.nivel)) {
     E.xp -= xpPara(E.nivel); E.nivel++;
     const premio = CONFIG.premioNivel * E.nivel;
-    E.moedas += premio;
+    E.moedas += premio; E.total += premio;
     const novo = cenarioDe(E.nivel);
     if (novo !== cenIdx) {
       transicao = { de: cenIdx, t: 0 }; cenIdx = novo;
@@ -424,7 +547,7 @@ function checaMissao() {
   const def = E.missao.def;
   if (progresso() < def.meta) return;
   const premio = Math.max(def.moedas || 0, Math.round(renda() * 6));
-  E.moedas += premio;
+  E.moedas += premio; E.total += premio;
   const r = $("missao").getBoundingClientRect();
   explode(r.left + r.width / 2, r.top + r.height / 2, 30, ["#FACC15", "#ffffff", "#4ade80"], 320, "estrela");
   flutua(r.left + r.width / 2, r.bottom + 24, "MISSÃO CUMPRIDA! +" + fmt(premio), "#FACC15", 22, 1.6);
@@ -469,12 +592,17 @@ addEventListener("keydown", e => {
   if (k === " " || k === "c" || k === "enter") { e.preventDefault(); comprar(); }
   else if (k === "f") fundeAutomatico();
   else if (k === "m") alternaSom();
+  else if (k === "l") telaLoja();
+  else if (k === "h" || k === "?") telaAjuda();
   else if (k === "escape") telaInicio();
 });
 $("b-comprar").onclick = () => { iniciaAudio(); comprar(); };
 $("b-som").onclick = () => { iniciaAudio(); alternaSom(); };
 $("b-dica").onclick = () => { iniciaAudio(); if (ocioso > 5) fundeAutomatico(); else ocioso = 99; };  // 1º toque mostra a dica, 2º faz a fusão
 $("b-menu").onclick = () => telaInicio();
+$("b-ajuda").onclick = () => { iniciaAudio(); telaAjuda(); };
+$("b-loja").onclick = () => { iniciaAudio(); telaLoja(); };
+$("b-renascer").onclick = () => { iniciaAudio(); telaRenascer(); };
 
 // ---------- demonstração (?demo=1): o jogo joga sozinho ----------
 const demo = { espera: 1.2, mov: null };
@@ -516,11 +644,15 @@ function passo(dt) {
     if (Math.random() < 0.6) particulas.push({ x: rnd(0, innerWidth), y: -10, vx: rnd(-40, 40), vy: rnd(60, 160), vida: 2.4, v0: 2.4,
       cor: ["#FACC15", "#f472b6", "#22d3ee", "#4ade80", "#ffffff"][Math.floor(rnd(0, 5))], tam: rnd(5, 9), tipo: "confete", giro: rnd(0, 6) });
   }
+  // vitrine (?demo=1): a tela de fim fica uns segundos no telão e o jogo recomeça sozinho
+  if (DEMO && !rodando && demoReinicia > 0 && (demoReinicia -= dt) <= 0) { fechaTela(); novoJogo(); rodando = true; }
+  if (fimPendente && !celebra && rodando) { fimPendente = false; telaFim(); }
   if (!E || !rodando) return;
 
   // moedas entrando
   const g = renda() * dt * ACEL;
-  E.moedas += g; E.ganho += g;
+  E.moedas += g; E.ganho += g; E.total += g;
+  if (!celebra) E.tempo += dt;           // relógio da partida (para o Top 10 de tempo)
 
   // capivaras: animações e "+moedas" flutuando
   E.vagas.forEach((c, i) => {
@@ -533,7 +665,7 @@ function passo(dt) {
     if ((c.tf -= dt) <= 0) {
       c.tf = 2;
       if (!arrasto || arrasto.de !== i)
-        flutua(vagaPos[i].x + rnd(-10, 10), vagaPos[i].y - tamVaga * 0.4, "+" + fmt(CONFIG.estagios[c.e].moedasPorSegundo * 2 * ACEL), "#fde047", 15, 0.9);
+        flutua(vagaPos[i].x + rnd(-10, 10), vagaPos[i].y - tamVaga * 0.4, "+" + fmt(rendaDe(c.e) * 2 * ACEL), "#fde047", 15, 0.9);
     }
   });
 
@@ -562,7 +694,10 @@ function passo(dt) {
   setTxt("m-txt", m.txt); setTxt("m-prog", m.prog);
   $("m-bar").style.width = (m.frac * 100).toFixed(1) + "%";
   const p = precoAtual();
-  setTxt("b-comprar", "＋ Capivara · 🪙 " + fmt(p));
+  if ($("b-comprar").dataset.p !== String(p)) { $("b-comprar").dataset.p = p; $("b-comprar").innerHTML = "＋ Capivara<small>🪙 " + fmt(p) + "</small>"; }
+  $("b-renascer").classList.toggle("hidden", DEMO || !temLendaria());
+  $("h-ren").classList.toggle("hidden", !META.renascimentos && !META.sementes);
+  setTxt("h-ren1", "♻️ " + META.renascimentos); setTxt("h-ren2", "🌱 " + META.sementes);
   $("b-comprar").classList.toggle("apagado", E.moedas < p || !vagasLivres().length);
 
   if ((salvaT -= dt) <= 0) { salvaT = 2; salvar(); }
@@ -582,8 +717,12 @@ function estrela(g, x, y, r) {
 }
 
 // A CAPIVARA: (g = onde desenhar, x/y = centro, tam = tamanho, e = estágio, t = tempo)
+// o.skin = qual skin usar (se não disser, usa a skin equipada na loja)
 function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
   const est = CONFIG.estagios[e], ac = est.acessorio;
+  const skin = tipoSkin(o.skin || META.skin);
+  if (skin === "pixel" && !o.semPixel) return desenhaPixelada(g, x, y, tam, e, t, o);
+  const chapeu = skin === "palha" || skin === "bone";          // chapéu/boné tira o enfeite da cabeça
   const k = tam / 125 * (e === 0 ? 0.8 : 1);
   const fase = o.fase || 0, respira = 1 + Math.sin(t * 3 + fase) * 0.03;
   g.save();
@@ -593,7 +732,13 @@ function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
   g.lineJoin = "round"; g.lineCap = "round";
   const contorno = "#2a1a10", lw = 3.5;
   g.strokeStyle = contorno; g.lineWidth = lw;
-  const corpo = est.corpo, escuro = escurece(corpo, 0.72), barriga = est.barriga;
+  let corpo = est.corpo, barriga = est.barriga;
+  if (skin === "dourada") { corpo = "#e0a526"; barriga = "#fde68a"; }
+  if (skin === "arcoiris") {                        // a cor vai passando por todas as do arco-íris
+    const hue = Math.round(t * 70 + (o.fase || 0) * 40) % 360;
+    corpo = hsl2hex(hue, 75, 55); barriga = hsl2hex((hue + 40) % 360, 85, 80);
+  }
+  const escuro = escurece(corpo, 0.72);
 
   if (ac === "lendaria") {                          // brilho girando + capa vermelha
     g.save(); g.rotate(t * 0.8);
@@ -610,7 +755,8 @@ function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
   // pés
   g.fillStyle = escuro; ret(g, -32, 30, 18, 15, 7); pinta(g); ret(g, 14, 30, 18, 15, 7); pinta(g);
   // corpo (ou roupa)
-  const roupa = ac === "cientista" ? "#f8fafc" : ac === "astronauta" ? "#eef2f7" : null;
+  let roupa = ac === "cientista" ? "#f8fafc" : ac === "astronauta" ? "#eef2f7" : null;
+  if (roupa && skin === "dourada") roupa = "#f5c542";
   g.fillStyle = roupa || corpo; elipse(g, 0, 14, 44, 31); pinta(g);
   if (!roupa) { g.fillStyle = barriga; elipse(g, 0, 22, 27, 18); g.fill(); }
   if (ac === "cientista") {                         // jaleco com gola em V e bolso com caneta
@@ -659,24 +805,24 @@ function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
     g.fillStyle = "#fff"; circ(g, -11.3, -48, 1.9); g.fill(); circ(g, 14.7, -48, 1.9); g.fill();
   }
   // acessórios
-  if (ac === "tangerina") {
+  if (ac === "tangerina" && !chapeu) {
     g.fillStyle = "#fb923c"; circ(g, 4, -73, 11); pinta(g);
     g.fillStyle = "#22c55e"; elipse(g, 11, -85, 7, 3.5, -0.5); pinta(g);
   }
-  if (ac === "flor") {
+  if (ac === "flor" && !chapeu) {
     g.save(); g.translate(-21, -63); g.lineWidth = 2;
     for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); g.fillStyle = "#f472b6"; elipse(g, 0, -6.5, 4.2, 6); pinta(g); }
     g.fillStyle = "#facc15"; circ(g, 0, 0, 3.6); pinta(g); g.restore();
   }
-  if (ac === "cientista") {                         // cabelo maluco de cientista
+  if (ac === "cientista" && !chapeu) {              // cabelo maluco de cientista
     g.fillStyle = "#f1f5f9"; [[-14, -64], [-4, -69], [6, -68], [15, -63]].forEach(([a, b]) => { circ(g, a, b, 7); pinta(g); });
   }
-  if (ac === "oculos" || ac === "cientista") {
+  if ((ac === "oculos" || ac === "cientista") && skin !== "escuros") {
     g.fillStyle = "rgba(191,233,255,.35)"; circ(g, -13, -46, 10.5); pinta(g); circ(g, 13, -46, 10.5); pinta(g);
     g.beginPath(); g.moveTo(-2.5, -47); g.quadraticCurveTo(0, -50, 2.5, -47); g.stroke();
     g.beginPath(); g.moveTo(-23.5, -47); g.lineTo(-31, -50); g.moveTo(23.5, -47); g.lineTo(31, -50); g.stroke();
   }
-  if (ac === "astronauta") {                        // capacete de vidro
+  if (ac === "astronauta" && skin !== "dourada") {  // capacete de vidro
     g.fillStyle = "rgba(186,230,253,.25)"; circ(g, 0, -38, 47); g.fill();
     g.strokeStyle = "#e2e8f0"; g.lineWidth = 6; g.stroke();
     g.strokeStyle = contorno; g.lineWidth = 2; circ(g, 0, -38, 50); g.stroke();
@@ -690,13 +836,73 @@ function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
     g.fillStyle = "#cbd5e1"; ret(g, -38, -44, 8, 13, 2); pinta(g); ret(g, 30, -44, 8, 13, 2); pinta(g);
   }
   if (ac === "lendaria") {                          // coroa e brilhinhos
-    g.fillStyle = "#FACC15";
-    g.beginPath(); g.moveTo(-20, -60); g.lineTo(-23, -84); g.lineTo(-10, -71); g.lineTo(0, -90); g.lineTo(10, -71); g.lineTo(23, -84); g.lineTo(20, -60); g.closePath(); pinta(g);
-    g.fillStyle = "#ef4444"; circ(g, 0, -70, 3.5); pinta(g);
-    g.fillStyle = "#3b82f6"; circ(g, -12, -66, 2.8); pinta(g); circ(g, 12, -66, 2.8); pinta(g);
+    if (!chapeu) {
+      g.fillStyle = "#FACC15";
+      g.beginPath(); g.moveTo(-20, -60); g.lineTo(-23, -84); g.lineTo(-10, -71); g.lineTo(0, -90); g.lineTo(10, -71); g.lineTo(23, -84); g.lineTo(20, -60); g.closePath(); pinta(g);
+      g.fillStyle = "#ef4444"; circ(g, 0, -70, 3.5); pinta(g);
+      g.fillStyle = "#3b82f6"; circ(g, -12, -66, 2.8); pinta(g); circ(g, 12, -66, 2.8); pinta(g);
+    }
     g.fillStyle = "#fff";
     for (let i = 0; i < 5; i++) { const a = t * 1.5 + i * 1.256; estrela(g, Math.cos(a) * 62, -18 + Math.sin(a) * 52, 5 + Math.sin(t * 6 + i) * 2); }
   }
+  desenhaSkin(g, skin, ac, t, contorno);
+  g.restore();
+}
+
+// ---------- SKINS da loja (desenhadas por cima da capivara) ----------
+// Tudo aqui usa as mesmas medidas da capivara: a cabeça vai de y=-64 a y=-10,
+// os olhos ficam em x=±13, y=-46. Quer uma skin nova? Copie um bloco e mude.
+function tipoSkin(id) { const s = CONFIG.skins.find(s => s.id === id); return s ? s.tipo : "nenhum"; }
+function hsl2hex(h, s, l) {                         // cor "HSL" (matiz, saturação, luz) → "#rrggbb"
+  s /= 100; l /= 100;
+  const f = n => { const k = (n + h / 30) % 12, c = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+                   return Math.round(c * 255).toString(16).padStart(2, "0"); };
+  return "#" + f(0) + f(8) + f(4);
+}
+function desenhaSkin(g, skin, ac, t, contorno) {
+  const sobe = ac === "astronauta" || ac === "robo" ? -24 : 0;   // em cima do capacete/antena
+  g.strokeStyle = contorno; g.lineWidth = 3;
+  if (skin === "palha") {                           // chapéu de palha com fita vermelha
+    g.save(); g.translate(0, sobe);
+    g.fillStyle = "#eab308"; elipse(g, 0, -62, 46, 10); pinta(g);
+    g.fillStyle = "#facc15"; ret(g, -24, -90, 48, 30, 12); pinta(g);
+    g.fillStyle = "#dc2626"; g.fillRect(-23, -70, 46, 7);
+    g.strokeStyle = "#a16207"; g.lineWidth = 1.5;   // trancinhas da palha
+    for (let i = -16; i <= 16; i += 8) { g.beginPath(); g.moveTo(i, -88); g.lineTo(i + 3, -72); g.stroke(); }
+    g.restore();
+  }
+  if (skin === "bone") {                            // boné amarelo da INEMA com aba preta
+    g.save(); g.translate(0, sobe);
+    g.fillStyle = "#FACC15"; g.beginPath(); g.moveTo(-30, -60); g.bezierCurveTo(-30, -96, 30, -96, 30, -60); g.closePath(); pinta(g);
+    g.fillStyle = "#0c0c10"; g.beginPath(); g.moveTo(-32, -61); g.quadraticCurveTo(0, -50, 32, -61);   // aba preta na frente
+    g.quadraticCurveTo(0, -66, -32, -61); g.closePath(); pinta(g);
+    g.fillStyle = "#0c0c10"; circ(g, 0, -88, 3.5); g.fill();
+    g.font = "900 11px Sora, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("INEMA", 0, -70);
+    g.restore();
+  }
+  if (skin === "escuros" && ac !== "robo") {        // óculos escuros com brilho
+    g.fillStyle = "#111827"; ret(g, -27, -54, 24, 15, 6); pinta(g); ret(g, 3, -54, 24, 15, 6); pinta(g);
+    g.beginPath(); g.moveTo(-3, -49); g.lineTo(3, -49); g.stroke();
+    g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(-22, -50); g.lineTo(-16, -50); g.moveTo(8, -50); g.lineTo(14, -50); g.stroke();
+  }
+  if (skin === "dourada") {                         // capacete de astronauta dourado + estrela no peito
+    g.fillStyle = "rgba(253,224,71,.2)"; circ(g, 0, -38, 47); g.fill();
+    g.strokeStyle = "#facc15"; g.lineWidth = 6; g.stroke();
+    g.strokeStyle = contorno; g.lineWidth = 2; circ(g, 0, -38, 50); g.stroke();
+    g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 5; g.beginPath(); g.arc(0, -38, 38, -2.7, -1.9); g.stroke();
+    g.fillStyle = "#fff7c2"; estrela(g, 0, 18, 9 + Math.sin(t * 5) * 1.5);
+  }
+}
+// Skin "pixel": desenha a capivara pequenininha num quadro escondido e amplia sem suavizar
+const quadroPixel = document.createElement("canvas"); quadroPixel.width = quadroPixel.height = 40;
+function desenhaPixelada(g, x, y, tam, e, t, o) {
+  const B = tam * 1.9, cy = y - tam * 0.2, q = quadroPixel.getContext("2d"), esc = 40 / B;
+  q.setTransform(1, 0, 0, 1, 0, 0); q.clearRect(0, 0, 40, 40);
+  desenhaCapivara(q, 20, 20 + (y - cy) * esc, tam * esc, e, t, { ...o, semPixel: true, skin: "classica" });
+  g.save(); g.imageSmoothingEnabled = false;
+  g.drawImage(quadroPixel, x - B / 2, cy - B / 2, B, B);
   g.restore();
 }
 
@@ -832,7 +1038,7 @@ function desenhaCelebra(t) {                       // tela "NOVA EVOLUÇÃO!"
   g.save(); g.translate(w / 2, h * 0.21); g.scale(balanca, balanca);
   texto("NOVA EVOLUÇÃO!", 0, 0, tamT, "#FACC15"); g.restore();
   texto(est.nome, w / 2, h * 0.74, Math.min(38, w * 0.075), "#ffffff");
-  texto("+" + fmt(est.moedasPorSegundo * ACEL) + " moedas por segundo cada", w / 2, h * 0.8, Math.min(20, w * 0.045), "#86efac", 800);
+  texto("+" + fmt(rendaDe(c.e) * ACEL) + " moedas por segundo cada", w / 2, h * 0.8, Math.min(20, w * 0.045), "#86efac", 800);
   if (c.t > 0.6 && Math.sin(t * 5) > -0.3) texto(DEMO ? "" : "toque para continuar", w / 2, h * 0.88, 17, "#e5e7eb", 700);
 }
 
@@ -890,8 +1096,17 @@ function desenha(t) {
 }
 
 function desenhaVitrine(t) {                       // fileira de capivaras na tela inicial
+  if ($("tela").classList.contains("hidden")) return;
+  // prévias da loja e da ajuda: <canvas data-e="estágio" data-skin="skin">
+  document.querySelectorAll("#tela canvas[data-e]").forEach((c, k) => {
+    const W = c.clientWidth * dpr, H = c.clientHeight * dpr;
+    if (!W || !H) return;
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, c.clientWidth, c.clientHeight);
+    desenhaCapivara(g, c.clientWidth / 2, c.clientHeight * 0.7, Math.min(c.clientWidth * 0.8, c.clientHeight * 0.78), +c.dataset.e, t, { fase: k, skin: c.dataset.skin });
+  });
   const v = $("vitrine");
-  if (!v || $("tela").classList.contains("hidden")) return;
+  if (!v) return;
   const W = v.clientWidth * dpr, H = v.clientHeight * dpr;
   if (v.width !== W || v.height !== H) { v.width = W; v.height = H; }
   const g = v.getContext("2d"), n = CONFIG.estagios.length, passo = v.clientWidth / n;
@@ -910,32 +1125,238 @@ function laco(agora) {
 }
 
 // ---------- telas ----------
-function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+// tela(html, {faixa, larga}): abre uma janela por cima do jogo.
+//   faixa = mostra a faixa amarela do INEMA.CLUB no topo; larga = janela mais larga no PC
+let principal = null;       // tela "mãe" (início ou fim) para onde o botão Voltar leva
+function tela(html, o = {}) {
+  $("tela-conteudo").innerHTML = html;
+  $("tela-conteudo").classList.toggle("duas", !!o.duas);
+  $("tela").classList.toggle("larga", !!o.duas);
+  $("faixa").classList.toggle("hidden", !o.faixa);
+  $("tela").classList.remove("hidden");
+  $("tela-conteudo").scrollTop = 0;
+}
 function fechaTela() { $("tela").classList.add("hidden"); }
+function voltar() { if (principal) principal(); else jogar(); }
+function pausa() { rodando = false; arrasto = null; salvar(); }
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mmss = s => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+
+// bloco do QR code + botão Baixar (tela inicial e tela de fim)
+function blocoQR() {
+  return `<div class="lado"><div class="qr">${QR_SVG}<div>📱 Jogue no seu celular</div></div>
+    <button class="btn mini sec" onclick="baixar()">⬇ Baixar o jogo</button></div>`;
+}
+function botoesExtras() {
+  return `<div class="linha"><button class="btn mini sec" onclick="telaTop()">🏆 Top 10</button>
+    <button class="btn mini sec" onclick="telaLoja()">🛍️ Loja</button>
+    <button class="btn mini sec" onclick="telaAjuda()">❓ Ajuda</button></div>`;
+}
+function linhaRenascer() {
+  return META.renascimentos || META.sementes
+    ? `<p style="font-size:14px">♻️ Renascimentos: <b>${META.renascimentos}</b> · 🌱 Sementes: <b>${META.sementes}</b> · renda <b>+${Math.round((multiplicador() - 1) * 100)}%</b></p>` : "";
+}
+
 function telaInicio() {
-  rodando = false; arrasto = null; salvar();
+  pausa(); principal = telaInicio;
   const rec = recorde();
-  tela(`<h1>${CONFIG.titulo}</h1>
+  tela(`<div>
+    <h1>${CONFIG.titulo}</h1>
     <canvas id="vitrine"></canvas>
     <p>${CONFIG.comoJogar1}<br>${CONFIG.comoJogar2}</p>
-    <p style="font-size:14px;color:#a1a1aa">Toque numa capivara para ganhar moedas na hora · PC: <b>C</b> compra, <b>F</b> funde, <b>M</b> som</p>
     <div class="linha"><button class="btn" onclick="jogar()">▶ Jogar</button>
     <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    ${botoesExtras()}
+    ${temLendaria() && !DEMO ? `<div class="linha"><button class="btn" style="background:#4ade80;box-shadow:0 5px 0 #15803d" onclick="telaRenascer()">🌱 Renascer</button></div>` : ""}
+    ${linhaRenascer()}
     ${rec > 0 ? `<p style="font-size:14px">⭐ Sua melhor evolução: <b>${CONFIG.estagios[rec].nome}</b></p>` : ""}
     ${E ? `<button class="link" onclick="jogarDoZero()">Começar do zero</button>` : ""}
-    <p style="font-size:12px;color:#888;margin-top:10px">Fábrica de Jogos INEMA · v${VERSAO}</p>`);
+    <p style="font-size:12px;color:#888;margin:6px 0 0">Fábrica de Jogos INEMA · v${VERSAO}</p></div>
+    ${blocoQR()}`, { faixa: true, duas: true });
 }
-function jogar() { if (!E) novoJogo(); rodando = true; fechaTela(); iniciaAudio(); }
+function jogar() { if (!E) novoJogo(); principal = null; rodando = true; fechaTela(); iniciaAudio(); }
 function jogarDoZero() { novoJogo(); salvar(); jogar(); }
+
+// TELA DE FIM: aparece quando a pessoa cria a CAPIVARA LENDÁRIA
+function telaFim(msg) {
+  pausa(); principal = telaFim;
+  const tempo = E.tempoLendaria != null ? E.tempoLendaria : E.tempo;
+  let meio;
+  if (DEMO) {
+    demoReinicia = 10;                                       // fica no telão e recomeça sozinho
+    meio = `<p style="font-size:18px"><b>Agora é a sua vez!</b> Aponte a câmera do celular para o QR code e jogue.</p>`;
+  } else {
+    meio = (E.registrado ? `<p>✅ Salvo no Top 10 como <b>${esc(E.registrado)}</b></p>`
+           : entraAlgum() ? formApelido() : `<p>Faltou pouco para o Top 10. Tente de novo!</p>`)
+      + `<div class="linha"><button class="btn" style="background:#4ade80;box-shadow:0 5px 0 #15803d" onclick="telaRenascer()">🌱 Renascer</button>
+         <button class="btn sec" onclick="jogar()">▶ Continuar</button></div>${botoesExtras()}`;
+  }
+  tela(`<div>
+    <h1>🏆 CAPIVARA LENDÁRIA!</h1>
+    <div class="placar"><div>⏱️ Tempo<b>${mmss(tempo)}</b></div><div>🪙 Moedas<b>${fmt(E.total)}</b></div></div>
+    ${msg ? `<p class="erro">${msg}</p>` : ""}
+    ${meio}</div>
+    ${blocoQR()}`, { faixa: true, duas: true });
+}
+
+// ---------- TOP 10 (salvo só neste aparelho) ----------
+// Dois placares: "pontos" (mais moedas numa partida) e "tempo" (menos tempo até a Lendária).
+const hoje = () => new Date().toLocaleDateString("sv");    // "2026-10-27"
+function carregaTop() {
+  let t = { pontos: [], tempo: [] };
+  try { t = Object.assign(t, JSON.parse(localStorage.getItem(CHAVE_TOP) || "{}")); } catch (e) {}
+  if (CONFIG.placarDoDia) for (const k of ["pontos", "tempo"]) t[k] = t[k].filter(r => r.data === hoje());
+  return t;
+}
+function salvaTop(t) { if (DEMO) return; try { localStorage.setItem(CHAVE_TOP, JSON.stringify(t)); } catch (e) {} }
+const melhor = (aba, a, b) => aba === "tempo" ? a < b : a > b;   // no tempo, menor é melhor
+function valorDe(aba) { return aba === "tempo" ? E.tempoLendaria : Math.floor(E.total); }
+function entra(t, aba) {                     // esta partida entraria no placar "aba"?
+  const v = valorDe(aba); if (v == null || (aba === "pontos" ? v <= 0 : E.semTempo)) return false;
+  const lista = t[aba].filter(r => r.id !== E.partida), velho = t[aba].find(r => r.id === E.partida);
+  if (velho && !melhor(aba, v, velho.valor)) return false;
+  return lista.length < 10 || melhor(aba, v, lista[lista.length - 1].valor);
+}
+function entraAlgum() { if (DEMO || !E) return false; const t = carregaTop(); return entra(t, "pontos") || entra(t, "tempo"); }
+// filtro simples de palavrão (tira acento e troca 4→a, 3→e, 1→i, 0→o, 5→s, @→a antes de comparar)
+const PALAVROES = ["porra", "caralh", "merd", "bost", "puta", "puto", "foda", "fodi", "buceta", "bucet", "piroc", "cacete",
+  "viado", "arromb", "vagabund", "desgrac", "corno", "xoxot", "xota", "penis", "pqp", "fdp", "vsf", "vtnc", "tnc", "krl",
+  "cuzao", "otari", "imbecil", "retardad", "nazi", "hitler", "babaca", "punheta", "bunda", "rola", "pau", "cu", "boquete", "putz"];
+const PALAVROES_INTEIROS = ["cu", "pau", "rola", "tnc", "krl", "vsf", "fdp", "pqp", "putz"];   // só se for a palavra inteira
+function palavrao(txt) {
+  const n = txt.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/4|@/g, "a").replace(/3/g, "e").replace(/1|!/g, "i").replace(/0/g, "o").replace(/5|\$/g, "s").replace(/7/g, "t");
+  const palavras = n.split(/[^a-z]+/).filter(Boolean), junto = palavras.join("");
+  // olha cada palavra; só junta tudo quando escreveram separado letra por letra ("p o r r a")
+  const pedacos = palavras.every(p => p.length <= 2) ? [junto] : palavras;
+  return PALAVROES.some(p => !PALAVROES_INTEIROS.includes(p) && pedacos.some(w => w.includes(p))) ||
+         palavras.some(p => PALAVROES_INTEIROS.includes(p)) || PALAVROES_INTEIROS.includes(junto);
+}
+function formApelido() {
+  return `<p style="margin-bottom:0"><b>Você entrou no Top 10!</b> Digite um apelido (até ${CONFIG.tamanhoApelido} letras, nada de nome completo):</p>
+    <div class="apelido"><input id="apelido" maxlength="${CONFIG.tamanhoApelido}" value="${esc(META.apelido)}" placeholder="apelido"
+      autocomplete="off" onkeydown="if(event.key==='Enter')registrar()">
+    <button class="btn" onclick="registrar()">💾 Salvar</button></div><p class="erro" id="erro-apelido"></p>`;
+}
+function registrar() {
+  if (DEMO || !E) return;
+  const campo = $("apelido");
+  const ap = (campo ? campo.value : "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, CONFIG.tamanhoApelido);
+  const erro = m => { if ($("erro-apelido")) $("erro-apelido").textContent = m; som("erro"); };
+  if (ap.length < 2) return erro("Use pelo menos 2 letras.");
+  if (palavrao(ap)) return erro("Ops! Escolha outro apelido, sem palavrão. 🙂");
+  const t = carregaTop(); let aba = "pontos";
+  for (const k of ["tempo", "pontos"]) {
+    if (!entra(t, k)) continue;
+    t[k] = t[k].filter(r => r.id !== E.partida);
+    t[k].push({ id: E.partida, apelido: ap, valor: valorDe(k), data: hoje() });
+    t[k].sort((a, b) => k === "tempo" ? a.valor - b.valor : b.valor - a.valor); t[k] = t[k].slice(0, 10);
+    aba = k;
+  }
+  salvaTop(t);
+  META.apelido = ap; E.registrado = ap; salvaMeta(); salvar();
+  som("fanfarra");
+  telaTop(aba, E.partida);
+}
+function telaTop(aba = "pontos", destaque = null) {
+  pausa();
+  const t = carregaTop(), lista = t[aba];
+  const linhas = lista.length ? lista.map((r, i) =>
+      `<tr class="${r.id === destaque ? "novo" : ""}"><td>${i + 1}º</td><td>${esc(r.apelido)}</td><td>${aba === "tempo" ? "⏱️ " + mmss(r.valor) : "🪙 " + fmt(r.valor)}</td></tr>`).join("")
+    : `<tr><td></td><td>Ninguém ainda. Seja o primeiro!</td><td></td></tr>`;
+  const pode = !DEMO && E && !E.registrado && entraAlgum();
+  tela(`<h1>🏆 Top 10</h1>
+    <div class="abas"><button class="${aba === "pontos" ? "on" : ""}" onclick="telaTop('pontos', '${destaque || ""}')">🪙 Pontuação</button>
+    <button class="${aba === "tempo" ? "on" : ""}" onclick="telaTop('tempo', '${destaque || ""}')">⏱️ Tempo até a Lendária</button></div>
+    <p style="font-size:13px;margin:2px 0">${aba === "tempo" ? "Quem criou a Capivara Lendária mais rápido" : "Mais moedas ganhas numa partida"}${CONFIG.placarDoDia ? " · placar de hoje" : ""}</p>
+    <table class="top">${linhas}</table>
+    ${pode ? formApelido() : ""}
+    <div class="linha"><button class="btn sec" onclick="voltar()">Voltar</button></div>`);
+}
+
+// ---------- RENASCER ----------
+function telaRenascer() {
+  if (!temLendaria() || DEMO) return;
+  pausa();
+  const novoBonus = Math.round((META.renascimentos + 1) * CONFIG.bonusPorRenascer * 100);
+  tela(`<h1>🌱 Renascer?</h1>
+    <canvas id="vitrine"></canvas>
+    <p>Seu gramado, suas moedas e seu nível <b>voltam ao zero</b>.</p>
+    <p>Em troca você ganha <b>${CONFIG.sementesPorRenascer} sementes 🌱</b> (para skins raras na loja)
+       e <b>+${Math.round(CONFIG.bonusPorRenascer * 100)}% de renda para sempre</b> (total: +${novoBonus}%).</p>
+    ${E.registrado || !entraAlgum() ? "" : `<p style="color:#fde68a">Dica: antes, salve sua partida no 🏆 Top 10!</p>`}
+    <div class="linha"><button class="btn" style="background:#4ade80;box-shadow:0 5px 0 #15803d" onclick="renascer()">🌱 Renascer agora</button>
+    <button class="btn sec" onclick="voltar()">Ainda não</button></div>`);
+}
+function renascer() {
+  if (!temLendaria() || DEMO) return;
+  META.renascimentos++; META.sementes += CONFIG.sementesPorRenascer; salvaMeta();
+  novoJogo(); salvar(); jogar();
+  banner("RENASCEU! ♻️", "+" + CONFIG.sementesPorRenascer + " 🌱 · renda +" + Math.round((multiplicador() - 1) * 100) + "% para sempre", "#4ade80");
+  explode(innerWidth / 2, innerHeight * 0.4, 60, ["#4ade80", "#FACC15", "#ffffff", "#86efac"], 460, "confete");
+  som("fanfarra", 0.9);
+}
+
+// ---------- LOJA DE SKINS ----------
+const CORES_RARIDADE = { "comum": "#a1a1aa", "rara": "#60a5fa", "épica": "#c084fc", "lendária": "#FACC15" };
+function telaLoja(msg = "") {
+  pausa();
+  const moedas = E ? E.moedas : 0;
+  const itens = CONFIG.skins.map(s => {
+    const tem = META.skins.includes(s.id), usando = META.skin === s.id;
+    const simbolo = s.moeda === "sementes" ? "🌱" : "🪙", saldo = s.moeda === "sementes" ? META.sementes : moedas;
+    const botao = usando ? `<button class="btn sec" disabled>✔ Em uso</button>`
+      : tem ? `<button class="btn" onclick="usarSkin('${s.id}')">Usar</button>`
+      : `<button class="btn${saldo >= s.preco ? "" : " apagado"}" onclick="comprarSkin('${s.id}')">${simbolo} ${fmt(s.preco)}</button>`;
+    return `<div class="item${usando ? " equipada" : ""}"><canvas data-e="1" data-skin="${s.id}"></canvas>
+      <b>${s.nome}</b><small style="color:${CORES_RARIDADE[s.raridade] || "#fff"}">${s.raridade.toUpperCase()}</small>${botao}</div>`;
+  }).join("");
+  tela(`<h1>🛍️ Loja de skins</h1>
+    <p style="margin:2px 0">Você tem <b>🪙 ${fmt(moedas)}</b> e <b>🌱 ${META.sementes}</b>. A skin vale para todas as capivaras.</p>
+    <p class="erro" style="margin:0">${msg}</p>
+    <div class="grade">${itens}</div>
+    <p style="font-size:13px;margin:4px 0">🌱 Sementes vêm de <b>renascer</b> depois da Capivara Lendária.</p>
+    <div class="linha" style="margin-top:6px"><button class="btn sec" onclick="voltar()">Voltar</button></div>`);
+}
+function comprarSkin(id) {
+  const s = CONFIG.skins.find(s => s.id === id); if (!s || META.skins.includes(id)) return;
+  if (s.moeda === "sementes") {
+    if (META.sementes < s.preco) { som("erro"); return telaLoja(`Faltam ${s.preco - META.sementes} 🌱. Renasça para ganhar sementes!`); }
+    META.sementes -= s.preco;
+  } else {
+    if (!E || E.moedas < s.preco) { som("erro"); return telaLoja(`Faltam ${fmt(s.preco - (E ? E.moedas : 0))} 🪙. Jogue mais um pouco!`); }
+    E.moedas -= s.preco; salvar();
+  }
+  META.skins.push(id); META.skin = id; salvaMeta();
+  som("fanfarra", 1.2); telaLoja();
+}
+function usarSkin(id) { if (!META.skins.includes(id)) return; META.skin = id; salvaMeta(); som("compra"); telaLoja(); }
+
+// ---------- AJUDA ----------
+function telaAjuda() {
+  pausa();
+  const evos = CONFIG.estagios.map((s, i) => `<div><canvas data-e="${i}" data-skin="classica"></canvas>${i + 1}. ${s.nome}</div>`).join("");
+  tela(`<div class="ajuda"><h1>❓ Como jogar</h1>
+    <p>👆 Arraste uma capivara sobre outra <b>igual</b>: as duas viram a próxima evolução.<br>
+       🪙 Cada capivara dá moedas sozinha. Toque nela para ganhar moedas na hora.<br>
+       🎯 Cumpra a missão do topo para ganhar prêmios e subir de nível.</p>
+    <p style="text-align:center;margin-bottom:0"><b>As 7 evoluções</b></p>
+    <div class="evos">${evos}</div>
+    <p>🌱 <b>Renascer:</b> quando tiver a Capivara Lendária, você pode recomeçar do zero e ganhar
+       ${CONFIG.sementesPorRenascer} sementes + ${Math.round(CONFIG.bonusPorRenascer * 100)}% de renda para sempre. Sementes compram skins raras na 🛍️ loja.</p>
+    <p>⌨️ <b>Teclas:</b> <b>C</b>, Espaço ou Enter compra · <b>F</b> funde um par · <b>L</b> loja · <b>H</b> ajuda · <b>M</b> som · <b>Esc</b> menu</p>
+    <div class="linha"><button class="btn" onclick="voltar()">Entendi!</button></div></div>`);
+}
+
 function telaCriar() {
-  rodando = false; salvar();
+  pausa();
   tela(`<h1>🛠️ Crie a sua versão</h1>
     <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
-    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: nomes dos estágios, cores, preços, missões, cenários.<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: nomes dos estágios, cores, preços, missões, cenários, skins.<br>
     <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
     <pre>${CONFIG.promptExemplo}</pre>
     <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
-    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <button class="btn sec" onclick="voltar()">Voltar</button></div>
     <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
 }
 function baixar() {
@@ -944,6 +1365,8 @@ function baixar() {
 }
 
 // ---------- começo ----------
+META = carregaMeta();
+$("rodape").textContent = "Fábrica de Jogos INEMA · v" + VERSAO;
 if (DEMO) { novoJogo(); rodando = true; }
 else { E = carrega(); if (E) { cenIdx = cenarioDe(E.nivel); if (!E.missao) iniciaMissao(); } telaInicio(); }
 requestAnimationFrame(laco);
