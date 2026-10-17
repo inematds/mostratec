@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Seja um Bombeiro — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5; --agua:#38bdf8 }
+  html,body { margin:0; height:100%; background:var(--preto); color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  canvas { display:block; width:100vw; height:100vh }
+  /* ---- placar no topo ---- */
+  #hud { position:fixed; top:8px; left:8px; right:8px; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none }
+  #hud .linha { display:flex; gap:6px; justify-content:center; flex-wrap:wrap }
+  .pilula { background:#0c0c10cc; border:2px solid #0c0c10; border-radius:999px; padding:4px 12px; font-weight:800;
+            font-size:clamp(14px,2.2vw,20px); text-shadow:0 2px 3px #000; white-space:nowrap }
+  #missao { background:#0c0c10e6; border:3px solid var(--amarelo); border-radius:14px; padding:6px 14px; font-weight:800;
+            font-size:clamp(14px,2.3vw,20px); display:flex; gap:10px; align-items:center; max-width:calc(100vw - 24px) }
+  #missao small { color:var(--amarelo); font-size:.7em; letter-spacing:.08em }
+  #missao.pop { animation:pop .6s ease }
+  #missao.feita { background:#166534; border-color:#4ade80 }
+  @keyframes pop { 0%{transform:scale(1)} 35%{transform:scale(1.25)} 100%{transform:scale(1)} }
+  #xp { background:#0c0c10cc; border-radius:999px; padding:3px 6px 3px 12px; display:flex; align-items:center; gap:8px; font-weight:800; font-size:clamp(12px,1.9vw,16px); text-shadow:0 2px 3px #000 }
+  .barra { width:clamp(120px,26vw,260px); height:12px; background:#0c0c10cc; border:2px solid #0c0c10; border-radius:999px; overflow:hidden }
+  .barra i { display:block; height:100%; width:0; background:var(--amarelo); transition:width .25s }
+  /* ---- tanque de água (embaixo à esquerda) ---- */
+  #tanque { position:fixed; left:12px; bottom:16px; background:#0c0c10d9; border:2px solid #0c0c10; border-radius:14px; padding:8px 10px;
+            font-weight:800; font-size:clamp(13px,2vw,17px); pointer-events:none; display:flex; flex-direction:column; gap:5px }
+  #tanque .barra { width:clamp(110px,22vw,200px); height:16px }
+  #tanque .barra i { background:var(--agua) }
+  #tanque.vazio { border-color:#ef4444; animation:pisca .8s infinite }
+  @keyframes pisca { 50%{ background:#7f1d1dd9 } }
+  /* ---- botões (embaixo à direita) ---- */
+  #botoes { position:fixed; right:12px; bottom:16px; display:flex; flex-direction:column; align-items:flex-end; gap:10px }
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800;
+         padding:12px 16px; font-size:clamp(14px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207 }
+  .btn:disabled { background:#555; color:#bbb; box-shadow:none }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  #b-agua { width:84px; height:84px; border-radius:50%; background:var(--agua); color:#082f49; box-shadow:0 5px 0 #0369a1; font-size:16px; line-height:1.1 }
+  #b-agua.ativo { transform:translateY(3px); box-shadow:0 2px 0 #0369a1 }
+  /* ---- telas ---- */
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.86); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 32px); overflow:auto; box-sizing:border-box;
+                 text-align:center; padding:22px; border:1px solid #333; border-radius:16px; background:#14141b }
+  #tela h1 { margin:.2em 0; font-size:clamp(28px,6vw,46px); color:var(--amarelo) }
+  #tela p { line-height:1.45; color:#d4d4d8 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #tela table { margin:10px auto; border-collapse:collapse; font-size:17px }
+  #tela td { padding:4px 12px; text-align:left }
+  #aviso { position:fixed; left:50%; top:150px; transform:translateX(-50%); background:#000c; padding:8px 14px; border-radius:10px;
+           font-weight:700; pointer-events:none; opacity:0; transition:opacity .3s; white-space:nowrap; font-size:clamp(13px,2vw,16px); z-index:3 }
+  #banner { position:fixed; left:50%; top:38%; transform:translate(-50%,-50%) scale(.6); opacity:0; pointer-events:none; text-align:center;
+            transition:opacity .25s, transform .35s cubic-bezier(.2,1.6,.4,1); z-index:4; width:calc(100% - 24px) }
+  #banner.on { opacity:1; transform:translate(-50%,-50%) scale(1) }
+  #banner b { display:block; font-size:clamp(40px,9vw,80px); color:var(--amarelo); -webkit-text-stroke:3px #0c0c10; text-shadow:0 5px 0 #0c0c10 }
+  #banner span { display:inline-block; margin-top:6px; background:#0c0c10e6; border-radius:12px; padding:8px 14px; font-weight:800; font-size:clamp(16px,3vw,24px) }
+  #rodape { position:fixed; left:0; right:0; bottom:2px; text-align:center; font-size:11px; color:#ffffff88; pointer-events:none; text-shadow:0 1px 2px #000 }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:40vh; font-size:12px; white-space:pre-wrap }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" class="hidden">
+  <div class="linha"><span class="pilula" id="h-pontos">⭐ 0</span><span class="pilula" id="h-moedas">🪙 0</span><span class="pilula" id="h-tempo">5:00</span></div>
+  <div id="missao"><small>MISSÃO</small><span id="m-texto">…</span><span id="m-prog"></span></div>
+  <div id="xp"><span id="xp-nivel">Nível 1</span><div class="barra"><i id="xp-barra"></i></div></div>
+</div>
+<div id="tanque" class="hidden"><span id="agua-txt">💧 100 L</span><div class="barra"><i id="agua-barra"></i></div></div>
+<div id="botoes" class="hidden">
+  <button class="btn sec" id="b-melhorar">⬆ Melhorar</button>
+  <button class="btn" id="b-agua">💧<br>Água</button>
+</div>
+<div id="aviso"></div>
+<div id="banner"><b id="banner-t"></b><span id="banner-s"></span></div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="tela"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   SEJA UM BOMBEIRO — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione um cachorro bombeiro que..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Seja um Bombeiro",
+  duracaoTurno: 300,           // segundos de cada turno (5 minutos)
+
+  // ---- o bombeiro ----
+  velocidadeAPe: 230,          // pixels por segundo andando
+  velocidadeCaminhao: 320,     // pixels por segundo de caminhão
+  velocidadeHelicoptero: 410,  // pixels por segundo de helicóptero
+  tanqueInicial: 100,          // litros de água no começo
+  gastoAgua: 12,               // litros por segundo enquanto o jato sai
+  recargaAgua: 90,             // litros por segundo no hidrante ou no quartel
+  alcanceJato: 175,            // até que distância a água chega
+  forcaMangueira: 0.30,        // quanto fogo apaga por segundo (1 = um fogo inteiro)
+  jatoAutomatico: true,        // true: a água sai sozinha perto do fogo. false: só segurando o botão
+
+  // ---- o fogo (ele NUNCA destrói nada: só diminui o bônus de pontos) ----
+  fogo: {
+    crescimento: 0.02,         // quanto o fogo cresce por segundo (bem devagar)
+    intervaloInicial: 7,       // segundos entre incêndios no nível 1
+    intervaloMinimo: 3.5,      // o mais rápido que eles podem aparecer
+    maximo: 6,                 // máximo de fogos ao mesmo tempo
+    chanceGrande: 0.15,        // chance de um fogo nascer grande
+    espalhaAPartirDoNivel: 7,  // a partir deste nível, fogo esquecido pula para o vizinho
+  },
+
+  // ---- resgates (gatinhos e pessoas que você leva até a ambulância) ----
+  resgate: { intervalo: 16, maximo: 2 },
+
+  // ---- pontos e moedas ----
+  pontos: { fogo: 50, fogoGrande: 120, resgate: 80, bonusRapidez: 50, perdaPorSegundo: 2 },
+  moedas: { fogo: 8, fogoGrande: 18, resgate: 12 },
+  xp: { fogo: 12, fogoGrande: 25, resgate: 18 },
+  xpBase: 60,                  // XP para subir do nível 1 para o 2
+  xpAumento: 30,               // cada nível pede este tanto a mais
+
+  // ---- o que você ganha ao subir de nível ----
+  premios: [
+    { nivel: 2, tipo: "tanque",    valor: 50,   texto: "Tanque maior: +50 litros" },
+    { nivel: 3, tipo: "veiculo",   valor: "caminhao",    texto: "Você ganhou o CAMINHÃO!" },
+    { nivel: 4, tipo: "bairro",    valor: 1,    texto: "Bairro novo: Centro" },
+    { nivel: 5, tipo: "mangueira", valor: 0.15, texto: "Mangueira mais forte" },
+    { nivel: 6, tipo: "veiculo",   valor: "helicoptero", texto: "HELICÓPTERO liberado!" },
+    { nivel: 7, tipo: "bairro",    valor: 2,    texto: "Bairro novo: Serra Verde" },
+    { nivel: 8, tipo: "alcance",   valor: 60,   texto: "Jato que vai mais longe" },
+  ],
+
+  // ---- loja: o botão "Melhorar" compra estes itens, um depois do outro ----
+  loja: [
+    { tipo: "mangueira",  valor: 0.08, nome: "Mangueira +",   custo: 30 },
+    { tipo: "tanque",     valor: 40,   nome: "Tanque +40 L",  custo: 40 },
+    { tipo: "velocidade", valor: 0.12, nome: "Botas rápidas", custo: 50 },
+  ],
+  lojaPrecoSobe: 1.6,          // a cada volta na loja, os preços multiplicam por isto
+
+  // ---- missões rápidas (uma de cada vez, em ordem) ----
+  missoes: [
+    { tipo: "apagar", quantidade: 2, texto: "Apague 2 incêndios",            moedas: 20, xp: 15 },
+    { tipo: "gato",   quantidade: 1, texto: "Resgate 1 gatinho",             moedas: 25, xp: 15 },
+    { tipo: "grande", quantidade: 1, texto: "Apague um fogo grande",         moedas: 30, xp: 20 },
+    { tipo: "encher", quantidade: 1, texto: "Encha o tanque no hidrante",    moedas: 15, xp: 10 },
+    { tipo: "pessoa", quantidade: 1, texto: "Leve 1 pessoa à ambulância",    moedas: 25, xp: 15 },
+    { tipo: "rapido", quantidade: 1, texto: "Apague um fogo em menos de 15 s", segundos: 15, moedas: 30, xp: 20 },
+    { tipo: "apagar", quantidade: 3, texto: "Apague 3 incêndios",            moedas: 30, xp: 20 },
+  ],
+
+  // ---- bairros (o mapa muda quando você sobe de nível) ----
+  bairros: [
+    { nome: "Vila das Flores", grama: "#7cc46a", rua: "#545a66", calcada: "#cfc8b8",
+      tipos: { casa: 6, arvore: 3, predio: 0, chale: 0 },
+      cores: ["#f87171", "#60a5fa", "#fbbf24", "#c084fc", "#34d399", "#fb923c"] },
+    { nome: "Centro", grama: "#86b86a", rua: "#4b5260", calcada: "#d4d4d8",
+      tipos: { casa: 2, arvore: 1, predio: 6, chale: 0 },
+      cores: ["#94a3b8", "#a5b4fc", "#fda4af", "#fcd34d", "#7dd3fc"] },
+    { nome: "Serra Verde", grama: "#5ea85a", rua: "#5c5448", calcada: "#c8b99a",
+      tipos: { casa: 2, arvore: 6, predio: 0, chale: 4 },
+      cores: ["#b45309", "#a16207", "#dc2626", "#65a30d"] },
+  ],
+
+  som: true,                   // bipes de comemoração (true ou false)
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const W = 1600, H = 1000;                 // tamanho do mundo (o bairro)
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");          // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const TINTA = "#1a1a22";                  // cor do contorno de tudo
+
+// ---------- tela e câmera ----------
+let escala = 1, dpr = 1;
+const cam = { x: 0, y: 0 };
+function redimensiona() {
+  dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const caber = Math.min(cv.width / W, cv.height / H);            // o bairro inteiro na tela
+  const retrato = cv.height > cv.width;
+  const zoom = Math.min(cv.width, cv.height) / (retrato ? 640 : 900); // no celular, chega mais perto
+  escala = Math.max(caber, zoom, retrato ? cv.height / H : 0);       // em pé: o bairro ocupa a altura toda
+}
+addEventListener("resize", redimensiona); redimensiona();
+function atualizaCamera() {
+  const vw = cv.width / escala, vh = cv.height / escala;
+  const fx = jog ? jog.x : W / 2, fy = jog ? jog.y : H / 2;
+  cam.x = vw >= W ? (W - vw) / 2 : clamp(fx - vw / 2, 0, W - vw);
+  cam.y = vh >= H ? (H - vh) / 2 : clamp(fy - vh / 2, 0, H - vh);
+}
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const sorteia = lista => lista[Math.floor(Math.random() * lista.length)];
+function semente(s) { // números "aleatórios" que se repetem: o mesmo bairro sai sempre igual
+  return () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function escurece(hex, f) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255;
+  return `rgb(${r * (1 - f) | 0},${g * (1 - f) | 0},${b * (1 - f) | 0})`;
+}
+let avisoTimer = 0, bannerTimer = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoTimer = 2.4; }
+function banner(titulo, sub) { $("banner-t").textContent = titulo; $("banner-s").textContent = sub; $("banner").classList.add("on"); bannerTimer = 2.8; }
+
+// som simples (só toca depois de um toque ou tecla, regra dos navegadores)
+let audio = null;
+function liga() { if (!audio && CONFIG.som) try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+function bipe(freq, dur = 0.12, quando = 0) {
+  if (!audio) return;
+  try {
+    const o = audio.createOscillator(), g = audio.createGain(), t0 = audio.currentTime + quando;
+    o.type = "triangle"; o.frequency.value = freq; g.gain.setValueAtTime(0.12, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur); o.connect(g).connect(audio.destination); o.start(t0); o.stop(t0 + dur);
+  } catch (e) {}
+}
+const festa = () => { bipe(523); bipe(659, 0.12, 0.1); bipe(784, 0.2, 0.2); };
+
+// ---------- o bairro (ruas, quadras e lotes) ----------
+const RUA = 64, QX = 320, QY = 248;      // largura da rua e tamanho de cada quadra
+const QUEIMAVEL = ["casa", "predio", "arvore", "chale"];
+let lotes = [], hidrantes = [], QUARTEL, HOSPITAL, AMBULANCIA, bairro;
+
+function sorteiaTipo(tipos, r) {
+  const total = Object.values(tipos).reduce((s, v) => s + v, 0);
+  let x = r() * total;
+  for (const [k, v] of Object.entries(tipos)) { x -= v; if (x <= 0) return k; }
+  return "casa";
+}
+function montaBairro(idx) {
+  bairro = CONFIG.bairros[idx % CONFIG.bairros.length];
+  const r = semente(1234 + idx * 777);
+  lotes = [];
+  // 4 colunas x 3 linhas de quadras; cada quadra tem 2 x 2 lotes
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) for (let a = 0; a < 2; a++) for (let c = 0; c < 2; c++) {
+    const x = RUA + i * (QX + RUA) + a * QX / 2, y = RUA + j * (QY + RUA) + c * QY / 2;
+    const L = { x, y, w: QX / 2, h: QY / 2, cx: x + QX / 4, cy: y + QY / 4, fuligem: 0, queimando: false, v: r() };
+    if (i === 0 && j === 0 && a === 0 && c === 0) L.tipo = "quartel";
+    else if (i === 3 && j === 2 && a === 1 && c === 1) L.tipo = "hospital";
+    else L.tipo = sorteiaTipo(bairro.tipos, r);
+    L.cor = bairro.cores[Math.floor(r() * bairro.cores.length)];
+    // árvores do lote (muitas no lote de árvore, uma de enfeite nas casas)
+    L.arvores = [];
+    const n = L.tipo === "arvore" ? 3 + Math.floor(r() * 2) : (L.tipo === "casa" || L.tipo === "chale") && r() < 0.6 ? 1 : 0;
+    for (let k = 0; k < n; k++) {
+      L.arvores.push(L.tipo === "arvore"
+        ? { x: L.cx + (r() - 0.5) * 100, y: L.cy + (r() - 0.5) * 70, r: 22 + r() * 10 }
+        : { x: L.x + (r() < 0.5 ? 20 : L.w - 20), y: L.y + 22, r: 15 });
+    }
+    lotes.push(L);
+  }
+  QUARTEL = lotes.find(l => l.tipo === "quartel");
+  HOSPITAL = lotes.find(l => l.tipo === "hospital");
+  AMBULANCIA = { x: HOSPITAL.cx, y: H - RUA / 2 };
+  // hidrantes nas esquinas (k = coluna da rua, m = linha da rua)
+  hidrantes = [[2, 0], [1, 1], [3, 1], [0, 2], [2, 2], [4, 2], [1, 3], [3, 3]]
+    .map(([k, m]) => ({ x: RUA / 2 + k * (QX + RUA) + 24, y: RUA / 2 + m * (QY + RUA) + 24 }));
+}
+
+// ---------- estado do jogo ----------
+let jog = null, fogos = [], resgates = [], part = [], textos = [], E = null;
+// E = placar e progresso do turno; jog = o bombeiro
+
+function novoJogo() {
+  liga();
+  montaBairro(0);
+  E = { pontos: 0, moedas: 0, xp: 0, nivel: 1, tempo: CONFIG.duracaoTurno, rodando: true,
+        apagados: 0, resgatados: 0, missoesFeitas: 0, missaoIdx: -1, missao: null, trocaMissao: 0,
+        timerFogo: 0.6, timerResgate: 6, compras: 0, bairroIdx: 0, avisoVazio: 0 };
+  jog = { x: QUARTEL.cx, y: QUARTEL.cy + 70, ang: 0, mira: -Math.PI / 2, veiculo: "pe",
+          tanque: CONFIG.tanqueInicial, agua: CONFIG.tanqueInicial, alcance: CONFIG.alcanceJato,
+          forca: CONFIG.forcaMangueira, bonusVel: 1, carregando: [], capacidade: 1, jorrando: false, alvo: null, pensa: 0 };
+  fogos = []; resgates = []; part = []; textos = [];
+  proximaMissao();
+  ["hud", "tanque", "botoes"].forEach(id => $(id).classList.remove("hidden"));
+  $("botoes").classList.toggle("hidden", DEMO);
+  $("tela").classList.add("hidden");
+}
+
+// ---------- entrada (teclado + toque) ----------
+const teclas = {};
+let segurandoAgua = false;
+addEventListener("keydown", e => {
+  liga(); const k = e.key.toLowerCase(); teclas[k] = true;
+  if (k === " ") { segurandoAgua = true; e.preventDefault(); }
+  if (k === "m") compraMelhoria();
+});
+addEventListener("keyup", e => { const k = e.key.toLowerCase(); teclas[k] = false; if (k === " ") segurandoAgua = false; });
+const joy = { ativo: false, id: null, x0: 0, y0: 0, dx: 0, dy: 0 };
+cv.addEventListener("pointerdown", e => { liga(); joy.ativo = true; joy.id = e.pointerId; joy.x0 = e.clientX; joy.y0 = e.clientY; joy.dx = joy.dy = 0; });
+addEventListener("pointermove", e => { if (joy.ativo && e.pointerId === joy.id) { joy.dx = e.clientX - joy.x0; joy.dy = e.clientY - joy.y0; } });
+addEventListener("pointerup", e => { if (e.pointerId === joy.id) { joy.ativo = false; joy.dx = joy.dy = 0; } });
+addEventListener("pointercancel", e => { if (e.pointerId === joy.id) { joy.ativo = false; joy.dx = joy.dy = 0; } });
+const bAgua = $("b-agua");
+bAgua.addEventListener("pointerdown", e => { liga(); segurandoAgua = true; bAgua.classList.add("ativo"); e.preventDefault(); });
+["pointerup", "pointerleave", "pointercancel"].forEach(ev => bAgua.addEventListener(ev, () => { segurandoAgua = false; bAgua.classList.remove("ativo"); }));
+$("b-melhorar").onclick = () => compraMelhoria();
+
+// ---------- loja ----------
+function itemLoja() {
+  const it = CONFIG.loja[E.compras % CONFIG.loja.length];
+  const volta = Math.floor(E.compras / CONFIG.loja.length);
+  return { ...it, custo: Math.round(it.custo * Math.pow(CONFIG.lojaPrecoSobe, volta)) };
+}
+function compraMelhoria() {
+  if (!E || !E.rodando) return;
+  const it = itemLoja();
+  if (E.moedas < it.custo) { aviso(`Faltam ${it.custo - Math.floor(E.moedas)} moedas para ${it.nome}`); return; }
+  E.moedas -= it.custo; E.compras++;
+  aplicaPremio(it);
+  aviso(`⬆ ${it.nome}!`); bipe(880, 0.15);
+  textos.push({ x: jog.x, y: jog.y - 50, txt: it.nome, cor: "#FACC15", vida: 1.5 });
+}
+
+// ---------- prêmios e níveis ----------
+function aplicaPremio(p) {
+  if (p.tipo === "tanque") { jog.tanque += p.valor; jog.agua = jog.tanque; }
+  if (p.tipo === "mangueira") jog.forca += p.valor;
+  if (p.tipo === "alcance") jog.alcance += p.valor;
+  if (p.tipo === "velocidade") jog.bonusVel += p.valor;
+  if (p.tipo === "veiculo") {
+    jog.veiculo = p.valor; jog.tanque += 60; jog.agua = jog.tanque;
+    if (p.valor === "helicoptero") { jog.alcance += 40; jog.capacidade = 2; }
+  }
+  if (p.tipo === "bairro") {
+    E.bairroIdx = p.valor; montaBairro(p.valor);
+    fogos = []; resgates = []; part = [];
+    jog.x = QUARTEL.cx; jog.y = QUARTEL.cy + 70; jog.agua = jog.tanque;
+    E.timerFogo = 1; garanteMissao();
+  }
+}
+const xpNecessario = n => CONFIG.xpBase + CONFIG.xpAumento * (n - 1);
+function ganhaXP(n) {
+  E.xp += n;
+  while (E.xp >= xpNecessario(E.nivel)) {
+    E.xp -= xpNecessario(E.nivel); E.nivel++;
+    const p = CONFIG.premios.find(p => p.nivel === E.nivel) || { tipo: "mangueira", valor: 0.06, texto: "Mangueira mais forte" };
+    aplicaPremio(p);
+    banner(`NÍVEL ${E.nivel}!`, p.texto);
+    confete(jog.x, jog.y, 50); festa();
+  }
+}
+
+// ---------- missões ----------
+function proximaMissao() {
+  E.missaoIdx = (E.missaoIdx + 1) % CONFIG.missoes.length;
+  E.missao = { ...CONFIG.missoes[E.missaoIdx], feito: 0, completa: false };
+  $("missao").classList.remove("feita");
+  garanteMissao();
+}
+function garanteMissao() { // garante que dá para cumprir a missão agora
+  const m = E.missao;
+  if ((m.tipo === "gato" || m.tipo === "pessoa") && !resgates.some(r => r.tipo === m.tipo) && !jog.carregando.some(r => r.tipo === m.tipo)) criaResgate(m.tipo);
+  if (m.tipo === "grande" && !fogos.some(f => f.grande)) criaFogo(true);
+  if ((m.tipo === "apagar" || m.tipo === "rapido") && fogos.length === 0) criaFogo(false);
+}
+function evento(tipo) {
+  const m = E.missao;
+  if (!m || m.completa || m.tipo !== tipo) return;
+  m.feito++;
+  if (m.feito >= m.quantidade) {
+    m.completa = true; E.missoesFeitas++;
+    E.moedas += m.moedas; ganhaXP(m.xp);
+    aviso(`✅ Missão cumprida! +${m.moedas} 🪙`);
+    const el = $("missao"); el.classList.add("feita"); el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    confete(jog.x, jog.y, 35); festa();
+    E.trocaMissao = 1.2;
+  }
+}
+
+// ---------- fogo ----------
+function criaFogo(grande, perto) {
+  let cand = lotes.filter(l => QUEIMAVEL.includes(l.tipo) && !l.queimando);
+  if (perto) cand = cand.filter(l => Math.hypot(l.cx - perto.cx, l.cy - perto.cy) < 230);
+  else {
+    const faixa = cand.filter(l => { const d = Math.hypot(l.cx - jog.x, l.cy - jog.y); return d > 200 && d < 900; });
+    if (faixa.length) cand = faixa;
+  }
+  if (!cand.length) return;
+  const L = sorteia(cand);
+  L.queimando = true;
+  const alvo = L.tipo === "arvore" && L.arvores.length ? sorteia(L.arvores) : { x: L.cx + rnd(-20, 20), y: L.cy + rnd(-12, 12) };
+  fogos.push({ x: alvo.x, y: alvo.y, lote: L, grande, int: grande ? 0.9 : 0.35, max: grande ? 1.8 : 1, idade: 0, molhando: 0, cheio: 0 });
+}
+function apaga(f) {
+  fogos.splice(fogos.indexOf(f), 1); f.lote.queimando = false;
+  const bonus = Math.max(0, Math.round(CONFIG.pontos.bonusRapidez - f.idade * CONFIG.pontos.perdaPorSegundo));
+  const pts = (f.grande ? CONFIG.pontos.fogoGrande : CONFIG.pontos.fogo) + bonus;
+  E.pontos += pts; E.moedas += f.grande ? CONFIG.moedas.fogoGrande : CONFIG.moedas.fogo; E.apagados++;
+  textos.push({ x: f.x, y: f.y - 30, txt: `+${pts}`, cor: "#FACC15", vida: 1.4 });
+  for (let i = 0; i < 18; i++) part.push({ x: f.x + rnd(-15, 15), y: f.y + rnd(-10, 10), vx: rnd(-30, 30), vy: rnd(-70, -20), vida: 1.2, max: 1.2, r: rnd(8, 16), tipo: "vapor" });
+  bipe(660, 0.1); bipe(990, 0.15, 0.08);
+  ganhaXP(f.grande ? CONFIG.xp.fogoGrande : CONFIG.xp.fogo);
+  evento("apagar");
+  if (f.grande) evento("grande");
+  if (E.missao && E.missao.tipo === "rapido" && f.idade <= E.missao.segundos) evento("rapido");
+}
+
+// ---------- resgates ----------
+function criaResgate(tipo) {
+  let cand = lotes.filter(l => tipo === "gato" ? l.arvores.length > 0 : ["casa", "predio", "chale"].includes(l.tipo));
+  cand = cand.filter(l => !resgates.some(r => r.lote === l) && dist({ x: l.cx, y: l.cy }, jog) > 150);
+  if (!cand.length) return;
+  const L = sorteia(cand);
+  const p = tipo === "gato" ? sorteia(L.arvores) : { x: L.cx + rnd(-25, 25), y: L.cy + L.h / 2 - 14 };
+  resgates.push({ tipo, x: p.x, y: p.y, lote: L, t: Math.random() * 5 });
+}
+
+// ---------- piloto automático (?demo=1) ----------
+function pensaDemo() {
+  const perto = lista => lista.reduce((m, o) => !m || dist(jog, o) < dist(jog, m) ? o : m, null);
+  if (E.moedas >= itemLoja().custo) compraMelhoria();
+  if (jog.carregando.length) return AMBULANCIA;
+  const pontosAgua = [...hidrantes, { x: QUARTEL.cx, y: QUARTEL.cy }];
+  if (jog.enchendo && jog.agua < jog.tanque * 0.95) return { x: jog.x, y: jog.y }; // espera encher
+  if (jog.agua < jog.tanque * 0.2 || (E.missao.tipo === "encher" && !E.missao.completa) || (!fogos.length && jog.agua < jog.tanque * 0.9)) return perto(pontosAgua);
+  const m = E.missao.tipo;
+  const resgateMissao = resgates.filter(r => r.tipo === m);
+  if (resgateMissao.length) return perto(resgateMissao);
+  if (m === "grande" && fogos.some(f => f.grande)) return paraFogo(fogos.find(f => f.grande));
+  const f = perto(fogos);
+  if (f) return paraFogo(f);
+  if (resgates.length) return perto(resgates);
+  return { x: QUARTEL.cx, y: QUARTEL.cy + 70 };
+}
+function paraFogo(f) { // para longe o suficiente para o jato alcançar
+  const d = dist(jog, f) || 1, k = jog.alcance * 0.6;
+  return d < k ? { x: jog.x, y: jog.y } : { x: f.x + (jog.x - f.x) / d * k, y: f.y + (jog.y - f.y) / d * k };
+}
+
+// ---------- ciclo ----------
+let ultimo = performance.now();
+function passo(dt) {
+  if (avisoTimer > 0 && (avisoTimer -= dt) <= 0) $("aviso").style.opacity = 0;
+  if (bannerTimer > 0 && (bannerTimer -= dt) <= 0) $("banner").classList.remove("on");
+  atualizaParticulas(dt);
+  if (!E || !E.rodando) return;
+  E.tempo -= dt;
+  if (E.tempo <= 0) { E.tempo = 0; fimDeTurno(); return; }
+  if (E.trocaMissao > 0 && (E.trocaMissao -= dt) <= 0) proximaMissao();
+
+  // novos incêndios (mais rápidos a cada nível)
+  E.timerFogo -= dt;
+  const maxFogos = Math.min(CONFIG.fogo.maximo, 2 + Math.floor((E.nivel - 1) / 2));
+  if (!fogos.length) E.timerFogo = Math.min(E.timerFogo, 1.5);
+  if (E.timerFogo <= 0) {
+    if (fogos.length < maxFogos) criaFogo(Math.random() < CONFIG.fogo.chanceGrande);
+    E.timerFogo = Math.max(CONFIG.fogo.intervaloMinimo, CONFIG.fogo.intervaloInicial - (E.nivel - 1) * 0.6);
+  }
+  // novos resgates
+  if ((E.timerResgate -= dt) <= 0) {
+    if (resgates.length < CONFIG.resgate.maximo) criaResgate(Math.random() < 0.5 ? "gato" : "pessoa");
+    E.timerResgate = CONFIG.resgate.intervalo;
+  }
+
+  // movimento do bombeiro
+  let dx = 0, dy = 0;
+  if (DEMO) {
+    if ((jog.pensa -= dt) <= 0 || !jog.alvo) { jog.alvo = pensaDemo(); jog.pensa = 0.4; }
+    dx = jog.alvo.x - jog.x; dy = jog.alvo.y - jog.y;
+    if (Math.hypot(dx, dy) < 8) dx = dy = 0;
+  } else {
+    if (teclas["arrowleft"] || teclas["a"]) dx -= 1;
+    if (teclas["arrowright"] || teclas["d"]) dx += 1;
+    if (teclas["arrowup"] || teclas["w"]) dy -= 1;
+    if (teclas["arrowdown"] || teclas["s"]) dy += 1;
+    if (joy.ativo && Math.hypot(joy.dx, joy.dy) > 8) { dx = joy.dx; dy = joy.dy; }
+  }
+  const vBase = jog.veiculo === "helicoptero" ? CONFIG.velocidadeHelicoptero : jog.veiculo === "caminhao" ? CONFIG.velocidadeCaminhao : CONFIG.velocidadeAPe;
+  const m = Math.hypot(dx, dy);
+  if (m > 0) {
+    const v = vBase * jog.bonusVel * (joy.ativo && !DEMO ? Math.min(1, m / 50) : 1);
+    jog.x = clamp(jog.x + dx / m * v * dt, 20, W - 20);
+    jog.y = clamp(jog.y + dy / m * v * dt, 20, H - 20);
+    jog.ang = Math.atan2(dy, dx);
+    if (!jog.jorrando) jog.mira = jog.ang;
+  }
+
+  // encher o tanque no hidrante ou no quartel
+  const naAgua = hidrantes.some(h => dist(jog, h) < 60) || dist(jog, { x: QUARTEL.cx, y: QUARTEL.cy }) < 100;
+  jog.enchendo = naAgua && jog.agua < jog.tanque;
+  if (naAgua) {
+    jog.agua = Math.min(jog.tanque, jog.agua + CONFIG.recargaAgua * dt);
+    if (jog.agua >= jog.tanque) evento("encher");
+  }
+
+  // jato d'água: automático perto do fogo, ou segurando o botão
+  let alvo = null, dmin = jog.alcance;
+  for (const f of fogos) { const d = dist(jog, f); if (d < dmin) { dmin = d; alvo = f; } }
+  const quer = segurandoAgua || (CONFIG.jatoAutomatico && alvo);
+  jog.jorrando = false;
+  if (quer && jog.agua > 0) {
+    jog.jorrando = true;
+    if (alvo) jog.mira = Math.atan2(alvo.y - jog.y, alvo.x - jog.x);
+    jog.agua = Math.max(0, jog.agua - CONFIG.gastoAgua * dt);
+    soltaGotas(alvo, dt);
+    if (alvo) { alvo.int -= jog.forca * dt; alvo.molhando = 0.25; if (alvo.int <= 0) apaga(alvo); }
+  } else if (quer && jog.agua <= 0 && (E.avisoVazio -= dt) <= 0) {
+    aviso("💧 Tanque vazio! Vá até um hidrante ou ao quartel"); E.avisoVazio = 4;
+  }
+
+  // o fogo cresce devagar (e nunca destrói nada)
+  for (const f of [...fogos]) {
+    f.idade += dt;
+    if (f.molhando > 0) f.molhando -= dt;
+    else f.int = Math.min(f.max, f.int + CONFIG.fogo.crescimento * (1 + (E.nivel - 1) * 0.1) * dt);
+    f.lote.fuligem = Math.min(0.5, f.lote.fuligem + dt * 0.02);
+    if (Math.random() < f.int * 6 * dt) part.push({ x: f.x + rnd(-10, 10), y: f.y - 10, vx: rnd(-10, 25), vy: rnd(-55, -35), vida: 2.2, max: 2.2, r: rnd(8, 14) * (f.grande ? 1.4 : 1), tipo: "fumaca" });
+    if (E.nivel >= CONFIG.fogo.espalhaAPartirDoNivel && f.int >= f.max && (f.cheio += dt) > 12 && fogos.length < CONFIG.fogo.maximo) {
+      f.cheio = 0; criaFogo(false, f.lote);
+    }
+  }
+  for (const L of lotes) if (!L.queimando && L.fuligem > 0) L.fuligem = Math.max(0, L.fuligem - dt * 0.01);
+
+  // pegar gatinhos/pessoas e levar até a ambulância
+  for (const r of [...resgates]) {
+    r.t += dt;
+    if (jog.carregando.length < jog.capacidade && dist(jog, r) < 55) {
+      resgates.splice(resgates.indexOf(r), 1); jog.carregando.push(r);
+      aviso(r.tipo === "gato" ? "🐱 Gatinho a salvo! Leve até a ambulância 🚑" : "🙋 Pegou! Leve até a ambulância 🚑");
+      bipe(740, 0.1);
+    }
+  }
+  if (jog.carregando.length && dist(jog, AMBULANCIA) < 90) {
+    for (const r of jog.carregando) {
+      E.pontos += CONFIG.pontos.resgate; E.moedas += CONFIG.moedas.resgate; E.resgatados++;
+      textos.push({ x: AMBULANCIA.x, y: AMBULANCIA.y - 40, txt: `+${CONFIG.pontos.resgate} resgate!`, cor: "#4ade80", vida: 1.6 });
+      ganhaXP(CONFIG.xp.resgate); evento(r.tipo);
+    }
+    jog.carregando = []; confete(AMBULANCIA.x, AMBULANCIA.y, 25); festa();
+  }
+
+  atualizaHUD();
+}
+
+function soltaGotas(alvo, dt) {
+  const n = Math.ceil(70 * dt);
+  const bx = jog.x + Math.cos(jog.mira) * 26, by = jog.y + Math.sin(jog.mira) * 26 - (jog.veiculo === "helicoptero" ? 0 : 6);
+  const alcance = alvo ? dist({ x: bx, y: by }, alvo) : jog.alcance * 0.8;
+  for (let i = 0; i < n; i++) {
+    const a = jog.mira + rnd(-0.12, 0.12), v = rnd(520, 640);
+    part.push({ x: bx, y: by, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: alcance / v, max: alcance / v, r: rnd(3, 6), tipo: "gota" });
+  }
+}
+function confete(x, y, n) {
+  const cores = ["#FACC15", "#38bdf8", "#f87171", "#4ade80", "#c084fc"];
+  for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(120, 320);
+    part.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, vida: 1.3, max: 1.3, r: rnd(4, 7), tipo: "confete", cor: sorteia(cores), giro: rnd(0, 6) }); }
+}
+function atualizaParticulas(dt) {
+  for (const p of part) {
+    p.vida -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.tipo === "confete") p.vy += 420 * dt;
+    if (p.tipo === "fumaca" || p.tipo === "vapor") p.r += dt * 10;
+  }
+  if (part.some(p => p.vida <= 0)) part = part.filter(p => p.vida > 0);
+  if (part.length > 600) part.splice(0, part.length - 600);
+  for (const t of textos) { t.vida -= dt; t.y -= 40 * dt; }
+  if (textos.some(t => t.vida <= 0)) textos = textos.filter(t => t.vida > 0);
+}
+
+function atualizaHUD() {
+  const s = Math.ceil(E.tempo);
+  $("h-pontos").textContent = "⭐ " + E.pontos;
+  $("h-moedas").textContent = "🪙 " + Math.floor(E.moedas);
+  $("h-tempo").textContent = "⏱ " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  const m = E.missao;
+  $("m-texto").textContent = m.completa ? "Cumprida!" : m.texto;
+  $("m-prog").textContent = m.completa ? "✅" : `${m.feito}/${m.quantidade}`;
+  $("xp-nivel").textContent = `Nível ${E.nivel} · ${bairro.nome}`;
+  $("xp-barra").style.width = (100 * E.xp / xpNecessario(E.nivel)).toFixed(1) + "%";
+  $("agua-txt").textContent = (jog.enchendo ? "💧 Enchendo… " : "💧 ") + Math.round(jog.agua) + " L";
+  $("agua-barra").style.width = (100 * jog.agua / jog.tanque).toFixed(1) + "%";
+  $("tanque").classList.toggle("vazio", jog.agua < 1);
+  const it = itemLoja();
+  $("b-melhorar").textContent = `⬆ ${it.nome} (${it.custo} 🪙)`;
+  $("b-melhorar").disabled = E.moedas < it.custo;
+}
+
+// ---------- desenho do cenário ----------
+function caixa(x, y, w, h, r, cor, contorno = true) {
+  ctx.fillStyle = cor; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill();
+  if (contorno) { ctx.strokeStyle = TINTA; ctx.lineWidth = 3; ctx.stroke(); }
+}
+function desenhaChao() {
+  ctx.fillStyle = bairro.rua; ctx.fillRect(0, 0, W, H);
+  // faixas amarelas no meio das ruas
+  ctx.strokeStyle = "#fde68a"; ctx.lineWidth = 3; ctx.setLineDash([22, 18]);
+  for (let k = 0; k <= 4; k++) { const x = RUA / 2 + k * (QX + RUA); ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let m = 0; m <= 3; m++) { const y = RUA / 2 + m * (QY + RUA); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.setLineDash([]);
+  // quadras: calçada + grama
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+    const x = RUA + i * (QX + RUA), y = RUA + j * (QY + RUA);
+    caixa(x - 8, y - 8, QX + 16, QY + 16, 14, bairro.calcada, false);
+    caixa(x, y, QX, QY, 8, bairro.grama, false);
+  }
+}
+function desenhaArvore(a, t) {
+  ctx.fillStyle = "#0003"; ctx.beginPath(); ctx.ellipse(a.x + 6, a.y + 8, a.r, a.r * 0.8, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#2f8f3a"; ctx.strokeStyle = TINTA; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#4cb050"; ctx.beginPath(); ctx.arc(a.x - a.r * 0.3, a.y - a.r * 0.3, a.r * 0.55, 0, 7); ctx.fill();
+  ctx.fillStyle = "#7bd47c"; ctx.beginPath(); ctx.arc(a.x - a.r * 0.4, a.y - a.r * 0.45, a.r * 0.22, 0, 7); ctx.fill();
+}
+function desenhaCasa(L, cor, w, h) {
+  const x = L.cx - w / 2, y = L.cy - h / 2 - 6;
+  ctx.fillStyle = "#e7dfcc"; ctx.fillRect(L.cx - 9, y + h, 18, L.y + L.h - y - h); // caminho até a calçada
+  ctx.fillStyle = "#0004"; ctx.fillRect(x + 7, y + 9, w, h);                        // sombra
+  ctx.fillStyle = cor; ctx.fillRect(x, y, w, h / 2);                                // telhado (lado de cima)
+  ctx.fillStyle = escurece(cor, 0.22); ctx.fillRect(x, y + h / 2, w, h / 2);         // telhado (lado de baixo)
+  ctx.strokeStyle = escurece(cor, 0.4); ctx.lineWidth = 1.5;
+  for (let k = 1; k < 4; k++) { const yy = y + k * h / 8; ctx.beginPath(); ctx.moveTo(x + 4, yy); ctx.lineTo(x + w - 4, yy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 4, y + h / 2 + k * h / 8); ctx.lineTo(x + w - 4, y + h / 2 + k * h / 8); ctx.stroke(); }
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y + h / 2); ctx.lineTo(x + w, y + h / 2); ctx.stroke();
+  ctx.strokeRect(x, y, w, h);
+  caixa(x + w * 0.7, y + 8, 14, 14, 2, "#9ca3af");                                  // chaminé
+}
+function desenhaPredio(L) {
+  const w = 124, h = 98, x = L.cx - w / 2, y = L.cy - h / 2;
+  ctx.fillStyle = "#0005"; ctx.fillRect(x + 14, y + 16, w, h);
+  caixa(x, y, w, h, 6, escurece(L.cor, 0.1));
+  caixa(x + 8, y + 8, w - 16, h - 16, 4, L.cor, false);
+  caixa(x + 16, y + 16, 26, 18, 3, "#cbd5e1");                                       // ar-condicionado
+  caixa(x + 16, y + 42, 26, 18, 3, "#cbd5e1");
+  ctx.fillStyle = "#64748b"; ctx.strokeStyle = TINTA; ctx.lineWidth = 3;            // caixa d'água
+  ctx.beginPath(); ctx.arc(x + w - 32, y + 32, 15, 0, 7); ctx.fill(); ctx.stroke();
+  if (L.v > 0.55) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + w - 36, y + h - 30, 16, 0, 7); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = "800 18px system-ui"; ctx.textAlign = "center"; ctx.fillText("H", x + w - 36, y + h - 24); }
+}
+function desenhaQuartel(L) {
+  const w = 136, h = 92, x = L.cx - w / 2, y = L.cy - h / 2 - 10;
+  ctx.fillStyle = "#0005"; ctx.fillRect(x + 10, y + 12, w, h);
+  caixa(x, y, w, h, 6, "#dc2626");
+  for (let k = 0; k < 3; k++) caixa(x + 10 + k * 42, y + h - 34, 34, 30, 3, "#fca5a5");  // portões
+  ctx.fillStyle = "#fff"; ctx.font = "900 20px system-ui"; ctx.textAlign = "center"; ctx.fillText("QUARTEL", L.cx, y + 30);
+  // área de recarga (círculo azul tracejado)
+  ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.setLineDash([8, 6]);
+  ctx.beginPath(); ctx.arc(L.cx, L.cy, 100, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+}
+function desenhaHospital(L) {
+  const w = 130, h = 92, x = L.cx - w / 2, y = L.cy - h / 2 - 8;
+  ctx.fillStyle = "#0005"; ctx.fillRect(x + 10, y + 12, w, h);
+  caixa(x, y, w, h, 6, "#f8fafc");
+  ctx.fillStyle = "#ef4444"; ctx.fillRect(L.cx - 8, y + 14, 16, 44); ctx.fillRect(L.cx - 22, y + 28, 44, 16);
+  ctx.fillStyle = TINTA; ctx.font = "900 15px system-ui"; ctx.textAlign = "center"; ctx.fillText("HOSPITAL", L.cx, y + h - 10);
+}
+function desenhaLote(L, t) {
+  if (L.tipo === "quartel") desenhaQuartel(L);
+  else if (L.tipo === "hospital") desenhaHospital(L);
+  else if (L.tipo === "predio") desenhaPredio(L);
+  else if (L.tipo === "casa") desenhaCasa(L, L.cor, 88 + L.v * 18, 66 + L.v * 10);
+  else if (L.tipo === "chale") desenhaCasa(L, L.cor, 76, 62);
+  for (const a of L.arvores) desenhaArvore(a, t);
+  if (L.fuligem > 0.01) { // marca de fuligem: some sozinha depois que o fogo apaga
+    ctx.fillStyle = `rgba(30,30,30,${L.fuligem * 0.6})`; ctx.beginPath(); ctx.ellipse(L.cx, L.cy, 60, 45, 0, 0, 7); ctx.fill();
+  }
+}
+function desenhaHidrante(h, t) {
+  if (dist(jog || { x: -999, y: -999 }, h) < 60) {
+    ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 4; ctx.globalAlpha = 0.6 + Math.sin(t * 8) * 0.3;
+    ctx.beginPath(); ctx.arc(h.x, h.y, 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = "#0004"; ctx.beginPath(); ctx.ellipse(h.x + 3, h.y + 6, 12, 7, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#ef4444"; ctx.strokeStyle = TINTA; ctx.lineWidth = 3;
+  ctx.fillRect(h.x - 15, h.y - 4, 30, 8); ctx.strokeRect(h.x - 15, h.y - 4, 30, 8);
+  ctx.beginPath(); ctx.arc(h.x, h.y, 10, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fbbf24"; ctx.beginPath(); ctx.arc(h.x, h.y, 4.5, 0, 7); ctx.fill(); ctx.stroke();
+}
+function desenhaAmbulancia(t) {
+  const a = AMBULANCIA, chamando = jog && jog.carregando.length;
+  if (chamando) { ctx.strokeStyle = "#4ade80"; ctx.lineWidth = 5; ctx.globalAlpha = 0.5 + Math.sin(t * 6) * 0.4;
+    ctx.beginPath(); ctx.arc(a.x, a.y, 90, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  ctx.fillStyle = "#0005"; ctx.fillRect(a.x - 40, a.y - 14, 88, 40);
+  caixa(a.x - 46, a.y - 20, 92, 40, 8, "#fff");
+  caixa(a.x + 26, a.y - 20, 20, 40, 6, "#bae6fd");
+  ctx.fillStyle = "#ef4444"; ctx.fillRect(a.x - 46, a.y + 8, 72, 6);
+  ctx.fillRect(a.x - 18, a.y - 14, 8, 20); ctx.fillRect(a.x - 24, a.y - 8, 20, 8);
+  ctx.fillStyle = Math.sin(t * 10) > 0 ? "#ef4444" : "#3b82f6"; ctx.fillRect(a.x + 14, a.y - 14, 8, 28);
+}
+
+// ---------- desenho dos personagens e efeitos ----------
+function chama(x, y, h, w, cor, contorno, sway) {
+  ctx.beginPath(); ctx.moveTo(x + sway, y - h);
+  ctx.quadraticCurveTo(x + w * 0.9, y - h * 0.35, x + w / 2, y);
+  ctx.arc(x, y, w / 2, 0, Math.PI, false);
+  ctx.quadraticCurveTo(x - w * 0.9, y - h * 0.35, x + sway, y - h);
+  ctx.closePath(); ctx.fillStyle = cor; ctx.fill();
+  if (contorno) { ctx.strokeStyle = TINTA; ctx.lineWidth = 2.5; ctx.stroke(); }
+}
+function desenhaFogo(f, t) {
+  const s = (f.grande ? 1.3 : 1) * (16 + f.int * 24);
+  const g = ctx.createRadialGradient(f.x, f.y, 2, f.x, f.y, s * 2.2);
+  g.addColorStop(0, "rgba(255,170,40,.55)"); g.addColorStop(1, "rgba(255,120,0,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, s * 2.2, 0, 7); ctx.fill();
+  const n = f.grande ? 6 : 4;
+  for (let k = 0; k < n; k++) {
+    const ox = Math.cos(k * 2.4) * s * 0.45, oy = Math.sin(k * 1.7) * s * 0.22;
+    const h = s * (1.05 + 0.22 * Math.sin(t * 9 + k * 1.7)), w = s * 0.62, sw = Math.sin(t * 7 + k) * w * 0.25;
+    chama(f.x + ox, f.y + oy, h, w, "#ef4444", true, sw);
+    chama(f.x + ox, f.y + oy + 2, h * 0.68, w * 0.66, "#f97316", false, sw * 0.7);
+    chama(f.x + ox, f.y + oy + 3, h * 0.38, w * 0.38, "#fde047", false, sw * 0.4);
+  }
+  if (f.molhando > 0) { // anel azul: quanto falta para apagar
+    ctx.strokeStyle = "#0c0c10aa"; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(f.x, f.y - s * 0.3, s * 1.25, 0, 7); ctx.stroke();
+    ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 5; ctx.beginPath();
+    ctx.arc(f.x, f.y - s * 0.3, s * 1.25, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(f.int / f.max, 0, 1)); ctx.stroke();
+  }
+  if (f.grande) { ctx.fillStyle = "#fff"; ctx.strokeStyle = TINTA; ctx.lineWidth = 4; ctx.font = "900 16px system-ui"; ctx.textAlign = "center";
+    ctx.strokeText("FOGO GRANDE", f.x, f.y + s * 0.9 + 14); ctx.fillText("FOGO GRANDE", f.x, f.y + s * 0.9 + 14); }
+}
+function desenhaGato(x, y, t, balao) {
+  const b = Math.abs(Math.sin(t * 4)) * 3;
+  ctx.save(); ctx.translate(x, y - b);
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 2.5; ctx.fillStyle = "#fb923c";
+  ctx.beginPath(); ctx.moveTo(-11, -4); ctx.lineTo(-9, -17); ctx.lineTo(-2, -9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(11, -4); ctx.lineTo(9, -17); ctx.lineTo(2, -9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = TINTA; ctx.beginPath(); ctx.arc(-4.5, -2, 2.2, 0, 7); ctx.arc(4.5, -2, 2.2, 0, 7); ctx.fill();
+  ctx.fillStyle = "#f472b6"; ctx.beginPath(); ctx.arc(0, 3, 2, 0, 7); ctx.fill();
+  ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-4, 4); ctx.lineTo(-16, 2); ctx.moveTo(4, 4); ctx.lineTo(16, 2); ctx.stroke();
+  ctx.restore();
+  if (balao) desenhaBalao(x, y - 30, "Miau!");
+}
+function desenhaPessoa(x, y, t, balao, cor = "#3b82f6") {
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 3;
+  const braco = Math.sin(t * 8) * 6;
+  ctx.beginPath(); ctx.moveTo(-9, 2); ctx.lineTo(-17, -14 + braco); ctx.moveTo(9, 2); ctx.lineTo(17, -14 - braco); ctx.stroke();
+  ctx.fillStyle = cor; ctx.beginPath(); ctx.roundRect(-10, -2, 20, 20, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f5c99b"; ctx.beginPath(); ctx.arc(0, -10, 9, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = TINTA; ctx.beginPath(); ctx.arc(-3, -11, 1.6, 0, 7); ctx.arc(3, -11, 1.6, 0, 7); ctx.fill();
+  ctx.restore();
+  if (balao) desenhaBalao(x, y - 34, "Me ajuda!");
+}
+function desenhaBalao(x, y, txt) {
+  ctx.font = "800 15px system-ui"; ctx.textAlign = "center";
+  const w = ctx.measureText(txt).width + 16;
+  caixa(x - w / 2, y - 22, w, 24, 8, "#fff");
+  ctx.fillStyle = TINTA; ctx.fillText(txt, x, y - 5);
+}
+function desenhaBombeiro(t) {
+  const x = jog.x, y = jog.y;
+  ctx.fillStyle = "#0005"; ctx.beginPath(); ctx.ellipse(x + 3, y + 20, 18, 7, 0, 0, 7); ctx.fill();
+  // mangueira com o bico apontando para a mira
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(x, y + 4);
+  ctx.lineTo(x + Math.cos(jog.mira) * 28, y + 4 + Math.sin(jog.mira) * 28); ctx.stroke();
+  ctx.strokeStyle = "#9ca3af"; ctx.lineWidth = 4; ctx.stroke();
+  const passo = jog.jorrando ? 0 : Math.sin(t * 14) * 2;
+  caixa(x - 15, y - 4 + passo, 30, 24, 9, "#eab308");                         // casaco
+  ctx.fillStyle = "#e5e7eb"; ctx.fillRect(x - 13, y + 9 + passo, 26, 4);       // faixa refletiva
+  ctx.fillStyle = "#f5c99b"; ctx.strokeStyle = TINTA; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(x, y - 12, 12, 0, 7); ctx.fill(); ctx.stroke();      // rosto
+  ctx.fillStyle = TINTA; ctx.beginPath(); ctx.arc(x - 4, y - 10, 2, 0, 7); ctx.arc(x + 4, y - 10, 2, 0, 7); ctx.fill();
+  ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y - 7, 4, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  ctx.fillStyle = "#dc2626"; ctx.lineWidth = 3;                                  // capacete
+  ctx.beginPath(); ctx.ellipse(x, y - 16, 17, 6, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y - 17, 12, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#FACC15"; ctx.beginPath(); ctx.arc(x, y - 22, 3.5, 0, 7); ctx.fill();
+}
+function desenhaCaminhao(t) {
+  ctx.save(); ctx.translate(jog.x, jog.y); ctx.rotate(jog.ang);
+  ctx.fillStyle = "#0005"; ctx.fillRect(-44, -18, 96, 46);
+  caixa(-48, -22, 96, 44, 8, "#dc2626");
+  caixa(22, -20, 24, 40, 6, "#b91c1c");                                          // cabine
+  caixa(36, -16, 8, 32, 3, "#bae6fd");                                           // para-brisa
+  ctx.strokeStyle = "#d1d5db"; ctx.lineWidth = 3;                                // escada
+  ctx.beginPath(); ctx.moveTo(-42, -9); ctx.lineTo(16, -9); ctx.moveTo(-42, 9); ctx.lineTo(16, 9);
+  for (let k = -40; k <= 14; k += 9) { ctx.moveTo(k, -9); ctx.lineTo(k, 9); } ctx.stroke();
+  ctx.fillStyle = Math.sin(t * 12) > 0 ? "#3b82f6" : "#ef4444"; ctx.fillRect(25, -18, 6, 10);
+  ctx.fillStyle = Math.sin(t * 12) > 0 ? "#ef4444" : "#3b82f6"; ctx.fillRect(25, 8, 6, 10);
+  ctx.restore();
+  // canhão d'água no teto aponta para a mira
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(jog.x, jog.y);
+  ctx.lineTo(jog.x + Math.cos(jog.mira) * 26, jog.y + Math.sin(jog.mira) * 26); ctx.stroke();
+}
+function desenhaHelicoptero(t) {
+  ctx.fillStyle = "#0004"; ctx.beginPath(); ctx.ellipse(jog.x + 22, jog.y + 34, 34, 16, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(jog.x, jog.y); ctx.rotate(jog.ang);
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-58, 0); ctx.stroke();
+  ctx.strokeStyle = "#dc2626"; ctx.lineWidth = 4; ctx.stroke();
+  caixa(-64, -10, 8, 20, 2, "#dc2626");                                          // rotor de cauda
+  ctx.fillStyle = "#dc2626"; ctx.strokeStyle = TINTA; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(0, 0, 32, 19, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#bae6fd"; ctx.beginPath(); ctx.ellipse(16, 0, 12, 13, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.fillRect(-20, -3, 22, 6);
+  ctx.rotate(t * 25);                                                            // hélice girando
+  ctx.strokeStyle = "#1f2937cc"; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-52, 0); ctx.lineTo(52, 0); ctx.moveTo(0, -52); ctx.lineTo(0, 52); ctx.stroke();
+  ctx.fillStyle = "#ffffff22"; ctx.beginPath(); ctx.arc(0, 0, 52, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function desenhaJogador(t) {
+  if (jog.veiculo === "caminhao") desenhaCaminhao(t);
+  else if (jog.veiculo === "helicoptero") desenhaHelicoptero(t);
+  else desenhaBombeiro(t);
+  jog.carregando.forEach((r, i) => r.tipo === "gato" ? desenhaGato(jog.x - 14 + i * 28, jog.y - 50, t, false) : desenhaPessoa(jog.x - 14 + i * 28, jog.y - 52, t, false, "#a855f7"));
+  ctx.fillStyle = "#fff"; ctx.strokeStyle = TINTA; ctx.lineWidth = 4; ctx.font = "900 15px system-ui"; ctx.textAlign = "center";
+  const yy = jog.y - (jog.carregando.length ? 80 : 40);
+  ctx.strokeText("VOCÊ", jog.x, yy); ctx.fillText("VOCÊ", jog.x, yy);
+}
+function desenhaParticulas() {
+  for (const p of part) {
+    const a = clamp(p.vida / p.max, 0, 1);
+    if (p.tipo === "gota") { ctx.fillStyle = "#38bdf8"; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e0f2fe"; ctx.beginPath(); ctx.arc(p.x - 1, p.y - 1, p.r * 0.4, 0, 7); ctx.fill(); }
+    else if (p.tipo === "fumaca") { ctx.fillStyle = `rgba(80,80,90,${a * 0.45})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+    else if (p.tipo === "vapor") { ctx.fillStyle = `rgba(240,248,255,${a * 0.7})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+    else if (p.tipo === "confete") { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.giro + p.vida * 8); ctx.globalAlpha = a;
+      ctx.fillStyle = p.cor; ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); ctx.restore(); }
+  }
+}
+
+// setas na borda da tela apontando para o que está fora de vista
+function setas() {
+  const lista = [];
+  if (jog.carregando.length) lista.push({ ...AMBULANCIA, cor: "#4ade80", icone: "amb" });
+  for (const f of fogos) lista.push({ x: f.x, y: f.y, cor: "#f97316", icone: "fogo" });
+  for (const r of resgates) lista.push({ x: r.x, y: r.y, cor: "#fb923c", icone: r.tipo });
+  if (jog.agua < jog.tanque * 0.2) {
+    const h = [...hidrantes, { x: QUARTEL.cx, y: QUARTEL.cy }].reduce((m, o) => !m || dist(jog, o) < dist(jog, m) ? o : m, null);
+    lista.push({ x: h.x, y: h.y, cor: "#38bdf8", icone: "agua" });
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const mx = 34 * dpr, myTop = 150 * dpr, myBot = 110 * dpr, cx = cv.width / 2, cy = cv.height / 2;
+  for (const o of lista) {
+    const sx = (o.x - cam.x) * escala, sy = (o.y - cam.y) * escala;
+    if (sx > 0 && sx < cv.width && sy > myTop - 20 * dpr && sy < cv.height) continue; // à vista (fora do placar): sem seta
+    const dx = sx - cx, dy = sy - cy;
+    const k = Math.min((cv.width / 2 - mx) / Math.abs(dx || 1e-6), (dy < 0 ? cy - myTop : cv.height - myBot - cy) / Math.abs(dy || 1e-6));
+    const px = cx + dx * k, py = cy + dy * k, ang = Math.atan2(dy, dx), r = 20 * dpr;
+    ctx.save(); ctx.translate(px, py);
+    ctx.save(); ctx.rotate(ang); ctx.fillStyle = o.cor; ctx.strokeStyle = TINTA; ctx.lineWidth = 3 * dpr;
+    ctx.beginPath(); ctx.moveTo(r + 14 * dpr, 0); ctx.lineTo(r - 2 * dpr, -10 * dpr); ctx.lineTo(r - 2 * dpr, 10 * dpr); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = "#0c0c10e6"; ctx.strokeStyle = o.cor; ctx.lineWidth = 3 * dpr; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.scale(dpr, dpr);
+    if (o.icone === "fogo") { chama(0, 8, 22, 16, "#ef4444", false, 0); chama(0, 9, 13, 9, "#fde047", false, 0); }
+    else if (o.icone === "gato") desenhaGato(0, 2, 0, false);
+    else if (o.icone === "pessoa") { ctx.scale(0.8, 0.8); desenhaPessoa(0, 4, 0, false); }
+    else if (o.icone === "amb") { ctx.fillStyle = "#ef4444"; ctx.fillRect(-4, -11, 8, 22); ctx.fillRect(-11, -4, 22, 8); }
+    else if (o.icone === "agua") { ctx.fillStyle = "#38bdf8"; ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(10, 2, 0, 10); ctx.quadraticCurveTo(-10, 2, 0, -12); ctx.fill(); }
+    ctx.restore();
+  }
+}
+
+function desenha(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#0c0c10"; ctx.fillRect(0, 0, cv.width, cv.height);
+  atualizaCamera();
+  ctx.setTransform(escala, 0, 0, escala, -cam.x * escala, -cam.y * escala);
+  desenhaChao();
+  for (const L of lotes) desenhaLote(L, t);
+  for (const h of hidrantes) desenhaHidrante(h, t);
+  desenhaAmbulancia(t);
+  for (const r of resgates) {
+    ctx.strokeStyle = "#FACC15"; ctx.lineWidth = 3; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4;
+    ctx.beginPath(); ctx.arc(r.x, r.y, 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    r.tipo === "gato" ? desenhaGato(r.x, r.y, r.t, true) : desenhaPessoa(r.x, r.y, r.t, true);
+  }
+  if (jog && jog.veiculo !== "helicoptero") desenhaJogador(t);
+  for (const f of fogos) desenhaFogo(f, t);
+  desenhaParticulas();
+  if (jog && jog.veiculo === "helicoptero") desenhaJogador(t);
+  for (const x of textos) { ctx.globalAlpha = clamp(x.vida, 0, 1); ctx.font = "900 26px system-ui"; ctx.textAlign = "center";
+    ctx.strokeStyle = TINTA; ctx.lineWidth = 5; ctx.strokeText(x.txt, x.x, x.y); ctx.fillStyle = x.cor; ctx.fillText(x.txt, x.x, x.y); ctx.globalAlpha = 1; }
+  if (jog && E && E.rodando) setas();
+  // joystick
+  if (joy.ativo && !DEMO && E && E.rodando) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.strokeStyle = "#ffffff88"; ctx.lineWidth = 3 * dpr;
+    ctx.beginPath(); ctx.arc(joy.x0 * dpr, joy.y0 * dpr, 50 * dpr, 0, 7); ctx.stroke();
+    const m = Math.min(1, 50 / (Math.hypot(joy.dx, joy.dy) || 1));
+    ctx.fillStyle = "#FACC15aa"; ctx.beginPath(); ctx.arc((joy.x0 + joy.dx * m) * dpr, (joy.y0 + joy.dy * m) * dpr, 22 * dpr, 0, 7); ctx.fill();
+  }
+}
+
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
+  passo(dt); desenha(agora / 1000);
+  requestAnimationFrame(laco);
+}
+
+// ---------- progresso salvo (só no seu navegador) ----------
+function carregaProgresso() {
+  try { return JSON.parse(localStorage.getItem("bombeiro-progresso")) || {}; } catch (e) { return {}; }
+}
+function salvaProgresso(p) { try { localStorage.setItem("bombeiro-progresso", JSON.stringify(p)); } catch (e) {} }
+
+// ---------- telas ----------
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function telaInicio() {
+  const p = carregaProgresso();
+  tela(`<h1>🚒 ${CONFIG.titulo}</h1>
+    <p>Ande pelo bairro, chegue perto do fogo e a água sai sozinha. Encha o tanque no <b>hidrante</b> e leve gatinhos e pessoas até a <b>ambulância</b>.</p>
+    <p><b>Mover:</b> arraste o dedo ou setas/WASD · <b>Água:</b> botão 💧 ou espaço · <b>Melhorar:</b> M</p>
+    ${p.recorde ? `<p>⭐ Seu recorde: <b>${p.recorde}</b> pontos · nível máximo <b>${p.nivelMax}</b></p>` : ""}
+    <div class="linha"><button class="btn" onclick="novoJogo()">▶ Jogar</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>`);
+}
+function fimDeTurno() {
+  E.rodando = false; segurandoAgua = false;
+  ["hud", "tanque", "botoes"].forEach(id => $(id).classList.add("hidden"));
+  const p = carregaProgresso(), novo = E.pontos > (p.recorde || 0);
+  salvaProgresso({ recorde: Math.max(p.recorde || 0, E.pontos), nivelMax: Math.max(p.nivelMax || 0, E.nivel),
+                   apagadosTotal: (p.apagadosTotal || 0) + E.apagados, resgatadosTotal: (p.resgatadosTotal || 0) + E.resgatados });
+  if (DEMO) setTimeout(novoJogo, 6000);
+  tela(`<h1>🚒 Turno encerrado!</h1>
+    <p>O bairro está a salvo graças a você.</p>
+    <table>
+      <tr><td>⭐ Pontos</td><td><b>${E.pontos}</b></td></tr>
+      <tr><td>🔥 Incêndios apagados</td><td><b>${E.apagados}</b></td></tr>
+      <tr><td>🐱 Resgates</td><td><b>${E.resgatados}</b></td></tr>
+      <tr><td>✅ Missões</td><td><b>${E.missoesFeitas}</b></td></tr>
+      <tr><td>🏅 Nível</td><td><b>${E.nivel}</b></td></tr>
+    </table>
+    <p>${novo ? "🏆 Novo recorde seu!" : `Seu recorde: ⭐ ${p.recorde}`}</p>
+    <div class="linha"><button class="btn" onclick="novoJogo()">↻ Jogar de novo</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>`);
+}
+function telaCriar() {
+  if (E) E.rodando = false;
+  ["hud", "tanque", "botoes"].forEach(id => $(id).classList.add("hidden"));
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: velocidade, tamanho do tanque, missões, cores dos bairros.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo de bombeiro, adicione um cachorro bombeiro que segue o jogador e late quando um gatinho precisa de ajuda. Crie também um bairro novo chamado Praia, com coqueiros e quiosques. Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-seja-um-bombeiro.html"; a.click();
+}
+
+// para o teste automático conferir o placar
+window.estadoDoJogo = () => E && { pontos: E.pontos, moedas: Math.floor(E.moedas), nivel: E.nivel, apagados: E.apagados,
+  missoesFeitas: E.missoesFeitas, resgatados: E.resgatados, x: jog.x, y: jog.y, agua: jog.agua, veiculo: jog.veiculo };
+
+montaBairro(0);
+if (DEMO) novoJogo(); else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
