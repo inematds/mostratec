@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Faça sua Comida — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5; --painel:#16161ee6; --borda:#272730 }
+  html,body { margin:0; height:100%; background:var(--preto); color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  canvas { display:block; width:100vw; height:100vh }
+
+  /* HUD: faixa do topo com moedas, nível + XP, tempo, missão e loja */
+  #hud { position:fixed; top:0; left:0; right:0; padding:7px 10px 6px; display:flex; flex-direction:column; gap:6px;
+         background:#0c0c10; border-bottom:2px solid #000; z-index:2; font-weight:800 }
+  .l1 { display:flex; align-items:center; gap:10px; font-size:clamp(15px,2.4vw,21px) }
+  #hud-moedas { color:var(--amarelo); min-width:72px; display:inline-block }
+  #hud-moedas.bump { animation:bump .35s }
+  @keyframes bump { 40% { transform:scale(1.3) } }
+  #nivel { flex:1; display:flex; align-items:center; gap:8px; min-width:0 }
+  #nv-txt { color:var(--amarelo); white-space:nowrap; font-size:clamp(13px,2vw,17px) }
+  .barra { height:10px; background:#00000088; border-radius:6px; overflow:hidden; border:1px solid #3f3f46 }
+  .barra > div { height:100%; width:0; background:var(--amarelo); border-radius:6px; transition:width .25s }
+  #nivel .barra { flex:1 }
+  #xp-barra { background:linear-gradient(90deg,#22c55e,#a3e635) !important }
+  #hud-tempo { white-space:nowrap }
+  .l2 { display:flex; gap:8px; align-items:stretch }
+  #missao { flex:1; background:var(--painel); border:2px solid var(--amarelo); border-radius:12px; padding:4px 10px 5px; min-width:0 }
+  #missao .topo { display:flex; justify-content:space-between; gap:8px; font-size:clamp(14px,2vw,17px) }
+  #m-txt { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  #m-prog { color:var(--amarelo); white-space:nowrap }
+  #missao .barra { margin-top:4px; height:6px }
+  #m-barra { background:#22c55e !important }
+  #missao.festa { animation:pop .9s ease-out }
+  @keyframes pop { 0%{transform:scale(1)} 25%{transform:scale(1.06); background:#FACC15; color:#1a1206} 100%{transform:scale(1)} }
+  #b-loja { padding:6px 12px; white-space:nowrap }
+  #b-loja.pode { animation:pulsa 1s infinite }
+  @keyframes pulsa { 50% { box-shadow:0 0 0 4px #facc1599, 0 4px 0 #a16207 } }
+
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800;
+         padding:12px 16px; font-size:clamp(14px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207 }
+  .btn:disabled { background:#555; color:#bbb; box-shadow:none }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.9); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 24px); overflow:auto; text-align:center; padding:20px; border:1px solid #333; border-radius:16px; background:#14141b; box-sizing:border-box }
+  #tela h1 { margin:.2em 0; font-size:clamp(28px,6vw,46px); color:var(--amarelo) }
+  #tela p { line-height:1.45; color:#d4d4d8 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #tela table { margin:10px auto; border-collapse:collapse; font-size:17px }
+  #tela td { padding:4px 12px; text-align:left }
+  #tela .nv { display:inline-block; background:#1f2937; border-radius:10px; padding:8px 14px; font-weight:800; color:var(--amarelo) }
+  .cards { display:grid; gap:10px; margin:12px 0 }
+  .card { display:flex; align-items:center; gap:10px; background:#1f1f29; border:1px solid #333; border-radius:12px; padding:10px; text-align:left; font-weight:800 }
+  .card .e { font-size:30px } .card .t { flex:1 } .card small { color:#a1a1aa; display:block; font-weight:400; margin-top:2px }
+  #aviso { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#000d; padding:8px 14px; border-radius:10px;
+           font-weight:700; pointer-events:none; opacity:0; transition:opacity .3s; max-width:calc(100% - 40px); text-align:center; font-size:clamp(13px,2vw,16px); z-index:3 }
+  /* faixa grande de comemoração (missão e nível) */
+  #festa { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; opacity:0; z-index:4; width:92% }
+  #festa .g { font-size:clamp(32px,8vw,68px); font-weight:900; color:var(--amarelo); -webkit-text-stroke:2px #0c0c10; text-shadow:0 5px 0 #0c0c10 }
+  #festa .p { font-size:clamp(15px,2.6vw,22px); font-weight:800; color:#fff; text-shadow:0 2px 4px #000, 0 0 8px #000; margin-top:6px }
+  #festa.mostra { animation:festa 2.6s ease-out }
+  @keyframes festa { 0%{opacity:0; transform:translate(-50%,-50%) scale(.4)} 12%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+                     20%{transform:translate(-50%,-50%) scale(1)} 80%{opacity:1} 100%{opacity:0; transform:translate(-50%,-60%) scale(1)} }
+  #rodape { position:fixed; bottom:1px; left:0; right:0; text-align:center; font-size:11px; color:#71717a; pointer-events:none; z-index:1 }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:40vh; font-size:12px; white-space:pre-wrap }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div class="l1">
+    <span id="hud-moedas">🪙 0</span>
+    <div id="nivel"><span id="nv-txt">⭐ Nível 1</span><div class="barra"><div id="xp-barra"></div></div></div>
+    <span id="hud-tempo">⏱ 4:00</span>
+  </div>
+  <div class="l2">
+    <div id="missao">
+      <div class="topo"><span id="m-txt">🎯 Missão</span><span id="m-prog">0/1</span></div>
+      <div class="barra"><div id="m-barra"></div></div>
+    </div>
+    <button class="btn" id="b-loja">🛒 Loja</button>
+  </div>
+</div>
+<div id="aviso"></div>
+<div id="festa"><div class="g" id="festa-g"></div><div class="p" id="festa-p"></div></div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="tela"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   FAÇA SUA COMIDA — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione um cardápio de..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Faça sua Comida",
+  duracaoExpediente: 240,      // segundos de cada partida (um "dia" na lanchonete)
+  maxItensBandeja: 7,          // quantos ingredientes cabem na bandeja
+  som: true,                   // bipes de acerto e erro (false = silêncio)
+
+  // ---------- CLIENTES ----------
+  pacienciaBase: 45,           // segundos que o cliente espera no nível 1
+  pacienciaPorNivel: -1.5,     // a cada nível, ele espera um pouco menos
+  pacienciaMinima: 24,         // nunca espera menos que isso
+  pacienciaPorItem: 2,         // pedido grande = mais paciência
+  intervaloCliente: 0.7,       // segundos até chegar um cliente novo no balcão vazio
+  dicaAteNivel: 2,             // até esse nível, o próximo ingrediente certo pisca (ajuda de quem está começando)
+
+  // ---------- DINHEIRO E RAPIDEZ ----------
+  tempoPreparo: 0.5,           // segundos que cada ingrediente leva da chapa até a bandeja
+  precoPorItem: 2,             // cada ingrediente do pedido soma moedas ao preço do prato
+  gorjetaMax: 0.6,             // gorjeta máxima = 60% do preço, se você for bem rápido
+  segundosPorItem: 1.8,        // tempo "justo" por ingrediente; mais rápido que isso = gorjeta cheia
+
+  // ---------- NÍVEIS ----------
+  // XP: 1 por cliente atendido (+1 se foi rápido) e +2 por missão.
+  xpParaSubir: [4, 6, 7, 8, 9, 10, 11, 12, 13, 14],  // XP para ir do nível 1→2, 2→3...; depois repete o último
+  moedasPorNivel: 10,          // bônus ao subir de nível (vezes o número do nível)
+
+  // ---------- INGREDIENTES ----------
+  // nivel: a partir de qual nível ele aparece · cor: usada se você criar um ingrediente sem desenho próprio
+  ingredientes: {
+    pao:         { nome: "Pão",         nivel: 1,  cor: "#e8a33d" },
+    carne:       { nome: "Carne",       nivel: 1,  cor: "#6b3a1f" },
+    queijo:      { nome: "Queijo",      nivel: 2,  cor: "#facc15" },
+    alface:      { nome: "Alface",      nivel: 2,  cor: "#4ade80" },
+    tomate:      { nome: "Tomate",      nivel: 4,  cor: "#ef4444" },
+    bacon:       { nome: "Bacon",       nivel: 6,  cor: "#b91c1c" },
+    massa:       { nome: "Massa",       nivel: 3,  cor: "#e9b872" },
+    molho:       { nome: "Molho",       nivel: 3,  cor: "#dc2626" },
+    mussarela:   { nome: "Mussarela",   nivel: 3,  cor: "#fde68a" },
+    calabresa:   { nome: "Calabresa",   nivel: 4,  cor: "#b91c1c" },
+    azeitona:    { nome: "Azeitona",    nivel: 6,  cor: "#1f2937" },
+    manjericao:  { nome: "Manjericão",  nivel: 8,  cor: "#16a34a" },
+    acai:        { nome: "Açaí",        nivel: 5,  cor: "#6b21a8" },
+    banana:      { nome: "Banana",      nivel: 5,  cor: "#fde68a" },
+    granola:     { nome: "Granola",     nivel: 5,  cor: "#a16207" },
+    morango:     { nome: "Morango",     nivel: 6,  cor: "#e11d48" },
+    leite:       { nome: "Leite cond.", nivel: 8,  cor: "#dbeafe" },
+    massaPastel: { nome: "Massa",       nivel: 7,  cor: "#f6c453" },
+    frango:      { nome: "Frango",      nivel: 7,  cor: "#f2c48d" },
+    milho:       { nome: "Milho",       nivel: 8,  cor: "#facc15" },
+    alga:        { nome: "Alga",        nivel: 9,  cor: "#14532d" },
+    arroz:       { nome: "Arroz",       nivel: 9,  cor: "#f8fafc" },
+    salmao:      { nome: "Salmão",      nivel: 9,  cor: "#fb923c" },
+    pepino:      { nome: "Pepino",      nivel: 10, cor: "#15803d" },
+    gergelim:    { nome: "Gergelim",    nivel: 11, cor: "#fef3c7" },
+  },
+
+  // ---------- CARDÁPIOS ----------
+  // nivel: quando o prato entra no cardápio · base: o 1º ingrediente de todo pedido
+  // ingredientes: na ORDEM em que se monta · forma: "pilha" (lanche), "disco" (pizza, pastel, sushi) ou "copo"
+  // minItens/maxItens: tamanho do pedido (cresce a cada 2 níveis)
+  cardapios: [
+    { id: "hamburguer", nome: "Hambúrguer", emoji: "🍔", nivel: 1, preco: 10, forma: "pilha", base: "pao",
+      ingredientes: ["pao", "carne", "queijo", "alface", "tomate", "bacon"], minItens: 2, maxItens: 5 },
+    { id: "pizza", nome: "Pizza", emoji: "🍕", nivel: 3, preco: 16, forma: "disco", base: "massa",
+      ingredientes: ["massa", "molho", "mussarela", "calabresa", "azeitona", "manjericao"], minItens: 3, maxItens: 5 },
+    { id: "acai", nome: "Açaí", emoji: "🍇", nivel: 5, preco: 14, forma: "copo", base: "acai",
+      ingredientes: ["acai", "banana", "granola", "morango", "leite"], minItens: 3, maxItens: 5 },
+    { id: "pastel", nome: "Pastel", emoji: "🥟", nivel: 7, preco: 12, forma: "disco", base: "massaPastel",
+      ingredientes: ["massaPastel", "carne", "queijo", "frango", "milho"], minItens: 3, maxItens: 4 },
+    { id: "sushi", nome: "Sushi", emoji: "🍣", nivel: 9, preco: 20, forma: "disco", base: "alga",
+      ingredientes: ["alga", "arroz", "salmao", "pepino", "gergelim"], minItens: 3, maxItens: 5 },
+  ],
+
+  // ---------- MELHORIAS (LOJA) ----------
+  // precos: um preço por nível da melhoria (a lista acaba = nível máximo)
+  melhorias: {
+    chapa:     { nome: "Chapa mais rápida", emoji: "🔥", desc: "Ingredientes chegam mais rápido na bandeja", precos: [30, 70, 140, 250] },
+    balcao:    { nome: "Mais um balcão",    emoji: "🪑", desc: "Mais um cliente ao mesmo tempo",           precos: [45, 140] },
+    decoracao: { nome: "Decoração",         emoji: "🪴", desc: "Clientes esperam mais e dão mais gorjeta", precos: [35, 90, 200] },
+  },
+  efeitoChapa: 0.25,           // cada nível da chapa corta 25% do tempo de preparo
+  decoracaoPaciencia: 6,       // +6 s de paciência por nível de decoração
+  decoracaoGorjeta: 0.15,      // +15% de gorjeta por nível de decoração
+
+  // ---------- MISSÕES ----------
+  // Sempre tem 1 missão na tela. Cumpriu? Comemoração, moedas, XP e a próxima na hora.
+  // tipo: "atender" (clientes) · "prato" (prato: id do cardápio) · "combo" (seguidos sem erro)
+  //       "gorjeta" (moedas de gorjeta) · "rapido" (monte e entregue em até "segundos") · "melhoria" (compre na loja)
+  prazoMissao: 45,             // se demorar mais que isso, vem outra missão (sem castigo)
+  xpMissao: 2,
+  missoes: [
+    { tipo: "atender",  n: 2,  texto: "Atenda {n} clientes",          premio: 15 },
+    { tipo: "prato",    n: 2,  prato: "hamburguer", texto: "Faça {n} hambúrgueres", premio: 20 },
+    { tipo: "combo",    n: 3,  texto: "Combo de {n} sem erro",        premio: 25 },
+    { tipo: "melhoria", n: 1,  texto: "Compre uma melhoria na Loja",  premio: 20 },
+    { tipo: "prato",    n: 2,  prato: "pizza", texto: "Faça {n} pizzas", premio: 35 },
+    { tipo: "gorjeta",  n: 20, texto: "Ganhe {n} moedas de gorjeta",  premio: 30 },
+    { tipo: "rapido",   n: 2,  segundos: 5, texto: "Monte {n} pedidos em até 5 s", premio: 30 },
+    { tipo: "prato",    n: 2,  prato: "acai", texto: "Sirva {n} açaís", premio: 40 },
+    { tipo: "combo",    n: 5,  texto: "Combo de {n} sem erro",        premio: 50 },
+    { tipo: "prato",    n: 2,  prato: "pastel", texto: "Frite {n} pastéis", premio: 45 },
+    { tipo: "atender",  n: 4,  texto: "Atenda {n} clientes",          premio: 40 },
+    { tipo: "prato",    n: 2,  prato: "sushi", texto: "Enrole {n} sushis", premio: 60 },
+  ],
+
+  // ---------- VISUAL ----------
+  clientes: {
+    pele:   ["#fcd5b5", "#e8b48a", "#c68642", "#8d5524", "#f1c27d", "#5c3a21"],
+    roupa:  ["#3b82f6", "#ec4899", "#22c55e", "#a855f7", "#f97316", "#14b8a6", "#ef4444"],
+    cabelo: ["#1f1308", "#5b3a1a", "#d97706", "#111827", "#9ca3af", "#7c2d12"],
+  },
+  frases: {
+    chegou:  ["Oi!", "Tô com fome!", "Capricha!", "Olá!"],
+    feliz:   ["Delícia!", "Perfeito!", "Hmmm!", "Voltarei!", "Top!"],
+    rapido:  ["Que rápido!", "Uau, voou!", "Relâmpago!"],
+    erro:    ["Não foi isso que pedi!", "Ordem errada!", "Hmm... tá diferente"],
+    demorou: ["Demorou demais!", "Vou embora..."],
+  },
+  cores: { parede: "#ffedd5", azulejo: "#fed7aa", balcao: "#92400e", balcaoTopo: "#c2650f", bandeja: "#292524", despensa: "#18181b" },
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;  // cópia do jogo para o botão "Baixar"
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");          // ?demo=1 → o jogo atende sozinho (vitrine do estande)
+const CONTORNO = "#2a1608";               // cor do contorno dos desenhos
+const MAX_BALCOES = 1 + CONFIG.melhorias.balcao.precos.length;
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const sorteia = lista => lista[Math.floor(Math.random() * lista.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const suave = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const dentro = (x, y, r) => r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+
+// ---------- salvar (recorde e progresso ficam no navegador) ----------
+function carrega() { try { return JSON.parse(localStorage.getItem("faca-sua-comida") || "{}") || {}; } catch (e) { return {}; } }
+function salva() { if (DEMO) return; try { localStorage.setItem("faca-sua-comida", JSON.stringify(salvo)); } catch (e) {} }
+let salvo = carrega();   // { nivel, xp, recorde, totalClientes }
+
+// ---------- som (bipes simples, sem arquivo de áudio) ----------
+let audio = null;
+function som(freq, dur = 0.09, tipo = "triangle", atraso = 0) {
+  if (!CONFIG.som || DEMO) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audio.currentTime + atraso, o = audio.createOscillator(), g = audio.createGain();
+    o.type = tipo; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.07, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audio.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  } catch (e) {}
+}
+const somToque = () => som(520, 0.05, "square");
+const somAcerto = () => [660, 880, 1100].forEach((f, i) => som(f, 0.12, "triangle", i * 0.07));
+const somErro = () => som(170, 0.28, "sawtooth");
+const somFesta = () => [523, 659, 784, 1047].forEach((f, i) => som(f, 0.16, "triangle", i * 0.09));
+
+// ---------- avisos e comemoração ----------
+let avisoTimer = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoTimer = 1.8; }
+function festa(grande, pequeno) {
+  $("festa-g").textContent = grande; $("festa-p").textContent = pequeno || "";
+  const f = $("festa"); f.classList.remove("mostra"); void f.offsetWidth; f.classList.add("mostra");
+}
+
+// ---------- tela (canvas nítido em qualquer celular) ----------
+let dpr = 1, L = null;
+function redimensiona() { dpr = window.devicePixelRatio || 1; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- regras de nível ----------
+let J = null;                 // estado da partida (null = ainda não começou)
+let rodando = false, pausado = false;
+const nivelAtual = () => J ? J.nivel : (salvo.nivel || 1);
+const xpPrecisa = n => CONFIG.xpParaSubir[Math.min(n - 1, CONFIG.xpParaSubir.length - 1)];
+const liberado = id => (CONFIG.ingredientes[id]?.nivel ?? 1) <= nivelAtual();
+const pratoPorId = id => CONFIG.cardapios.find(p => p.id === id);
+const valido = c => c && c.saindo === null;
+const tempoPreparo = () => CONFIG.tempoPreparo * Math.pow(1 - CONFIG.efeitoChapa, J.up.chapa);
+
+// ordem fixa (mas embaralhada) dos ingredientes na despensa de cada prato
+const hash = s => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 9973; return h; };
+const ordemDespensa = p => p.ingredientes.slice().sort((a, b) => hash(a + p.id) - hash(b + p.id));
+function pratoAtual() {
+  const c = J && J.clientes[J.sel];
+  return valido(c) ? c.prato : (J && J.ultimoPrato) || CONFIG.cardapios[0];
+}
+const idsDespensa = () => ordemDespensa(pratoAtual()).filter(liberado);
+
+// ---------- começar partida ----------
+function novaPartida() {
+  document.activeElement && document.activeElement.blur();
+  const nivel = DEMO ? 1 : (salvo.nivel || 1), xp = DEMO ? 0 : (salvo.xp || 0);
+  J = { moedas: 0, nivel, xp, xpPartida: 0, tempo: CONFIG.duracaoExpediente, t: 0,
+        balcoes: 1, up: { chapa: 0, balcao: 0, decoracao: 0 },
+        clientes: new Array(MAX_BALCOES).fill(null), espera: [0.3, 1, 1, 1], sel: 0,
+        atendidos: 0, combo: 0, melhorCombo: 0, erros: 0, gorjetas: 0, missoesCumpridas: 0,
+        missao: null, feitas: new Set(), voando: [], parts: [], textos: [], flash: {},
+        ultimoPrato: CONFIG.cardapios[0], acaoDemo: 0.8, compraDemo: 2 };
+  rodando = true; pausado = false;
+  novaMissao(true);
+  $("tela").classList.add("hidden");
+}
+
+// ---------- clientes ----------
+function escolhePrato() {
+  const lib = CONFIG.cardapios.filter(p => p.nivel <= J.nivel);
+  const m = J.missao && J.missao.def;
+  if (m && m.tipo === "prato" && Math.random() < 0.6) { const p = pratoPorId(m.prato); if (p && p.nivel <= J.nivel) return p; }
+  if (lib.length > 1 && Math.random() < 0.45) return lib[lib.length - 1];   // o prato mais novo aparece mais
+  return sorteia(lib);
+}
+function montaPedido(p) {
+  // base + alguns ingredientes liberados, sempre na ordem do cardápio
+  const disp = p.ingredientes.filter(liberado), resto = disp.filter(id => id !== p.base);
+  const n = clamp(p.minItens + Math.floor((J.nivel - p.nivel) / 2), 1, Math.min(p.maxItens, disp.length));
+  const escolhidos = resto.slice().sort(() => Math.random() - 0.5).slice(0, n - 1);
+  escolhidos.sort((a, b) => p.ingredientes.indexOf(a) - p.ingredientes.indexOf(b));
+  return [p.base, ...escolhidos];
+}
+function novoCliente() {
+  const prato = escolhePrato(), pedido = montaPedido(prato);
+  const pacMax = Math.max(CONFIG.pacienciaMinima, CONFIG.pacienciaBase + CONFIG.pacienciaPorNivel * (J.nivel - 1))
+               + J.up.decoracao * CONFIG.decoracaoPaciencia + pedido.length * CONFIG.pacienciaPorItem;
+  return { prato, pedido, montado: [], fila: 0, pac: pacMax, pacMax, entra: 0, saindo: null, humor: "normal",
+           fala: sorteia(CONFIG.frases.chegou), falaT: 1.1, tremor: 0, inicio: null, pendente: false,
+           pele: sorteia(CONFIG.clientes.pele), roupa: sorteia(CONFIG.clientes.roupa),
+           cabelo: sorteia(CONFIG.clientes.cabelo), estilo: Math.floor(Math.random() * 3) };
+}
+function escolheCliente() {   // quando o cliente atual vai embora, atende o próximo sozinho
+  let melhor = -1, nota = -1e9;
+  J.clientes.forEach((c, i) => { if (!valido(c)) return; const n = (c.montado.length + c.fila) * 100 - c.pac; if (n > nota) { nota = n; melhor = i; } });
+  if (melhor >= 0) J.sel = melhor;
+}
+function trocaCliente(dir) {
+  for (let k = 1; k <= MAX_BALCOES; k++) {
+    const i = (J.sel + dir * k + MAX_BALCOES * 3) % MAX_BALCOES;
+    if (valido(J.clientes[i])) { J.sel = i; return; }
+  }
+}
+function posCliente(c) {
+  const i = J.clientes.indexOf(c), s = L && L.slots[i];
+  return s ? { x: s.x, y: L.balcaoY - 70 * escalaCliente(s) } : { x: innerWidth / 2, y: innerHeight / 3 };
+}
+
+// ---------- ações do jogador ----------
+function tocaIngrediente(id) {
+  if (!J || !rodando || pausado) return;
+  const c = J.clientes[J.sel];
+  if (!valido(c)) { aviso("Espere o próximo cliente!"); return; }
+  if (c.montado.length + c.fila >= CONFIG.maxItensBandeja) { aviso("Bandeja cheia! Toque em LIMPAR."); return; }
+  if (c.inicio === null) c.inicio = J.t;
+  c.fila++;
+  const b = L && L.ingr.find(g => g.id === id);
+  const de = b ? { x: b.x + b.w / 2, y: b.y + b.h / 2 } : { x: L.prato.x, y: L.prato.y };
+  J.voando.push({ id, cliente: c, de, t: 0, dur: tempoPreparo() });
+  J.flash[id] = 0.18; somToque();
+}
+function limpar() {
+  if (!J || !rodando || pausado) return;
+  const c = J.clientes[J.sel]; if (!valido(c)) return;
+  J.voando = J.voando.filter(v => v.cliente !== c);
+  c.fila = 0; c.montado = []; c.pendente = false; c.inicio = null;
+}
+function entregar(c) {
+  if (!J || !rodando || pausado) return;
+  c = c || J.clientes[J.sel];
+  if (!valido(c)) return;
+  if (c.fila > 0) { c.pendente = true; return; }          // ainda tem ingrediente na chapa: entrega quando chegar
+  if (!c.montado.length) { aviso("Toque nos ingredientes primeiro!"); return; }
+  const certo = c.montado.length === c.pedido.length && c.pedido.every((id, i) => c.montado[i] === id);
+  const pos = posCliente(c);
+  if (certo) {
+    const preco = c.prato.preco + CONFIG.precoPorItem * c.pedido.length;
+    const gasto = J.t - c.inicio, justo = CONFIG.segundosPorItem * c.pedido.length + 1;
+    const rapidez = clamp((justo * 2 - gasto) / justo, 0, 1);       // 1 = super-rápido, 0 = devagar
+    const gorjeta = Math.round(preco * CONFIG.gorjetaMax * rapidez * (1 + J.up.decoracao * CONFIG.decoracaoGorjeta));
+    ganhaMoedas(preco + gorjeta);
+    J.atendidos++; J.combo++; J.melhorCombo = Math.max(J.melhorCombo, J.combo); J.gorjetas += gorjeta;
+    c.humor = "feliz"; c.fala = sorteia(rapidez > 0.6 ? CONFIG.frases.rapido : CONFIG.frases.feliz); c.falaT = 1.3; c.saindo = -0.4;
+    texto(`+${preco}`, pos.x, pos.y - 30, "#FACC15", 30);
+    if (gorjeta > 0) texto(`+${gorjeta} gorjeta`, pos.x, pos.y, "#86efac", 20);
+    if (J.combo >= 3) texto(`COMBO x${J.combo}`, pos.x, pos.y + 26, "#f472b6", 20);
+    explode(pos.x, pos.y, 22, ["#FACC15", "#fde047", "#f59e0b", "#fff"]);
+    somAcerto();
+    ganhaXP(1 + (rapidez > 0.6 ? 1 : 0), pos.x, pos.y - 60);
+    missaoEvento({ tipo: "entrega", prato: c.prato.id, gorjeta, segundos: gasto });
+  } else {
+    J.combo = 0; J.erros++;
+    c.humor = "bravo"; c.fala = sorteia(CONFIG.frases.erro); c.falaT = 1.8; c.tremor = 0.5;
+    c.montado = []; c.inicio = null;
+    if (c.pac > 4) c.pac = Math.max(4, c.pac - c.pacMax * 0.15);   // reclama e perde um pouco de paciência
+    somErro();
+    missaoEvento({ tipo: "erro" });
+  }
+}
+function demorou(c) {
+  c.saindo = -0.5; c.humor = "bravo"; c.fala = sorteia(CONFIG.frases.demorou); c.falaT = 1.5;
+  J.combo = 0; J.voando = J.voando.filter(v => v.cliente !== c);
+  missaoEvento({ tipo: "erro" }); somErro();
+}
+
+// ---------- moedas, XP, nível ----------
+function ganhaMoedas(n) {
+  J.moedas += n;
+  const el = $("hud-moedas"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+}
+function ganhaXP(n, x, y) {
+  J.xp += n; J.xpPartida += n;
+  if (x !== undefined) texto(`+${n} XP`, x, y, "#a3e635", 18);
+  while (J.xp >= xpPrecisa(J.nivel)) { J.xp -= xpPrecisa(J.nivel); J.nivel++; subiuNivel(); }
+  if (!DEMO) { salvo.nivel = J.nivel; salvo.xp = J.xp; salva(); }
+}
+function subiuNivel() {
+  const novosPratos = CONFIG.cardapios.filter(p => p.nivel === J.nivel);
+  const novosIngr = Object.entries(CONFIG.ingredientes).filter(([id, g]) => g.nivel === J.nivel && !novosPratos.some(p => p.ingredientes.includes(id)));
+  const bonus = CONFIG.moedasPorNivel * J.nivel; ganhaMoedas(bonus);
+  let sub = `+${bonus} 🪙`;
+  if (novosPratos.length) sub = `Novo cardápio: ${novosPratos.map(p => p.emoji + " " + p.nome).join(", ")}! · ` + sub;
+  else if (novosIngr.length) sub = `Novo ingrediente: ${novosIngr.map(([, g]) => g.nome).join(", ")} · ` + sub;
+  else sub = "Pedidos maiores, gorjetas maiores · " + sub;
+  festa(`⭐ NÍVEL ${J.nivel}!`, sub); somFesta();
+  if (L) confete(L.cena.x + L.cena.w / 2, L.cena.y + L.cena.h / 2);
+}
+
+// ---------- missões ----------
+function missaoDisponivel(m) {
+  if (m.tipo === "prato") { const p = pratoPorId(m.prato); return p && p.nivel <= J.nivel; }
+  if (m.tipo === "melhoria") return Object.keys(CONFIG.melhorias).some(k => J.up[k] < CONFIG.melhorias[k].precos.length);
+  return true;
+}
+const textoMissao = d => d.texto.replace("{n}", d.n);
+function novaMissao(primeira) {
+  let i = CONFIG.missoes.findIndex((m, k) => !J.feitas.has(k) && missaoDisponivel(m));
+  if (i < 0) { J.feitas.clear(); i = CONFIG.missoes.findIndex(m => missaoDisponivel(m)); }
+  J.missao = { idx: i, def: CONFIG.missoes[i], prog: 0, inicio: J.t };
+  if (!primeira) { $("missao").classList.add("festa"); setTimeout(() => $("missao").classList.remove("festa"), 900); }
+}
+function missaoEvento(ev) {
+  const m = J.missao; if (!m) return;
+  const d = m.def;
+  if (ev.tipo === "entrega") {
+    if (d.tipo === "atender") m.prog++;
+    if (d.tipo === "prato" && ev.prato === d.prato) m.prog++;
+    if (d.tipo === "gorjeta") m.prog += ev.gorjeta;
+    if (d.tipo === "combo") m.prog++;
+    if (d.tipo === "rapido" && ev.segundos <= d.segundos) m.prog++;
+  }
+  if (ev.tipo === "erro" && d.tipo === "combo") m.prog = 0;
+  if (ev.tipo === "melhoria" && d.tipo === "melhoria") m.prog++;
+  if (m.prog >= d.n) cumpreMissao();
+}
+function cumpreMissao() {
+  const d = J.missao.def;
+  J.feitas.add(J.missao.idx); J.missoesCumpridas++;
+  ganhaMoedas(d.premio);
+  festa("✅ MISSÃO CUMPRIDA!", `+${d.premio} 🪙   +${CONFIG.xpMissao} XP`); somFesta();
+  const r = $("missao").getBoundingClientRect();
+  confete(r.left + r.width / 2, r.bottom + 10);
+  novaMissao();
+  ganhaXP(CONFIG.xpMissao);
+}
+
+// ---------- loja ----------
+function comprar(k) {
+  if (!J) return;
+  const m = CONFIG.melhorias[k], n = J.up[k];
+  if (n >= m.precos.length || J.moedas < m.precos[n]) return;
+  J.moedas -= m.precos[n]; J.up[k]++;
+  if (k === "balcao") { J.balcoes++; J.espera[J.balcoes - 1] = 0.3; }
+  aviso(`${m.emoji} ${m.nome}: nível ${J.up[k]}!`); somAcerto();
+  if (L) confete(L.cena.x + L.cena.w / 2, L.cena.y + 40);
+  missaoEvento({ tipo: "melhoria" });
+  if (pausado) telaLoja();
+}
+const podeComprar = () => J && Object.keys(CONFIG.melhorias).some(k => { const m = CONFIG.melhorias[k]; return J.up[k] < m.precos.length && J.moedas >= m.precos[J.up[k]]; });
+
+// ---------- efeitos (partículas e números que sobem) ----------
+function texto(txt, x, y, cor, tam) { J.textos.push({ txt, x: clamp(x, txt.length * tam * 0.33 + 6, innerWidth - txt.length * tam * 0.33 - 6), y, cor, tam, vida: 1.3 }); }
+function explode(x, y, n, cores) {
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, Math.PI * 2), v = rnd(90, 280);
+    J.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 140, vida: rnd(0.6, 1.1), cor: sorteia(cores), r: rnd(3, 7) });
+  }
+}
+const confete = (x, y) => explode(x, y, 40, ["#FACC15", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"]);
+function efeitos(dt) {
+  if (!J) return;
+  for (const p of J.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 480 * dt; p.vida -= dt; }
+  J.parts = J.parts.filter(p => p.vida > 0);
+  for (const s of J.textos) { s.y -= 45 * dt; s.vida -= dt; }
+  J.textos = J.textos.filter(s => s.vida > 0);
+  for (const k in J.flash) J.flash[k] -= dt;
+}
+
+// ---------- entrada (toque, mouse e teclado) ----------
+cv.addEventListener("pointerdown", e => {
+  if (!J || !rodando || pausado || DEMO || !L) return;
+  const x = e.clientX, y = e.clientY;
+  for (const g of L.ingr) if (dentro(x, y, g)) return tocaIngrediente(g.id);
+  if (dentro(x, y, L.entregar)) return entregar();
+  if (dentro(x, y, L.limpar)) return limpar();
+  if (dentro(x, y, L.cena)) L.slots.forEach((s, i) => { if (Math.abs(x - s.x) < s.w / 2 && valido(J.clientes[i])) J.sel = i; });
+});
+addEventListener("keydown", e => {
+  if (!J || !rodando || pausado || DEMO) return;
+  const k = e.key;
+  if (k >= "1" && k <= "9") { const g = L && L.ingr[+k - 1]; if (g) tocaIngrediente(g.id); }
+  else if (k === "Enter" || k === " ") { e.preventDefault(); entregar(); }
+  else if (k === "Backspace" || k === "Delete" || k.toLowerCase() === "l") { e.preventDefault(); limpar(); }
+  else if (k === "ArrowLeft" || k === "ArrowRight" || k === "Tab") { e.preventDefault(); trocaCliente(k === "ArrowLeft" ? -1 : 1); }
+  else if (k.toLowerCase() === "u") telaLoja();
+});
+$("b-loja").onclick = () => telaLoja();
+
+// ---------- piloto automático (?demo=1) ----------
+function demo(dt) {
+  if ((J.compraDemo -= dt) <= 0) {
+    J.compraDemo = 2.5;
+    for (const k of ["chapa", "balcao", "decoracao"]) { const m = CONFIG.melhorias[k]; if (J.up[k] < m.precos.length && J.moedas >= m.precos[J.up[k]]) { comprar(k); break; } }
+  }
+  if ((J.acaoDemo -= dt) > 0) return;
+  J.acaoDemo = rnd(0.28, 0.45);
+  const c = J.clientes[J.sel];
+  if (!valido(c) || c.entra < 1) return;
+  const k = c.montado.length + c.fila;
+  if (k < c.pedido.length) {
+    let id = c.pedido[k];
+    if (Math.random() < 0.04) { const outros = idsDespensa().filter(x => x !== id); if (outros.length) id = sorteia(outros); }  // às vezes erra, para mostrar a reclamação
+    tocaIngrediente(id);
+  } else if (!c.pendente) { J.acaoDemo = 0.5; entregar(c); }
+}
+
+// ---------- ciclo do jogo ----------
+function passo(dt) {
+  if (avisoTimer > 0 && (avisoTimer -= dt) <= 0) $("aviso").style.opacity = 0;
+  efeitos(dt);
+  if (!J || !rodando || pausado) return;
+  J.t += dt; J.tempo -= dt;
+  if (J.tempo <= 0) { J.tempo = 0; fimDoDia(); return; }
+  // clientes chegam, esperam e vão embora
+  for (let i = 0; i < MAX_BALCOES; i++) {
+    const c = J.clientes[i];
+    if (!c) { if (i < J.balcoes && (J.espera[i] -= dt) <= 0) J.clientes[i] = novoCliente(); continue; }
+    c.entra = Math.min(1, c.entra + dt / 0.6);
+    if (c.falaT > 0) c.falaT -= dt;
+    if (c.tremor > 0) c.tremor -= dt;
+    if (c.saindo !== null) {
+      c.saindo += dt / 0.7;
+      if (c.saindo >= 1) { J.ultimoPrato = c.prato; J.clientes[i] = null; J.espera[i] = CONFIG.intervaloCliente; }
+      continue;
+    }
+    if (c.entra >= 1) c.pac -= dt;
+    if (c.pac <= 0) demorou(c);
+  }
+  if (!valido(J.clientes[J.sel])) escolheCliente();
+  // ingredientes voando da chapa para a bandeja
+  for (const v of J.voando) v.t += dt;
+  const chegaram = J.voando.filter(v => v.t >= v.dur);
+  J.voando = J.voando.filter(v => v.t < v.dur);
+  for (const v of chegaram) {
+    const c = v.cliente; c.montado.push(v.id); c.fila--;
+    if (c.pendente && c.fila === 0) { c.pendente = false; entregar(c); }
+  }
+  // missão que demora demais é trocada (sem castigo)
+  if (J.t - J.missao.inicio > CONFIG.prazoMissao) { aviso("⏳ Essa demorou. Bora outra missão!"); J.feitas.add(J.missao.idx); novaMissao(); }
+  if (DEMO) demo(dt);
+  atualizaHUD();
+}
+function atualizaHUD() {
+  $("hud-moedas").textContent = "🪙 " + Math.floor(J.moedas);
+  $("nv-txt").textContent = `⭐ Nível ${J.nivel}`;
+  $("xp-barra").style.width = (100 * J.xp / xpPrecisa(J.nivel)) + "%";
+  const s = Math.ceil(J.tempo);
+  $("hud-tempo").textContent = "⏱ " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  const m = J.missao, d = m.def;
+  $("m-txt").textContent = "🎯 " + textoMissao(d);
+  $("m-prog").textContent = Math.min(Math.floor(m.prog), d.n) + "/" + d.n;
+  $("m-barra").style.width = (100 * clamp(m.prog / d.n, 0, 1)) + "%";
+  $("b-loja").classList.toggle("pode", podeComprar());
+}
+
+// ---------- layout (celular em pé ou tela deitada) ----------
+const escalaCliente = s => clamp(Math.min(s.w / 150, (L.balcaoY - L.cena.y) / 230), 0.5, 1.5);
+function calculaLayout() {
+  const w = innerWidth, h = innerHeight;
+  const topo = $("hud").getBoundingClientRect().bottom + 2, rod = 16, util = h - topo - rod;
+  const lay = {};
+  if (w > h * 1.15) {           // deitado: cena + bandeja à esquerda, ingredientes à direita
+    const cw = Math.round(w * 0.6);
+    lay.cena = { x: 0, y: topo, w: cw, h: util * 0.6 };
+    lay.bandeja = { x: 0, y: topo + util * 0.6, w: cw, h: util * 0.4 };
+    lay.despensa = { x: cw, y: topo, w: w - cw, h: util };
+  } else {                      // em pé: tudo empilhado
+    lay.cena = { x: 0, y: topo, w, h: util * 0.42 };
+    lay.bandeja = { x: 0, y: topo + util * 0.42, w, h: util * 0.23 };
+    lay.despensa = { x: 0, y: topo + util * 0.65, w, h: util * 0.35 };
+  }
+  const n = J ? J.balcoes : 1, c = lay.cena, sw = Math.min(c.w / n, 280);
+  lay.slots = [];
+  for (let i = 0; i < n; i++) lay.slots.push({ x: c.x + c.w / 2 + (i - (n - 1) / 2) * sw, w: sw });
+  lay.balcaoY = c.y + c.h - Math.min(46, c.h * 0.16);
+  // bandeja: prato à esquerda, botões ENTREGAR/LIMPAR à direita
+  const b = lay.bandeja, pad = 10, bw = Math.min(170, b.w * 0.36), bh = Math.min(70, (b.h - pad * 3) / 2);
+  lay.entregar = { x: b.x + b.w - bw - pad, y: b.y + b.h / 2 - bh - pad / 2, w: bw, h: bh };
+  lay.limpar = { x: lay.entregar.x, y: b.y + b.h / 2 + pad / 2, w: bw, h: bh };
+  const livreW = b.w - bw - pad * 3;
+  lay.prato = { x: b.x + pad + livreW / 2, y: b.y + 20 + (b.h - 20) / 2, s: Math.max(40, Math.min(livreW / 1.3, (b.h - 30) / 0.92)) };
+  // despensa: grade de botões com o maior tamanho que couber
+  const d = lay.despensa, ids = idsDespensa(), tituloH = 24;
+  let best = { cols: 1, rows: 1, s: 60 };
+  for (let cols = 1; cols <= Math.max(1, ids.length); cols++) {
+    const rows = Math.ceil(ids.length / cols), s = Math.min((d.w - 16) / cols, (d.h - tituloH - 8) / rows, 150);
+    if (cols === 1 || s > best.s + 0.5 || (Math.abs(s - best.s) <= 0.5 && Math.abs(cols - rows) < Math.abs(best.cols - best.rows))) best = { cols, rows, s };
+  }
+  const gw = best.cols * best.s, gh = best.rows * best.s;
+  const x0 = d.x + (d.w - gw) / 2, y0 = d.y + tituloH + (d.h - tituloH - gh) / 2;
+  lay.ingr = ids.map((id, i) => ({ id, tecla: i + 1, x: x0 + (i % best.cols) * best.s + 5, y: y0 + Math.floor(i / best.cols) * best.s + 5, w: best.s - 10, h: best.s - 10 }));
+  return lay;
+}
+
+// ---------- ajudantes de desenho ----------
+function fs(cor) { if (cor) { ctx.fillStyle = cor; ctx.fill(); } ctx.stroke(); }
+function pinta(cor) { ctx.fillStyle = cor; ctx.fill(); }
+function circ(x, y, r, cor) { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2); fs(cor); }
+function elip(x, y, rx, ry, rot, cor) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(0, rx), Math.max(0, ry), rot, 0, Math.PI * 2); fs(cor); }
+function rr(x, y, w, h, r, cor) { w = Math.max(0, w); h = Math.max(0, h); ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.max(0, Math.min(r, w / 2, h / 2))); fs(cor); }
+function onda(x0, x1, y, amp, passos) {   // caminho ondulado (bacon, alface)
+  ctx.beginPath();
+  for (let k = 0; k <= passos; k++) { const x = lerp(x0, x1, k / passos), yy = y + Math.sin(k / passos * Math.PI * 3) * amp; k ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
+}
+function textoContorno(txt, x, y, tam, cor, peso = 900) {
+  ctx.font = `${peso} ${tam}px system-ui,sans-serif`; ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(3, tam / 5); ctx.strokeStyle = "#0c0c10"; ctx.strokeText(txt, x, y);
+  ctx.fillStyle = cor; ctx.fillText(txt, x, y);
+}
+
+// ---------- DESENHO DOS INGREDIENTES (cada um num quadrado de -50 a 50) ----------
+const DESENHOS = {
+  pao() {
+    ctx.beginPath(); ctx.moveTo(-44, 8); ctx.bezierCurveTo(-44, -42, 44, -42, 44, 8); ctx.closePath(); fs("#e8a33d");
+    rr(-44, 12, 88, 20, 9, "#d48b2c");
+    ctx.fillStyle = "#fff7e0";
+    for (const [x, y] of [[-20, -14], [0, -22], [18, -12], [-6, -6], [26, -2], [-28, 0]]) { ctx.beginPath(); ctx.ellipse(x, y, 4, 2.4, 0.4, 0, 7); ctx.fill(); }
+  },
+  carne() {
+    rr(-44, -18, 88, 36, 18, "#6b3a1f");
+    ctx.save(); ctx.strokeStyle = "#3d1f0f"; ctx.lineWidth = 4;
+    for (const x of [-22, 0, 22]) { ctx.beginPath(); ctx.moveTo(x - 8, -8); ctx.lineTo(x + 8, 8); ctx.stroke(); }
+    ctx.restore(); ctx.fillStyle = "#8b5a3c"; ctx.beginPath(); ctx.ellipse(-20, -10, 12, 3, 0, 0, 7); ctx.fill();
+  },
+  queijo() {
+    ctx.beginPath(); ctx.moveTo(-40, -32); ctx.lineTo(40, -32); ctx.lineTo(40, 14); ctx.lineTo(22, 14); ctx.lineTo(16, 34); ctx.lineTo(8, 14);
+    ctx.lineTo(-14, 14); ctx.lineTo(-20, 28); ctx.lineTo(-26, 14); ctx.lineTo(-40, 14); ctx.closePath(); fs("#fcd34d");
+    ctx.fillStyle = "#eab308"; for (const [x, y, r] of [[-18, -14, 7], [14, -18, 5], [20, 2, 6], [-4, 4, 4]]) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
+  },
+  alface() {
+    ctx.beginPath(); ctx.moveTo(-46, 14);
+    for (let k = 0; k <= 8; k++) ctx.lineTo(-46 + k * 11.5, k % 2 ? -30 : -16);
+    ctx.lineTo(46, 14); ctx.quadraticCurveTo(0, 32, -46, 14); ctx.closePath(); fs("#4ade80");
+    ctx.save(); ctx.strokeStyle = "#15803d"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-32, 14); ctx.quadraticCurveTo(0, -4, 34, -12); ctx.stroke(); ctx.restore();
+  },
+  tomate() {
+    circ(0, 0, 40, "#ef4444"); ctx.fillStyle = "#f87171"; ctx.beginPath(); ctx.arc(0, 0, 31, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fde68a"; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 17, Math.sin(a) * 17, 5, 3, a, 0, 7); ctx.fill(); }
+    ctx.fillStyle = "#fca5a5"; ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7); ctx.fill();
+  },
+  bacon() {
+    ctx.save(); ctx.lineCap = "round";
+    for (const y of [-15, 15]) {
+      onda(-40, 40, y, 7, 16); ctx.strokeStyle = CONTORNO; ctx.lineWidth = 22; ctx.stroke();
+      ctx.strokeStyle = "#b91c1c"; ctx.lineWidth = 16; ctx.stroke();
+      ctx.strokeStyle = "#fecaca"; ctx.lineWidth = 5; ctx.stroke();
+    }
+    ctx.restore();
+  },
+  massa() { circ(0, 0, 44, "#e9b872"); circ(0, 0, 34, "#fbe3b4"); },
+  molho() {
+    ctx.beginPath(); ctx.moveTo(-42, -4); ctx.arc(0, -4, 42, 0, Math.PI); ctx.closePath(); fs("#f5f5f4");
+    elip(0, -4, 42, 13, 0, "#dc2626"); ctx.fillStyle = "#f87171"; ctx.beginPath(); ctx.ellipse(-12, -7, 10, 3, 0, 0, 7); ctx.fill();
+  },
+  mussarela() { elip(-16, 8, 22, 15, 0.3, "#fef9c3"); elip(16, 10, 22, 14, -0.3, "#fef3c7"); elip(0, -12, 24, 16, 0, "#fefce8"); },
+  calabresa() {
+    for (const [x, y, r, c] of [[-10, -8, 30, "#b91c1c"], [16, 16, 24, "#991b1b"]]) {
+      circ(x, y, r, c); ctx.fillStyle = "#fca5a5";
+      for (let k = 0; k < 5; k++) { const a = k * 1.3 + x; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.12, 0, 7); ctx.fill(); }
+    }
+  },
+  azeitona() { for (const [x, y] of [[-18, -12], [18, -8], [0, 18]]) { circ(x, y, 17, "#1f2937"); ctx.fillStyle = "#be123c"; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); } },
+  manjericao() {
+    for (const [x, y, a] of [[-12, 4, -0.6], [14, -4, 0.7]]) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(0, -32); ctx.quadraticCurveTo(24, 0, 0, 32); ctx.quadraticCurveTo(-24, 0, 0, -32); fs("#16a34a");
+      ctx.strokeStyle = "#bbf7d0"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(0, 26); ctx.stroke(); ctx.restore();
+    }
+  },
+  acai() {
+    ctx.beginPath(); ctx.moveTo(-30, -12); ctx.lineTo(30, -12); ctx.lineTo(22, 44); ctx.lineTo(-22, 44); ctx.closePath(); fs("#f5f3ff");
+    ctx.fillStyle = "#7c3aed"; ctx.fillRect(-26, 12, 52, 12);
+    ctx.beginPath(); ctx.moveTo(-34, -10); ctx.bezierCurveTo(-34, -50, 34, -50, 34, -10); ctx.closePath(); fs("#6b21a8");
+    ctx.fillStyle = "#a855f7"; ctx.beginPath(); ctx.ellipse(-10, -28, 9, 4, -0.4, 0, 7); ctx.fill();
+  },
+  banana() {
+    for (const [x, y] of [[-20, 12], [20, 14], [0, -16]]) {
+      circ(x, y, 18, "#fde68a"); ctx.fillStyle = "#fef9c3"; ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.fill();
+      ctx.fillStyle = "#92400e"; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(x + Math.cos(k * 2.1) * 4, y + Math.sin(k * 2.1) * 4, 1.6, 0, 7); ctx.fill(); }
+    }
+  },
+  granola() {
+    const pedacos = [[-24, 16, 11, "#a16207"], [0, 20, 12, "#ca8a04"], [24, 16, 11, "#78350f"], [-12, -2, 12, "#ca8a04"], [12, -2, 11, "#a16207"], [0, -20, 10, "#92400e"], [-30, -4, 7, "#78350f"], [30, 0, 8, "#ca8a04"]];
+    for (const [x, y, r, c] of pedacos) circ(x, y, r, c);
+  },
+  morango() {
+    ctx.beginPath(); ctx.moveTo(0, 42); ctx.bezierCurveTo(-44, 8, -40, -30, 0, -24); ctx.bezierCurveTo(40, -30, 44, 8, 0, 42); fs("#e11d48");
+    ctx.fillStyle = "#fde68a"; for (const [x, y] of [[-14, -6], [10, -10], [0, 8], [-18, 12], [16, 10], [-4, 24], [8, 24]]) { ctx.beginPath(); ctx.ellipse(x, y, 2, 3, 0, 0, 7); ctx.fill(); }
+    ctx.beginPath(); ctx.moveTo(-20, -26); ctx.lineTo(-6, -32); ctx.lineTo(0, -44); ctx.lineTo(6, -32); ctx.lineTo(20, -26); ctx.lineTo(4, -20); ctx.lineTo(-4, -20); ctx.closePath(); fs("#16a34a");
+  },
+  leite() {
+    rr(-28, -32, 56, 70, 8, "#dbeafe"); ctx.fillStyle = "#1d4ed8"; ctx.fillRect(-27, -8, 54, 24);
+    elip(0, -32, 28, 7, 0, "#cbd5e1");
+    ctx.fillStyle = "#fff"; ctx.font = "900 13px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.fillText("LEITE", 0, 9);
+  },
+  massaPastel() {
+    ctx.beginPath(); ctx.moveTo(-46, 16); ctx.arc(0, 16, 46, Math.PI, 0); ctx.closePath(); fs("#f6c453");
+    ctx.save(); ctx.strokeStyle = "#b45309"; ctx.lineWidth = 3;
+    for (let a = Math.PI + 0.25; a < Math.PI * 2 - 0.1; a += 0.3) { ctx.beginPath(); ctx.moveTo(Math.cos(a) * 38, 16 + Math.sin(a) * 38); ctx.lineTo(Math.cos(a) * 45, 16 + Math.sin(a) * 45); ctx.stroke(); }
+    ctx.restore(); ctx.fillStyle = "#fde68a"; for (const [x, y] of [[-14, -2], [12, -10], [4, 6]]) { ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); }
+  },
+  frango() { for (const [x, y, a] of [[-14, -14, 0.4], [12, -16, -0.3], [-2, 4, 0.1], [-20, 16, -0.5], [18, 14, 0.6]]) { ctx.save(); ctx.translate(x, y); ctx.rotate(a); rr(-20, -7, 40, 14, 7, "#f2c48d"); ctx.restore(); } },
+  milho() {
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(0, 40); ctx.quadraticCurveTo(s * 40, 20, s * 26, -20); ctx.quadraticCurveTo(s * 14, 10, 0, 40); fs("#65a30d"); }
+    elip(0, -2, 20, 40, 0, "#facc15");
+    ctx.fillStyle = "#eab308"; for (let y = -30; y <= 28; y += 9) for (let x = -10; x <= 10; x += 10) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); }
+  },
+  alga() {
+    rr(-40, -40, 80, 80, 6, "#14532d");
+    ctx.save(); ctx.strokeStyle = "#166534"; ctx.lineWidth = 3;
+    for (const y of [-24, -8, 8, 24]) { ctx.beginPath(); ctx.moveTo(-34, y); ctx.lineTo(34, y + 4); ctx.stroke(); } ctx.restore();
+  },
+  arroz() {
+    ctx.beginPath(); ctx.moveTo(-44, 0); ctx.arc(0, 0, 44, 0, Math.PI); ctx.closePath(); fs("#1d4ed8");
+    ctx.beginPath(); ctx.moveTo(-42, 0); ctx.bezierCurveTo(-40, -42, 40, -42, 42, 0); ctx.closePath(); fs("#ffffff");
+    ctx.fillStyle = "#d1d5db"; for (const [x, y, a] of [[-18, -10, 0.4], [0, -20, -0.3], [16, -10, 0.8], [-6, -4, 0], [24, -2, -0.5], [-28, -2, 0.9]]) { ctx.beginPath(); ctx.ellipse(x, y, 5, 2.5, a, 0, 7); ctx.fill(); }
+    ctx.fillStyle = "#93c5fd"; ctx.fillRect(-30, 14, 60, 5);
+  },
+  salmao() {
+    rr(-44, -26, 88, 52, 16, "#fb923c");
+    ctx.save(); ctx.strokeStyle = "#fed7aa"; ctx.lineWidth = 5; ctx.lineCap = "round";
+    for (const x of [-26, -6, 14]) { ctx.beginPath(); ctx.moveTo(x, -16); ctx.lineTo(x + 12, 16); ctx.stroke(); } ctx.restore();
+  },
+  pepino() {
+    circ(0, 0, 40, "#15803d"); circ(0, 0, 31, "#bbf7d0");
+    ctx.fillStyle = "#86efac"; ctx.beginPath(); ctx.arc(0, 0, 14, 0, 7); ctx.fill();
+    ctx.fillStyle = "#f0fdf4"; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 9, Math.sin(a) * 9, 3, 1.8, a, 0, 7); ctx.fill(); }
+  },
+  gergelim() {
+    elip(0, 18, 42, 16, 0, "#e5e7eb");
+    ctx.lineWidth = 2;
+    for (const [x, y, a, c] of [[-20, 4, 0.4, "#fef3c7"], [-6, -6, -0.3, "#111827"], [8, 2, 0.6, "#fef3c7"], [20, -4, -0.6, "#fef3c7"], [-12, 14, 0.1, "#fef3c7"], [6, 14, -0.2, "#111827"], [22, 12, 0.3, "#fef3c7"], [-28, 14, 0.8, "#111827"], [0, -16, 0.2, "#fef3c7"]]) elip(x, y, 6, 3.5, a, c);
+  },
+};
+function desenhoPadrao(id) {   // ingrediente novo sem desenho: bolinha colorida com a inicial
+  const g = CONFIG.ingredientes[id] || {};
+  circ(0, 0, 40, g.cor || "#a3a3a3");
+  ctx.fillStyle = "#0c0c10"; ctx.font = "900 40px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText((g.nome || id)[0].toUpperCase(), 0, 2); ctx.textBaseline = "alphabetic";
+}
+function ic(id, x, y, tam) {   // desenha o ingrediente "id" centrado em (x,y) com largura "tam"
+  ctx.save(); ctx.translate(x, y); ctx.scale(tam / 100, tam / 100);
+  ctx.lineWidth = 4; ctx.strokeStyle = CONTORNO; ctx.lineJoin = "round";
+  (DESENHOS[id] || (() => desenhoPadrao(id)))();
+  ctx.restore();
+}
+
+// ---------- prato montado na bandeja ----------
+const BASES_DISCO = {   // ingredientes que viram uma "camada redonda" na pizza, pastel e sushi
+  massa: { r: 1, cor: "#e9b872", miolo: "#fbe3b4" }, massaPastel: { r: 1, cor: "#f6c453", miolo: "#fcd876" },
+  molho: { r: 0.82, cor: "#dc2626" }, mussarela: { r: 0.78, cor: "#fde68a", manchas: "#fffbeb" },
+  alga: { r: 1, cor: "#14532d" }, arroz: { r: 0.8, cor: "#f8fafc", manchas: "#e5e7eb" }, salmao: { r: 0.4, cor: "#fb923c", manchas: "#fed7aa" },
+};
+const LUGARES = [[-0.42, -0.18], [0.3, -0.38], [0.05, 0.42], [-0.2, 0.2], [0.42, 0.16], [-0.05, -0.46], [-0.45, 0.3], [0.2, -0.05], [0.24, 0.4]];
+function camadaPilha(id, i, cx, y, S) {   // uma camada do lanche, de baixo para cima; devolve a nova altura
+  const w = S * 0.8, x = cx - w / 2;
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO;
+  if (id === "pao") {
+    if (i === 0) { const h = S * 0.13; rr(x, y - h, w, h, h * 0.5, "#d48b2c"); return y - h * 0.85; }
+    const h = S * 0.26; ctx.beginPath(); ctx.moveTo(x, y); ctx.bezierCurveTo(x, y - h * 1.3, x + w, y - h * 1.3, x + w, y); ctx.closePath(); fs("#e8a33d"); return y - h;
+  }
+  if (id === "carne") { const h = S * 0.14; rr(x + S * 0.02, y - h, w - S * 0.04, h, h * 0.5, "#6b3a1f"); ctx.fillStyle = "#8b5a3c"; ctx.fillRect(x + w * 0.2, y - h * 0.75, w * 0.25, h * 0.15); return y - h * 0.85; }
+  if (id === "queijo") {
+    const h = S * 0.05; ctx.beginPath(); ctx.moveTo(x - S * 0.03, y - h); ctx.lineTo(x + w + S * 0.03, y - h); ctx.lineTo(x + w + S * 0.03, y);
+    ctx.lineTo(cx + S * 0.25, y); ctx.lineTo(cx + S * 0.2, y + S * 0.07); ctx.lineTo(cx + S * 0.14, y); ctx.lineTo(cx - S * 0.15, y);
+    ctx.lineTo(cx - S * 0.2, y + S * 0.06); ctx.lineTo(cx - S * 0.26, y); ctx.lineTo(x - S * 0.03, y); ctx.closePath(); fs("#facc15"); return y - h * 0.9;
+  }
+  if (id === "alface") {
+    const h = S * 0.06; ctx.beginPath(); ctx.moveTo(x - S * 0.05, y);
+    for (let k = 0; k <= 10; k++) ctx.lineTo(x - S * 0.05 + (w + S * 0.1) * k / 10, y - h - (k % 2 ? h * 0.7 : 0));
+    ctx.lineTo(x + w + S * 0.05, y); ctx.closePath(); fs("#4ade80"); return y - h * 0.9;
+  }
+  if (id === "tomate") { const h = S * 0.075; elip(cx - w * 0.22, y - h / 2, w * 0.27, h / 2 + 1, 0, "#ef4444"); elip(cx + w * 0.22, y - h / 2, w * 0.27, h / 2 + 1, 0, "#ef4444"); return y - h * 0.9; }
+  if (id === "bacon") {
+    const h = S * 0.05; ctx.save(); ctx.lineCap = "round"; onda(x + 4, x + w - 4, y - h / 2, h * 0.5, 14);
+    ctx.lineWidth = h + 5; ctx.stroke(); ctx.strokeStyle = "#b91c1c"; ctx.lineWidth = h; ctx.stroke();
+    ctx.strokeStyle = "#fecaca"; ctx.lineWidth = h * 0.3; ctx.stroke(); ctx.restore(); return y - h * 1.3;
+  }
+  const h = S * 0.16; ic(id, cx, y - h / 2, h * 1.3); return y - h * 0.9;
+}
+function desenhaMontagem(c, cx, cy, S) {
+  const itens = c.montado, forma = c.prato.forma;
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO; ctx.lineJoin = "round";
+  if (forma === "pilha") {
+    elip(cx, cy + S * 0.3, S * 0.52, S * 0.12, 0, "#f8fafc");
+    let y = cy + S * 0.3;
+    itens.forEach((id, i) => { y = camadaPilha(id, i, cx, y, S); });
+  } else if (forma === "copo") {
+    const topo = cy - S * 0.02, fundo = cy + S * 0.44, a = S * 0.3, b = S * 0.22;
+    ctx.beginPath(); ctx.moveTo(cx - a, topo); ctx.lineTo(cx + a, topo); ctx.lineTo(cx + b, fundo); ctx.lineTo(cx - b, fundo); ctx.closePath(); fs("#f5f3ff");
+    ctx.fillStyle = "#7c3aed"; ctx.fillRect(cx - a * 0.86, topo + (fundo - topo) * 0.4, a * 1.72, (fundo - topo) * 0.22);
+    itens.forEach((id, i) => {
+      if (id === "acai") { ctx.beginPath(); ctx.moveTo(cx - a - 2, topo); ctx.bezierCurveTo(cx - a, topo - S * 0.34, cx + a, topo - S * 0.34, cx + a + 2, topo); ctx.closePath(); fs("#6b21a8"); return; }
+      if (id === "leite") { ctx.save(); ctx.lineCap = "round"; onda(cx - a * 0.8, cx + a * 0.8, topo - S * 0.14, S * 0.03, 20); ctx.lineWidth = S * 0.04; ctx.stroke(); ctx.strokeStyle = "#fffbeb"; ctx.lineWidth = S * 0.025; ctx.stroke(); ctx.restore(); return; }
+      for (let k = 0; k < 2; k++) { const p = LUGARES[(i * 2 + k) % LUGARES.length]; ic(id, cx + p[0] * a * 1.1, topo - S * 0.12 + p[1] * S * 0.12, S * 0.17); }
+    });
+  } else {                                                    // disco: pizza, pastel, sushi
+    const R = S * 0.46; circ(cx, cy, R * 1.12, "#f8fafc");
+    itens.forEach((id, i) => {
+      const b = BASES_DISCO[id];
+      if (b) {
+        circ(cx, cy, R * b.r, b.cor);
+        if (b.miolo) { ctx.fillStyle = b.miolo; ctx.beginPath(); ctx.arc(cx, cy, R * b.r * 0.8, 0, 7); ctx.fill(); }
+        if (b.manchas) { ctx.fillStyle = b.manchas; for (let k = 0; k < 5; k++) { const a = k * 1.26 + i; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * R * b.r * 0.5, cy + Math.sin(a) * R * b.r * 0.5, R * b.r * 0.14, 0, 7); ctx.fill(); } }
+      } else for (let k = 0; k < 3; k++) { const p = LUGARES[(i * 3 + k) % LUGARES.length]; ic(id, cx + p[0] * R, cy + p[1] * R, R * 0.4); }
+    });
+  }
+}
+
+// ---------- cena: parede, clientes, balões e balcão ----------
+function desenhaCliente(cl, s, sel, t) {
+  const sc = escalaCliente(s);
+  let x = s.x;
+  if (cl.entra < 1) x += (1 - suave(cl.entra)) * s.w * 0.9;
+  if (cl.saindo !== null && cl.saindo > 0) x -= suave(cl.saindo) * s.w * 1.1;
+  if (cl.tremor > 0) x += Math.sin(t * 60) * 4;
+  const y = L.balcaoY + Math.sin(t * 3 + s.x) * 1.5;
+  const f = cl.pac / cl.pacMax;
+  const humor = cl.humor === "feliz" ? "feliz" : (cl.humor === "bravo" && (cl.falaT > 0 || cl.saindo !== null)) ? "bravo" : f > 0.5 ? "normal" : f > 0.25 ? "preocupado" : "bravo";
+  ctx.save();
+  if (cl.saindo !== null && cl.saindo > 0) ctx.globalAlpha = 1 - suave(cl.saindo);
+  if (sel) { ctx.fillStyle = "#FACC1566"; ctx.beginPath(); ctx.ellipse(x, y - 4, 56 * sc, 14 * sc, 0, 0, 7); ctx.fill(); }
+  ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO; ctx.lineJoin = "round";
+  if (cl.estilo === 2) rr(-31, -108, 62, 58, 22, cl.cabelo);           // cabelo comprido (atrás da cabeça)
+  rr(-36, -58, 72, 70, 26, cl.roupa);                                   // corpo
+  rr(-8, -60, 16, 10, 4, cl.pele);                                     // pescoço
+  circ(0, -82, 27, cl.pele);                                           // cabeça
+  ctx.fillStyle = cl.cabelo; ctx.beginPath();
+  if (cl.estilo === 1) { ctx.moveTo(-27, -86); for (let k = 0; k <= 6; k++) ctx.lineTo(-27 + k * 9, k % 2 ? -118 : -104); ctx.lineTo(27, -86); ctx.closePath(); }
+  else { ctx.arc(0, -84, 28, Math.PI * 1.02, Math.PI * 1.98); ctx.closePath(); }
+  fs(cl.cabelo);
+  // olhos
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(-10, -84, 6.5, 7.5, 0, 0, 7); ctx.ellipse(10, -84, 6.5, 7.5, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#0c0c10"; ctx.beginPath(); ctx.arc(-9, -83, 3.2, 0, 7); ctx.arc(11, -83, 3.2, 0, 7); ctx.fill();
+  ctx.lineWidth = 3;
+  if (humor === "feliz") {
+    ctx.beginPath(); ctx.arc(0, -73, 10, 0.1 * Math.PI, 0.9 * Math.PI); ctx.closePath(); fs("#7f1d1d");
+    ctx.fillStyle = "#f9a8d4aa"; ctx.beginPath(); ctx.arc(-17, -72, 5, 0, 7); ctx.arc(17, -72, 5, 0, 7); ctx.fill();
+  } else if (humor === "normal") { ctx.beginPath(); ctx.arc(0, -74, 7, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke(); }
+  else if (humor === "preocupado") {
+    ctx.beginPath(); ctx.moveTo(-7, -67); ctx.lineTo(7, -67); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(22, -100); ctx.quadraticCurveTo(28, -90, 22, -88); ctx.quadraticCurveTo(16, -90, 22, -100); fs("#7dd3fc");
+  } else {
+    ctx.beginPath(); ctx.arc(0, -62, 8, 1.2 * Math.PI, 1.8 * Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-17, -96); ctx.lineTo(-4, -91); ctx.moveTo(17, -96); ctx.lineTo(4, -91); ctx.stroke();
+    ctx.fillStyle = "#ef444477"; ctx.beginPath(); ctx.arc(-17, -72, 5, 0, 7); ctx.arc(17, -72, 5, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+  cl.desenhoX = x;
+}
+function desenhaBalao(cl, s, sel) {
+  const sc = escalaCliente(s), x = cl.desenhoX ?? s.x, n = cl.pedido.length;
+  const fundo = L.balcaoY - 120 * sc, topoMin = L.cena.y + 18;
+  let icone = clamp((s.w - 24) / 3 - 8, 20, clamp(L.cena.h / 8, 40, 56));
+  let porLinha = Math.max(1, Math.min(n, Math.floor((s.w - 20) / (icone + 8))));
+  let linhas = Math.ceil(n / porLinha);
+  const cabe = (fundo - topoMin - 30) / linhas - 16;
+  if (icone > cabe) icone = Math.max(14, cabe);
+  const bw = porLinha * (icone + 8) + 12, bh = 24 + linhas * (icone + 15);
+  const by = Math.max(topoMin, fundo - bh), bx = clamp(x - bw / 2, L.cena.x + 3, L.cena.x + L.cena.w - bw - 3);
+  ctx.save();
+  if (cl.entra < 1) ctx.globalAlpha = suave(cl.entra);
+  if (sel) { ctx.shadowColor = "#FACC15"; ctx.shadowBlur = 14; }
+  ctx.lineWidth = sel ? 4 : 2.5; ctx.strokeStyle = sel ? "#eab308" : CONTORNO;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 12); ctx.moveTo(x - 8, by + bh); ctx.lineTo(x, by + bh + 10); ctx.lineTo(x + 8, by + bh);
+  ctx.fillStyle = "#fff"; ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.fillRect(x - 6, by + bh - 3, 12, 4);
+  ctx.fillStyle = "#1c1917"; ctx.font = "800 13px system-ui,sans-serif"; ctx.textAlign = "center";
+  ctx.fillText(cl.prato.nome.toUpperCase(), bx + bw / 2, by + 16);
+  cl.pedido.forEach((id, i) => {
+    const col = i % porLinha, lin = Math.floor(i / porLinha);
+    const ix = bx + 6 + col * (icone + 8) + (icone + 8) / 2, iy = by + 22 + lin * (icone + 15) + icone / 2;
+    ic(id, ix, iy, icone);
+    const m = cl.montado[i];                                 // ✓ verde se já está certo, ✗ vermelho se errou
+    const cor = m === undefined ? "#e5e7eb" : m === id ? "#22c55e" : "#ef4444";
+    ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(ix, iy + icone / 2 + 6, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = m === undefined ? "#1c1917" : "#fff"; ctx.font = "800 10px system-ui,sans-serif";
+    ctx.fillText(m === undefined ? String(i + 1) : m === id ? "✓" : "✗", ix, iy + icone / 2 + 9.5);
+  });
+  ctx.restore();
+}
+function desenhaFala(cl, s) {
+  const sc = escalaCliente(s), x = (cl.desenhoX ?? s.x), y = L.balcaoY - 95 * sc;
+  ctx.font = "800 14px system-ui,sans-serif"; const tw = ctx.measureText(cl.fala).width + 16;
+  let fx = x + 28 * sc; if (fx + tw > L.cena.x + L.cena.w - 4) fx = x - 28 * sc - tw;
+  fx = clamp(fx, L.cena.x + 3, L.cena.x + L.cena.w - tw - 3);
+  ctx.save(); ctx.globalAlpha = clamp(cl.falaT * 3, 0, 1);
+  ctx.lineWidth = 2.5; ctx.strokeStyle = cl.humor === "bravo" ? "#dc2626" : cl.humor === "feliz" ? "#16a34a" : CONTORNO;
+  rr(fx, y - 14, tw, 26, 10, "#fff");
+  ctx.fillStyle = "#1c1917"; ctx.textAlign = "left"; ctx.fillText(cl.fala, fx + 8, y + 4);
+  ctx.restore();
+}
+function desenhaPlanta(x, y, s) {
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO;
+  for (const a of [-0.7, -0.25, 0.25, 0.7]) { ctx.save(); ctx.translate(x, y - 18 * s); ctx.rotate(a); elip(0, -16 * s, 7 * s, 18 * s, 0, "#22c55e"); ctx.restore(); }
+  ctx.beginPath(); ctx.moveTo(x - 14 * s, y - 20 * s); ctx.lineTo(x + 14 * s, y - 20 * s); ctx.lineTo(x + 10 * s, y); ctx.lineTo(x - 10 * s, y); ctx.closePath(); fs("#c2410c");
+}
+function desenhaCena(t) {
+  const c = L.cena, dec = J ? J.up.decoracao : 0;
+  ctx.fillStyle = CONFIG.cores.parede; ctx.fillRect(c.x, c.y, c.w, c.h);
+  ctx.strokeStyle = CONFIG.cores.azulejo; ctx.lineWidth = 2;
+  for (let x = c.x + 18; x < c.x + c.w; x += 36) { ctx.beginPath(); ctx.moveTo(x, c.y); ctx.lineTo(x, c.y + c.h); ctx.stroke(); }
+  for (let y = c.y + 18; y < c.y + c.h; y += 36) { ctx.beginPath(); ctx.moveTo(c.x, y); ctx.lineTo(c.x + c.w, y); ctx.stroke(); }
+  // decoração nível 3: toldo listrado
+  if (dec >= 3) {
+    ctx.lineWidth = 2; ctx.strokeStyle = CONTORNO;
+    for (let i = 0, x = c.x; x < c.x + c.w; i++, x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, c.y); ctx.lineTo(x + 40, c.y); ctx.lineTo(x + 40, c.y + 6); ctx.arc(x + 20, c.y + 6, 20, 0, Math.PI); ctx.closePath();
+      fs(i % 2 ? "#fff" : "#ef4444");
+    }
+  }
+  // decoração nível 2: varal de luzes
+  if (dec >= 2) {
+    ctx.strokeStyle = "#44403c"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(c.x, c.y + 8);
+    for (let x = c.x; x <= c.x + c.w; x += 60) ctx.quadraticCurveTo(x + 30, c.y + 22, x + 60, c.y + 8);
+    ctx.stroke();
+    const cores = ["#FACC15", "#ef4444", "#22c55e", "#3b82f6", "#ec4899"];
+    for (let i = 0, x = c.x + 15; x < c.x + c.w; i++, x += 30) {
+      const fase = (x - c.x) % 60 / 60, yy = c.y + 8 + Math.sin(fase * Math.PI) * 10 + 5;
+      ctx.save(); ctx.shadowColor = cores[i % 5]; ctx.shadowBlur = 8 + 6 * Math.sin(t * 4 + i);
+      ctx.fillStyle = cores[i % 5]; ctx.beginPath(); ctx.arc(x, yy, 4.5, 0, 7); ctx.fill(); ctx.restore();
+    }
+  }
+  // decoração nível 1: plantas nas pontas do balcão (atrás dos clientes)
+  if (dec >= 1) { const s = clamp(c.h / 320, 0.6, 1); desenhaPlanta(c.x + 20 * s, L.balcaoY - 4, s); desenhaPlanta(c.x + c.w - 20 * s, L.balcaoY - 4, s); }
+  if (!J) return;
+  // clientes (atrás do balcão)
+  L.slots.forEach((s, i) => {
+    const cl = J.clientes[i];
+    if (cl) desenhaCliente(cl, s, i === J.sel, t);
+    else { ctx.fillStyle = "#9a341288"; ctx.font = "700 13px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.fillText("próximo cliente…", s.x, L.balcaoY - 30); }
+  });
+  // balcão de madeira
+  const by = L.balcaoY;
+  ctx.fillStyle = CONFIG.cores.balcao; ctx.fillRect(c.x, by, c.w, c.y + c.h - by);
+  ctx.strokeStyle = "#78350f"; ctx.lineWidth = 2;
+  for (let x = c.x + 30; x < c.x + c.w; x += 60) { ctx.beginPath(); ctx.moveTo(x, by + 6); ctx.lineTo(x, c.y + c.h); ctx.stroke(); }
+  ctx.fillStyle = CONFIG.cores.balcaoTopo; ctx.fillRect(c.x, by - 5, c.w, 10);
+  ctx.strokeStyle = CONTORNO; ctx.lineWidth = 2; ctx.strokeRect(c.x - 2, by - 5, c.w + 4, 10);
+  // barra de paciência de cada cliente (na frente do balcão)
+  L.slots.forEach((s, i) => {
+    const cl = J.clientes[i]; if (!valido(cl)) return;
+    const f = clamp(cl.pac / cl.pacMax, 0, 1), bw = s.w * 0.6, bx = s.x - bw / 2, yy = by + 12;
+    ctx.fillStyle = "#0c0c10aa"; ctx.fillRect(bx, yy, bw, 9);
+    ctx.fillStyle = f > 0.5 ? "#22c55e" : f > 0.25 ? "#facc15" : "#ef4444"; ctx.fillRect(bx + 1, yy + 1, (bw - 2) * f, 7);
+  });
+  // balões de pedido e falas (por cima de tudo)
+  L.slots.forEach((s, i) => {
+    const cl = J.clientes[i];
+    if (valido(cl)) desenhaBalao(cl, s, i === J.sel);
+    if (cl && cl.falaT > 0) desenhaFala(cl, s);
+  });
+}
+
+// ---------- bandeja e botões ----------
+function botao(r, txt, cor, corTxt, apertavel) {
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO;
+  rr(r.x, r.y + 4, r.w, r.h, 14, "#000000aa");
+  rr(r.x, r.y, r.w, r.h, 14, apertavel ? cor : "#57534e");
+  ctx.fillStyle = corTxt; ctx.font = `900 ${clamp(r.h * 0.34, 13, 22)}px system-ui,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(txt, r.x + r.w / 2, r.y + r.h / 2 + 1); ctx.textBaseline = "alphabetic";
+}
+function desenhaBandeja(t) {
+  const b = L.bandeja, p = L.prato, cl = J && J.clientes[J.sel];
+  ctx.fillStyle = CONFIG.cores.bandeja; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = "#fafaf9"; ctx.font = "800 14px system-ui,sans-serif"; ctx.textAlign = "left";
+  ctx.fillText(valido(cl) ? `Bandeja · ${cl.prato.nome}` : "Bandeja", b.x + 10, b.y + 18);
+  const tw = p.s * 1.25, th = p.s * 0.92;
+  ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO;
+  rr(p.x - tw / 2, p.y - th / 2, tw, th, 16, "#a8a29e");
+  ctx.lineWidth = 0.01; rr(p.x - tw / 2 + 6, p.y - th / 2 + 6, tw - 12, th - 12, 12, "#d6d3d1");
+  if (valido(cl) && (cl.montado.length || cl.fila)) desenhaMontagem(cl, p.x, p.y, p.s * 0.82);
+  else { ctx.fillStyle = "#78716c"; ctx.font = "700 14px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.fillText("monte o pedido aqui", p.x, p.y + 5); }
+  // chapa no canto da bandeja (fica mais quente a cada melhoria)
+  if (J) {
+    const cx = p.x + p.s * 0.625 - 26, cy = p.y - p.s * 0.46 + 16, quente = J.voando.length > 0;
+    ctx.lineWidth = 2; ctx.strokeStyle = CONTORNO; rr(cx - 16, cy - 6, 32, 12, 3, "#57534e");
+    for (let k = 0; k <= J.up.chapa; k++) {
+      const fx = cx - 10 + k * 6, h = 7 + (quente ? Math.sin(t * 20 + k) * 3 : 0);
+      ctx.fillStyle = k % 2 ? "#facc15" : "#f97316"; ctx.beginPath(); ctx.moveTo(fx - 3, cy + 6); ctx.lineTo(fx, cy + 6 + h); ctx.lineTo(fx + 3, cy + 6); ctx.fill();
+    }
+  }
+  const completo = valido(cl) && cl.montado.length + cl.fila === cl.pedido.length;
+  botao(L.entregar, "ENTREGAR", completo ? "#22c55e" : "#FACC15", "#1a1206", valido(cl) && cl.montado.length + cl.fila > 0);
+  botao(L.limpar, "LIMPAR", "#64748b", "#fff", valido(cl) && cl.montado.length + cl.fila > 0);
+}
+
+// ---------- despensa (botões de ingredientes) ----------
+function desenhaDespensa(t) {
+  const d = L.despensa, prato = pratoAtual(), cl = J && J.clientes[J.sel];
+  ctx.fillStyle = CONFIG.cores.despensa; ctx.fillRect(d.x, d.y, d.w, d.h);
+  ctx.fillStyle = "#a1a1aa"; ctx.font = "700 13px system-ui,sans-serif"; ctx.textAlign = "left";
+  ctx.fillText(`Ingredientes · ${prato.nome} — toque na ordem do balão`, d.x + 10, d.y + 17, d.w - 20);
+  // dica para quem está começando: o próximo ingrediente certo brilha
+  const proximo = J && J.nivel <= CONFIG.dicaAteNivel && valido(cl) ? cl.pedido[cl.montado.length + cl.fila] : null;
+  for (const g of L.ingr) {
+    const aperta = J && J.flash[g.id] > 0, enc = aperta ? 4 : 0;
+    const x = g.x + enc, y = g.y + enc, w = g.w - enc * 2, h = g.h - enc * 2;
+    ctx.lineWidth = 3; ctx.strokeStyle = CONTORNO;
+    rr(x, y + 5, w, h, 16, "#000000aa");
+    if (g.id === proximo) { ctx.save(); ctx.shadowColor = "#FACC15"; ctx.shadowBlur = 18 + 8 * Math.sin(t * 8); rr(x, y, w, h, 16, "#fef08a"); ctx.restore(); ctx.lineWidth = 4; ctx.strokeStyle = "#eab308"; rr(x, y, w, h, 16, null); }
+    else rr(x, y, w, h, 16, aperta ? "#fde68a" : "#fff7ed");
+    ic(g.id, x + w / 2, y + h * 0.44, Math.min(w, h) * 0.56);
+    ctx.fillStyle = "#1c1917"; ctx.font = `800 ${clamp(w * 0.12, 11, 16)}px system-ui,sans-serif`; ctx.textAlign = "center";
+    ctx.fillText(CONFIG.ingredientes[g.id]?.nome || g.id, x + w / 2, y + h - 9, w - 8);
+    ctx.fillStyle = "#a8a29e"; ctx.font = "800 11px system-ui,sans-serif"; ctx.textAlign = "left"; ctx.fillText(String(g.tecla), x + 8, y + 15);
+  }
+}
+
+function desenha(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#0c0c10"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  L = calculaLayout();
+  desenhaCena(t); desenhaBandeja(t); desenhaDespensa(t);
+  if (!J) return;
+  // ingredientes voando até a bandeja
+  for (const v of J.voando) {
+    const p = clamp(v.t / v.dur, 0, 1);
+    ic(v.id, lerp(v.de.x, L.prato.x, p), lerp(v.de.y, L.prato.y, p) - Math.sin(p * Math.PI) * 80, 46 - p * 10);
+  }
+  for (const p of J.parts) {
+    ctx.globalAlpha = clamp(p.vida * 1.5, 0, 1); ctx.fillStyle = p.cor;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1; ctx.textAlign = "center";
+  for (const s of J.textos) { ctx.globalAlpha = clamp(s.vida * 1.5, 0, 1); textoContorno(s.txt, s.x, s.y, s.tam, s.cor); }
+  ctx.globalAlpha = 1;
+}
+
+let ultimo = performance.now();
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
+  passo(dt); desenha(agora / 1000);
+  requestAnimationFrame(laco);
+}
+
+// ---------- telas ----------
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function telaInicio() {
+  rodando = false;
+  const nv = salvo.nivel || 1;
+  tela(`<h1>🍔 ${CONFIG.titulo}</h1>
+    <p>Os clientes pedem no <b>balão</b>. Toque nos <b>ingredientes na ordem</b> para montar o prato na bandeja e toque em <b>ENTREGAR</b>.
+    Quanto mais rápido, maior a <b>gorjeta</b>!</p>
+    <p style="font-size:14px">Hambúrguer → pizza → açaí → pastel → sushi: cada nível traz ingrediente novo.<br>
+    PC: teclas <b>1–9</b> = ingredientes · <b>Enter</b> = entregar · <b>Backspace</b> = limpar · <b>←/→</b> = trocar cliente · <b>U</b> = loja</p>
+    <span class="nv">⭐ Nível ${nv}${salvo.recorde ? ` · Recorde 🪙 ${salvo.recorde}` : ""}</span>
+    <div class="linha"><button class="btn" onclick="novaPartida()">▶ Jogar</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    ${nv > 1 ? `<p style="font-size:12px;margin-top:10px"><a href="#" style="color:#a1a1aa" onclick="recomeca();return false">recomeçar do nível 1</a></p>` : ""}
+    <p style="font-size:12px;color:#888;margin-top:10px">Fábrica de Jogos INEMA · v${VERSAO}</p>`);
+}
+function recomeca() { salvo.nivel = 1; salvo.xp = 0; salva(); telaInicio(); }
+function telaLoja() {
+  if (!J || !rodando || DEMO) return;
+  pausado = true;
+  const cards = Object.entries(CONFIG.melhorias).map(([k, m]) => {
+    const n = J.up[k], max = m.precos.length, preco = m.precos[n];
+    return `<div class="card"><span class="e">${m.emoji}</span><span class="t">${m.nome}<small>${m.desc} · nível ${n}/${max}</small></span>
+      ${n >= max ? "<b>MÁX</b>" : `<button class="btn" ${J.moedas < preco ? "disabled" : ""} onclick="comprar('${k}')">🪙 ${preco}</button>`}</div>`;
+  }).join("");
+  tela(`<h1>🛒 Loja</h1><p>Você tem <b style="color:#FACC15">🪙 ${Math.floor(J.moedas)}</b> · o jogo fica pausado aqui</p>
+    <div class="cards">${cards}</div>
+    <div class="linha"><button class="btn sec" onclick="fechaLoja()">▶ Voltar ao jogo</button></div>`);
+}
+function fechaLoja() { pausado = false; $("tela").classList.add("hidden"); document.activeElement && document.activeElement.blur(); }
+function fimDoDia() {
+  rodando = false;
+  const pontos = Math.floor(J.moedas), novo = pontos > (salvo.recorde || 0);
+  if (!DEMO) { if (novo) salvo.recorde = pontos; salvo.totalClientes = (salvo.totalClientes || 0) + J.atendidos; salva(); }
+  if (DEMO) setTimeout(novaPartida, 6000);
+  tela(`<h1>🍽️ Fim do expediente!</h1>
+    <table><tr><td>🙂 Clientes atendidos</td><td>${J.atendidos}</td></tr>
+    <tr><td>🪙 Moedas</td><td>${pontos}</td></tr>
+    <tr><td>💸 Gorjetas</td><td>${J.gorjetas}</td></tr>
+    <tr><td>🔥 Maior combo</td><td>${J.melhorCombo}</td></tr>
+    <tr><td>🎯 Missões</td><td>${J.missoesCumpridas}</td></tr></table>
+    <p><span class="nv">⭐ Nível ${J.nivel} · +${J.xpPartida} XP</span></p>
+    <p>${novo ? "⭐ Novo recorde seu!" : `Seu recorde: 🪙 ${salvo.recorde || 0}`}</p>
+    <div class="linha"><button class="btn" onclick="novaPartida()">↻ Jogar de novo</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>`);
+}
+function telaCriar() {
+  rodando = false; pausado = false;
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: <b>ingredientes</b>, <b>cardápios</b>, preços, paciência dos clientes, <b>melhorias</b> e <b>missões</b>.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo, crie o cardápio "Tapioca" no nível 4,
+com os ingredientes goma, coco, queijo e presunto,
+cada um desenhado no canvas como os outros.
+Crie também a missão "Faça 3 tapiocas".
+Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "minha-faca-sua-comida.html"; a.click();
+}
+
+// janela para o teste automático (testa.cjs) espiar o estado do jogo
+window.jogo = {
+  estado: () => J ? ({ rodando, pausado, nivel: J.nivel, xp: J.xp, moedas: J.moedas, atendidos: J.atendidos, erros: J.erros,
+                       missoesCumpridas: J.missoesCumpridas, missao: textoMissao(J.missao.def), combo: J.combo,
+                       balcoes: J.balcoes, up: { ...J.up }, voando: J.voando.length,
+                       cliente: valido(J.clientes[J.sel]) ? { pedido: J.clientes[J.sel].pedido.slice(), montado: J.clientes[J.sel].montado.slice() } : null })
+                   : { rodando: false, nivel: salvo.nivel || 1 },
+  layout: () => L && { ingr: L.ingr, entregar: L.entregar, limpar: L.limpar },
+};
+
+if (DEMO) novaPartida(); else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
