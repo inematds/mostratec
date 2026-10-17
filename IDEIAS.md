@@ -49,3 +49,16 @@ Consolidada em 16/10/2026: as ideias do documento original e as que surgiram na 
 - **Fila:** D5 (se o klein for rápido) ou D2 (garantida), + C1, corrida de robôs.
 - **Brinde:** B1, o Oráculo impresso.
 - **Demonstração:** 6, avatar com foto, só no telão.
+
+## E. Ligação com o "Roube um Ovo" (Steal an Egg, Roblox) — proposta de 17/10/2026
+
+Jogo viral de julho de 2026 (6 bilhões de visitas): você rouba ovos da base dos outros, choca e ganha pets que rendem dinheiro. A ideia é usar a **mecânica** (ovo, chocar, raridade, roubar), não a marca nem o logo do Roblox.
+
+| # | Ideia | Situação |
+|---|---|---|
+| E1 | **Choque seu ovo de IA**: ovos-cápsula no estande, cada um com um QR → "choca" um pet robô com raridade (comum, raro, épico, lendário), card impresso na hora | Proposta, pets pré-gerados com flux2-klein |
+| E2 | **Roube o ovo da IA** no telão: jogo multiplayer simples no navegador, o celular vira controle pelo QR, placar do dia | Proposta, ~5 dias de código |
+| E3 | **Crie seu "roube um ovo" no Roblox com IA**: o QR leva a uma trilha INEMA para montar o próprio jogo no Roblox Studio com o assistente de IA | Proposta: é o elo de aprendizado depois da feira |
+| E4 | Ovo de papel que "choca": papercraft em duas metades com o pet dentro | Proposta, alternativa ao Oráculo |
+
+Riscos: não usar o nome nem a marca do jogo como se fosse nosso ("inspirado em"); em ago/2026 o jogo foi tirado do ar por um tempo por causa da mecânica de "rolar vídeos" (brainrot), então não copiar essa parte.
