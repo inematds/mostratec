@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Evolua a Capivara — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5 }
+  html,body { margin:0; height:100%; background:var(--preto); color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none;
+              font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif }
+  #c { display:block; position:fixed; inset:0; width:100vw; height:100vh }
+
+  /* ---------- HUD (topo) ---------- */
+  #hud { position:fixed; top:8px; left:8px; right:8px; max-width:720px; margin:0 auto; display:flex; flex-direction:column;
+         gap:6px; pointer-events:none; z-index:2 }
+  .linha1 { display:flex; gap:6px; align-items:stretch }
+  .pilula { background:rgba(12,12,16,.84); border:2px solid #000; border-radius:14px; color:#fff; padding:6px 10px;
+            box-shadow:0 3px 0 rgba(0,0,0,.35) }
+  #h-moedas { flex:1.3; font-weight:800; font-size:clamp(19px,5vw,28px); display:flex; align-items:baseline; gap:6px;
+              white-space:nowrap; overflow:hidden }
+  #h-moedas b { color:var(--amarelo) }
+  #h-moedas small { font-size:.52em; color:#86efac }
+  .nivel { flex:1; font-weight:800; font-size:13px; display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0 }
+  .nivel small { font-weight:700; color:#cbd5e1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .barra-xp, .barra-m { height:8px; background:#ffffff26; border-radius:6px; overflow:hidden }
+  .barra-xp i, .barra-m i { display:block; height:100%; width:0; transition:width .25s }
+  .barra-xp i { background:#22d3ee }
+  .barra-m i { background:var(--amarelo) }
+  #missao { display:grid; grid-template-columns:1fr auto; gap:3px 8px; font-weight:800; font-size:clamp(14px,3.8vw,18px) }
+  #missao .barra-m { grid-column:1 / 3 }
+  #m-prog { color:var(--amarelo) }
+  #missao.ok { animation:missaoOk .7s }
+  @keyframes missaoOk { 0% { transform:scale(1) } 30% { transform:scale(1.07); background:#FACC15; color:#0c0c10 } 100% { transform:scale(1) } }
+  .pulo { animation:pulo .35s }
+  @keyframes pulo { 50% { transform:scale(1.12) } }
+  .btn-icone { pointer-events:auto; background:rgba(12,12,16,.84); color:#fff; border:2px solid #000; border-radius:14px;
+               font-size:22px; min-width:50px; min-height:50px; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.35) }
+
+  /* ---------- barra de baixo ---------- */
+  #barra { position:fixed; left:0; right:0; bottom:24px; display:flex; justify-content:center; gap:10px; z-index:2; padding:0 10px }
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:14px; font-weight:800; font-family:inherit;
+         padding:14px 20px; font-size:clamp(16px,4.4vw,21px); cursor:pointer; box-shadow:0 5px 0 #a16207 }
+  .btn:active { transform:translateY(3px); box-shadow:0 2px 0 #a16207 }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 5px 0 #000 }
+  .btn.apagado { filter:saturate(.35) brightness(.85) }
+  #b-comprar { flex:0 1 340px; white-space:nowrap }
+  .treme { animation:treme .35s }
+  @keyframes treme { 25% { transform:translateX(-6px) } 75% { transform:translateX(6px) } }
+  #rodape { position:fixed; bottom:4px; left:0; right:0; text-align:center; font-size:11px; color:#ffffffb0;
+            pointer-events:none; z-index:2; text-shadow:0 1px 2px #000 }
+  #aviso { position:fixed; left:50%; bottom:98px; transform:translateX(-50%); background:#000d; padding:9px 16px; border-radius:12px;
+           font-weight:800; pointer-events:none; opacity:0; transition:opacity .3s; white-space:nowrap; z-index:3;
+           font-size:clamp(13px,3.6vw,17px); border:2px solid var(--amarelo) }
+
+  /* ---------- telas (início, criar) ---------- */
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.8); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 32px); overflow:auto; text-align:center; padding:20px;
+                 border:2px solid #333; border-radius:18px; background:#14141b; box-sizing:border-box }
+  #tela h1 { margin:.15em 0; font-size:clamp(28px,7vw,44px); color:var(--amarelo); line-height:1.1 }
+  #tela p { line-height:1.45; color:#d4d4d8; margin:.6em 0 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #tela .link { background:none; border:0; color:#a1a1aa; text-decoration:underline; font:inherit; font-size:14px; cursor:pointer; margin-top:10px }
+  #vitrine { width:100%; height:100px; display:block }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:34vh; font-size:12px; white-space:pre-wrap }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div class="linha1">
+    <div id="h-moedas" class="pilula">🪙 <b id="h-m">0</b> <small id="h-r">+0/s</small></div>
+    <div class="pilula nivel"><span id="h-nv">Nível 1</span><div class="barra-xp"><i id="h-xp"></i></div><small id="h-cen">🌿 Lagoa</small></div>
+    <button id="b-menu" class="btn-icone" title="Menu">☰</button>
+  </div>
+  <div id="missao" class="pilula"><span id="m-txt">🎯 ...</span><span id="m-prog">0/0</span><div class="barra-m"><i id="m-bar"></i></div></div>
+</div>
+
+<div id="barra">
+  <button id="b-som" class="btn-icone" title="Som">🔊</button>
+  <button id="b-comprar" class="btn">＋ Capivara · 🪙 10</button>
+  <button id="b-dica" class="btn-icone" title="Dica">💡</button>
+</div>
+<div id="aviso"></div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="tela" class="hidden"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   EVOLUA A CAPIVARA — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione um 8º estágio que..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Evolua a Capivara",
+
+  // ESTÁGIOS DE EVOLUÇÃO (do menor para o maior). Duas iguais juntas viram o próximo.
+  //   nome: o que aparece na tela
+  //   moedasPorSegundo: quanto CADA capivara desse estágio rende sozinha
+  //   corpo / barriga: cores do desenho
+  //   cor: cor da bolinha com o número do estágio
+  //   acessorio: qual enfeite desenhar ("tangerina", "flor", "oculos", "cientista",
+  //              "astronauta", "robo", "lendaria" ou "" para nenhum)
+  estagios: [
+    { nome: "Filhote",             moedasPorSegundo: 1,   corpo: "#c99263", barriga: "#ecc39b", cor: "#a3e635", acessorio: "tangerina" },
+    { nome: "Capivara",            moedasPorSegundo: 3,   corpo: "#a8703f", barriga: "#d9a676", cor: "#4ade80", acessorio: "flor" },
+    { nome: "Capivara de óculos",  moedasPorSegundo: 8,   corpo: "#9c6537", barriga: "#d29d6c", cor: "#22d3ee", acessorio: "oculos" },
+    { nome: "Capivara cientista",  moedasPorSegundo: 20,  corpo: "#93603a", barriga: "#d29d6c", cor: "#60a5fa", acessorio: "cientista" },
+    { nome: "Capivara astronauta", moedasPorSegundo: 55,  corpo: "#8f5e36", barriga: "#d29d6c", cor: "#a78bfa", acessorio: "astronauta" },
+    { nome: "Capivara robô",       moedasPorSegundo: 140, corpo: "#8f9bad", barriga: "#cfd8e3", cor: "#f472b6", acessorio: "robo" },
+    { nome: "CAPIVARA LENDÁRIA",   moedasPorSegundo: 400, corpo: "#f2b51b", barriga: "#ffe28a", cor: "#FACC15", acessorio: "lendaria" },
+  ],
+
+  // ECONOMIA
+  moedasIniciais: 30,         // moedas no começo
+  capivarasIniciais: 3,       // quantos filhotes já começam no gramado
+  precoCapivara: 10,          // preço da primeira capivara comprada
+  aumentoPreco: 1.09,         // cada compra fica 9% mais cara
+  presenteACada: 7,           // a cada X segundos aparece um filhote de graça
+  presenteEstagioMax: 2,      // nos níveis altos o presente já vem mais evoluído (até este estágio)
+  bonusToque: 1,              // tocar numa capivara dá X segundos da renda dela na hora
+
+  // NÍVEL E XP
+  xpPorFusao: 6,              // XP de cada fusão (multiplicado pelo estágio novo)
+  xpPrimeiroNivel: 40,        // XP para ir do nível 1 ao 2
+  xpAumentoPorNivel: 30,      // cada nível pede mais este tanto de XP
+  premioNivel: 30,            // moedas de prêmio ao subir (vezes o número do nível)
+
+  // CENÁRIOS: liberados ao chegar no nível indicado.
+  //   tipo: qual desenho usar ("lagoa", "cidade", "laboratorio", "espaco")
+  //   vaga / borda: cores dos quadradinhos onde as capivaras ficam
+  cenarios: [
+    { nivel: 1, nome: "Lagoa",       emoji: "🌿", tipo: "lagoa",       vaga: "#b5e88f", borda: "#3f7d2a" },
+    { nivel: 2, nome: "Cidade",      emoji: "🏙️", tipo: "cidade",      vaga: "#e5e7eb", borda: "#4b5563" },
+    { nivel: 3, nome: "Laboratório", emoji: "🧪", tipo: "laboratorio", vaga: "#f1f5f9", borda: "#475569" },
+    { nivel: 4, nome: "Espaço",      emoji: "🚀", tipo: "espaco",      vaga: "#3730a3", borda: "#a5b4fc" },
+  ],
+
+  // MISSÕES (uma de cada vez, na ordem). {n} vira o número da meta.
+  //   tipo: "fundir" (juntar capivaras), "comprar", "tocar" (tocar nas capivaras),
+  //         "moedas" (ganhar moedas), "estagio" (chegar ao estágio número meta; 0 = filhote)
+  //   moedas / xp: prêmio ao cumprir
+  missoes: [
+    { tipo: "fundir",  meta: 2,   texto: "Evolua {n} capivaras",              moedas: 20,  xp: 15 },
+    { tipo: "comprar", meta: 2,   texto: "Compre {n} capivaras",              moedas: 25,  xp: 15 },
+    { tipo: "estagio", meta: 2,   texto: "Chegue à capivara de óculos",       moedas: 40,  xp: 20 },
+    { tipo: "tocar",   meta: 10,  texto: "Toque {n} vezes nas capivaras",     moedas: 40,  xp: 20 },
+    { tipo: "fundir",  meta: 4,   texto: "Evolua {n} capivaras",              moedas: 60,  xp: 25 },
+    { tipo: "estagio", meta: 3,   texto: "Chegue ao estágio cientista",       moedas: 100, xp: 30 },
+    { tipo: "moedas",  meta: 400, texto: "Ganhe {n} moedas",                  moedas: 120, xp: 30 },
+    { tipo: "fundir",  meta: 6,   texto: "Evolua {n} capivaras",              moedas: 150, xp: 35 },
+    { tipo: "estagio", meta: 4,   texto: "Chegue à capivara astronauta",      moedas: 300, xp: 40 },
+    { tipo: "comprar", meta: 5,   texto: "Compre {n} capivaras",              moedas: 300, xp: 40 },
+    { tipo: "estagio", meta: 5,   texto: "Chegue à capivara robô",            moedas: 800, xp: 50 },
+    { tipo: "estagio", meta: 6,   texto: "Crie a CAPIVARA LENDÁRIA!",         moedas: 3000, xp: 80 },
+  ],
+
+  demoAcelera: 3,             // no modo vitrine (?demo=1) o tempo passa X vezes mais rápido
+  som: true,                  // começa com som ligado?
+
+  // Textos da tela inicial
+  comoJogar1: "Arraste uma capivara sobre outra <b>igual</b> para ela evoluir.",
+  comoJogar2: "Cada capivara dá moedas sozinha: compre mais, cumpra missões e crie a <b>CAPIVARA LENDÁRIA</b>!",
+  promptExemplo: "Neste jogo, adicione um 8º estágio: a CAPIVARA DRAGÃO, " +
+                 "que dá 1000 moedas por segundo. Desenhe asas e uma " +
+                 "chaminha saindo do focinho no acessório dela. " +
+                 "Explique o que você mudou.",
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML; // cópia do jogo para o botão "Baixar"
+const $ = id => document.getElementById(id);
+const cv = $("c"), ctx = cv.getContext("2d");
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");            // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const ACEL = DEMO ? CONFIG.demoAcelera : 1;
+const ULTIMO = CONFIG.estagios.length - 1;  // índice do último estágio
+const NVAGAS = 12;                          // 12 lugares no gramado (3×4 no celular, 4×3 no PC)
+const CHAVE = "evolua-a-capivara-v1", CHAVE_RECORDE = "evolua-a-capivara-recorde";
+
+let dpr = 1;
+function redimensiona() {
+  dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+}
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fmt(n) {                            // 1234 → "1.234"; 25300 → "25,3 mil"
+  n = Math.floor(n);
+  if (n < 10000) return n.toLocaleString("pt-BR");
+  for (const [v, s] of [[1e9, "bi"], [1e6, "mi"], [1e3, "mil"]])
+    if (n >= v) return (n / v).toLocaleString("pt-BR", { maximumFractionDigits: n / v < 100 ? 1 : 0 }) + " " + s;
+}
+function escurece(hex, f) {                  // deixa uma cor mais escura (f < 1)
+  const n = parseInt(hex.slice(1), 16);
+  return `rgb(${Math.round((n >> 16 & 255) * f)},${Math.round((n >> 8 & 255) * f)},${Math.round((n & 255) * f)})`;
+}
+let avisoT = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoT = 2.2; }
+function anima(el, classe) { el.classList.remove(classe); void el.offsetWidth; el.classList.add(classe); }
+function setTxt(id, txt) { const el = $(id); if (el.textContent !== txt) el.textContent = txt; }
+
+// ---------- som (feito na hora, sem arquivos) ----------
+let audio = null, somLigado = CONFIG.som;
+function iniciaAudio() {                     // só pode criar o áudio depois de um toque/tecla
+  if (audio || DEMO) return;
+  try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+}
+function som(tipo, tom = 1) {
+  if (!audio || !somLigado) return;
+  const notas = {
+    pop:      [[520, 0, .08], [780, .06, .12]],
+    moeda:    [[988, 0, .05], [1319, .05, .08]],
+    compra:   [[440, 0, .06], [660, .06, .09]],
+    erro:     [[180, 0, .16]],
+    fanfarra: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .3]],
+  }[tipo];
+  const t0 = audio.currentTime;
+  for (const [f, ini, dur] of notas) {
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = tipo === "erro" ? "sawtooth" : "triangle"; o.frequency.value = f * tom;
+    g.gain.setValueAtTime(0.0001, t0 + ini);
+    g.gain.exponentialRampToValueAtTime(0.18, t0 + ini + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + ini + dur);
+    o.connect(g).connect(audio.destination); o.start(t0 + ini); o.stop(t0 + ini + dur + 0.02);
+  }
+}
+function alternaSom() { somLigado = !somLigado; $("b-som").textContent = somLigado ? "🔊" : "🔇"; }
+
+// ---------- estado do jogo ----------
+let E = null;               // tudo o que é salvo (moedas, nível, capivaras...)
+let rodando = false;        // false = jogo pausado atrás de uma tela
+let cenIdx = 0, transicao = null;
+let celebra = null;         // tela "NOVA EVOLUÇÃO!" aberta
+let arrasto = null;         // capivara sendo arrastada
+let ocioso = 0, salvaT = 0, tremor = 0, demoReinicia = 0;
+const particulas = [], textos = [], aneis = [], banners = [];
+
+function novaCapy(e) { return { e, anim: 0, cai: 0, fase: rnd(0, 6), tf: rnd(0.5, 2) }; }
+function estadoNovo() {
+  return { moedas: CONFIG.moedasIniciais, xp: 0, nivel: 1, compras: 0, maior: 0, fusoes: 0, toques: 0, ganho: 0,
+           missaoIdx: 0, missao: null, presente: CONFIG.presenteACada, vagas: Array(NVAGAS).fill(null) };
+}
+function novoJogo() {
+  E = estadoNovo();
+  const ordem = [...Array(NVAGAS).keys()].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < CONFIG.capivarasIniciais; i++) poe(0, ordem[i]);
+  cenIdx = cenarioDe(E.nivel); transicao = null; celebra = null; arrasto = null;
+  iniciaMissao();
+}
+function salvar() {
+  if (DEMO || !E) return;
+  try { localStorage.setItem(CHAVE, JSON.stringify({ ...E, vagas: E.vagas.map(c => c ? c.e : -1) })); } catch (e) {}
+}
+function carrega() {
+  try {
+    const s = JSON.parse(localStorage.getItem(CHAVE) || "null");
+    if (!s || !Array.isArray(s.vagas)) return null;
+    const est = Object.assign(estadoNovo(), s);
+    est.vagas = Array.from({ length: NVAGAS }, (_, i) => s.vagas[i] >= 0 && s.vagas[i] <= ULTIMO ? novaCapy(s.vagas[i]) : null);
+    return est;
+  } catch (e) { return null; }
+}
+function recorde() { try { return +localStorage.getItem(CHAVE_RECORDE) || 0; } catch (e) { return 0; } }
+
+const renda = () => E ? E.vagas.reduce((s, c) => s + (c ? CONFIG.estagios[c.e].moedasPorSegundo : 0), 0) : 0;
+const precoAtual = () => Math.round(CONFIG.precoCapivara * Math.pow(CONFIG.aumentoPreco, E.compras));
+const vagasLivres = () => E.vagas.map((c, i) => c ? -1 : i).filter(i => i >= 0);
+const xpPara = n => CONFIG.xpPrimeiroNivel + CONFIG.xpAumentoPorNivel * (n - 1);
+function cenarioDe(nivel) { let i = 0; CONFIG.cenarios.forEach((c, k) => { if (nivel >= c.nivel) i = k; }); return i; }
+
+// ---------- lugares (vagas) na tela ----------
+let vagaPos = [], tamVaga = 100;
+function layout() {
+  const topo = $("hud").getBoundingClientRect().bottom + 8;
+  const base = $("barra").getBoundingClientRect().top - 10;
+  const retrato = innerHeight > innerWidth;
+  const cols = retrato ? 3 : 4, lins = retrato ? 4 : 3;
+  const areaW = innerWidth - 20, areaH = Math.max(120, base - topo);
+  tamVaga = Math.min(areaW / cols, areaH / lins, 175);
+  const x0 = (innerWidth - tamVaga * cols) / 2, y0 = topo + (areaH - tamVaga * lins) / 2;
+  vagaPos = [];
+  for (let i = 0; i < NVAGAS; i++) vagaPos.push({ x: x0 + (i % cols + 0.5) * tamVaga, y: y0 + (Math.floor(i / cols) + 0.5) * tamVaga });
+}
+function vagaEm(x, y, f) {
+  for (let i = 0; i < NVAGAS; i++) if (Math.abs(x - vagaPos[i].x) < tamVaga * f && Math.abs(y - vagaPos[i].y) < tamVaga * f) return i;
+  return -1;
+}
+function achaPar() {           // procura duas capivaras iguais (as menos evoluídas primeiro)
+  for (let e = 0; e < ULTIMO; e++) {
+    const iguais = [];
+    E.vagas.forEach((c, i) => { if (c && c.e === e && c.cai <= 0) iguais.push(i); });
+    if (iguais.length >= 2) return iguais;
+  }
+  return null;
+}
+
+// ---------- efeitos ("juice") ----------
+function explode(x, y, n, cores, forca = 260, tipo = "circ") {
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, Math.PI * 2), v = rnd(forca * 0.3, forca);
+    particulas.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - forca * 0.3, vida: rnd(0.6, 1.1), v0: 1.1,
+                      cor: cores[i % cores.length], tam: rnd(3, 7), tipo, giro: rnd(0, 6) });
+  }
+}
+function flutua(x, y, txt, cor = "#FACC15", tam = 20, vida = 1.1) { textos.push({ x, y, txt, cor, tam, vida, v0: vida }); }
+function banner(titulo, sub, cor = "#FACC15") { banners.push({ titulo, sub, cor, vida: 2.4, v0: 2.4 }); }
+
+// ---------- ações do jogador ----------
+function poe(e, i, caindo = false) {
+  E.vagas[i] = novaCapy(e);
+  if (caindo) E.vagas[i].cai = 1;
+}
+function comprar() {
+  if (!E || !rodando) return;
+  const p = precoAtual(), livres = vagasLivres();
+  if (!livres.length) { aviso("Gramado cheio! Junte duas capivaras iguais."); som("erro"); anima($("b-comprar"), "treme"); return; }
+  if (E.moedas < p) { aviso(`Faltam ${fmt(p - E.moedas)} moedas`); som("erro"); anima($("b-comprar"), "treme"); return; }
+  E.moedas -= p; E.compras++;
+  poe(0, livres[Math.floor(Math.random() * livres.length)], true);
+  som("compra"); anima($("h-moedas"), "pulo");
+}
+function toca(i) {               // toque rápido numa capivara: moedas na hora
+  const c = E.vagas[i]; if (!c) return;
+  const ganho = Math.max(1, CONFIG.estagios[c.e].moedasPorSegundo * CONFIG.bonusToque * ACEL);
+  E.moedas += ganho; E.ganho += ganho; E.toques++;
+  c.anim = 0.6;
+  const p = vagaPos[i];
+  flutua(p.x, p.y - tamVaga * 0.35, "+" + fmt(ganho), "#FACC15", 24);
+  explode(p.x, p.y - tamVaga * 0.2, 6, ["#FACC15", "#fde68a"], 180, "moeda");
+  som("moeda", 1 + c.e * 0.08);
+}
+function soltaEm(destino) {      // largou a capivara arrastada em cima de um lugar
+  const de = arrasto.de, c = E.vagas[de]; arrasto = null;
+  if (!c) return;
+  if (destino < 0 || destino === de) { c.anim = 0.4; return; }
+  const alvo = E.vagas[destino];
+  if (!alvo) { E.vagas[destino] = c; E.vagas[de] = null; c.anim = 0.5; return; }
+  if (alvo.e === c.e && c.e < ULTIMO && alvo.cai <= 0) { funde(de, destino); return; }
+  if (alvo.e === c.e) aviso("Essa já é a evolução máxima! 👑");
+  E.vagas[destino] = c; E.vagas[de] = alvo; c.anim = alvo.anim = 0.5;   // diferentes: trocam de lugar
+}
+function funde(de, para) {       // FUSÃO! duas iguais viram o próximo estágio
+  const alvo = E.vagas[para]; E.vagas[de] = null;
+  alvo.e++; alvo.anim = 1; E.fusoes++;
+  const est = CONFIG.estagios[alvo.e], p = vagaPos[para];
+  explode(p.x, p.y, 18 + alvo.e * 6, [est.cor, "#ffffff", "#FACC15", est.corpo], 300 + alvo.e * 30, "estrela");
+  aneis.push({ x: p.x, y: p.y, r: tamVaga * 0.2, vida: 0.5, cor: est.cor });
+  flutua(p.x, p.y - tamVaga * 0.5, est.nome + "!", "#ffffff", 18 + Math.min(alvo.e, 4) * 2, 1.4);
+  tremor = Math.max(tremor, 0.25 + alvo.e * 0.08);
+  som("pop", 1 + alvo.e * 0.15);
+  ganhaXP(CONFIG.xpPorFusao * alvo.e);
+  if (alvo.e > E.maior) {        // primeira vez neste estágio → tela NOVA EVOLUÇÃO!
+    E.maior = alvo.e;
+    celebra = { e: alvo.e, t: 0 };
+    som("fanfarra");
+    try { if (alvo.e > recorde()) localStorage.setItem(CHAVE_RECORDE, alvo.e); } catch (e) {}
+    if (DEMO && alvo.e === ULTIMO) demoReinicia = 9;
+  }
+}
+function fundeAutomatico() {     // tecla F / botão 💡 quando não há dica: faz uma fusão
+  const par = achaPar();
+  if (!par) { aviso("Nenhum par igual. Compre mais capivaras!"); return; }
+  arrasto = { de: par[0] }; soltaEm(par[1]);
+}
+
+// ---------- XP, nível e cenário ----------
+function ganhaXP(n) {
+  E.xp += n;
+  while (E.xp >= xpPara(E.nivel)) {
+    E.xp -= xpPara(E.nivel); E.nivel++;
+    const premio = CONFIG.premioNivel * E.nivel;
+    E.moedas += premio;
+    const novo = cenarioDe(E.nivel);
+    if (novo !== cenIdx) {
+      transicao = { de: cenIdx, t: 0 }; cenIdx = novo;
+      banner("NÍVEL " + E.nivel + "!", "Novo cenário: " + CONFIG.cenarios[novo].nome + "  ·  +" + fmt(premio) + " moedas", "#22d3ee");
+    } else banner("NÍVEL " + E.nivel + "!", "+" + fmt(premio) + " moedas de prêmio", "#22d3ee");
+    explode(innerWidth / 2, innerHeight * 0.3, 40, ["#22d3ee", "#FACC15", "#f472b6", "#4ade80"], 420, "confete");
+    som("fanfarra", 1.25);
+  }
+}
+
+// ---------- missões ----------
+function defMissao(i) {
+  if (i < CONFIG.missoes.length) return { ...CONFIG.missoes[i] };
+  const k = i - CONFIG.missoes.length, r = Math.max(10, renda());    // depois da lista: missões que se repetem
+  return [
+    { tipo: "fundir",  meta: 4 + (k % 4), texto: "Evolua {n} capivaras", xp: 40 },
+    { tipo: "moedas",  meta: Math.ceil(r * 15 / 10) * 10, texto: "Ganhe {n} moedas", xp: 40 },
+    { tipo: "comprar", meta: 3, texto: "Compre {n} capivaras", xp: 40 },
+    { tipo: "tocar",   meta: 12, texto: "Toque {n} vezes nas capivaras", xp: 40 },
+  ][k % 4];
+}
+function iniciaMissao() {
+  for (let guarda = 0; guarda < 60; guarda++) {
+    const def = defMissao(E.missaoIdx);
+    if (def.tipo === "estagio" && E.maior >= def.meta) { E.missaoIdx++; continue; }  // já cumprida antes
+    E.missao = { def, inicio: { fusoes: E.fusoes, compras: E.compras, toques: E.toques, ganho: E.ganho } };
+    return;
+  }
+}
+function progresso() {
+  const { def, inicio } = E.missao;
+  switch (def.tipo) {
+    case "fundir":  return E.fusoes - inicio.fusoes;
+    case "comprar": return E.compras - inicio.compras;
+    case "tocar":   return E.toques - inicio.toques;
+    case "moedas":  return E.ganho - inicio.ganho;
+    case "estagio": return E.maior;
+  }
+  return 0;
+}
+function checaMissao() {
+  if (!E.missao) iniciaMissao();
+  const def = E.missao.def;
+  if (progresso() < def.meta) return;
+  const premio = Math.max(def.moedas || 0, Math.round(renda() * 6));
+  E.moedas += premio;
+  const r = $("missao").getBoundingClientRect();
+  explode(r.left + r.width / 2, r.top + r.height / 2, 30, ["#FACC15", "#ffffff", "#4ade80"], 320, "estrela");
+  flutua(r.left + r.width / 2, r.bottom + 24, "MISSÃO CUMPRIDA! +" + fmt(premio), "#FACC15", 22, 1.6);
+  anima($("missao"), "ok"); anima($("h-moedas"), "pulo");
+  som("fanfarra", 1.5);
+  E.missaoIdx++;
+  ganhaXP(def.xp || 20);
+  iniciaMissao();
+}
+function textoMissao() {
+  const { def } = E.missao;
+  const prog = def.tipo === "estagio" ? `${E.maior + 1}/${def.meta + 1}` : `${fmt(Math.min(progresso(), def.meta))}/${fmt(def.meta)}`;
+  const frac = def.tipo === "estagio" ? E.maior / def.meta : progresso() / def.meta;
+  return { txt: "🎯 " + def.texto.replace("{n}", fmt(def.meta)), prog, frac: clamp(frac, 0, 1) };
+}
+
+// ---------- entrada: toque, mouse e teclado ----------
+cv.addEventListener("pointerdown", e => {
+  iniciaAudio(); ocioso = 0;
+  if (celebra) { if (celebra.t > 0.6) celebra = null; return; }
+  if (!rodando || DEMO || !E) return;
+  const i = vagaEm(e.clientX, e.clientY, 0.5);
+  if (i < 0 || !E.vagas[i] || E.vagas[i].cai > 0) return;
+  arrasto = { de: i, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, moveu: false };
+});
+addEventListener("pointermove", e => {
+  if (!arrasto || e.pointerId !== arrasto.id) return;
+  arrasto.x = e.clientX; arrasto.y = e.clientY;
+  if (Math.hypot(arrasto.x - arrasto.x0, arrasto.y - arrasto.y0) > 10) arrasto.moveu = true;
+});
+addEventListener("pointerup", e => {
+  if (!arrasto || e.pointerId !== arrasto.id) return;
+  if (!arrasto.moveu) { const i = arrasto.de; arrasto = null; toca(i); return; }   // só tocou
+  soltaEm(vagaEm(e.clientX, e.clientY, 0.62));
+});
+addEventListener("pointercancel", () => { if (arrasto && arrasto.id !== undefined) arrasto = null; });
+addEventListener("keydown", e => {
+  iniciaAudio(); ocioso = 0;
+  const k = e.key.toLowerCase();
+  if (celebra) { if (celebra.t > 0.6) celebra = null; return; }
+  if (!rodando || DEMO) return;
+  if (k === " " || k === "c" || k === "enter") { e.preventDefault(); comprar(); }
+  else if (k === "f") fundeAutomatico();
+  else if (k === "m") alternaSom();
+  else if (k === "escape") telaInicio();
+});
+$("b-comprar").onclick = () => { iniciaAudio(); comprar(); };
+$("b-som").onclick = () => { iniciaAudio(); alternaSom(); };
+$("b-dica").onclick = () => { iniciaAudio(); if (ocioso > 5) fundeAutomatico(); else ocioso = 99; };  // 1º toque mostra a dica, 2º faz a fusão
+$("b-menu").onclick = () => telaInicio();
+
+// ---------- demonstração (?demo=1): o jogo joga sozinho ----------
+const demo = { espera: 1.2, mov: null };
+function passoDemo(dt) {
+  if (celebra) { if (celebra.t > 2.2) celebra = null; return; }
+  if (demoReinicia > 0 && (demoReinicia -= dt) <= 0) { novoJogo(); return; }
+  if (demo.mov) {                          // a "mão" leva a capivara até a outra
+    const m = demo.mov; m.t = Math.min(1, m.t + dt / 0.55);
+    const ease = m.t < 0.5 ? 2 * m.t * m.t : 1 - Math.pow(-2 * m.t + 2, 2) / 2;
+    const a = vagaPos[m.de], b = vagaPos[m.para];
+    arrasto.x = a.x + (b.x - a.x) * ease; arrasto.y = a.y + (b.y - a.y) * ease;
+    if (m.t >= 1) { demo.mov = null; soltaEm(m.para); demo.espera = 0.35; }
+    return;
+  }
+  if ((demo.espera -= dt) > 0) return;
+  demo.espera = 0.45;
+  const par = achaPar();
+  if (par) { arrasto = { de: par[0], x: vagaPos[par[0]].x, y: vagaPos[par[0]].y }; demo.mov = { de: par[0], para: par[1], t: 0 }; return; }
+  if (vagasLivres().length && E.moedas >= precoAtual()) { comprar(); return; }
+  const ocupadas = E.vagas.map((c, i) => c ? i : -1).filter(i => i >= 0);
+  if (ocupadas.length) toca(ocupadas[Math.floor(Math.random() * ocupadas.length)]);
+}
+
+// ---------- ciclo principal ----------
+function passo(dt) {
+  layout();
+  if (avisoT > 0 && (avisoT -= dt) <= 0) $("aviso").style.opacity = 0;
+  for (let i = particulas.length - 1; i >= 0; i--) {
+    const p = particulas[i]; p.vida -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 520 * dt; p.vx *= 0.98; p.giro += dt * 8;
+    if (p.vida <= 0) particulas.splice(i, 1);
+  }
+  for (let i = textos.length - 1; i >= 0; i--) { const f = textos[i]; f.vida -= dt; f.y -= 45 * dt; if (f.vida <= 0) textos.splice(i, 1); }
+  for (let i = aneis.length - 1; i >= 0; i--) { const a = aneis[i]; a.vida -= dt; a.r += 420 * dt; if (a.vida <= 0) aneis.splice(i, 1); }
+  if (banners.length && !celebra && (banners[0].vida -= dt) <= 0) banners.shift();
+  tremor = Math.max(0, tremor - dt * 1.6);
+  if (transicao && (transicao.t += dt) >= 1) transicao = null;
+  if (celebra) {
+    celebra.t += dt;
+    if (Math.random() < 0.6) particulas.push({ x: rnd(0, innerWidth), y: -10, vx: rnd(-40, 40), vy: rnd(60, 160), vida: 2.4, v0: 2.4,
+      cor: ["#FACC15", "#f472b6", "#22d3ee", "#4ade80", "#ffffff"][Math.floor(rnd(0, 5))], tam: rnd(5, 9), tipo: "confete", giro: rnd(0, 6) });
+  }
+  if (!E || !rodando) return;
+
+  // moedas entrando
+  const g = renda() * dt * ACEL;
+  E.moedas += g; E.ganho += g;
+
+  // capivaras: animações e "+moedas" flutuando
+  E.vagas.forEach((c, i) => {
+    if (!c) return;
+    c.anim = Math.max(0, c.anim - dt * 1.6);
+    if (c.cai > 0) {
+      c.cai -= dt / 0.45;
+      if (c.cai <= 0) { c.cai = 0; c.anim = 0.7; explode(vagaPos[i].x, vagaPos[i].y + tamVaga * 0.3, 8, ["#ffffffcc", "#e7d3b0"], 120); som("pop", 0.8); }
+    }
+    if ((c.tf -= dt) <= 0) {
+      c.tf = 2;
+      if (!arrasto || arrasto.de !== i)
+        flutua(vagaPos[i].x + rnd(-10, 10), vagaPos[i].y - tamVaga * 0.4, "+" + fmt(CONFIG.estagios[c.e].moedasPorSegundo * 2 * ACEL), "#fde047", 15, 0.9);
+    }
+  });
+
+  // presente: um filhote de graça de tempos em tempos
+  if ((E.presente -= dt * ACEL) <= 0) {
+    E.presente = CONFIG.presenteACada;
+    const livres = vagasLivres();
+    if (livres.length) {
+      const i = livres[Math.floor(Math.random() * livres.length)];
+      poe(Math.min(CONFIG.presenteEstagioMax, Math.floor((E.nivel - 1) / 2), ULTIMO), i, true);
+      flutua(vagaPos[i].x, vagaPos[i].y - tamVaga * 0.55, "Presente!", "#ffffff", 18, 1.3);
+    }
+  }
+
+  if (DEMO) passoDemo(dt); else ocioso += dt;
+  checaMissao();
+
+  // HUD
+  setTxt("h-m", fmt(E.moedas));
+  setTxt("h-r", "+" + fmt(renda() * ACEL) + "/s");
+  setTxt("h-nv", "Nível " + E.nivel);
+  $("h-xp").style.width = (100 * E.xp / xpPara(E.nivel)).toFixed(1) + "%";
+  const cen = CONFIG.cenarios[cenIdx];
+  setTxt("h-cen", cen.emoji + " " + cen.nome);
+  const m = textoMissao();
+  setTxt("m-txt", m.txt); setTxt("m-prog", m.prog);
+  $("m-bar").style.width = (m.frac * 100).toFixed(1) + "%";
+  const p = precoAtual();
+  setTxt("b-comprar", "＋ Capivara · 🪙 " + fmt(p));
+  $("b-comprar").classList.toggle("apagado", E.moedas < p || !vagasLivres().length);
+
+  if ((salvaT -= dt) <= 0) { salvaT = 2; salvar(); }
+}
+
+/* =====================================================================
+   DESENHO — tudo é desenhado com formas simples no canvas
+   ===================================================================== */
+const circ = (g, x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); };
+const elipse = (g, x, y, rx, ry, rot = 0) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); };
+const ret = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+const pinta = g => { g.fill(); g.stroke(); };
+function estrela(g, x, y, r) {
+  g.beginPath();
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.35 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  g.closePath(); g.fill();
+}
+
+// A CAPIVARA: (g = onde desenhar, x/y = centro, tam = tamanho, e = estágio, t = tempo)
+function desenhaCapivara(g, x, y, tam, e, t, o = {}) {
+  const est = CONFIG.estagios[e], ac = est.acessorio;
+  const k = tam / 125 * (e === 0 ? 0.8 : 1);
+  const fase = o.fase || 0, respira = 1 + Math.sin(t * 3 + fase) * 0.03;
+  g.save();
+  g.translate(x, y + 40 * k);                       // apoia nos pés para "respirar"
+  g.scale(k * (o.sx || 1), k * (o.sy || 1) * respira);
+  g.translate(0, -40);
+  g.lineJoin = "round"; g.lineCap = "round";
+  const contorno = "#2a1a10", lw = 3.5;
+  g.strokeStyle = contorno; g.lineWidth = lw;
+  const corpo = est.corpo, escuro = escurece(corpo, 0.72), barriga = est.barriga;
+
+  if (ac === "lendaria") {                          // brilho girando + capa vermelha
+    g.save(); g.rotate(t * 0.8);
+    for (let i = 0; i < 12; i++) {
+      g.rotate(Math.PI / 6); g.fillStyle = i % 2 ? "rgba(253,224,71,.5)" : "rgba(251,146,60,.35)";
+      g.beginPath(); g.moveTo(0, -10); g.lineTo(-13, -100); g.lineTo(13, -100); g.closePath(); g.fill();
+    }
+    g.restore();
+    g.fillStyle = "#dc2626";
+    g.beginPath(); g.moveTo(-30, -12); g.quadraticCurveTo(-60, 30, -44, 46); g.lineTo(44, 46); g.quadraticCurveTo(60, 30, 30, -12); g.closePath(); pinta(g);
+  }
+  // sombra
+  g.fillStyle = "rgba(0,0,0,.22)"; elipse(g, 0, 46, 44, 8); g.fill();
+  // pés
+  g.fillStyle = escuro; ret(g, -32, 30, 18, 15, 7); pinta(g); ret(g, 14, 30, 18, 15, 7); pinta(g);
+  // corpo (ou roupa)
+  const roupa = ac === "cientista" ? "#f8fafc" : ac === "astronauta" ? "#eef2f7" : null;
+  g.fillStyle = roupa || corpo; elipse(g, 0, 14, 44, 31); pinta(g);
+  if (!roupa) { g.fillStyle = barriga; elipse(g, 0, 22, 27, 18); g.fill(); }
+  if (ac === "cientista") {                         // jaleco com gola em V e bolso com caneta
+    g.fillStyle = barriga; g.beginPath(); g.moveTo(-14, -14); g.lineTo(0, 16); g.lineTo(14, -14); g.closePath(); pinta(g);
+    g.fillStyle = contorno; circ(g, 0, 24, 2.2); g.fill(); circ(g, 0, 33, 2.2); g.fill();
+    g.fillStyle = "#e2e8f0"; ret(g, -32, 14, 13, 11, 2); pinta(g);
+    g.strokeStyle = "#2563eb"; g.beginPath(); g.moveTo(-27, 16); g.lineTo(-27, 7); g.stroke(); g.strokeStyle = contorno;
+  }
+  if (ac === "astronauta" || ac === "robo") {       // painel no peito com luzinhas
+    g.fillStyle = ac === "robo" ? "#64748b" : "#334155"; ret(g, -15, 10, 30, 19, 5); pinta(g);
+    ["#ef4444", "#facc15", "#22c55e"].forEach((c, i) => {
+      g.fillStyle = Math.sin(t * 5 + i * 2) > 0 ? c : "#1e293b"; circ(g, -8 + i * 8, 19.5, 3.2); g.fill();
+    });
+  }
+  if (ac === "robo") { g.fillStyle = "#e5e7eb"; [[-32, 10], [32, 10], [-22, 34], [22, 34]].forEach(([a, b]) => { circ(g, a, b, 2.6); g.fill(); }); }
+  if (ac === "cientista") {                         // tubo de ensaio na mão
+    g.save(); g.translate(24, -4); g.rotate(0.35);
+    g.fillStyle = "#e0f2fe"; ret(g, -6, -24, 12, 28, 6); pinta(g);
+    g.fillStyle = "#4ade80"; ret(g, -4.5, -8, 9, 10.5, 4.5); g.fill();
+    g.fillStyle = "#ffffffaa"; circ(g, -1, -12 - (t * 12 % 10), 1.8); g.fill();
+    g.restore();
+  }
+  // patinhas
+  g.fillStyle = ac === "astronauta" ? "#e2e8f0" : escuro; g.lineWidth = 2;
+  elipse(g, -21, 6, 7, 5.5, 0.4); pinta(g); elipse(g, 21, 6, 7, 5.5, -0.4); pinta(g); g.lineWidth = lw;
+  // orelhas
+  g.fillStyle = escuro; circ(g, -22, -57, 8); pinta(g); circ(g, 22, -57, 8); pinta(g);
+  g.fillStyle = "#e8a0a0"; circ(g, -22, -57, 3.5); g.fill(); circ(g, 22, -57, 3.5); g.fill();
+  // cabeça (capivara tem cabeça "quadradona")
+  g.fillStyle = corpo; ret(g, -31, -64, 62, 54, 24); pinta(g);
+  // focinho
+  g.fillStyle = barriga; ret(g, -21, -38, 42, 27, 13); g.fill(); g.lineWidth = 2.5; g.stroke(); g.lineWidth = lw;
+  g.fillStyle = "#3b2416"; elipse(g, -7, -29, 3.2, 2.4); g.fill(); elipse(g, 7, -29, 3.2, 2.4); g.fill();
+  g.lineWidth = 2.5; g.beginPath(); g.moveTo(-6, -19); g.quadraticCurveTo(-3, -15, 0, -18); g.quadraticCurveTo(3, -15, 6, -19); g.stroke(); g.lineWidth = lw;
+  // bochechas rosadas
+  g.fillStyle = "rgba(255,120,140,.45)"; circ(g, -25, -32, 5.5); g.fill(); circ(g, 25, -32, 5.5); g.fill();
+  // olhos (o robô tem visor de LED)
+  if (ac === "robo") {
+    g.fillStyle = "#0f172a"; ret(g, -24, -54, 48, 15, 7); pinta(g);
+    g.fillStyle = `rgba(34,211,238,${0.7 + Math.sin(t * 4) * 0.3})`;
+    ret(g, -18, -50.5, 11, 8, 3); g.fill(); ret(g, 7, -50.5, 11, 8, 3); g.fill();
+  } else if ((t + fase * 3) % 4 < 0.13) {         // piscando
+    g.beginPath(); g.moveTo(-18, -46); g.lineTo(-8, -46); g.moveTo(8, -46); g.lineTo(18, -46); g.stroke();
+  } else {
+    g.fillStyle = contorno; circ(g, -13, -46, 5.5); g.fill(); circ(g, 13, -46, 5.5); g.fill();
+    g.fillStyle = "#fff"; circ(g, -11.3, -48, 1.9); g.fill(); circ(g, 14.7, -48, 1.9); g.fill();
+  }
+  // acessórios
+  if (ac === "tangerina") {
+    g.fillStyle = "#fb923c"; circ(g, 4, -73, 11); pinta(g);
+    g.fillStyle = "#22c55e"; elipse(g, 11, -85, 7, 3.5, -0.5); pinta(g);
+  }
+  if (ac === "flor") {
+    g.save(); g.translate(-21, -63); g.lineWidth = 2;
+    for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); g.fillStyle = "#f472b6"; elipse(g, 0, -6.5, 4.2, 6); pinta(g); }
+    g.fillStyle = "#facc15"; circ(g, 0, 0, 3.6); pinta(g); g.restore();
+  }
+  if (ac === "cientista") {                         // cabelo maluco de cientista
+    g.fillStyle = "#f1f5f9"; [[-14, -64], [-4, -69], [6, -68], [15, -63]].forEach(([a, b]) => { circ(g, a, b, 7); pinta(g); });
+  }
+  if (ac === "oculos" || ac === "cientista") {
+    g.fillStyle = "rgba(191,233,255,.35)"; circ(g, -13, -46, 10.5); pinta(g); circ(g, 13, -46, 10.5); pinta(g);
+    g.beginPath(); g.moveTo(-2.5, -47); g.quadraticCurveTo(0, -50, 2.5, -47); g.stroke();
+    g.beginPath(); g.moveTo(-23.5, -47); g.lineTo(-31, -50); g.moveTo(23.5, -47); g.lineTo(31, -50); g.stroke();
+  }
+  if (ac === "astronauta") {                        // capacete de vidro
+    g.fillStyle = "rgba(186,230,253,.25)"; circ(g, 0, -38, 47); g.fill();
+    g.strokeStyle = "#e2e8f0"; g.lineWidth = 6; g.stroke();
+    g.strokeStyle = contorno; g.lineWidth = 2; circ(g, 0, -38, 50); g.stroke();
+    g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 5; g.beginPath(); g.arc(0, -38, 38, -2.7, -1.9); g.stroke();
+    g.strokeStyle = contorno; g.lineWidth = 3; g.beginPath(); g.moveTo(30, -76); g.lineTo(38, -94); g.stroke();
+    g.fillStyle = Math.sin(t * 6) > 0 ? "#ef4444" : "#7f1d1d"; circ(g, 38, -96, 5); pinta(g);
+  }
+  if (ac === "robo") {
+    g.beginPath(); g.moveTo(0, -64); g.lineTo(0, -84); g.stroke();
+    g.fillStyle = Math.sin(t * 6) > 0 ? "#ef4444" : "#7f1d1d"; circ(g, 0, -88, 6); pinta(g);
+    g.fillStyle = "#cbd5e1"; ret(g, -38, -44, 8, 13, 2); pinta(g); ret(g, 30, -44, 8, 13, 2); pinta(g);
+  }
+  if (ac === "lendaria") {                          // coroa e brilhinhos
+    g.fillStyle = "#FACC15";
+    g.beginPath(); g.moveTo(-20, -60); g.lineTo(-23, -84); g.lineTo(-10, -71); g.lineTo(0, -90); g.lineTo(10, -71); g.lineTo(23, -84); g.lineTo(20, -60); g.closePath(); pinta(g);
+    g.fillStyle = "#ef4444"; circ(g, 0, -70, 3.5); pinta(g);
+    g.fillStyle = "#3b82f6"; circ(g, -12, -66, 2.8); pinta(g); circ(g, 12, -66, 2.8); pinta(g);
+    g.fillStyle = "#fff";
+    for (let i = 0; i < 5; i++) { const a = t * 1.5 + i * 1.256; estrela(g, Math.cos(a) * 62, -18 + Math.sin(a) * 52, 5 + Math.sin(t * 6 + i) * 2); }
+  }
+  g.restore();
+}
+
+// ---------- cenários ----------
+const DECO = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() }));
+function desenhaCenario(i, t) {
+  const w = innerWidth, h = innerHeight, tipo = CONFIG.cenarios[i].tipo, g = ctx;
+  if (tipo === "lagoa") {
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#8fd862"); gr.addColorStop(1, "#4c9c35");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    const lago = (x, y, rx, ry) => {
+      g.fillStyle = "#3fa9e0"; g.strokeStyle = "#2b7fb0"; g.lineWidth = 5; elipse(g, x, y, rx, ry); pinta(g);
+      g.fillStyle = "rgba(160,225,250,.55)"; elipse(g, x - rx * 0.15, y - ry * 0.2, rx * 0.6, ry * 0.45); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = 2;
+      for (let k = 0; k < 2; k++) { const f = (t * 0.4 + k * 0.5) % 1; elipse(g, x + rx * 0.2, y, rx * 0.15 * (1 + f * 2), ry * 0.15 * (1 + f * 2)); g.globalAlpha = 1 - f; g.stroke(); g.globalAlpha = 1; }
+      for (let k = 0; k < 4; k++) {                 // juncos (taboa)
+        const jx = x + rx * (0.55 + k * 0.1), jy = y - ry * 0.6;
+        g.strokeStyle = "#2f6b22"; g.lineWidth = 3; g.beginPath(); g.moveTo(jx, jy + 30); g.lineTo(jx + Math.sin(t + k) * 3, jy - 18); g.stroke();
+        g.fillStyle = "#7c4a24"; elipse(g, jx + Math.sin(t + k) * 3, jy - 18, 4, 9); g.fill();
+      }
+    };
+    lago(w * 0.1, h * 0.9, w * 0.38, h * 0.12); lago(w * 0.95, h * 0.22, w * 0.22, h * 0.07);
+    g.strokeStyle = "#3d8a2a"; g.lineWidth = 2.5;
+    DECO.slice(0, 45).forEach(d => {               // tufos de grama
+      const x = d.x * w, y = d.y * h;
+      g.beginPath(); g.moveTo(x - 6, y - 8); g.lineTo(x, y); g.lineTo(x + 2, y - 11); g.moveTo(x, y); g.lineTo(x + 7, y - 7); g.stroke();
+    });
+    DECO.slice(45, 60).forEach(d => {              // florzinhas
+      g.fillStyle = d.s > 0.5 ? "#fff" : "#f9a8d4"; circ(g, d.x * w, d.y * h, 4); g.fill();
+      g.fillStyle = "#facc15"; circ(g, d.x * w, d.y * h, 1.6); g.fill();
+    });
+  } else if (tipo === "cidade") {
+    const hc = h * 0.42;
+    const gr = g.createLinearGradient(0, 0, 0, hc); gr.addColorStop(0, "#7c5cff"); gr.addColorStop(1, "#ffb36b");
+    g.fillStyle = gr; g.fillRect(0, 0, w, hc);
+    g.fillStyle = "#ffe08a"; circ(g, w * 0.78, hc * 0.7, Math.min(w, h) * 0.08); g.fill();
+    for (let k = 0; k < 16; k++) {                 // prédios
+      const d = DECO[k], bw = w / 11 + d.s * w / 18, bh = h * (0.12 + d.s * 0.2), bx = k / 15 * w - bw / 2;
+      g.fillStyle = k % 2 ? "#3b3361" : "#4a3f78"; g.fillRect(bx, hc - bh, bw, bh);
+      g.fillStyle = "#fde68a";
+      for (let yy = hc - bh + 10; yy < hc - 12; yy += 18) for (let xx = bx + 7; xx < bx + bw - 10; xx += 15)
+        if ((xx * 7 + yy * 3 + k) % 5 > 1) g.fillRect(xx, yy, 7, 9);
+    }
+    g.fillStyle = "#a3a3a3"; g.fillRect(0, hc, w, h - hc);
+    g.strokeStyle = "#8b8b8b"; g.lineWidth = 2;
+    for (let x = 0; x < w; x += 64) { g.beginPath(); g.moveTo(x, hc); g.lineTo(x, h); g.stroke(); }
+    for (let y = hc; y < h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+    g.fillStyle = "#6b7280"; g.fillRect(0, hc, w, 10);
+  } else if (tipo === "laboratorio") {
+    const hc = h * 0.38;
+    g.fillStyle = "#1e3a5f"; g.fillRect(0, 0, w, hc);
+    g.strokeStyle = "#274b75"; g.lineWidth = 2;
+    for (let x = 0; x < w; x += 48) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, hc); g.stroke(); }
+    g.fillStyle = "#94a3b8"; g.fillRect(0, hc * 0.72, w, 8);   // prateleira
+    for (let k = 0; k < 12; k++) {                 // frascos com bolhas
+      const d = DECO[k], fx = (k + 0.5) / 12 * w, fy = hc * 0.72, cor = ["#4ade80", "#f472b6", "#22d3ee", "#facc15"][k % 4];
+      g.fillStyle = "#e0f2fe"; g.strokeStyle = "#0c0c10"; g.lineWidth = 2.5;
+      g.beginPath(); g.moveTo(fx - 5, fy - 34); g.lineTo(fx - 5, fy - 20); g.lineTo(fx - 15, fy); g.lineTo(fx + 15, fy); g.lineTo(fx + 5, fy - 20); g.lineTo(fx + 5, fy - 34); g.closePath(); pinta(g);
+      g.fillStyle = cor; g.beginPath(); g.moveTo(fx - 10, fy - 7); g.lineTo(fx - 14, fy - 1); g.lineTo(fx + 14, fy - 1); g.lineTo(fx + 10, fy - 7); g.closePath(); g.fill();
+      g.fillStyle = cor; circ(g, fx + Math.sin(t * 2 + k) * 3, fy - 38 - ((t * 20 + d.s * 30) % 30), 2.5); g.fill();
+    }
+    for (let y = hc; y < h; y += 56) for (let x = 0; x < w; x += 56) {
+      g.fillStyle = ((x + y) / 56) % 2 ? "#cbd5e1" : "#e2e8f0"; g.fillRect(x, y, 56, 56);
+    }
+  } else {                                          // espaço
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#0b1026"); gr.addColorStop(1, "#2a1b5c");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    DECO.forEach((d, k) => { g.fillStyle = `rgba(255,255,255,${0.4 + 0.6 * Math.abs(Math.sin(t * 1.5 + k))})`; circ(g, d.x * w, d.y * h * 0.8, 1 + d.s * 1.8); g.fill(); });
+    const pr = Math.min(w, h) * 0.09;
+    g.fillStyle = "#fb923c"; g.strokeStyle = "#0c0c10"; g.lineWidth = 3; circ(g, w * 0.84, h * 0.2, pr); pinta(g);
+    g.strokeStyle = "#fde68a"; g.lineWidth = 5; elipse(g, w * 0.84, h * 0.2, pr * 1.7, pr * 0.45, -0.3); g.stroke();
+    g.fillStyle = "#6b7280"; g.strokeStyle = "#0c0c10"; elipse(g, w / 2, h * 1.2, w * 0.95, h * 0.5); pinta(g);
+    g.fillStyle = "#4b5563";
+    [[0.2, 0.86, 30], [0.55, 0.92, 22], [0.8, 0.84, 18], [0.4, 0.8, 12]].forEach(([a, b, r]) => { elipse(g, a * w, b * h, r, r * 0.4); g.fill(); });
+  }
+}
+
+function desenhaVaga(p, t, destaque) {
+  const cen = CONFIG.cenarios[cenIdx], r = tamVaga * 0.44, g = ctx;
+  g.globalAlpha = 0.6; g.fillStyle = cen.vaga; g.strokeStyle = cen.borda; g.lineWidth = 3;
+  ret(g, p.x - r, p.y - r, r * 2, r * 2, r * 0.45); pinta(g); g.globalAlpha = 1;
+  if (destaque) {
+    g.strokeStyle = destaque === "par" ? "#FACC15" : "#ffffff"; g.lineWidth = 5 + Math.sin(t * 10) * 2;
+    ret(g, p.x - r, p.y - r, r * 2, r * 2, r * 0.45); g.stroke();
+  }
+}
+function desenhaMarca(x, y, e) {                   // bolinha com o número do estágio
+  const r = Math.max(9, tamVaga * 0.1), g = ctx;
+  g.fillStyle = CONFIG.estagios[e].cor; g.strokeStyle = "#0c0c10"; g.lineWidth = 2.5; circ(g, x, y, r); pinta(g);
+  g.fillStyle = "#0c0c10"; g.font = `800 ${Math.round(r * 1.25)}px system-ui`; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(e + 1, x, y + 1);
+}
+function dedo(x, y, t) {                           // "mãozinha" da dica e da demonstração
+  const g = ctx;
+  g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 3; circ(g, x, y, 18 + (t * 40 % 16)); g.stroke();
+  g.fillStyle = "#fff"; g.strokeStyle = "#0c0c10"; g.lineWidth = 3; circ(g, x, y, 13); pinta(g);
+  g.fillStyle = "#FACC15"; circ(g, x, y, 5); g.fill();
+}
+function texto(txt, x, y, tam, cor, peso = 900) {
+  const g = ctx;
+  g.font = `${peso} ${tam}px Sora, system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+  g.lineWidth = Math.max(3, tam / 6); g.strokeStyle = "#0c0c10"; g.lineJoin = "round"; g.strokeText(txt, x, y);
+  g.fillStyle = cor; g.fillText(txt, x, y);
+}
+function desenhaParticulas() {
+  const g = ctx;
+  for (const p of particulas) {
+    g.globalAlpha = clamp(p.vida / (p.v0 * 0.5), 0, 1); g.fillStyle = p.cor;
+    if (p.tipo === "estrela") estrela(g, p.x, p.y, p.tam * 1.4);
+    else if (p.tipo === "confete") { g.save(); g.translate(p.x, p.y); g.rotate(p.giro); g.fillRect(-p.tam / 2, -p.tam / 4, p.tam, p.tam / 2); g.restore(); }
+    else if (p.tipo === "moeda") { g.strokeStyle = "#a16207"; g.lineWidth = 2; circ(g, p.x, p.y, p.tam); pinta(g); }
+    else { circ(g, p.x, p.y, p.tam); g.fill(); }
+  }
+  g.globalAlpha = 1;
+}
+function desenhaCelebra(t) {                       // tela "NOVA EVOLUÇÃO!"
+  const c = celebra, w = innerWidth, h = innerHeight, g = ctx, est = CONFIG.estagios[c.e];
+  const a = Math.min(1, c.t * 4), m = Math.min(w, h);
+  g.fillStyle = `rgba(12,12,16,${0.82 * a})`; g.fillRect(0, 0, w, h);
+  g.save(); g.translate(w / 2, h * 0.48); g.rotate(c.t * 0.5); g.globalAlpha = a;
+  for (let i = 0; i < 16; i++) {
+    g.rotate(Math.PI / 8); g.fillStyle = i % 2 ? est.cor + "55" : "rgba(250,204,21,.18)";
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(-m * 0.12, -m); g.lineTo(m * 0.12, -m); g.closePath(); g.fill();
+  }
+  g.restore(); g.globalAlpha = 1;
+  const x = Math.min(1, c.t / 0.45), pop = x < 1 ? 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2) : 1;  // "easeOutBack"
+  desenhaCapivara(g, w / 2, h * 0.47, m * 0.5 * pop, c.e, t);
+  const balanca = 1 + Math.sin(c.t * 8) * 0.04;
+  let tamT = 56;                                    // diminui a letra até caber na largura da tela
+  g.font = `900 ${tamT}px Sora, system-ui, sans-serif`;
+  const larg = g.measureText("NOVA EVOLUÇÃO!").width;
+  if (larg > w - 40) tamT = Math.floor(tamT * (w - 40) / larg);
+  g.save(); g.translate(w / 2, h * 0.21); g.scale(balanca, balanca);
+  texto("NOVA EVOLUÇÃO!", 0, 0, tamT, "#FACC15"); g.restore();
+  texto(est.nome, w / 2, h * 0.74, Math.min(38, w * 0.075), "#ffffff");
+  texto("+" + fmt(est.moedasPorSegundo * ACEL) + " moedas por segundo cada", w / 2, h * 0.8, Math.min(20, w * 0.045), "#86efac", 800);
+  if (c.t > 0.6 && Math.sin(t * 5) > -0.3) texto(DEMO ? "" : "toque para continuar", w / 2, h * 0.88, 17, "#e5e7eb", 700);
+}
+
+function desenha(t) {
+  const w = innerWidth, h = innerHeight, g = ctx;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (tremor > 0) g.translate(rnd(-1, 1) * tremor * 12, rnd(-1, 1) * tremor * 12);
+  g.fillStyle = "#0c0c10"; g.fillRect(-20, -20, w + 40, h + 40);
+  desenhaCenario(cenIdx, t);
+  if (transicao) { g.globalAlpha = 1 - transicao.t; desenhaCenario(transicao.de, t); g.globalAlpha = 1; }
+
+  if (E) {
+    const alvoI = arrasto ? vagaEm(arrasto.x, arrasto.y, 0.62) : -1;
+    const eArr = arrasto && E.vagas[arrasto.de] ? E.vagas[arrasto.de].e : -1;
+    vagaPos.forEach((p, i) => {
+      const c = E.vagas[i];
+      const par = arrasto && i !== arrasto.de && c && c.e === eArr && eArr < ULTIMO;
+      desenhaVaga(p, t, par ? "par" : (i === alvoI && i !== arrasto.de ? "alvo" : null));
+    });
+    vagaPos.forEach((p, i) => {
+      const c = E.vagas[i];
+      if (!c || (arrasto && arrasto.de === i)) return;
+      const pop = c.anim > 0 ? 1 + Math.sin((1 - c.anim) * Math.PI * 4) * c.anim * 0.35 : 1;
+      const dy = c.cai > 0 ? -c.cai * c.cai * (p.y + tamVaga) : 0;
+      desenhaCapivara(g, p.x, p.y + dy, tamVaga * 0.9, c.e, t, { fase: c.fase, sx: pop, sy: 2 - pop });
+      if (c.cai <= 0) desenhaMarca(p.x + tamVaga * 0.34, p.y + tamVaga * 0.32, c.e);
+    });
+  }
+  for (const a of aneis) { g.strokeStyle = a.cor; g.lineWidth = 8 * a.vida * 2; g.globalAlpha = a.vida * 2; circ(g, a.x, a.y, a.r); g.stroke(); g.globalAlpha = 1; }
+  if (!celebra) desenhaParticulas();
+  if (E && arrasto && E.vagas[arrasto.de]) {
+    desenhaCapivara(g, arrasto.x, arrasto.y - 12, tamVaga * 1.05, E.vagas[arrasto.de].e, t, { sx: 1.05, sy: 0.95 });
+    if (DEMO) dedo(arrasto.x + 14, arrasto.y + 22, t);
+  }
+  for (const f of textos) { g.globalAlpha = clamp(f.vida / (f.v0 * 0.4), 0, 1); texto(f.txt, f.x, f.y, f.tam, f.cor); g.globalAlpha = 1; }
+  // dica: depois de alguns segundos parado, a mãozinha mostra um par
+  if (E && rodando && !DEMO && !arrasto && !celebra && ocioso > 5) {
+    const par = achaPar();
+    if (par) {
+      const a = vagaPos[par[0]], b = vagaPos[par[1]], f = Math.min(1, (t * 0.8) % 1.4);
+      dedo(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, t);
+    }
+  }
+  if (banners.length && !celebra) {
+    const b = banners[0], vida = b.v0 - b.vida, s = vida < 0.3 ? vida / 0.3 : b.vida < 0.3 ? b.vida / 0.3 : 1;
+    const y = vagaPos.length ? vagaPos[0].y - tamVaga * 0.1 : h * 0.3, bw = Math.min(w - 24, 440);
+    g.save(); g.translate(w / 2, y); g.scale(s, s);
+    g.fillStyle = "rgba(12,12,16,.92)"; g.strokeStyle = b.cor; g.lineWidth = 4; ret(g, -bw / 2, -46, bw, 92, 18); pinta(g);
+    texto(b.titulo, 0, -12, 34, b.cor); texto(b.sub, 0, 24, Math.min(17, bw / 24), "#ffffff", 700);
+    g.restore();
+  }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (celebra) { desenhaCelebra(t); desenhaParticulas(); }
+  desenhaVitrine(t);
+}
+
+function desenhaVitrine(t) {                       // fileira de capivaras na tela inicial
+  const v = $("vitrine");
+  if (!v || $("tela").classList.contains("hidden")) return;
+  const W = v.clientWidth * dpr, H = v.clientHeight * dpr;
+  if (v.width !== W || v.height !== H) { v.width = W; v.height = H; }
+  const g = v.getContext("2d"), n = CONFIG.estagios.length, passo = v.clientWidth / n;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, v.clientWidth, v.clientHeight);
+  for (let i = 0; i < n; i++) {
+    const pulo = Math.max(0, Math.sin(t * 4 - i * 0.6)) * 8;
+    desenhaCapivara(g, passo * (i + 0.5), v.clientHeight * 0.55 - pulo, Math.min(passo * 1.1, 80), i, t, { fase: i });
+  }
+}
+
+let ultimo = performance.now(), relogio = 0;
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora; relogio += dt;
+  passo(dt); desenha(relogio);
+  requestAnimationFrame(laco);
+}
+
+// ---------- telas ----------
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function fechaTela() { $("tela").classList.add("hidden"); }
+function telaInicio() {
+  rodando = false; arrasto = null; salvar();
+  const rec = recorde();
+  tela(`<h1>${CONFIG.titulo}</h1>
+    <canvas id="vitrine"></canvas>
+    <p>${CONFIG.comoJogar1}<br>${CONFIG.comoJogar2}</p>
+    <p style="font-size:14px;color:#a1a1aa">Toque numa capivara para ganhar moedas na hora · PC: <b>C</b> compra, <b>F</b> funde, <b>M</b> som</p>
+    <div class="linha"><button class="btn" onclick="jogar()">▶ Jogar</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    ${rec > 0 ? `<p style="font-size:14px">⭐ Sua melhor evolução: <b>${CONFIG.estagios[rec].nome}</b></p>` : ""}
+    ${E ? `<button class="link" onclick="jogarDoZero()">Começar do zero</button>` : ""}
+    <p style="font-size:12px;color:#888;margin-top:10px">Fábrica de Jogos INEMA · v${VERSAO}</p>`);
+}
+function jogar() { if (!E) novoJogo(); rodando = true; fechaTela(); iniciaAudio(); }
+function jogarDoZero() { novoJogo(); salvar(); jogar(); }
+function telaCriar() {
+  rodando = false; salvar();
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: nomes dos estágios, cores, preços, missões, cenários.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>${CONFIG.promptExemplo}</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "minha-evolua-a-capivara.html"; a.click();
+}
+
+// ---------- começo ----------
+if (DEMO) { novoJogo(); rodando = true; }
+else { E = carrega(); if (E) { cenIdx = cenarioDe(E.nivel); if (!E.missao) iniciaMissao(); } telaInicio(); }
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
