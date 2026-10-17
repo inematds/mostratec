@@ -153,7 +153,7 @@ const chavesSalvas = page => page.evaluate(() => Object.keys(localStorage).filte
     await page.waitForTimeout(200);
     ok(!(await page.evaluate(() => META.skins.includes("pixel"))), "loja: sem sementes não compra a skin pixel");
     await foto(page, "loja-390.png");
-    await page.click("text=Voltar");
+    await page.click("#tela >> text=Voltar");
     await page.waitForTimeout(1500);
     await foto(page, "jogo-skin-390.png");
 
@@ -181,7 +181,7 @@ const chavesSalvas = page => page.evaluate(() => Object.keys(localStorage).filte
     await page.click("text=🪙 Pontuação");
     await page.waitForTimeout(200);
     ok(await page.evaluate(() => document.querySelectorAll("#tela tr.novo").length === 1 && /Mais moedas/.test(document.getElementById("tela-conteudo").textContent)), "top 10: aba Pontuação com destaque");
-    await page.click("text=Voltar");
+    await page.click("#tela >> text=Voltar");
     await page.waitForTimeout(300);
     ok(await page.evaluate(() => /Salvo no Top 10/.test(document.getElementById("tela-conteudo").textContent)), "top 10: Voltar leva à tela de fim já salva");
 
@@ -208,7 +208,7 @@ const chavesSalvas = page => page.evaluate(() => Object.keys(localStorage).filte
     await page.locator(".item", { hasText: "arco-íris" }).locator("button").click();
     await page.waitForTimeout(300);
     ok(await page.evaluate(() => META.skin === "arcoiris" && META.sementes === 2), "loja: comprou arco-íris com 🌱 sementes");
-    await page.click("text=Voltar");
+    await page.click("#tela >> text=Voltar");
     await page.waitForTimeout(2600);
     await foto(page, "renasceu-390.png");
 
@@ -248,7 +248,7 @@ const chavesSalvas = page => page.evaluate(() => Object.keys(localStorage).filte
     await foto(page, "loja-1280.png");
     await page.locator(".item", { hasText: "Capivara pixel" }).locator("button").click();
     await page.waitForTimeout(200);
-    await page.click("text=Voltar");
+    await page.click("#tela >> text=Voltar");
     await page.keyboard.press("h");
     await page.waitForTimeout(400);
     await foto(page, "ajuda-1280.png");
