@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Descasca a Batata — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5 }
+  html,body { margin:0; height:100%; background:var(--preto); color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  canvas { display:block; width:100vw; height:100vh }
+  /* barra do topo: moedas, nível + XP, contador e som */
+  #hud { position:fixed; top:8px; left:10px; right:10px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+         font-weight:800; font-size:clamp(14px,2.4vw,22px); text-shadow:0 2px 4px #000; pointer-events:none }
+  #hud .bloco { background:#000a; border:2px solid #0c0c10; border-radius:12px; padding:5px 10px; white-space:nowrap }
+  #nivel-box { flex:1; max-width:340px; text-align:center }
+  #xp { height:9px; background:#333; border-radius:6px; overflow:hidden; margin-top:3px; border:1px solid #000 }
+  #xp i { display:block; height:100%; width:0; background:linear-gradient(90deg,#22c55e,#FACC15); transition:width .3s }
+  #b-som { pointer-events:auto; cursor:pointer; background:#000a; border:2px solid #0c0c10; border-radius:12px; font-size:inherit; padding:4px 8px; color:#fff }
+  /* cartão da missão (cliente/pedido) */
+  #missao { position:fixed; top:clamp(52px,8vh,64px); left:50%; transform:translateX(-50%); width:min(560px,calc(100% - 20px));
+            background:#fffbea; color:#1a1206; border:3px solid #0c0c10; border-radius:14px; padding:6px 10px; box-sizing:border-box;
+            display:flex; align-items:center; gap:10px; font-weight:700; font-size:clamp(13px,2.1vw,17px); box-shadow:0 4px 0 #000; pointer-events:none }
+  #missao .rosto { font-size:clamp(24px,4vw,34px) }
+  #missao .txt { flex:1; line-height:1.2 }
+  #missao .barra { height:6px; background:#e7dcb5; border-radius:4px; overflow:hidden; margin-top:4px }
+  #missao .barra i { display:block; height:100%; width:100%; background:#f97316 }
+  #missao .prog { font-size:clamp(16px,2.6vw,22px); font-weight:900; white-space:nowrap }
+  #missao.pop { animation:pop .5s }
+  @keyframes pop { 0%{transform:translateX(-50%) scale(1)} 40%{transform:translateX(-50%) scale(1.12)} 100%{transform:translateX(-50%) scale(1)} }
+  /* loja embaixo */
+  #loja { position:fixed; left:8px; right:8px; bottom:16px; display:flex; gap:8px; justify-content:center }
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800;
+         padding:12px 16px; font-size:clamp(13px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207 }
+  .btn:disabled { background:#555; color:#bbb; box-shadow:none }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  #loja .btn { flex:1; max-width:190px; padding:8px 4px; font-size:clamp(11px,1.8vw,15px); line-height:1.15 }
+  #loja .btn b { display:block; font-size:clamp(17px,2.8vw,24px) }
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.88); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 32px); overflow:auto; box-sizing:border-box;
+                 text-align:center; padding:22px; border:1px solid #333; border-radius:16px; background:#14141b }
+  #tela h1 { margin:.2em 0; font-size:clamp(28px,6vw,46px); color:var(--amarelo) }
+  #tela p { line-height:1.45; color:#d4d4d8 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #aviso { position:fixed; left:50%; top:30%; transform:translate(-50%,-50%); background:#000c; padding:10px 18px; border-radius:14px;
+           border:3px solid var(--amarelo); font-weight:900; pointer-events:none; opacity:0; transition:opacity .3s; text-align:center;
+           font-size:clamp(18px,3.6vw,30px); z-index:4; max-width:90vw }
+  #rodape { position:fixed; left:0; right:0; bottom:0; text-align:center; font-size:10px; color:#666; pointer-events:none }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:40vh; font-size:12px; white-space:pre-wrap }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <span class="bloco" id="hud-moedas">🪙 0</span>
+  <div class="bloco" id="nivel-box"><span id="hud-nivel">Nível 1</span><div id="xp"><i id="xp-barra"></i></div></div>
+  <span class="bloco" id="hud-total">🥔 0</span>
+  <button id="b-som" title="Som (M)">🔊</button>
+</div>
+<div id="missao" class="hidden"><span class="rosto" id="m-rosto">👩‍🍳</span>
+  <div class="txt"><div id="m-texto">...</div><div class="barra"><i id="m-tempo"></i></div></div>
+  <span class="prog" id="m-prog">0/3</span></div>
+<div id="aviso"></div>
+<div id="loja" class="hidden">
+  <button class="btn" id="b-ferramenta"></button>
+  <button class="btn" id="b-raio"></button>
+  <button class="btn" id="b-vel"></button>
+  <button class="btn" id="b-valor"></button>
+</div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="tela"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   DESCASCA A BATATA — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione um legume novo que..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Descasca a Batata",
+  subtitulo: "Arraste o dedo (ou o mouse) sobre o legume para tirar a casca!",
+
+  // Quanto da casca precisa sair para o legume contar como descascado (0.95 = 95%)
+  porcentagemPronto: 0.95,
+  // Tamanho do raspador (fração do legume). Maior = descasca mais rápido.
+  raioBase: 0.11,
+  // A cada quantos % descascados cai +1 moeda durante a raspagem
+  moedaACadaPorcento: 10,
+  // Tempo (segundos) para emendar o próximo legume e manter o COMBO
+  janelaCombo: 8,
+  // Bônus do combo: cada combo soma +20% nas moedas
+  bonusCombo: 0.2,
+  // Combo máximo que conta para o bônus (o contador pode passar, mas o bônus para aqui)
+  comboMaximo: 10,
+
+  // Legumes: aparecem quando você chega no "nivel" indicado.
+  // forma: "batata", "cenoura", "batataDoce" ou "abacaxi"
+  // raro: chance (0 a 1) de aparecer; se não tiver, aparece normal
+  legumes: [
+    { id: "batata",     nome: "Batata",         emoji: "🥔", forma: "batata",     casca: "#a8743f", pinta: "#7a5128", polpa: "#fde68a", nivel: 1, valor: 8,  xp: 10 },
+    { id: "cenoura",    nome: "Cenoura",        emoji: "🥕", forma: "cenoura",    casca: "#c2410c", pinta: "#7c2d12", polpa: "#fb923c", nivel: 2, valor: 12, xp: 12 },
+    { id: "batataDoce", nome: "Batata-doce",    emoji: "🍠", forma: "batataDoce", casca: "#9d3a5a", pinta: "#5b1e33", polpa: "#fdba74", nivel: 3, valor: 16, xp: 15 },
+    { id: "abacaxi",    nome: "Abacaxi",        emoji: "🍍", forma: "abacaxi",    casca: "#a16207", pinta: "#4d3405", polpa: "#fde047", nivel: 4, valor: 25, xp: 22 },
+    { id: "dourada",    nome: "Batata dourada", emoji: "✨", forma: "batata",     casca: "#eab308", pinta: "#a16207", polpa: "#fffbeb", nivel: 5, valor: 80, xp: 40, raro: 0.12 },
+  ],
+
+  // XP necessário para cada nível (depois do último, soma +passoNivel)
+  niveis: [0, 25, 60, 110, 180, 270, 380, 520, 700, 920],
+  passoNivel: 260,
+
+  // Ferramentas (compradas em ordem). raio = multiplica o raspador. auto = descasca sozinha
+  ferramentas: [
+    { nome: "Faca",        icone: "🔪", preco: 0,   raio: 1.0 },
+    { nome: "Descascador", icone: "🥄", preco: 40,  raio: 1.5 },
+    { nome: "Máquina",     icone: "🤖", preco: 150, raio: 1.5, auto: true },
+  ],
+  // Velocidade da máquina automática (unidades do legume por segundo)
+  velocidadeMaquina: 0.55,
+
+  // Upgrades: preço inicial, multiplicador do preço e nível máximo
+  upgrades: {
+    raio:  { nome: "Raspador maior", icone: "📏", preco: 25, fator: 1.7, max: 5, ganho: 0.12 },  // +12% de tamanho
+    vel:   { nome: "Velocidade",     icone: "⚡", preco: 50, fator: 1.8, max: 5, ganho: 0.3 },   // +30% na máquina e nas trocas
+    valor: { nome: "Preço melhor",   icone: "💰", preco: 35, fator: 1.8, max: 8, ganho: 0.25 },  // +25% de moedas
+  },
+
+  // Clientes que fazem pedidos (missões). Use {n} e {legume} no texto.
+  clientes: [
+    { nome: "Dona Rosa",  rosto: "👩‍🍳" },
+    { nome: "Seu Juca",   rosto: "👨‍🌾" },
+    { nome: "Chef Lia",   rosto: "🧑‍🍳" },
+    { nome: "Vovó Nina",  rosto: "👵" },
+    { nome: "Tio Beto",   rosto: "🧔" },
+  ],
+  // tipo: "qualquer" (qualquer legume), "legume" (um legume específico), "combo" (chegar no combo n)
+  // tempo: segundos para cumprir (0 = sem pressa). Se o tempo acabar, chega outro cliente — sem perder nada!
+  missoes: [
+    { tipo: "qualquer", n: 2, tempo: 0,  texto: "Descasque {n} legumes pra mim!",          premio: 15 },
+    { tipo: "legume", legume: "batata", n: 3, tempo: 40, texto: "Descasque {n} batatas em {t} s!", premio: 25 },
+    { tipo: "combo",    n: 3, tempo: 0,  texto: "Faça um COMBO x{n}!",                      premio: 30 },
+    { tipo: "legume", legume: "cenoura", n: 2, tempo: 35, texto: "Quero {n} cenouras em {t} s!",  premio: 30 },
+    { tipo: "qualquer", n: 3, tempo: 30, texto: "Descasque {n} legumes em {t} s!",           premio: 35 },
+    { tipo: "legume", legume: "batataDoce", n: 2, tempo: 40, texto: "{n} batatas-doces, rapidinho!", premio: 40 },
+    { tipo: "legume", legume: "abacaxi", n: 1, tempo: 0,  texto: "Descasque um abacaxi pra sobremesa!", premio: 45 },
+    { tipo: "legume", legume: "dourada", n: 1, tempo: 0,  texto: "Descasque uma batata DOURADA!", premio: 80 },
+  ],
+
+  cores: { fundo1: "#1e3a2a", fundo2: "#0f1f17", mesa: "#8b5a2b", mesaBorda: "#4a2c12", panela: "#9ca3af", agua: "#60a5fa" },
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;   // cópia do jogo para "Baixar"
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");          // ?demo=1 → o jogo descasca sozinho (vitrine do estande)
+const CHAVE = "descasca-batata-v1";       // nome do save no localStorage
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const escolhe = l => l[Math.floor(Math.random() * l.length)];
+let avisoTimer = 0;
+function aviso(txt, seg = 2) { const a = $("aviso"); a.innerHTML = txt; a.style.opacity = 1; avisoTimer = seg; }
+
+// ---------- tela e tamanhos (em pixels CSS) ----------
+let LW = 0, LH = 0, dpr = 1;
+let area = { cx: 0, cy: 0, S: 300 };     // centro e tamanho do legume
+let panela = { x: 0, y: 0, r: 60 };
+function redimensiona() {
+  dpr = window.devicePixelRatio || 1;
+  LW = innerWidth; LH = innerHeight;
+  cv.width = LW * dpr; cv.height = LH * dpr;
+  const deitado = LW > LH;
+  const topo = deitado ? Math.min(150, LH * 0.17) : 140, baixo = 100;
+  const pr = Math.max(42, Math.min(80, Math.min(LW, LH) * 0.12));
+  const altura = LH - topo - baixo - (deitado ? 0 : pr * 0.9);   // no celular em pé, a panela fica embaixo
+  const S = Math.min(LW * 0.78, altura * 0.78, 520);
+  area = { cx: LW / 2, cy: topo + Math.min(altura * 0.5, S * 0.62 + 10), S };
+  panela = deitado ? { x: LW - pr * 1.9, y: topo + altura - pr * 0.6, r: pr }
+                   : { x: LW - pr * 1.25, y: Math.min(LH - baixo - pr * 0.45, area.cy + S * 0.56 + 50 + pr * 0.5), r: pr * 0.8 };
+}
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- som (WebAudio, liga/desliga com o botão 🔊 ou tecla M) ----------
+let audio = null, somLigado = true, ultimoRaspa = 0, ruido = null;
+function iniciaAudio() {
+  if (audio || DEMO) return;
+  try {
+    audio = new (window.AudioContext || window.webkitAudioContext)();
+    ruido = audio.createBuffer(1, audio.sampleRate * 0.2, audio.sampleRate);
+    const d = ruido.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  } catch (e) { audio = null; }
+}
+function nota(freq, dur = 0.12, tipo = "sine", vol = 0.15, atraso = 0) {
+  if (!audio || !somLigado) return;
+  const t = audio.currentTime + atraso, o = audio.createOscillator(), g = audio.createGain();
+  o.type = tipo; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur);
+}
+function somRaspa() {   // "shhk" curtinho da casca saindo
+  if (!audio || !somLigado || performance.now() - ultimoRaspa < 55) return;
+  ultimoRaspa = performance.now();
+  const s = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+  s.buffer = ruido; f.type = "bandpass"; f.frequency.value = rnd(1800, 3200);
+  g.gain.setValueAtTime(0.12, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.07);
+  s.connect(f).connect(g).connect(audio.destination); s.start(); s.stop(audio.currentTime + 0.08);
+}
+const somMoeda  = () => { nota(1320, 0.08, "square", 0.05); nota(1760, 0.1, "square", 0.05, 0.05); };
+const somPronto = () => { nota(523, 0.12, "triangle"); nota(659, 0.12, "triangle", 0.15, 0.08); nota(784, 0.2, "triangle", 0.15, 0.16); };
+const somNivel  = () => [523, 659, 784, 1047].forEach((f, i) => nota(f, 0.18, "square", 0.07, i * 0.09));
+const somMissao = () => [784, 988, 1175, 1568].forEach((f, i) => nota(f, 0.2, "triangle", 0.12, i * 0.07));
+$("b-som").onclick = () => { iniciaAudio(); somLigado = !somLigado; $("b-som").textContent = somLigado ? "🔊" : "🔇"; };
+
+// ---------- progresso (salvo no navegador) ----------
+let P;   // moedas, xp, nivel, ferramenta, up{raio,vel,valor}, total, recorde
+function progressoNovo() { return { moedas: 0, xp: 0, nivel: 1, ferramenta: 0, up: { raio: 0, vel: 0, valor: 0 }, total: 0, recordeCombo: 0 }; }
+function carrega() {
+  P = progressoNovo();
+  if (DEMO) return;
+  try { const s = JSON.parse(localStorage.getItem(CHAVE)); if (s) P = Object.assign(P, s, { up: Object.assign(P.up, s.up) }); } catch (e) {}
+}
+function salva() { if (DEMO) return; try { localStorage.setItem(CHAVE, JSON.stringify(P)); } catch (e) {} }
+carrega();
+
+const xpDoNivel = n => n - 1 < CONFIG.niveis.length ? CONFIG.niveis[n - 1] : CONFIG.niveis.at(-1) + (n - CONFIG.niveis.length) * CONFIG.passoNivel;
+const ferramenta = () => CONFIG.ferramentas[P.ferramenta];
+const raioAtual = () => CONFIG.raioBase * ferramenta().raio * (1 + CONFIG.upgrades.raio.ganho * P.up.raio);
+const multMoedas = () => 1 + CONFIG.upgrades.valor.ganho * P.up.valor;
+const multVel = () => 1 + CONFIG.upgrades.vel.ganho * P.up.vel;
+const precoUp = k => Math.round(CONFIG.upgrades[k].preco * Math.pow(CONFIG.upgrades[k].fator, P.up[k]));
+const legumesLiberados = () => CONFIG.legumes.filter(l => l.nivel <= P.nivel);
+
+// ---------- o legume (casca em canvas separado + grade para medir %) ----------
+const R = 384, N = 64;           // resolução da casca e da grade de medida
+let leg = null;                  // legume atual
+function formaPath(forma, sem) { // desenha o contorno da forma numa caixa R×R
+  const p = new Path2D(), c = R / 2, h = R / 2 * 0.94;
+  const pontos = 72;
+  for (let i = 0; i <= pontos; i++) {
+    const a = i / pontos * Math.PI * 2;
+    let x, y;
+    if (forma === "batata") {
+      const r = 1 + 0.06 * Math.sin(3 * a + sem) + 0.04 * Math.sin(5 * a + sem * 2);
+      x = Math.cos(a) * 0.95 * r; y = Math.sin(a) * 0.72 * r;
+    } else if (forma === "batataDoce") {
+      const r = 1 + 0.05 * Math.sin(4 * a + sem);
+      x = Math.cos(a) * 0.98 * r; y = Math.sin(a) * 0.5 * r * (0.55 + 0.45 * Math.pow(Math.abs(Math.sin(a)), 0.4));
+      const rot = -0.3, xx = x * Math.cos(rot) - y * Math.sin(rot); y = x * Math.sin(rot) + y * Math.cos(rot); x = xx;
+    } else if (forma === "cenoura") {      // de cima (larga) para baixo (ponta)
+      const t = (Math.sin(a) + 1) / 2;      // 0 = topo, 1 = ponta
+      const larg = 0.36 * Math.pow(1 - t, 0.7) + 0.02;
+      x = Math.cos(a) * larg + 0.03 * Math.sin(t * 9 + sem) * (1 - t); y = -0.62 + t * 1.58;
+    } else {                                // abacaxi: oval
+      x = Math.cos(a) * 0.66; y = Math.sin(a) * 0.82 + 0.12;
+    }
+    p[i ? "lineTo" : "moveTo"](c + x * h, c + y * h);
+  }
+  p.closePath();
+  return p;
+}
+function novoLegume() {
+  // sorteia: dourada é rara; se a missão pede um legume, ele aparece mais vezes
+  const lib = legumesLiberados();
+  let tipo = null;
+  const pede = missao && missao.tipo === "legume" ? lib.find(l => l.id === missao.legume) : null;
+  const rara = lib.find(l => l.raro && Math.random() < (pede && pede.id === l.id ? 0.55 : l.raro));
+  if (rara) tipo = rara;
+  else if (pede && Math.random() < 0.6) tipo = pede;
+  else { const comuns = lib.filter(l => !l.raro); tipo = comuns.length > 1 && Math.random() < 0.55 ? comuns.at(-1) : escolhe(comuns); }
+  const sem = rnd(0, 6.28), path = formaPath(tipo.forma, sem);
+  // máscara: quais células da grade são do legume
+  const tmp = document.createElement("canvas").getContext("2d");
+  const mask = new Uint8Array(N * N); let total = 0;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    if (tmp.isPointInPath(path, (i + 0.5) * R / N, (j + 0.5) * R / N)) { mask[j * N + i] = 1; total++; }
+  }
+  leg = { tipo, sem, path, mask, total, limpas: 0, moedasDadas: 0, estado: "entrando", t: 0, aperto: 0,
+          polpa: desenhaPolpa(tipo, path), casca: desenhaCasca(tipo, path, sem) };
+}
+function desenhaPolpa(tipo, path) {
+  const c = document.createElement("canvas"); c.width = c.height = R; const g = c.getContext("2d");
+  g.fillStyle = tipo.polpa; g.fill(path);
+  g.save(); g.clip(path);
+  const gr = g.createRadialGradient(R * 0.38, R * 0.35, 10, R / 2, R / 2, R * 0.55);
+  gr.addColorStop(0, "#ffffffaa"); gr.addColorStop(0.5, "#ffffff22"); gr.addColorStop(1, "#00000033");
+  g.fillStyle = gr; g.fillRect(0, 0, R, R);
+  if (tipo.forma === "abacaxi") { g.strokeStyle = "#eab30888"; g.lineWidth = 3; for (let k = 0; k < 10; k++) { g.beginPath(); g.arc(R / 2, R * 0.56, 12 + k * 16, 0, 7); g.stroke(); } }
+  if (tipo.forma === "cenoura") { g.strokeStyle = "#f9731655"; g.lineWidth = 10; g.beginPath(); g.moveTo(R / 2, R * 0.25); g.lineTo(R / 2, R * 0.9); g.stroke(); }
+  g.restore();
+  return c;
+}
+function desenhaCasca(tipo, path, sem) {
+  const c = document.createElement("canvas"); c.width = c.height = R; const g = c.getContext("2d");
+  g.fillStyle = tipo.casca; g.fill(path);
+  g.save(); g.clip(path);
+  const gr = g.createRadialGradient(R * 0.35, R * 0.32, 10, R / 2, R / 2, R * 0.6);
+  gr.addColorStop(0, "#ffffff55"); gr.addColorStop(0.6, "#ffffff00"); gr.addColorStop(1, "#00000055");
+  g.fillStyle = gr; g.fillRect(0, 0, R, R);
+  g.fillStyle = tipo.pinta; g.strokeStyle = tipo.pinta;
+  if (tipo.forma === "batata") {         // "olhinhos" e pintinhas da batata
+    for (let k = 0; k < 70; k++) { g.globalAlpha = 0.35; g.beginPath(); g.arc(rnd(0, R), rnd(0, R), rnd(1.5, 3.5), 0, 7); g.fill(); }
+    g.globalAlpha = 1;
+    for (let k = 0; k < 6; k++) { const x = R / 2 + Math.cos(k * 1.7 + sem) * rnd(40, 120), y = R / 2 + Math.sin(k * 1.7 + sem) * rnd(25, 80);
+      g.beginPath(); g.ellipse(x, y, 7, 4, k, 0, 7); g.fill(); }
+    if (tipo.id === "dourada") { g.fillStyle = "#fff"; for (let k = 0; k < 14; k++) { const x = rnd(60, R - 60), y = rnd(90, R - 90); g.beginPath(); g.moveTo(x, y - 9); g.lineTo(x + 3, y); g.lineTo(x, y + 9); g.lineTo(x - 3, y); g.fill(); } }
+  } else if (tipo.forma === "cenoura") { // risquinhos horizontais
+    g.lineWidth = 3; for (let y = R * 0.25; y < R; y += rnd(14, 26)) { g.beginPath(); g.moveTo(R / 2 - rnd(10, 40), y); g.lineTo(R / 2 + rnd(0, 30), y + 3); g.stroke(); }
+  } else if (tipo.forma === "batataDoce") { // veios compridos
+    g.lineWidth = 2.5; g.globalAlpha = 0.6;
+    for (let k = 0; k < 16; k++) { const y = rnd(R * 0.3, R * 0.75), x = rnd(20, R - 100); g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 40, y - 12, x + rnd(60, 110), y - rnd(10, 40)); g.stroke(); }
+    g.globalAlpha = 1;
+  } else {                               // abacaxi: losangos com pontinho
+    g.lineWidth = 4;
+    for (let d = -R; d < R * 2; d += 38) { g.beginPath(); g.moveTo(d, 0); g.lineTo(d + R, R); g.stroke(); g.beginPath(); g.moveTo(d, R); g.lineTo(d + R, 0); g.stroke(); }
+    g.fillStyle = "#3f2a04"; for (let y = 19; y < R; y += 38) for (let x = (y / 38 % 2 ? 0 : 19); x < R; x += 38) { g.beginPath(); g.arc(x, y + 19, 4, 0, 7); g.fill(); }
+  }
+  g.restore();
+  return c;
+}
+
+// raspa um círculo no ponto (u,v) — coordenadas do legume de -1 a 1
+function raspa(u, v, r) {
+  if (!leg || leg.estado !== "descascando") return 0;
+  const gx = (u + 1) / 2 * N, gy = (v + 1) / 2 * N, gr = r / 2 * N;
+  let novas = 0;
+  for (let j = Math.max(0, Math.floor(gy - gr)); j <= Math.min(N - 1, Math.ceil(gy + gr)); j++)
+    for (let i = Math.max(0, Math.floor(gx - gr)); i <= Math.min(N - 1, Math.ceil(gx + gr)); i++) {
+      const k = j * N + i;
+      if (leg.mask[k] === 1 && Math.hypot(i + 0.5 - gx, j + 0.5 - gy) <= gr) { leg.mask[k] = 2; novas++; }
+    }
+  // apaga a casca no desenho (um pouco maior que a grade, para não sobrar fiapo)
+  const g = leg.casca.getContext("2d");
+  g.globalCompositeOperation = "destination-out";
+  g.beginPath(); g.arc((u + 1) / 2 * R, (v + 1) / 2 * R, r / 2 * R * 1.12, 0, 7); g.fill();
+  g.globalCompositeOperation = "source-over";
+  if (novas) {
+    leg.limpas += novas; leg.aperto = 1;
+    const sx = area.cx + u * area.S / 2, sy = area.cy + v * area.S / 2;
+    soltaCasca(sx, sy, novas);
+    somRaspa();
+    // moedinhas enquanto raspa
+    const pct = leg.limpas / leg.total * 100, devidas = Math.floor(pct / CONFIG.moedaACadaPorcento);
+    while (leg.moedasDadas < devidas) { leg.moedasDadas++; ganhaMoedas(Math.max(1, Math.round(multMoedas())), sx, sy - 20, false); }
+    if (leg.limpas / leg.total >= CONFIG.porcentagemPronto) terminaLegume();
+  }
+  return novas;
+}
+// raspa ao longo de um traço (para o dedo rápido não deixar buraco)
+function raspaTraco(x0, y0, x1, y1) {
+  const r = raioAtual(), d = Math.hypot(x1 - x0, y1 - y0), passos = Math.max(1, Math.ceil(d / (r * 0.35)));
+  for (let s = 1; s <= passos; s++) raspa(x0 + (x1 - x0) * s / passos, y0 + (y1 - y0) * s / passos, r);
+}
+const telaParaLegume = (x, y) => ({ u: (x - area.cx) / (area.S / 2), v: (y - area.cy) / (area.S / 2) });
+
+// ---------- partículas e números flutuantes ----------
+let parts = [], textos = [], tremor = 0;
+function soltaCasca(x, y, novas) {
+  const n = Math.min(3, Math.ceil(novas / 6));
+  for (let k = 0; k < n && parts.length < 320; k++) {
+    const a = rnd(-Math.PI, 0);
+    parts.push({ tipo: Math.random() < 0.6 ? "tira" : "lasca", x, y, vx: Math.cos(a) * rnd(80, 260), vy: Math.sin(a) * rnd(120, 320),
+                 rot: rnd(0, 6.28), vr: rnd(-12, 12), tam: rnd(6, 13) * area.S / 320, vida: rnd(0.6, 1.1), cor: leg.tipo.casca, borda: leg.tipo.pinta });
+  }
+}
+function confete(x, y, n = 30, cores = ["#FACC15", "#22c55e", "#3b82f6", "#ec4899", "#f97316"]) {
+  for (let k = 0; k < n && parts.length < 400; k++) {
+    const a = rnd(0, 6.28), v = rnd(150, 450);
+    parts.push({ tipo: "confete", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 150, rot: rnd(0, 6), vr: rnd(-10, 10), tam: rnd(5, 9), vida: rnd(0.9, 1.6), cor: escolhe(cores) });
+  }
+}
+function flutua(txt, x, y, cor = "#FACC15", tam = 26) { textos.push({ txt, x, y, cor, tam, vida: 1.1 }); }
+
+// ---------- moedas, XP, combo ----------
+let combo = 0, ultimoPronto = -99, relogio = 0, totalSessao = 0, missoesFeitas = 0;
+function ganhaMoedas(q, x, y, grande) {
+  P.moedas += q;
+  flutua("+" + q + " 🪙", x + rnd(-15, 15), y, "#FACC15", grande ? 34 : 20);
+  if (grande) somMoeda();
+}
+function ganhaXP(q) {
+  P.xp += q;
+  while (P.xp >= xpDoNivel(P.nivel + 1)) {
+    P.nivel++;
+    const novo = CONFIG.legumes.filter(l => l.nivel === P.nivel);
+    const bonus = P.nivel * 10; P.moedas += bonus;
+    aviso(`⭐ NÍVEL ${P.nivel}! ⭐<br><span style="font-size:.7em">${novo.length ? "Novo: " + novo.map(l => l.emoji + " " + l.nome).join(", ") : "Bônus +" + bonus + " 🪙"}</span>`, 2.6);
+    confete(LW / 2, LH * 0.4, 70); somNivel();
+  }
+}
+function terminaLegume() {
+  // termina de limpar o resto e manda o legume para a panela
+  const g = leg.casca.getContext("2d"); g.clearRect(0, 0, R, R);
+  leg.estado = "saindo"; leg.t = 0;
+  combo = relogio - ultimoPronto <= CONFIG.janelaCombo ? combo + 1 : 1;
+  ultimoPronto = relogio;
+  P.recordeCombo = Math.max(P.recordeCombo, combo);
+  const mult = multMoedas() * (1 + CONFIG.bonusCombo * (Math.min(combo, CONFIG.comboMaximo) - 1));
+  const q = Math.round(leg.tipo.valor * mult);
+  ganhaMoedas(q, area.cx, area.cy - area.S * 0.3, true);
+  if (combo >= 2) { flutua(`COMBO x${combo}!`, area.cx, area.cy - area.S * 0.45, "#f97316", 40); tremor = 0.25; }
+  confete(area.cx, area.cy, leg.tipo.id === "dourada" ? 80 : 26, leg.tipo.id === "dourada" ? ["#FACC15", "#fde68a", "#fff"] : undefined);
+  somPronto();
+  P.total++; totalSessao++;
+  ganhaXP(leg.tipo.xp);
+  progressoMissao(leg.tipo);
+  salva();
+}
+
+// ---------- missões (pedidos dos clientes) ----------
+let missao = null, idxMissao = 0;
+function novaMissao() {
+  const lib = legumesLiberados().map(l => l.id);
+  // pula missões de legumes que ainda não apareceram
+  for (let k = 0; k < CONFIG.missoes.length; k++) {
+    const m = CONFIG.missoes[idxMissao % CONFIG.missoes.length]; idxMissao++;
+    if (m.tipo === "legume" && !lib.includes(m.legume)) continue;
+    const cli = escolhe(CONFIG.clientes);
+    missao = Object.assign({}, m, { feito: 0, resta: m.tempo, cli });
+    break;
+  }
+  const l = CONFIG.legumes.find(x => x.id === missao.legume);
+  $("m-rosto").textContent = missao.cli.rosto;
+  $("m-texto").innerHTML = `<b>${missao.cli.nome}:</b> ` + missao.texto.replace("{n}", missao.n).replace("{t}", missao.tempo).replace("{legume}", l ? l.nome : "");
+  $("missao").classList.remove("pop"); void $("missao").offsetWidth; $("missao").classList.add("pop");
+}
+function progressoMissao(tipo) {
+  if (!missao) return;
+  if (missao.tipo === "qualquer") missao.feito++;
+  else if (missao.tipo === "legume" && tipo.id === missao.legume) missao.feito++;
+  else if (missao.tipo === "combo") missao.feito = Math.max(missao.feito, combo);
+  if (missao.feito >= missao.n) {
+    const premio = Math.round(missao.premio * multMoedas());
+    P.moedas += premio; missoesFeitas++;
+    aviso(`✅ Pedido entregue!<br><span style="font-size:.7em">${missao.cli.rosto} ${missao.cli.nome}: “Obrigado!” +${premio} 🪙 +10 XP</span>`, 2.2);
+    confete(LW / 2, 90, 50); somMissao();
+    missao = null;
+    ganhaXP(10);
+    setTimeout(novaMissao, 400);
+  }
+}
+
+// ---------- loja ----------
+function compraFerramenta() {
+  const prox = CONFIG.ferramentas[P.ferramenta + 1];
+  if (!prox || P.moedas < prox.preco) return;
+  P.moedas -= prox.preco; P.ferramenta++;
+  aviso(`${prox.icone} Nova ferramenta: ${prox.nome}!${prox.auto ? "<br><span style='font-size:.7em'>Ela descasca sozinha, devagarinho.</span>" : ""}`, 2.4);
+  confete(LW / 2, LH - 80, 40); somNivel(); salva();
+}
+function compraUp(k) {
+  const u = CONFIG.upgrades[k];
+  if (P.up[k] >= u.max || P.moedas < precoUp(k)) return;
+  if (k === "vel" && !ferramenta().auto) return;
+  P.moedas -= precoUp(k); P.up[k]++;
+  flutua(`${u.icone} ${u.nome} ${P.up[k]}!`, LW / 2, LH - 110, "#22c55e", 26); somMoeda(); salva();
+}
+$("b-ferramenta").onclick = compraFerramenta;
+$("b-raio").onclick = () => compraUp("raio");
+$("b-vel").onclick = () => compraUp("vel");
+$("b-valor").onclick = () => compraUp("valor");
+function atualizaLoja() {
+  const prox = CONFIG.ferramentas[P.ferramenta + 1];
+  const bf = $("b-ferramenta");
+  if (prox) { bf.innerHTML = `<b>${prox.icone}</b>${prox.nome} · ${prox.preco}🪙`; bf.disabled = P.moedas < prox.preco; }
+  else { bf.innerHTML = `<b>${ferramenta().icone}</b>${ferramenta().nome} ✓`; bf.disabled = true; }
+  for (const [k, id] of [["raio", "b-raio"], ["vel", "b-vel"], ["valor", "b-valor"]]) {
+    const u = CONFIG.upgrades[k], b = $(id), cheio = P.up[k] >= u.max;
+    const trava = k === "vel" && !ferramenta().auto;
+    b.innerHTML = `<b>${u.icone}</b>${u.nome} ${P.up[k]}<br>${cheio ? "MÁX" : trava ? "🔒 precisa 🤖" : precoUp(k) + "🪙"}`;
+    b.disabled = cheio || trava || P.moedas < precoUp(k);
+  }
+}
+
+// ---------- entrada: toque, mouse e teclado ----------
+let rodando = false, dedo = null;              // dedo = último ponto do arraste (coordenadas do legume)
+let cursor = { x: 0, y: 0, visivel: false };   // onde desenhar a ferramenta
+const teclas = {};
+cv.addEventListener("pointerdown", e => {
+  iniciaAudio(); if (!rodando || DEMO) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}   // segura o arraste mesmo saindo do canvas
+  dedo = telaParaLegume(e.clientX, e.clientY); raspa(dedo.u, dedo.v, raioAtual());
+  cursor = { x: e.clientX, y: e.clientY, visivel: true };
+});
+cv.addEventListener("pointermove", e => {
+  if (DEMO) return;
+  cursor = { x: e.clientX, y: e.clientY, visivel: true };
+  if (!rodando || !dedo) return;
+  const p = telaParaLegume(e.clientX, e.clientY);
+  raspaTraco(dedo.u, dedo.v, p.u, p.v); dedo = p;
+});
+addEventListener("pointerup", () => { dedo = null; });
+addEventListener("pointercancel", () => { dedo = null; });
+// teclado: setas/WASD movem o raspador (ele raspa enquanto anda); 1-4 compram; M = som
+let tecla = { u: 0, v: 0 };
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase(); teclas[k] = true; iniciaAudio();
+  if (!rodando) return;
+  if (k === "1") compraFerramenta(); if (k === "2") compraUp("raio"); if (k === "3") compraUp("vel"); if (k === "4") compraUp("valor");
+  if (k === "m") $("b-som").click();
+});
+addEventListener("keyup", e => { teclas[e.key.toLowerCase()] = false; });
+
+// ---------- máquina automática ----------
+let maq = { a: 0, r: 0.2, dir: 1, ultimo: null };
+function passoMaquina(dt) {
+  if (!ferramenta().auto || !leg || leg.estado !== "descascando") { maq.ultimo = null; return; }
+  const vel = CONFIG.velocidadeMaquina * multVel();
+  maq.a += vel * dt / Math.max(0.25, maq.r) * 1.2;
+  maq.r += maq.dir * vel * dt * 0.18;
+  if (maq.r > 0.95) maq.dir = -1; if (maq.r < 0.1) maq.dir = 1;
+  const p = { u: Math.cos(maq.a) * maq.r, v: Math.sin(maq.a) * maq.r * 0.9 };
+  if (maq.ultimo) { const r0 = CONFIG.raioBase * 0.9; const d = Math.hypot(p.u - maq.ultimo.u, p.v - maq.ultimo.v);
+    const n = Math.max(1, Math.ceil(d / (r0 * 0.35))); for (let s = 1; s <= n; s++) raspa(maq.ultimo.u + (p.u - maq.ultimo.u) * s / n, maq.ultimo.v + (p.v - maq.ultimo.v) * s / n, r0); }
+  maq.ultimo = p;
+}
+
+// ---------- demo: um "dedo fantasma" descasca sozinho ----------
+let fantasma = { u: -0.9, v: 0, alvo: null, t: 0, compra: 0 };
+function passoDemo(dt) {
+  fantasma.compra -= dt;
+  if (fantasma.compra <= 0) {  // compra o que der, como um jogador faria
+    fantasma.compra = 1.5;
+    compraFerramenta(); compraUp("raio"); compraUp("valor"); compraUp("vel");
+  }
+  if (!leg || leg.estado !== "descascando") { fantasma.alvo = null; return; }
+  if (!fantasma.alvo || Math.hypot(fantasma.alvo.u - fantasma.u, fantasma.alvo.v - fantasma.v) < 0.05 || leg.mask[fantasma.alvo.k] === 2) {
+    // escolhe a célula com casca mais perto do dedo (assim ele "varre" o legume)
+    let melhor = -1, md = 1e9;
+    for (let k = 0; k < N * N; k++) if (leg.mask[k] === 1) {
+      const u = ((k % N) + 0.5) / N * 2 - 1, v = (Math.floor(k / N) + 0.5) / N * 2 - 1;
+      const d = Math.hypot(u - fantasma.u, v - fantasma.v) + Math.random() * 0.15;
+      if (d < md) { md = d; melhor = k; }
+    }
+    if (melhor < 0) return;
+    const k = melhor;
+    fantasma.alvo = { k, u: ((k % N) + 0.5) / N * 2 - 1, v: (Math.floor(k / N) + 0.5) / N * 2 - 1 };
+  }
+  fantasma.t += dt;
+  const dx = fantasma.alvo.u - fantasma.u, dy = fantasma.alvo.v - fantasma.v, d = Math.hypot(dx, dy);
+  const vel = 2.2, passo = Math.min(d, vel * dt);
+  const ondula = Math.sin(fantasma.t * 14) * 0.012;  // zigue-zague de "esfregar"
+  const nu = fantasma.u + dx / d * passo - dy / d * ondula, nv = fantasma.v + dy / d * passo + dx / d * ondula;
+  raspaTraco(fantasma.u, fantasma.v, nu, nv);
+  fantasma.u = nu; fantasma.v = nv;
+  cursor = { x: area.cx + nu * area.S / 2, y: area.cy + nv * area.S / 2, visivel: true };
+}
+
+// ---------- ciclo principal ----------
+let ultimo = performance.now(), inicioDemo = 0;
+function passo(dt) {
+  if (avisoTimer > 0 && (avisoTimer -= dt) <= 0) $("aviso").style.opacity = 0;
+  // partículas sempre se mexem (até na tela inicial)
+  for (const p of parts) { p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; p.vida -= dt; }
+  parts = parts.filter(p => p.vida > 0 && p.y < LH + 40);
+  for (const t of textos) { t.y -= 60 * dt; t.vida -= dt; }
+  textos = textos.filter(t => t.vida > 0);
+  tremor = Math.max(0, tremor - dt);
+  if (!rodando) return;
+  relogio += dt;
+
+  // legume entrando, sendo descascado ou voando para a panela
+  if (leg) {
+    leg.t += dt; leg.aperto = Math.max(0, leg.aperto - dt * 4);
+    const rapido = multVel();
+    if (leg.estado === "entrando" && leg.t > 0.45 / rapido) { leg.estado = "descascando"; leg.t = 0; }
+    if (leg.estado === "saindo" && leg.t > 0.65 / rapido) {
+      for (let k = 0; k < 12; k++) parts.push({ tipo: "gota", x: panela.x + rnd(-20, 20), y: panela.y - panela.r * 0.4, vx: rnd(-140, 140), vy: rnd(-380, -160), rot: 0, vr: 0, tam: rnd(3, 6), vida: 0.8, cor: CONFIG.cores.agua });
+      novoLegume();
+    }
+  }
+  // teclado move um raspador
+  if (!DEMO && leg) {
+    let dx = 0, dy = 0;
+    if (teclas["arrowleft"] || teclas["a"]) dx -= 1; if (teclas["arrowright"] || teclas["d"]) dx += 1;
+    if (teclas["arrowup"] || teclas["w"]) dy -= 1;   if (teclas["arrowdown"] || teclas["s"]) dy += 1;
+    if (dx || dy) {
+      const m = Math.hypot(dx, dy), nu = clamp(tecla.u + dx / m * 1.6 * dt, -1, 1), nv = clamp(tecla.v + dy / m * 1.6 * dt, -1, 1);
+      raspaTraco(tecla.u, tecla.v, nu, nv); tecla = { u: nu, v: nv };
+      cursor = { x: area.cx + nu * area.S / 2, y: area.cy + nv * area.S / 2, visivel: true };
+    }
+  }
+  passoMaquina(dt);
+  if (DEMO) {
+    passoDemo(dt);
+    if (relogio - inicioDemo > 300) novaPartida();   // a cada 5 min a vitrine recomeça do zero
+  }
+  // missão com tempo
+  if (missao && missao.tempo > 0) {
+    missao.resta -= dt;
+    if (missao.resta <= 0) { aviso(`${missao.cli.rosto} ${missao.cli.nome} cansou de esperar…<br><span style="font-size:.7em">Sem problema, chegou outro cliente!</span>`, 2); missao = null; novaMissao(); }
+  }
+  if (combo && relogio - ultimoPronto > CONFIG.janelaCombo) combo = 0;
+  atualizaHud();
+}
+function atualizaHud() {
+  $("hud-moedas").textContent = "🪙 " + Math.floor(P.moedas).toLocaleString("pt-BR");
+  const a = xpDoNivel(P.nivel), b = xpDoNivel(P.nivel + 1);
+  $("hud-nivel").textContent = "Nível " + P.nivel + (combo >= 2 ? `  ·  🔥 x${combo}` : "");
+  $("xp-barra").style.width = clamp((P.xp - a) / (b - a) * 100, 0, 100) + "%";
+  $("hud-total").textContent = (leg ? leg.tipo.emoji : "🥔") + " " + P.total;
+  if (missao) {
+    $("m-prog").textContent = missao.tipo === "combo" ? `x${missao.feito}/${missao.n}` : `${missao.feito}/${missao.n}`;
+    $("m-tempo").style.width = missao.tempo ? clamp(missao.resta / missao.tempo * 100, 0, 100) + "%" : "100%";
+    $("m-tempo").style.background = missao.tempo && missao.resta < 8 ? "#ef4444" : missao.tempo ? "#f97316" : "#22c55e";
+  }
+  atualizaLoja();
+}
+
+// ---------- desenho ----------
+function desenhaFolhas(forma, x, y, s, t) {   // folhas da cenoura e coroa do abacaxi (não descascam)
+  ctx.save(); ctx.translate(x, y); ctx.scale(s / R, s / R);
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 6;
+  const balanca = Math.sin(t * 3) * 0.06;
+  if (forma === "cenoura") {
+    ctx.fillStyle = "#16a34a";
+    for (let k = -2; k <= 2; k++) { ctx.save(); ctx.translate(R / 2, R * 0.22); ctx.rotate(k * 0.32 + balanca);
+      ctx.beginPath(); ctx.ellipse(0, -48, 13, 50, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  } else if (forma === "abacaxi") {
+    ctx.fillStyle = "#15803d";
+    for (let k = -3; k <= 3; k++) { ctx.save(); ctx.translate(R / 2, R * 0.17); ctx.rotate(k * 0.28 + balanca);
+      ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(0, -90 + Math.abs(k) * 14); ctx.lineTo(14, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  }
+  ctx.restore();
+}
+function desenhaLegume(t) {
+  if (!leg) return;
+  let x = area.cx, y = area.cy, s = area.S, rot = 0;
+  const rapido = multVel();
+  if (leg.estado === "entrando") {           // rola da esquerda
+    const f = clamp(leg.t / (0.45 / rapido), 0, 1), e = 1 - Math.pow(1 - f, 3);
+    x = -s + (area.cx + s) * e; rot = (1 - e) * -4;
+  } else if (leg.estado === "saindo") {       // pula até a panela
+    const f = clamp(leg.t / (0.65 / rapido), 0, 1);
+    x = area.cx + (panela.x - area.cx) * f; y = area.cy + (panela.y - area.cy) * f - Math.sin(f * Math.PI) * area.S * 0.6;
+    s = area.S * (1 - 0.75 * f); rot = f * 6;
+  }
+  const sq = 1 + leg.aperto * 0.04 * Math.sin(t * 40);   // "tremidinha" ao raspar
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sq, 2 - sq);
+  // sombra
+  ctx.fillStyle = "#00000055"; ctx.beginPath(); ctx.ellipse(0, s * 0.42, s * 0.42, s * 0.07, 0, 0, 7); ctx.fill();
+  if (leg.tipo.id === "dourada") { ctx.shadowColor = "#FACC15"; ctx.shadowBlur = 30 + Math.sin(t * 5) * 12; }
+  desenhaFolhas(leg.tipo.forma, -s / 2, -s / 2, s, t);
+  ctx.drawImage(leg.polpa, -s / 2, -s / 2, s, s);
+  ctx.shadowBlur = 0;
+  ctx.drawImage(leg.casca, -s / 2, -s / 2, s, s);
+  // contorno escuro (estilo cartoon)
+  ctx.save(); ctx.translate(-s / 2, -s / 2); ctx.scale(s / R, s / R);
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 7; ctx.lineJoin = "round"; ctx.stroke(leg.path); ctx.restore();
+  // carinha feliz quando está quase limpo
+  const pct = leg.limpas / leg.total;
+  if (pct > 0.6 || leg.estado === "saindo") {
+    ctx.fillStyle = "#0c0c10"; const e = s * 0.03, oy = leg.tipo.forma === "cenoura" ? -s * 0.15 : -s * 0.04;
+    ctx.beginPath(); ctx.arc(-s * 0.09, oy, e, 0, 7); ctx.arc(s * 0.09, oy, e, 0, 7); ctx.fill();
+    ctx.lineWidth = Math.max(2, s * 0.012); ctx.beginPath(); ctx.arc(0, oy + s * 0.04, s * 0.06, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+    ctx.fillStyle = "#f472b688"; ctx.beginPath(); ctx.arc(-s * 0.16, oy + s * 0.05, e * 1.3, 0, 7); ctx.arc(s * 0.16, oy + s * 0.05, e * 1.3, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+function desenhaBarra() {   // barra de progresso do legume (por cima das cascas voando)
+  if (!leg) return;
+  const pct = leg.limpas / leg.total;
+  if (leg.estado !== "saindo") {
+    const bw = Math.min(area.S, 300), bx = area.cx - bw / 2, by = area.cy + area.S * 0.5 + 6;
+    ctx.fillStyle = "#000a"; ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, 16, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = pct > 0.8 ? "#22c55e" : "#FACC15";
+    ctx.beginPath(); ctx.roundRect(bx + 2, by + 2, (bw - 4) * clamp(pct / CONFIG.porcentagemPronto, 0, 1), 12, 6); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "800 13px system-ui"; ctx.textAlign = "center";
+    ctx.fillText(`${leg.tipo.emoji} ${leg.tipo.nome} · ${Math.floor(clamp(pct / CONFIG.porcentagemPronto, 0, 1) * 100)}%`, area.cx, by + 32);
+  }
+}
+function desenhaPanela() {
+  const { x, y, r } = panela;
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 4;
+  ctx.fillStyle = "#6b7280";                   // alças
+  ctx.beginPath(); ctx.roundRect(-r * 1.25, -r * 0.35, r * 0.3, r * 0.18, 4); ctx.roundRect(r * 0.95, -r * 0.35, r * 0.3, r * 0.18, 4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = CONFIG.cores.panela;
+  ctx.beginPath(); ctx.moveTo(-r, -r * 0.45); ctx.lineTo(-r * 0.85, r * 0.5); ctx.quadraticCurveTo(0, r * 0.7, r * 0.85, r * 0.5); ctx.lineTo(r, -r * 0.45); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = CONFIG.cores.agua; ctx.beginPath(); ctx.ellipse(0, -r * 0.45, r, r * 0.22, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.font = `900 ${Math.round(r * 0.32)}px system-ui`; ctx.textAlign = "center";
+  ctx.fillText(P.total, 0, r * 0.22);
+  ctx.restore();
+}
+function desenhaFerramenta(t) {
+  if (!cursor.visivel || !rodando) return;
+  const f = ferramenta(), r = raioAtual() * area.S / 2;
+  ctx.save(); ctx.translate(cursor.x, cursor.y);
+  ctx.strokeStyle = "#ffffff88"; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+  ctx.rotate(-0.6 + (dedo || DEMO ? Math.sin(t * 25) * 0.15 : 0));
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 3;
+  if (P.ferramenta === 0) {           // faca
+    ctx.fillStyle = "#e5e7eb"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, -50); ctx.lineTo(-6, -50); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#92400e"; ctx.beginPath(); ctx.roundRect(-8, -86, 20, 38, 5); ctx.fill(); ctx.stroke();
+  } else {                            // descascador (em Y)
+    ctx.fillStyle = "#e5e7eb"; ctx.beginPath(); ctx.roundRect(-18, -6, 36, 10, 3); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-16, -2); ctx.lineTo(-6, -36); ctx.moveTo(16, -2); ctx.lineTo(6, -36); ctx.stroke();
+    ctx.fillStyle = "#16a34a"; ctx.beginPath(); ctx.roundRect(-9, -82, 18, 48, 8); ctx.fill(); ctx.stroke();
+  }
+  if (DEMO) { ctx.rotate(0.6); ctx.font = "34px system-ui"; ctx.fillText("👆", 4, 40); }
+  ctx.restore();
+}
+function desenhaMaquina(t) {
+  if (!ferramenta().auto || !leg || leg.estado !== "descascando" || !maq.ultimo) return;
+  const bx = area.cx - area.S * 0.62, by = area.cy + area.S * 0.42;
+  const px = area.cx + maq.ultimo.u * area.S / 2, py = area.cy + maq.ultimo.v * area.S / 2;
+  ctx.save(); ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 4;
+  ctx.fillStyle = "#64748b"; ctx.beginPath(); ctx.roundRect(bx - 30, by - 20, 60, 44, 8); ctx.fill(); ctx.stroke();   // base do robô
+  ctx.fillStyle = "#22c55e"; ctx.beginPath(); ctx.arc(bx - 10, by, 5, 0, 7); ctx.arc(bx + 10, by, 5, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 12; ctx.lineCap = "round";
+  const mx = (bx + px) / 2 - 30, my = (by + py) / 2 - 40;
+  ctx.beginPath(); ctx.moveTo(bx, by - 20); ctx.lineTo(mx, my); ctx.lineTo(px, py); ctx.stroke();
+  ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(bx, by - 20); ctx.lineTo(mx, my); ctx.lineTo(px, py); ctx.stroke();
+  ctx.translate(px, py); ctx.rotate(t * 20);                // disco girando
+  ctx.fillStyle = "#e5e7eb"; ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 3;
+  ctx.beginPath(); for (let k = 0; k < 8; k++) { const a = k / 8 * 6.28; ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.lineTo(Math.cos(a + 0.39) * 9, Math.sin(a + 0.39) * 9); } ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function desenhaParticulas() {
+  for (const p of parts) {
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = clamp(p.vida * 2, 0, 1);
+    if (p.tipo === "tira") {           // tira enroladinha de casca
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = p.tam * 0.75 + 3; ctx.beginPath(); ctx.arc(0, 0, p.tam, 0, Math.PI * 1.4); ctx.stroke();
+      ctx.strokeStyle = p.cor; ctx.lineWidth = p.tam * 0.75; ctx.beginPath(); ctx.arc(0, 0, p.tam, 0, Math.PI * 1.4); ctx.stroke();
+    } else if (p.tipo === "lasca") {
+      ctx.fillStyle = p.cor; ctx.strokeStyle = "#0c0c10"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 0, p.tam * 0.8, p.tam * 0.45, 0, 0, 7); ctx.fill(); ctx.stroke();
+    } else if (p.tipo === "gota") {
+      ctx.fillStyle = p.cor; ctx.beginPath(); ctx.arc(0, 0, p.tam, 0, 7); ctx.fill();
+    } else { ctx.fillStyle = p.cor; ctx.fillRect(-p.tam / 2, -p.tam / 4, p.tam, p.tam / 2); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+function desenhaTextos() {
+  ctx.textAlign = "center";
+  for (const t of textos) {
+    const s = t.vida > 0.9 ? 1 + (t.vida - 0.9) * 3 : 1;   // "pop" ao nascer
+    ctx.globalAlpha = clamp(t.vida * 1.8, 0, 1);
+    ctx.font = `900 ${Math.round(t.tam * s)}px system-ui`;
+    ctx.lineWidth = 5; ctx.strokeStyle = "#0c0c10"; ctx.strokeText(t.txt, t.x, t.y);
+    ctx.fillStyle = t.cor; ctx.fillText(t.txt, t.x, t.y);
+  }
+  ctx.globalAlpha = 1;
+}
+function desenha(t) {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (tremor > 0) ctx.translate(rnd(-6, 6) * tremor * 4, rnd(-6, 6) * tremor * 4);
+  // fundo (cozinha) + tábua de corte
+  const g = ctx.createLinearGradient(0, 0, 0, LH);
+  g.addColorStop(0, CONFIG.cores.fundo1); g.addColorStop(1, CONFIG.cores.fundo2);
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, LW + 40, LH + 40);
+  ctx.fillStyle = "#ffffff08"; for (let x = 0; x < LW; x += 48) for (let y = 0; y < LH; y += 48) if ((x + y) / 48 % 2 === 0) ctx.fillRect(x, y, 48, 48);
+  const tw = Math.min(LW * 0.92, area.S * 1.5), th = area.S * 1.12;
+  ctx.fillStyle = CONFIG.cores.mesa; ctx.strokeStyle = CONFIG.cores.mesaBorda; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.roundRect(area.cx - tw / 2, area.cy - th / 2, tw, th, 28); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#00000022"; ctx.lineWidth = 2;
+  for (let k = 1; k < 6; k++) { ctx.beginPath(); ctx.moveTo(area.cx - tw / 2 + 20, area.cy - th / 2 + k * th / 6); ctx.lineTo(area.cx + tw / 2 - 20, area.cy - th / 2 + k * th / 6 + 6); ctx.stroke(); }
+  desenhaPanela();
+  desenhaLegume(t);
+  desenhaMaquina(t);
+  desenhaParticulas();
+  desenhaBarra();
+  desenhaTextos();
+  desenhaFerramenta(t);
+}
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
+  passo(dt); desenha(agora / 1000);
+  requestAnimationFrame(laco);
+}
+
+// ---------- telas ----------
+function novaPartida() {
+  if (DEMO) { P = progressoNovo(); inicioDemo = relogio; }
+  parts = []; textos = []; combo = 0; missao = null;
+  novoLegume(); novaMissao();
+  rodando = true;
+  $("loja").classList.remove("hidden"); $("missao").classList.remove("hidden");
+  $("tela").classList.add("hidden");
+}
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function telaInicio() {
+  rodando = false;
+  const tem = P.total > 0;
+  tela(`<h1>🥔 ${CONFIG.titulo}</h1>
+    <p>${CONFIG.subtitulo}<br>Legume limpinho vai pra panela e vira moeda. Atenda os pedidos dos clientes e compre ferramentas melhores!</p>
+    <p style="font-size:14px"><b>Teclado:</b> setas/WASD raspam · <b>1–4</b> compram na loja · <b>M</b> liga/desliga o som</p>
+    ${tem ? `<p>Você já descascou <b>${P.total}</b> legumes · nível <b>${P.nivel}</b> · maior combo <b>x${P.recordeCombo}</b></p>` : ""}
+    <div class="linha"><button class="btn" onclick="novaPartida()">▶ ${tem ? "Continuar" : "Jogar"}</button>
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    ${tem ? `<p><button class="btn sec" style="font-size:12px;padding:6px 10px" onclick="zerar()">↺ Começar do zero</button></p>` : ""}
+    <p style="font-size:12px;color:#888;margin-top:14px">Fábrica de Jogos INEMA · v${VERSAO}</p>`);
+}
+function zerar() { P = progressoNovo(); salva(); telaInicio(); }
+function telaCriar() {
+  rodando = false;
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: legumes, cores, preços, missões, clientes.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo de descascar, adicione uma cebola que
+faz a tela "chorar" (gotas azuis caindo) enquanto
+você descasca, e uma missão "Descasque 2 cebolas
+sem chorar demais". Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-descasca-a-batata.html"; a.click();
+}
+
+// estado para testes automáticos (não mexe em nada)
+window.estadoJogo = () => ({ moedas: P.moedas, total: P.total, nivel: P.nivel, missoesFeitas, ferramenta: P.ferramenta,
+                             pct: leg ? leg.limpas / leg.total : 0, rodando });
+
+if (DEMO) { $("b-som").classList.add("hidden"); novaPartida(); } else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
