@@ -9,6 +9,7 @@ Experiência INEMA.club na MOSTRATEC 2026 (27 a 30/10, Novo Hamburgo). Cada idei
 | [06-avatar-foto-demo](06-avatar-foto-demo/) | Foto → avatar do futuro | Só demonstração |
 | [09-atracao](09-atracao/) | Atração que forma fila | Propostas |
 | [10-fabrica-de-jogos](10-fabrica-de-jogos/) | Fábrica de Jogos: choca o ovo, joga e cria o próprio jogo | Conceito |
+| [11-solucoes-praticas](11-solucoes-praticas/) | Soluções práticas para vender (pet, irrigação, câmera, energia, água) | Proposta |
 
 - Lista completa de ideias: [IDEIAS.md](IDEIAS.md)
 - Ideias originais: [docs/ideias-original.md](docs/ideias-original.md)

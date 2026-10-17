@@ -62,3 +62,7 @@ Jogo viral de julho de 2026 (6 bilhões de visitas): você rouba ovos da base do
 | E4 | Ovo de papel que "choca": papercraft em duas metades com o pet dentro | Proposta, alternativa ao Oráculo |
 
 Riscos: não usar o nome nem a marca do jogo como se fosse nosso ("inspirado em"); em ago/2026 o jogo foi tirado do ar por um tempo por causa da mecânica de "rolar vídeos" (brainrot), então não copiar essa parte.
+
+## F. Linha 2 — Soluções práticas para vender (`11-solucoes-praticas/`) — 17/10/2026
+
+S1 pet automático · S2 irrigação inteligente · S3 nutrientes (EC/pH) · S4 vigilância com câmera e alerta · S5 painel de energia · S6 painel de água · S7 controle geral. No estande: maquete "Casa Inteligente" com painel ao vivo. Detalhes, custos e segurança no README da pasta.
