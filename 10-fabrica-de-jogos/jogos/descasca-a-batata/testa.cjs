@@ -42,7 +42,7 @@ fs.mkdirSync(SHOTS, { recursive: true });
   const pg = await ctxJ.newPage(); pega('jogo', pg);
   await pg.goto(URL);
   await pg.screenshot({ path: path.join(SHOTS, 'inicio-1280.png') });
-  await pg.click('text=▶ Jogar');
+  await pg.click('#tela >> text=▶ Jogar');
   await pg.waitForTimeout(800);
   const e0 = await pg.evaluate(() => estadoJogo());
   // arraste em zigue-zague sobre o legume
@@ -66,7 +66,7 @@ fs.mkdirSync(SHOTS, { recursive: true });
   // 3) Criar a minha versão → Baixar
   await pg.evaluate(() => telaCriar());
   await pg.screenshot({ path: path.join(SHOTS, 'criar-1280.png') });
-  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('text=⬇ Baixar o jogo')]);
+  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#tela >> text=⬇ Baixar o jogo')]);
   const destino = path.join(SHOTS, 'baixado.html'); await dl.saveAs(destino);
   const tamB = fs.statSync(destino).size, tamA = fs.statSync(ARQ).size;
   console.log('download:', dl.suggestedFilename(), tamB, 'bytes; arquivo original', tamA, 'bytes; diferença', ((tamB - tamA) / tamA * 100).toFixed(2) + '%');
@@ -77,7 +77,7 @@ fs.mkdirSync(SHOTS, { recursive: true });
   const cel = await ctxM.newPage(); pega('celular', cel);
   await cel.goto(URL);
   await cel.screenshot({ path: path.join(SHOTS, 'inicio-celular-390.png') });
-  await cel.tap('text=▶ Jogar');
+  await cel.tap('#tela >> text=▶ Jogar');
   await cel.waitForTimeout(700);
   // arraste por toque (via eventos de ponteiro)
   await cel.evaluate(async () => {
@@ -92,6 +92,56 @@ fs.mkdirSync(SHOTS, { recursive: true });
   if (!(ec.pct > 0 || ec.total > 0)) falha('toque no celular não descascou');
   await cel.waitForTimeout(300);
   await cel.screenshot({ path: path.join(SHOTS, 'jogando-celular-390.png') });
+
+  // 5) faixa INEMA.CLUB + painel com QR (celular 390×844)
+  const fx = await cel.evaluate(() => {
+    const r = document.getElementById('puxador').getBoundingClientRect();
+    const l = document.getElementById('loja').getBoundingClientRect();
+    const el = document.elementFromPoint(195, r.top + r.height / 2);
+    return { top: r.top, bottom: r.bottom, h: r.height, lojaBottom: l.bottom, noTopo: el && el.id, sy: scrollY, ih: innerHeight };
+  });
+  console.log('faixa:', JSON.stringify(fx));
+  if (!(Math.abs(fx.bottom - fx.ih) < 2 && Math.abs(fx.h - 46) < 2)) falha('faixa amarela não está colada embaixo com 46 px');
+  if (fx.noTopo !== 'puxador') falha('faixa coberta por outro elemento: ' + fx.noTopo);
+  if (fx.lojaBottom > fx.top) falha('loja fica embaixo da faixa');
+  await cel.tap('#puxador');
+  await cel.waitForTimeout(1200);
+  const pn = await cel.evaluate(() => {
+    const q = document.querySelector('#qr-painel svg').getBoundingClientRect();
+    return { sy: scrollY, alvo: Math.min(document.getElementById('painel').offsetTop, document.documentElement.scrollHeight - innerHeight), qrTop: q.top, qrBottom: q.bottom, qrW: q.width, ih: innerHeight,
+             estado: estadoJogo() };
+  });
+  console.log('painel:', JSON.stringify({ sy: pn.sy, alvo: pn.alvo, qrTop: pn.qrTop, qrBottom: pn.qrBottom, qrW: pn.qrW }));
+  if (Math.abs(pn.sy - pn.alvo) > 4) falha('puxador não rolou até o painel');
+  if (!(pn.qrW > 150 && pn.qrTop >= 0 && pn.qrBottom <= pn.ih)) falha('QR não está inteiro na tela');
+  await cel.screenshot({ path: path.join(SHOTS, 'painel-celular-390.png') });
+  await cel.tap('text=⬆ Voltar ao jogo');
+  await cel.waitForTimeout(1200);
+  const sy0 = await cel.evaluate(() => scrollY);
+  console.log('voltar ao jogo: scrollY', sy0);
+  if (sy0 !== 0) falha('"Voltar ao jogo" não voltou ao topo');
+  // arraste com toque de verdade (CDP) depois de voltar: tem que descascar e não rolar a página
+  const cdp = await ctxM.newCDPSession(cel);
+  const toque = async (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y]) => ({ x, y, id: 1 })) });
+  const ea = await cel.evaluate(() => estadoJogo());
+  // zigue-zague cobrindo o legume inteiro (o meio já foi raspado no passo 4)
+  await toque('touchStart', [[60, 190]]);
+  for (let k = 0; k < 120; k++) { await toque('touchMove', [[60 + (k % 12) * 25, 190 + Math.floor(k / 12) * 30]]); await cel.waitForTimeout(16); }
+  await toque('touchEnd', []);
+  await cel.waitForTimeout(200);
+  const eb = await cel.evaluate(() => ({ ...estadoJogo(), sy: scrollY }));
+  console.log('arraste (toque CDP) depois de voltar: pct', ea.pct.toFixed(2), '→', eb.pct.toFixed(2), 'total', ea.total, '→', eb.total, 'scrollY', eb.sy);
+  if (!(eb.pct > ea.pct || eb.total > ea.total)) falha('arraste não descascou depois de voltar do painel');
+  if (eb.sy !== 0) falha('arraste no canvas rolou a página');
+  await cel.screenshot({ path: path.join(SHOTS, 'jogando-depois-painel-390.png') });
+  // deslizar o dedo para cima na faixa abre o painel
+  await toque('touchStart', [[195, 820]]);
+  for (let k = 1; k <= 12; k++) { await toque('touchMove', [[195, 820 - k * 40]]); await cel.waitForTimeout(16); }
+  await toque('touchEnd', []);
+  await cel.waitForTimeout(900);
+  const syS = await cel.evaluate(() => scrollY);
+  console.log('deslizar para cima na faixa: scrollY', syS);
+  if (!(syS > 100)) falha('deslizar para cima na faixa não rolou a página');
 
   await browser.close();
   console.log('erros de página/console:', erros.length ? '\n  ' + erros.join('\n  ') : 'nenhum');
