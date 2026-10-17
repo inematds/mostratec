@@ -1,0 +1,1508 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Desenho ou Oof! — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --tinta:#15121f; --papel:#fffaf0; --fundo:#241b47;
+          --verde:#22c55e; --vermelho:#ef4444; --texto:#f5f5f5 }
+  /* a página rola (para mostrar o painel INEMA.CLUB embaixo), mas o jogo fica fixo atrás */
+  html { overflow-x:hidden; overflow-y:auto; overscroll-behavior:none }
+  html,body { margin:0; background:var(--preto); color:var(--texto); touch-action:pan-y;
+              user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif }
+  input { user-select:text; -webkit-user-select:text }
+  button { font-family:inherit }
+
+  /* o jogo ocupa a tela toda, menos os 46 px da faixa amarela embaixo */
+  #jogo { position:fixed; left:0; right:0; top:0; bottom:46px; display:flex; flex-direction:column; overflow:hidden;
+          background:radial-gradient(circle at 18% 12%, #3d2f80 0, transparent 42%),
+                     radial-gradient(circle at 88% 85%, #1d5470 0, transparent 46%), var(--fundo) }
+  #jogo::before { content:""; position:absolute; inset:0; pointer-events:none;
+                  background-image:radial-gradient(#ffffff12 2px, transparent 2.6px); background-size:26px 26px }
+
+  /* ---------- HUD: moedas, nível e missão (sempre à vista) ---------- */
+  #hud { position:relative; z-index:2; display:flex; gap:6px; padding:8px 8px 4px; align-items:stretch }
+  .pilula { background:var(--papel); color:var(--tinta); border:3px solid var(--tinta); border-radius:14px;
+            box-shadow:0 3px 0 var(--tinta); padding:3px 9px; font-weight:800; box-sizing:border-box }
+  #h-moedas { font-size:19px; display:flex; align-items:center; white-space:nowrap }
+  #h-nivel { min-width:92px; font-size:13px; display:flex; flex-direction:column; justify-content:center }
+  #h-missao { flex:1; min-width:0; font-size:13px; display:flex; flex-direction:column; justify-content:center }
+  #h-missao .topo { display:flex; justify-content:space-between; align-items:flex-start; gap:6px }
+  #m-txt { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.15; font-size:12.5px }
+  #m-cont { color:#6b6280; white-space:nowrap }
+  .barra { height:8px; background:#0001; border:2px solid var(--tinta); border-radius:6px; overflow:hidden; margin-top:3px }
+  .barra > div { height:100%; width:0; background:var(--amarelo); transition:width .3s }
+  #m-barra { background:var(--verde) }
+  #h-missao.festa { animation:popm .9s ease-out }
+  @keyframes popm { 0%{transform:scale(1)} 25%{transform:scale(1.06); background:var(--amarelo)} 100%{transform:scale(1)} }
+
+  /* ---------- palco: só uma tela aparece por vez ---------- */
+  #palco { position:relative; flex:1; min-height:0; z-index:1 }
+  .tela { position:absolute; inset:0; display:none; box-sizing:border-box }
+  .tela.ativa { display:flex }
+  .rolavel { overflow:auto; overscroll-behavior:contain }
+
+  /* botões cartoon: contorno escuro e sombra embaixo */
+  .btn { background:var(--amarelo); color:#1a1206; border:3px solid var(--tinta); border-radius:14px; font-weight:900;
+         padding:11px 16px; font-size:clamp(15px,2.2vw,18px); cursor:pointer; box-shadow:0 4px 0 var(--tinta); min-height:48px }
+  .btn:active { transform:translateY(3px); box-shadow:0 1px 0 var(--tinta) }
+  .btn:disabled { background:#8b8698; color:#e5e5e5; cursor:default }
+  .btn.sec { background:var(--papel); color:var(--tinta) }
+  .btn.verde { background:var(--verde); color:#fff; text-shadow:0 2px 0 #0006 }
+  .btn.grande { font-size:clamp(19px,3vw,24px); padding:13px 22px }
+
+  /* caixa de papel no meio da tela (início, mensagens, final) */
+  .centro { align-items:center; justify-content:center; padding:10px }
+  .caixa { background:var(--papel); color:var(--tinta); border:4px solid var(--tinta); border-radius:20px; box-shadow:0 6px 0 var(--tinta);
+           width:min(560px,100%); max-height:100%; box-sizing:border-box; padding:16px 16px 18px; text-align:center }
+  .caixa h2 { margin:.1em 0 .3em; font-size:clamp(24px,6vw,36px); line-height:1.1 }
+  .caixa p { line-height:1.45; margin:.5em 0; font-size:16px }
+  .caixa .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px }
+  .nome-grande { font-size:clamp(30px,9vw,52px); font-weight:900; color:var(--tinta); background:var(--amarelo);
+                 display:inline-block; padding:4px 18px; border-radius:14px; border:3px solid var(--tinta); margin:6px 0 }
+  .tema-cx { background:#fef3c7; border:3px dashed var(--tinta); border-radius:14px; padding:8px 10px; font-size:clamp(19px,5vw,26px); font-weight:900; margin:8px 0 }
+  .tema-cx small { display:block; font-size:12px; letter-spacing:.08em; color:#6b6280 }
+  .rodape-cx { font-size:12px; color:#6b6280; margin-top:12px }
+  pre { text-align:left; background:#15121f; color:#fde68a; padding:10px; border-radius:10px; overflow:auto; font-size:13px; white-space:pre-wrap; user-select:text }
+
+  /* título do jogo */
+  .logo { font-weight:900; font-size:clamp(40px,12vw,68px); line-height:.95; margin:4px 0 8px; letter-spacing:-.02em }
+  .logo span { -webkit-text-stroke:3px var(--tinta); paint-order:stroke fill; text-shadow:0 5px 0 var(--tinta); display:inline-block }
+  .logo .a { color:var(--amarelo); transform:rotate(-3deg) } .logo .b { color:#fff; font-size:.6em }
+  .logo .c { color:var(--vermelho); transform:rotate(4deg) }
+  .polaroids { display:flex; justify-content:center; gap:8px; margin:6px 0 4px }
+  .polaroids img { width:min(26vw,120px); border:3px solid var(--tinta); border-radius:8px; background:#fff; box-shadow:0 3px 0 var(--tinta) }
+  .polaroids img:nth-child(1) { transform:rotate(-6deg) } .polaroids img:nth-child(3) { transform:rotate(5deg) }
+  .botoes-inicio { display:flex; flex-direction:column; gap:10px; margin-top:12px }
+  .nv { display:inline-block; background:#ede9fe; border:2px solid var(--tinta); border-radius:999px; padding:4px 12px; font-weight:800; font-size:14px }
+
+  /* ---------- tela de desenho ---------- */
+  #t-desenho { flex-direction:column; padding:4px 8px 8px; gap:6px }
+  #d-topo { display:flex; align-items:center; gap:8px }
+  #d-tema { flex:1; min-width:0; background:var(--amarelo); color:var(--tinta); border:3px solid var(--tinta); border-radius:14px;
+            box-shadow:0 3px 0 var(--tinta); padding:4px 10px; font-weight:900; font-size:clamp(17px,4.6vw,26px); line-height:1.15 }
+  #d-tema small { display:block; font-size:12px; letter-spacing:.08em; font-weight:800; opacity:.7 }
+  #d-tempo { flex:none; width:62px; height:62px; border-radius:50%; background:var(--papel); color:var(--tinta); border:3px solid var(--tinta);
+             display:flex; align-items:center; justify-content:center; font-weight:900; font-size:24px; box-shadow:0 3px 0 var(--tinta) }
+  #d-tempo.urgente { background:var(--vermelho); color:#fff; animation:pulsa .5s infinite alternate }
+  @keyframes pulsa { to { transform:scale(1.12) } }
+  #d-robos { display:flex; gap:8px; align-items:center; justify-content:center; font-size:13px; color:#e9e5ff; font-weight:700; min-height:28px; flex-wrap:wrap }
+  .rb { position:relative; display:inline-flex }
+  .rb img { width:28px; height:28px }
+  .rb i { position:absolute; right:-8px; top:-6px; font-style:normal; font-size:14px; animation:rabisca .35s infinite alternate }
+  @keyframes rabisca { from { transform:rotate(-20deg) translateX(-2px) } to { transform:rotate(15deg) translateX(2px) } }
+  #d-corpo { flex:1; min-height:0; display:flex; flex-direction:column; gap:8px }
+  #area-tela { flex:1; min-height:0; display:flex; align-items:center; justify-content:center }
+  /* SÓ o quadro de desenho trava o gesto: o dedo desenha sem rolar a página */
+  #cv { background:#fff; border:4px solid var(--tinta); border-radius:12px; box-shadow:0 5px 0 var(--tinta);
+        touch-action:none; cursor:crosshair; display:block; width:300px; height:300px }
+  #ferramentas { display:flex; flex-direction:column; gap:7px }
+  .linha-f { display:flex; flex-wrap:wrap; gap:5px; justify-content:center }
+  .cor { width:32px; height:32px; border-radius:50%; border:3px solid var(--tinta); cursor:pointer; padding:0; box-shadow:0 2px 0 var(--tinta) }
+  .cor.sel { outline:3px solid #fff; outline-offset:2px; transform:scale(1.12) }
+  .ferr { min-width:48px; height:48px; border-radius:12px; border:3px solid var(--tinta); background:var(--papel); color:var(--tinta);
+          font-size:19px; font-weight:800; cursor:pointer; box-shadow:0 3px 0 var(--tinta); padding:0 5px; position:relative; line-height:1 }
+  .ferr .rot { display:block; font-size:10px; margin-top:2px }
+  .ferr.sel { background:var(--amarelo); transform:translateY(2px); box-shadow:0 1px 0 var(--tinta) }
+  .ferr.trancado { background:#c9c4d6; color:#4b4560 }
+  .ferr .cad { position:absolute; right:-4px; top:-6px; font-size:10px; background:var(--tinta); color:#fff; border-radius:6px; padding:1px 3px }
+  .ferr .bola { display:inline-block; background:var(--tinta); border-radius:50% }
+  #b-pronto { background:var(--verde); color:#fff; padding:0 12px; font-size:16px; text-shadow:0 2px 0 #0006 }
+  @media (min-aspect-ratio: 5/4) {
+    #d-corpo { flex-direction:row }
+    #ferramentas { width:min(410px,38vw); justify-content:center; gap:12px }
+    .cor { width:40px; height:40px } .ferr { min-width:58px; height:58px; font-size:23px } .ferr .rot { font-size:11px }
+    #b-pronto { font-size:19px }
+    #d-corpo { justify-content:center; gap:20px }
+    #area-tela { flex:0 1 auto; height:100%; aspect-ratio:1/1; max-width:calc(100% - 430px) }
+    #final-cx { width:min(760px,100%) }
+  }
+
+  /* ---------- galeria (votação e revelação) ---------- */
+  #t-galeria { flex-direction:column; padding:4px 8px 8px; gap:6px }
+  #g-titulo { text-align:center; font-weight:900; font-size:clamp(18px,4.8vw,28px); color:#fff; -webkit-text-stroke:1px var(--tinta);
+              text-shadow:0 3px 0 var(--tinta); line-height:1.15 }
+  #g-sub { text-align:center; font-size:14px; color:#e9e5ff; font-weight:700; min-height:18px }
+  #g-grade { flex:1; min-height:0; display:grid; gap:8px; justify-content:center; align-content:center; overflow:auto; overscroll-behavior:contain; padding:4px }
+  .carta { background:var(--papel); border:3px solid var(--tinta); border-radius:14px; box-shadow:0 4px 0 var(--tinta); padding:5px;
+           color:var(--tinta); position:relative; display:flex; flex-direction:column; gap:4px; width:var(--img,140px); box-sizing:content-box; justify-self:center }
+  .carta > img.des { width:100%; aspect-ratio:1/1; border-radius:8px; border:2px solid var(--tinta); display:block; background:#fff; box-sizing:border-box }
+  .carta .nome { display:flex; align-items:center; gap:4px; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; height:20px }
+  .carta .nome img { width:20px; height:20px; flex:none }
+  .carta .nome span { overflow:hidden; text-overflow:ellipsis }
+  .votos { display:flex; gap:4px }
+  .votos button { flex:1; height:44px; font-size:20px; border:3px solid var(--tinta); border-radius:10px; background:#fff; cursor:pointer; padding:0 }
+  .votos .ve.sel { background:var(--amarelo) } .votos .vo.sel { background:var(--vermelho) }
+  .votos button:disabled { opacity:.35; cursor:default }
+  .carta.estrela { outline:4px solid var(--amarelo); outline-offset:2px } .carta.oof { outline:4px solid var(--vermelho); outline-offset:2px }
+  .carta .eu { height:44px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:14px; background:#ede9fe; border-radius:10px }
+  .placar { display:flex; justify-content:space-around; font-weight:900; font-size:19px; height:44px; align-items:center; background:#fff; border:2px solid var(--tinta); border-radius:10px }
+  .placar span { white-space:nowrap; display:inline-flex; align-items:center; gap:3px }
+  .placar b { display:inline-block; min-width:1.1em }
+  .placar b.pop { animation:pop .35s }
+  @keyframes pop { 40% { transform:scale(1.7) } }
+  .carta.cai { animation:cai 1.6s cubic-bezier(.55,0,.9,.4) forwards; z-index:5 }
+  @keyframes cai { 0%{transform:none} 18%{transform:translateY(-18px) rotate(-6deg)} 100%{transform:translateY(110vh) rotate(38deg); opacity:.4} }
+  .carta.treme { animation:treme .12s 5 }
+  @keyframes treme { 50% { transform:translateX(-5px) rotate(-2deg) } }
+  .selo { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-12deg); font-weight:900; white-space:nowrap;
+          font-size:clamp(20px,4vw,34px); color:#fff; -webkit-text-stroke:2px var(--tinta); paint-order:stroke fill;
+          background:var(--vermelho); border:3px solid var(--tinta); border-radius:12px; padding:2px 10px; pointer-events:none }
+  .selo.fica { background:var(--verde); font-size:clamp(14px,2.6vw,20px); top:12%; transform:translate(-50%,-50%) rotate(-6deg) }
+  .selo.escudo { background:#3b82f6 }
+  #g-rodape { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:52px }
+
+  /* ---------- final: pódio ---------- */
+  .podio { display:flex; align-items:flex-end; justify-content:center; gap:8px; margin:6px 0 }
+  .degrau { display:flex; flex-direction:column; align-items:center; width:min(30%,150px) }
+  .degrau img.des { width:100%; aspect-ratio:1/1; border:3px solid var(--tinta); border-radius:10px; background:#fff }
+  .degrau .bloco { width:100%; border:3px solid var(--tinta); border-radius:10px 10px 0 0; font-weight:900; font-size:22px; margin-top:4px; padding-top:4px }
+  .degrau .nm { font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100% }
+  .coroa { font-size:34px; line-height:1; animation:pulsa .6s infinite alternate }
+  .ranking { margin:8px auto; border-collapse:collapse; font-size:15px }
+  .ranking td { padding:1px 8px; text-align:left }
+  .ranking tr.voce td { background:#fef3c7; font-weight:800 }
+
+  /* ---------- amigos, meus desenhos ---------- */
+  .campo { display:flex; gap:6px; margin:6px 0 }
+  .campo input { flex:1; font-size:18px; padding:9px 10px; border:3px solid var(--tinta); border-radius:12px; min-width:0; font-weight:700 }
+  .grade-meus { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin:10px 0 }
+  .grade-meus button { background:#fff; border:3px solid var(--tinta); border-radius:12px; padding:4px; cursor:pointer; font-size:12px; font-weight:700; color:var(--tinta) }
+  .grade-meus img { width:100%; aspect-ratio:1/1; display:block; border-radius:8px }
+
+  /* aviso rápido, faixa de comemoração e confete */
+  #aviso { position:fixed; left:50%; bottom:64px; transform:translateX(-50%); background:#000d; padding:8px 14px; border-radius:10px; z-index:3;
+           font-weight:700; pointer-events:none; opacity:0; transition:opacity .3s; max-width:calc(100% - 40px); text-align:center; font-size:15px }
+  #festa { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; opacity:0; z-index:3; width:92% }
+  #festa .g { font-size:clamp(32px,8vw,66px); font-weight:900; color:var(--amarelo); -webkit-text-stroke:2px var(--tinta); paint-order:stroke fill; text-shadow:0 5px 0 var(--tinta) }
+  #festa .p { font-size:clamp(16px,2.8vw,22px); font-weight:800; color:#fff; text-shadow:0 2px 4px #000; margin-top:6px }
+  #festa.mostra { animation:festa 2.6s ease-out }
+  @keyframes festa { 0%{opacity:0; transform:translate(-50%,-50%) scale(.4)} 12%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+                     20%{transform:translate(-50%,-50%) scale(1)} 80%{opacity:1} 100%{opacity:0; transform:translate(-50%,-60%) scale(1)} }
+  #confete { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:3 }
+  .hidden { display:none !important }
+
+  /* ---------- painel INEMA.CLUB embaixo do jogo (deslize a tela para cima) ---------- */
+  #rolagem { position:relative; z-index:4; pointer-events:none }
+  #espaco { height:calc(100vh - 46px); height:calc(100dvh - 46px) }
+  #painel { pointer-events:auto; background:var(--preto); touch-action:pan-y; text-align:center; padding-bottom:28px }
+  #puxador { display:block; width:100%; height:46px; border:0; background:var(--amarelo); color:#1a1206; cursor:pointer;
+             font:800 clamp(14px,3.8vw,18px)/46px Sora,system-ui,sans-serif; box-shadow:0 -4px 14px #0008 }
+  #painel .faixa-g { background:var(--amarelo); color:#1a1206; font:800 clamp(24px,7vw,44px)/1.15 Sora,system-ui,sans-serif;
+                     padding:22px 16px 26px; border-top:4px solid var(--preto) }
+  #painel .faixa-g b { display:inline-block; background:var(--preto); color:var(--amarelo); padding:2px 14px; border-radius:10px; margin-top:8px }
+  #painel .qr-g { display:inline-block; background:#fff; color:#111; border-radius:16px; padding:14px 14px 10px; margin:22px 16px 10px }
+  #painel .qr-g svg { width:min(64vw,260px); height:auto; display:block }
+  #painel .qr-g p { margin:8px 0 0; font-weight:800 }
+  #painel .acoes-p { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:12px 16px }
+  #painel .txt-p { color:#d4d4d8; max-width:520px; margin:10px auto 0; padding:0 16px; line-height:1.5 }
+  #painel a { color:var(--amarelo) }
+</style>
+</head>
+<body>
+<div id="jogo">
+  <div id="hud">
+    <div id="h-moedas" class="pilula">🪙 <span id="h-moedas-n">0</span></div>
+    <div id="h-nivel" class="pilula"><span id="nv-txt">⭐ Nível 1</span><div class="barra"><div id="xp-barra"></div></div></div>
+    <div id="h-missao" class="pilula"><div class="topo"><span id="m-txt">🎯 …</span><span id="m-cont"></span></div><div class="barra"><div id="m-barra"></div></div></div>
+  </div>
+  <div id="palco">
+    <!-- tela inicial -->
+    <div id="t-inicio" class="tela centro"><div class="caixa rolavel" id="inicio-cx"></div></div>
+    <!-- mensagens: rodada nova, "passe o celular", você caiu -->
+    <div id="t-msg" class="tela centro"><div class="caixa rolavel" id="msg-cx"></div></div>
+    <!-- desenho -->
+    <div id="t-desenho" class="tela">
+      <div id="d-topo"><div id="d-tema"></div><div id="d-tempo">45</div></div>
+      <div id="d-robos"></div>
+      <div id="d-corpo">
+        <div id="area-tela"><canvas id="cv" width="512" height="512"></canvas></div>
+        <div id="ferramentas">
+          <div class="linha-f" id="f-cores"></div>
+          <div class="linha-f" id="f-ferr"></div>
+          <div class="linha-f" id="f-acoes"></div>
+        </div>
+      </div>
+    </div>
+    <!-- galeria: votação e revelação dos votos -->
+    <div id="t-galeria" class="tela">
+      <div id="g-titulo"></div><div id="g-sub"></div>
+      <div id="g-grade"></div>
+      <div id="g-rodape"></div>
+    </div>
+    <!-- amigos, meus desenhos, final, criar -->
+    <div id="t-amigos" class="tela centro"><div class="caixa rolavel" id="amigos-cx"></div></div>
+    <div id="t-meus" class="tela centro"><div class="caixa rolavel" id="meus-cx"></div></div>
+    <div id="t-final" class="tela centro"><div class="caixa rolavel" id="final-cx"></div></div>
+    <div id="t-criar" class="tela centro"><div class="caixa rolavel" id="criar-cx"></div></div>
+  </div>
+</div>
+<canvas id="confete"></canvas>
+<div id="aviso"></div>
+<div id="festa"><div class="g" id="festa-g"></div><div class="p" id="festa-p"></div></div>
+<div id="rolagem">
+  <div id="espaco"></div>
+  <div id="painel">
+    <button id="puxador">⬆ INEMA.CLUB · Jogue no seu celular</button>
+    <div class="faixa-g">Aprenda a criar jogos com IA<br>de graça<br><b>INEMA.CLUB</b></div>
+    <div class="qr-g"><div id="qr-painel"></div><p>📱 Jogue no seu celular</p></div>
+    <div class="acoes-p">
+      <button class="btn" id="p-baixar">⬇ Baixar o jogo</button>
+      <button class="btn" id="p-voltar">⬆ Voltar ao jogo</button>
+    </div>
+    <p class="txt-p">Baixe o jogo, abra num editor de texto e mude o <b>CONFIG</b>. Depois peça para uma IA criar temas, pincéis, robôs e modos novos.
+      Mais jogos na <a href="../../">Fábrica de Jogos INEMA</a> · cursos grátis em <a href="https://inema.club" target="_blank" rel="noopener">inema.club</a></p>
+  </div>
+</div>
+<!-- QR code com o endereço do jogo (vem do arquivo qr-jogo.svg; fica aqui dentro para funcionar sem internet) -->
+<template id="tpl-qr"><svg version="1.1" viewBox="0 0 41 41" xmlns="http://www.w3.org/2000/svg"><path d="M2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM5,2H6V3H5zM6,2H7V3H6zM7,2H8V3H7zM8,2H9V3H8zM11,2H12V3H11zM12,2H13V3H12zM15,2H16V3H15zM16,2H17V3H16zM20,2H21V3H20zM21,2H22V3H21zM23,2H24V3H23zM24,2H25V3H24zM25,2H26V3H25zM28,2H29V3H28zM29,2H30V3H29zM32,2H33V3H32zM33,2H34V3H33zM34,2H35V3H34zM35,2H36V3H35zM36,2H37V3H36zM37,2H38V3H37zM38,2H39V3H38zM2,3H3V4H2zM8,3H9V4H8zM11,3H12V4H11zM15,3H16V4H15zM16,3H17V4H16zM18,3H19V4H18zM19,3H20V4H19zM20,3H21V4H20zM22,3H23V4H22zM23,3H24V4H23zM24,3H25V4H24zM25,3H26V4H25zM26,3H27V4H26zM27,3H28V4H27zM29,3H30V4H29zM30,3H31V4H30zM32,3H33V4H32zM38,3H39V4H38zM2,4H3V5H2zM4,4H5V5H4zM5,4H6V5H5zM6,4H7V5H6zM8,4H9V5H8zM11,4H12V5H11zM12,4H13V5H12zM13,4H14V5H13zM15,4H16V5H15zM19,4H20V5H19zM20,4H21V5H20zM21,4H22V5H21zM22,4H23V5H22zM25,4H26V5H25zM28,4H29V5H28zM29,4H30V5H29zM30,4H31V5H30zM32,4H33V5H32zM34,4H35V5H34zM35,4H36V5H35zM36,4H37V5H36zM38,4H39V5H38zM2,5H3V6H2zM4,5H5V6H4zM5,5H6V6H5zM6,5H7V6H6zM8,5H9V6H8zM11,5H12V6H11zM16,5H17V6H16zM20,5H21V6H20zM22,5H23V6H22zM24,5H25V6H24zM25,5H26V6H25zM30,5H31V6H30zM32,5H33V6H32zM34,5H35V6H34zM35,5H36V6H35zM36,5H37V6H36zM38,5H39V6H38zM2,6H3V7H2zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM13,6H14V7H13zM15,6H16V7H15zM17,6H18V7H17zM18,6H19V7H18zM20,6H21V7H20zM23,6H24V7H23zM25,6H26V7H25zM28,6H29V7H28zM29,6H30V7H29zM30,6H31V7H30zM32,6H33V7H32zM34,6H35V7H34zM35,6H36V7H35zM36,6H37V7H36zM38,6H39V7H38zM2,7H3V8H2zM8,7H9V8H8zM10,7H11V8H10zM11,7H12V8H11zM13,7H14V8H13zM14,7H15V8H14zM15,7H16V8H15zM19,7H20V8H19zM20,7H21V8H20zM21,7H22V8H21zM24,7H25V8H24zM29,7H30V8H29zM32,7H33V8H32zM38,7H39V8H38zM2,8H3V9H2zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM18,8H19V9H18zM20,8H21V9H20zM22,8H23V9H22zM24,8H25V9H24zM26,8H27V9H26zM28,8H29V9H28zM30,8H31V9H30zM32,8H33V9H32zM33,8H34V9H33zM34,8H35V9H34zM35,8H36V9H35zM36,8H37V9H36zM37,8H38V9H37zM38,8H39V9H38zM13,9H14V10H13zM14,9H15V10H14zM16,9H17V10H16zM18,9H19V10H18zM19,9H20V10H19zM23,9H24V10H23zM24,9H25V10H24zM26,9H27V10H26zM28,9H29V10H28zM29,9H30V10H29zM2,10H3V11H2zM5,10H6V11H5zM7,10H8V11H7zM8,10H9V11H8zM10,10H11V11H10zM11,10H12V11H11zM15,10H16V11H15zM16,10H17V11H16zM20,10H21V11H20zM23,10H24V11H23zM26,10H27V11H26zM27,10H28V11H27zM28,10H29V11H28zM30,10H31V11H30zM31,10H32V11H31zM33,10H34V11H33zM2,11H3V12H2zM3,11H4V12H3zM5,11H6V12H5zM6,11H7V12H6zM7,11H8V12H7zM9,11H10V12H9zM10,11H11V12H10zM11,11H12V12H11zM12,11H13V12H12zM16,11H17V12H16zM17,11H18V12H17zM19,11H20V12H19zM22,11H23V12H22zM26,11H27V12H26zM30,11H31V12H30zM31,11H32V12H31zM32,11H33V12H32zM35,11H36V12H35zM36,11H37V12H36zM38,11H39V12H38zM2,12H3V13H2zM4,12H5V13H4zM6,12H7V13H6zM8,12H9V13H8zM9,12H10V13H9zM11,12H12V13H11zM12,12H13V13H12zM14,12H15V13H14zM15,12H16V13H15zM16,12H17V13H16zM18,12H19V13H18zM21,12H22V13H21zM23,12H24V13H23zM24,12H25V13H24zM30,12H31V13H30zM34,12H35V13H34zM35,12H36V13H35zM37,12H38V13H37zM38,12H39V13H38zM6,13H7V14H6zM9,13H10V14H9zM10,13H11V14H10zM12,13H13V14H12zM13,13H14V14H13zM14,13H15V14H14zM17,13H18V14H17zM20,13H21V14H20zM23,13H24V14H23zM24,13H25V14H24zM25,13H26V14H25zM27,13H28V14H27zM28,13H29V14H28zM30,13H31V14H30zM31,13H32V14H31zM2,14H3V15H2zM5,14H6V15H5zM6,14H7V15H6zM7,14H8V15H7zM8,14H9V15H8zM10,14H11V15H10zM11,14H12V15H11zM18,14H19V15H18zM19,14H20V15H19zM21,14H22V15H21zM22,14H23V15H22zM23,14H24V15H23zM24,14H25V15H24zM26,14H27V15H26zM27,14H28V15H27zM29,14H30V15H29zM30,14H31V15H30zM31,14H32V15H31zM32,14H33V15H32zM37,14H38V15H37zM38,14H39V15H38zM2,15H3V16H2zM4,15H5V16H4zM5,15H6V16H5zM7,15H8V16H7zM9,15H10V16H9zM10,15H11V16H10zM11,15H12V16H11zM14,15H15V16H14zM15,15H16V16H15zM21,15H22V16H21zM22,15H23V16H22zM24,15H25V16H24zM31,15H32V16H31zM32,15H33V16H32zM33,15H34V16H33zM36,15H37V16H36zM37,15H38V16H37zM38,15H39V16H38zM3,16H4V17H3zM4,16H5V17H4zM5,16H6V17H5zM7,16H8V17H7zM8,16H9V17H8zM10,16H11V17H10zM12,16H13V17H12zM13,16H14V17H13zM15,16H16V17H15zM18,16H19V17H18zM24,16H25V17H24zM25,16H26V17H25zM26,16H27V17H26zM27,16H28V17H27zM28,16H29V17H28zM30,16H31V17H30zM31,16H32V17H31zM33,16H34V17H33zM34,16H35V17H34zM36,16H37V17H36zM38,16H39V17H38zM2,17H3V18H2zM3,17H4V18H3zM4,17H5V18H4zM5,17H6V18H5zM6,17H7V18H6zM7,17H8V18H7zM11,17H12V18H11zM12,17H13V18H12zM13,17H14V18H13zM14,17H15V18H14zM15,17H16V18H15zM16,17H17V18H16zM18,17H19V18H18zM19,17H20V18H19zM20,17H21V18H20zM23,17H24V18H23zM27,17H28V18H27zM28,17H29V18H28zM29,17H30V18H29zM30,17H31V18H30zM31,17H32V18H31zM32,17H33V18H32zM34,17H35V18H34zM37,17H38V18H37zM38,17H39V18H38zM2,18H3V19H2zM5,18H6V19H5zM6,18H7V19H6zM7,18H8V19H7zM8,18H9V19H8zM11,18H12V19H11zM12,18H13V19H12zM13,18H14V19H13zM15,18H16V19H15zM16,18H17V19H16zM20,18H21V19H20zM21,18H22V19H21zM22,18H23V19H22zM23,18H24V19H23zM24,18H25V19H24zM31,18H32V19H31zM32,18H33V19H32zM33,18H34V19H33zM35,18H36V19H35zM36,18H37V19H36zM38,18H39V19H38zM2,19H3V20H2zM3,19H4V20H3zM5,19H6V20H5zM10,19H11V20H10zM14,19H15V20H14zM15,19H16V20H15zM16,19H17V20H16zM17,19H18V20H17zM18,19H19V20H18zM25,19H26V20H25zM26,19H27V20H26zM27,19H28V20H27zM28,19H29V20H28zM32,19H33V20H32zM33,19H34V20H33zM34,19H35V20H34zM35,19H36V20H35zM37,19H38V20H37zM38,19H39V20H38zM2,20H3V21H2zM5,20H6V21H5zM8,20H9V21H8zM9,20H10V21H9zM17,20H18V21H17zM18,20H19V21H18zM19,20H20V21H19zM20,20H21V21H20zM23,20H24V21H23zM27,20H28V21H27zM31,20H32V21H31zM33,20H34V21H33zM34,20H35V21H34zM35,20H36V21H35zM37,20H38V21H37zM38,20H39V21H38zM3,21H4V22H3zM6,21H7V22H6zM7,21H8V22H7zM10,21H11V22H10zM11,21H12V22H11zM13,21H14V22H13zM14,21H15V22H14zM15,21H16V22H15zM19,21H20V22H19zM20,21H21V22H20zM22,21H23V22H22zM23,21H24V22H23zM25,21H26V22H25zM26,21H27V22H26zM28,21H29V22H28zM30,21H31V22H30zM31,21H32V22H31zM32,21H33V22H32zM33,21H34V22H33zM36,21H37V22H36zM37,21H38V22H37zM4,22H5V23H4zM6,22H7V23H6zM8,22H9V23H8zM11,22H12V23H11zM12,22H13V23H12zM15,22H16V23H15zM16,22H17V23H16zM17,22H18V23H17zM18,22H19V23H18zM20,22H21V23H20zM21,22H22V23H21zM22,22H23V23H22zM23,22H24V23H23zM25,22H26V23H25zM26,22H27V23H26zM27,22H28V23H27zM28,22H29V23H28zM32,22H33V23H32zM34,22H35V23H34zM37,22H38V23H37zM2,23H3V24H2zM4,23H5V24H4zM5,23H6V24H5zM6,23H7V24H6zM7,23H8V24H7zM10,23H11V24H10zM13,23H14V24H13zM14,23H15V24H14zM15,23H16V24H15zM18,23H19V24H18zM22,23H23V24H22zM26,23H27V24H26zM30,23H31V24H30zM31,23H32V24H31zM32,23H33V24H32zM33,23H34V24H33zM35,23H36V24H35zM38,23H39V24H38zM3,24H4V25H3zM6,24H7V25H6zM8,24H9V25H8zM9,24H10V25H9zM14,24H15V25H14zM18,24H19V25H18zM19,24H20V25H19zM21,24H22V25H21zM22,24H23V25H22zM23,24H24V25H23zM24,24H25V25H24zM30,24H31V25H30zM31,24H32V25H31zM37,24H38V25H37zM38,24H39V25H38zM2,25H3V26H2zM4,25H5V26H4zM5,25H6V26H5zM7,25H8V26H7zM11,25H12V26H11zM14,25H15V26H14zM16,25H17V26H16zM17,25H18V26H17zM18,25H19V26H18zM19,25H20V26H19zM21,25H22V26H21zM23,25H24V26H23zM24,25H25V26H24zM26,25H27V26H26zM27,25H28V26H27zM29,25H30V26H29zM31,25H32V26H31zM32,25H33V26H32zM38,25H39V26H38zM2,26H3V27H2zM3,26H4V27H3zM6,26H7V27H6zM7,26H8V27H7zM8,26H9V27H8zM9,26H10V27H9zM10,26H11V27H10zM13,26H14V27H13zM14,26H15V27H14zM17,26H18V27H17zM22,26H23V27H22zM23,26H24V27H23zM24,26H25V27H24zM26,26H27V27H26zM27,26H28V27H27zM31,26H32V27H31zM32,26H33V27H32zM35,26H36V27H35zM38,26H39V27H38zM4,27H5V28H4zM5,27H6V28H5zM6,27H7V28H6zM9,27H10V28H9zM11,27H12V28H11zM12,27H13V28H12zM13,27H14V28H13zM17,27H18V28H17zM18,27H19V28H18zM21,27H22V28H21zM24,27H25V28H24zM26,27H27V28H26zM27,27H28V28H27zM28,27H29V28H28zM31,27H32V28H31zM32,27H33V28H32zM33,27H34V28H33zM35,27H36V28H35zM36,27H37V28H36zM37,27H38V28H37zM38,27H39V28H38zM2,28H3V29H2zM6,28H7V29H6zM7,28H8V29H7zM8,28H9V29H8zM9,28H10V29H9zM10,28H11V29H10zM11,28H12V29H11zM12,28H13V29H12zM14,28H15V29H14zM16,28H17V29H16zM22,28H23V29H22zM25,28H26V29H25zM26,28H27V29H26zM32,28H33V29H32zM35,28H36V29H35zM36,28H37V29H36zM38,28H39V29H38zM3,29H4V30H3zM4,29H5V30H4zM5,29H6V30H5zM7,29H8V30H7zM9,29H10V30H9zM11,29H12V30H11zM12,29H13V30H12zM13,29H14V30H13zM14,29H15V30H14zM16,29H17V30H16zM17,29H18V30H17zM19,29H20V30H19zM20,29H21V30H20zM21,29H22V30H21zM22,29H23V30H22zM23,29H24V30H23zM24,29H25V30H24zM25,29H26V30H25zM26,29H27V30H26zM27,29H28V30H27zM28,29H29V30H28zM30,29H31V30H30zM35,29H36V30H35zM37,29H38V30H37zM38,29H39V30H38zM2,30H3V31H2zM3,30H4V31H3zM5,30H6V31H5zM8,30H9V31H8zM11,30H12V31H11zM12,30H13V31H12zM13,30H14V31H13zM14,30H15V31H14zM19,30H20V31H19zM20,30H21V31H20zM21,30H22V31H21zM23,30H24V31H23zM24,30H25V31H24zM29,30H30V31H29zM30,30H31V31H30zM31,30H32V31H31zM32,30H33V31H32zM33,30H34V31H33zM34,30H35V31H34zM36,30H37V31H36zM37,30H38V31H37zM10,31H11V32H10zM13,31H14V32H13zM14,31H15V32H14zM20,31H21V32H20zM25,31H26V32H25zM26,31H27V32H26zM27,31H28V32H27zM29,31H30V32H29zM30,31H31V32H30zM34,31H35V32H34zM35,31H36V32H35zM38,31H39V32H38zM2,32H3V33H2zM3,32H4V33H3zM4,32H5V33H4zM5,32H6V33H5zM6,32H7V33H6zM7,32H8V33H7zM8,32H9V33H8zM12,32H13V33H12zM16,32H17V33H16zM18,32H19V33H18zM20,32H21V33H20zM26,32H27V33H26zM27,32H28V33H27zM28,32H29V33H28zM29,32H30V33H29zM30,32H31V33H30zM32,32H33V33H32zM34,32H35V33H34zM35,32H36V33H35zM37,32H38V33H37zM38,32H39V33H38zM2,33H3V34H2zM8,33H9V34H8zM10,33H11V34H10zM12,33H13V34H12zM13,33H14V34H13zM14,33H15V34H14zM17,33H18V34H17zM18,33H19V34H18zM19,33H20V34H19zM20,33H21V34H20zM21,33H22V34H21zM23,33H24V34H23zM25,33H26V34H25zM28,33H29V34H28zM30,33H31V34H30zM34,33H35V34H34zM35,33H36V34H35zM36,33H37V34H36zM2,34H3V35H2zM4,34H5V35H4zM5,34H6V35H5zM6,34H7V35H6zM8,34H9V35H8zM11,34H12V35H11zM13,34H14V35H13zM18,34H19V35H18zM19,34H20V35H19zM20,34H21V35H20zM22,34H23V35H22zM23,34H24V35H23zM26,34H27V35H26zM27,34H28V35H27zM30,34H31V35H30zM31,34H32V35H31zM32,34H33V35H32zM33,34H34V35H33zM34,34H35V35H34zM35,34H36V35H35zM37,34H38V35H37zM38,34H39V35H38zM2,35H3V36H2zM4,35H5V36H4zM5,35H6V36H5zM6,35H7V36H6zM8,35H9V36H8zM10,35H11V36H10zM13,35H14V36H13zM15,35H16V36H15zM17,35H18V36H17zM18,35H19V36H18zM19,35H20V36H19zM20,35H21V36H20zM22,35H23V36H22zM26,35H27V36H26zM27,35H28V36H27zM33,35H34V36H33zM34,35H35V36H34zM36,35H37V36H36zM37,35H38V36H37zM2,36H3V37H2zM4,36H5V37H4zM5,36H6V37H5zM6,36H7V37H6zM8,36H9V37H8zM12,36H13V37H12zM13,36H14V37H13zM14,36H15V37H14zM15,36H16V37H15zM17,36H18V37H17zM20,36H21V37H20zM21,36H22V37H21zM23,36H24V37H23zM24,36H25V37H24zM27,36H28V37H27zM29,36H30V37H29zM30,36H31V37H30zM33,36H34V37H33zM34,36H35V37H34zM35,36H36V37H35zM37,36H38V37H37zM38,36H39V37H38zM2,37H3V38H2zM8,37H9V38H8zM13,37H14V38H13zM14,37H15V38H14zM15,37H16V38H15zM16,37H17V38H16zM18,37H19V38H18zM20,37H21V38H20zM23,37H24V38H23zM24,37H25V38H24zM25,37H26V38H25zM26,37H27V38H26zM27,37H28V38H27zM28,37H29V38H28zM29,37H30V38H29zM30,37H31V38H30zM31,37H32V38H31zM33,37H34V38H33zM2,38H3V39H2zM3,38H4V39H3zM4,38H5V39H4zM5,38H6V39H5zM6,38H7V39H6zM7,38H8V39H7zM8,38H9V39H8zM10,38H11V39H10zM11,38H12V39H11zM13,38H14V39H13zM14,38H15V39H14zM17,38H18V39H17zM19,38H20V39H19zM20,38H21V39H20zM21,38H22V39H21zM23,38H24V39H23zM25,38H26V39H25zM26,38H27V39H26zM27,38H28V39H27zM29,38H30V39H29zM30,38H31V39H30zM31,38H32V39H31zM37,38H38V39H37zM38,38H39V39H38z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none" /></svg></template>
+
+<script>
+/* =====================================================================
+   DESENHO OU OOF! — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   Cada rodada tem um TEMA e um tempo para desenhar. Depois todo mundo
+   vota no MELHOR (⭐) e no PIOR (💥 Oof!). O pior cai fora. Quem ficar
+   por último é o campeão!
+
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Desenho ou Oof!",
+
+  // ---------- TEMPO ----------
+  tempoRodadas: [45, 40, 35, 30],   // segundos para desenhar na 1ª, 2ª, 3ª... rodada (a última vale para as seguintes)
+  avisoFinal: 10,                   // nos últimos X segundos o relógio fica vermelho e apita
+  som: true,                        // false = jogo sem som
+
+  // ---------- PARTICIPANTES E ELIMINAÇÃO ----------
+  numRobos: 5,                      // quantos robôs desenham contra você (5 robôs + você = 6 desenhos)
+  caemDoisSe: 5,                    // se a rodada tiver 5 desenhos ou mais, caem 2 (deixa a partida mais curta)
+  // escudo de iniciante: quem está até o nível "ateNivel" não cai nas primeiras "rodadas" rodadas
+  escudoIniciante: { ateNivel: 1, rodadas: 2 },
+
+  // ---------- DESENHO ----------
+  tamanhos: [6, 14, 30],            // espessura do pincel: fino, médio, grosso (em pixels do quadro de 512×512)
+  toleranciaBalde: 60,              // 0 a 255: quanto o balde "aceita" de cor parecida (maior = vaza mais)
+  maxDesfazer: 15,                  // quantas vezes dá para desfazer
+  cores: [                          // a paleta que já vem liberada
+    "#1b1b24", "#ffffff", "#ef4444", "#f97316", "#facc15",
+    "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#92400e",
+  ],
+
+  // ---------- DESBLOQUEIOS (por nível) ----------
+  // tipo "cor" → cor nova na paleta · tipo "pincel" → glitter, arcoiris ou carimbo
+  desbloqueios: [
+    { nivel: 2, tipo: "cor", cor: "#9ca3af", nome: "Cinza" },
+    { nivel: 2, tipo: "cor", cor: "#f5c9a0", nome: "Cor de pele" },
+    { nivel: 3, tipo: "pincel", id: "glitter",  nome: "Pincel de glitter ✨" },
+    { nivel: 4, tipo: "pincel", id: "arcoiris", nome: "Pincel arco-íris 🌈" },
+    { nivel: 5, tipo: "pincel", id: "carimbo",  nome: "Carimbos ⭐❤️😊" },
+    { nivel: 6, tipo: "cor", cor: "#22d3ee", nome: "Ciano neon" },
+    { nivel: 6, tipo: "cor", cor: "#a3e635", nome: "Verde-limão" },
+    { nivel: 7, tipo: "cor", cor: "#d4a017", nome: "Dourado" },
+  ],
+
+  // ---------- ROBÔS ----------
+  // talento: 0 (só faz "oof") a 1 (artista). olhos: "redondo", "visor" ou "x". antena: "bola", "raio" ou "dupla"
+  robos: [
+    { nome: "Pincelino",   cor: "#60a5fa", talento: 0.85, olhos: "redondo", antena: "bola" },
+    { nome: "Rabiscadora", cor: "#f472b6", talento: 0.65, olhos: "visor",   antena: "dupla" },
+    { nome: "Tinta-Tron",  cor: "#34d399", talento: 0.55, olhos: "redondo", antena: "raio" },
+    { nome: "Giz-Bot",     cor: "#fbbf24", talento: 0.45, olhos: "x",       antena: "bola" },
+    { nome: "Borrão 3000", cor: "#a78bfa", talento: 0.25, olhos: "visor",   antena: "raio" },
+    { nome: "Aquarela",    cor: "#fb923c", talento: 0.75, olhos: "redondo", antena: "dupla" },
+    { nome: "Lápis-X",     cor: "#94a3b8", talento: 0.35, olhos: "x",       antena: "dupla" },
+  ],
+  frasesQueda: ["Meu pincel travou!", "Era arte moderna...", "Vou voltar mais forte!", "Faltou bateria na criatividade.",
+                "Eu juro que era um gato.", "Erro 404: talento não encontrado.", "Oof!"],
+
+  // ---------- TEMAS ----------
+  // Use palavras que os robôs conhecem para eles desenharem algo parecido:
+  // bichos/coisas: gato, cachorro, pizza, robô, peixe, tubarão, casa, árvore, sol, foguete, dinossauro, bolo, carro,
+  //   flor, monstro, sorvete, banana, pinguim, unicórnio · enfeites: astronauta, óculos, coroa, chapéu, cozinheiro,
+  //   pernas, asas, voador(a), skate, super-herói, Mostratec · lugares: espaço, praia
+  temas: [
+    "um gato astronauta", "pizza com pernas", "robô da Mostratec", "um tubarão de óculos", "um dinossauro de coroa",
+    "um foguete na praia", "uma casa voadora", "um sorvete com pernas", "um cachorro de chapéu", "um sol de óculos",
+    "uma banana super-heroína", "um peixe no espaço", "um bolo de aniversário", "um unicórnio de skate", "um monstro fofo",
+    "uma árvore de chapéu", "um carro com asas", "uma flor astronauta", "um robô cozinheiro", "um pinguim na praia",
+    "um dinossauro astronauta", "uma pizza no espaço", "um gato de coroa", "um carro na praia", "um monstro de óculos",
+    "um foguete com pernas", "um cachorro super-herói", "uma casa no espaço", "um sorvete de coroa", "um tubarão com pernas",
+    "um pinguim de skate", "um peixe de chapéu", "um robô de skate", "um unicórnio com asas", "uma banana de óculos",
+    "um gato cozinheiro", "uma flor com pernas", "um bolo no espaço", "um dinossauro de skate", "um monstro na praia",
+  ],
+
+  // ---------- PRÊMIOS ----------
+  premios: {
+    desenho:    { moedas: 5,  xp: 10 },   // por terminar um desenho
+    estrela:    { moedas: 5,  xp: 10 },   // por estrela ⭐ recebida
+    sobreviver: { moedas: 15, xp: 25 },   // por ficar na rodada
+    campeao:    { moedas: 60, xp: 60 },   // por ganhar a partida
+  },
+
+  // ---------- MISSÕES RÁPIDAS ----------
+  // Sempre tem 1 na tela. tipo: "cores" (cores no desenho) · "balde" (áreas pintadas com o balde) · "tracos" (traços)
+  //   "pintar" (% do quadro pintado) · "votar" · "estrelas" (estrelas recebidas) · "sobreviver" (rodadas que você ficou)
+  missoes: [
+    { tipo: "cores",      n: 3,  texto: "Use {n} cores no desenho",       moedas: 15, xp: 20 },
+    { tipo: "votar",      n: 1,  texto: "Vote no melhor e no pior",       moedas: 10, xp: 15 },
+    { tipo: "sobreviver", n: 1,  texto: "Sobreviva {n} rodada",           moedas: 20, xp: 25 },
+    { tipo: "balde",      n: 2,  texto: "Pinte {n} áreas com o balde 🪣", moedas: 15, xp: 20 },
+    { tipo: "estrelas",   n: 2,  texto: "Ganhe {n} estrelas ⭐",          moedas: 20, xp: 30 },
+    { tipo: "cores",      n: 4,  texto: "Use {n} cores no desenho",       moedas: 20, xp: 25 },
+    { tipo: "pintar",     n: 40, texto: "Pinte {n}% do quadro",           moedas: 20, xp: 25 },
+    { tipo: "tracos",     n: 15, texto: "Faça {n} traços",                moedas: 15, xp: 20 },
+    { tipo: "sobreviver", n: 2,  texto: "Sobreviva {n} rodadas",          moedas: 30, xp: 40 },
+    { tipo: "estrelas",   n: 3,  texto: "Ganhe {n} estrelas ⭐",          moedas: 30, xp: 40 },
+  ],
+
+  // ---------- NÍVEIS ----------
+  niveis: [0, 50, 130, 240, 380, 550, 750, 1000],   // XP total para chegar no nível 1, 2, 3...
+  xpPorNivelExtra: 300,                              // depois do último, cada nível novo custa mais isso
+
+  maxMeusDesenhos: 6,               // quantos desenhos ficam guardados em "Meus desenhos"
+  revelacaoIntervalo: 0.3,          // segundos entre cada voto revelado
+
+  // ---------- MODO VITRINE (?demo=1) ----------
+  demo: { tempo: 6, pausa: 1.1, revelacaoIntervalo: 0.1 },
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+// cópia do arquivo do jogo, guardada ANTES de qualquer mudança na página (é ela que o botão "Baixar o jogo" entrega)
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");              // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const S = 512;                                // o quadro de desenho tem 512×512 pixels (a tela só muda o tamanho visível)
+const TINTA = "#1b1b24";                      // cor do contorno dos desenhos
+const CHAVE = "desenho-oof-progresso", CHAVE_GAL = "desenho-oof-galeria";
+
+// painel embaixo do jogo: o puxador amarelo sobe o painel; "Voltar ao jogo" desce
+$("qr-painel").innerHTML = $("tpl-qr").innerHTML;
+$("puxador").onclick = () => scrollTo({ top: $("painel").offsetTop, behavior: "smooth" });
+$("p-voltar").onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+$("p-baixar").onclick = () => baixar();
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = lista => lista[Math.floor(Math.random() * lista.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const embaralha = l => { const c = l.slice(); for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; } return c; };
+const semAcento = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+let avisoTimer = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoTimer = 2.4; }
+function festa(grande, pequeno) {
+  $("festa-g").textContent = grande; $("festa-p").textContent = pequeno || "";
+  const f = $("festa"); f.classList.remove("mostra"); void f.offsetWidth; f.classList.add("mostra");
+}
+
+// ---------- som (bipes simples, feitos na hora) ----------
+let audio = null;
+function som(notas, tipo) {
+  if (!CONFIG.som) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state !== "running") return;           // o navegador só libera som depois de um toque
+    notas.forEach((f, i) => {
+      const o = audio.createOscillator(), g = audio.createGain(), t0 = audio.currentTime + i * 0.09;
+      o.type = tipo || "square"; o.frequency.value = f; g.gain.setValueAtTime(0.05, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
+      o.connect(g); g.connect(audio.destination); o.start(t0); o.stop(t0 + 0.17);
+    });
+  } catch (e) {}
+}
+addEventListener("pointerdown", () => { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {} });
+
+// ---------- progresso salvo no navegador: XP, moedas e missão ----------
+let prog = { xp: 0, moedas: 0, idxMissao: 0 };
+if (!DEMO) try { const p = JSON.parse(localStorage.getItem(CHAVE)); if (p && p.xp >= 0) prog = { ...prog, ...p }; } catch (e) {}
+function salva() { if (!DEMO) try { localStorage.setItem(CHAVE, JSON.stringify(prog)); } catch (e) {} }
+
+// XP total para chegar no nível n (1, 2, 3...)
+function xpDoNivel(n) { const L = CONFIG.niveis; return n <= L.length ? L[n - 1] : L[L.length - 1] + (n - L.length) * CONFIG.xpPorNivelExtra; }
+function nivelDoXp(xp) { let n = 1; while (xp >= xpDoNivel(n + 1)) n++; return n; }
+let nivel = nivelDoXp(prog.xp);
+const liberado = d => nivel >= d.nivel;
+
+// ganha moedas e XP; se subir de nível, comemora e mostra o que liberou
+function ganha(moedas, xp) {
+  prog.moedas += moedas; prog.xp += xp;
+  const novo = nivelDoXp(prog.xp);
+  if (novo > nivel) {
+    const libs = CONFIG.desbloqueios.filter(d => d.nivel > nivel && d.nivel <= novo).map(d => d.nome);
+    nivel = novo;
+    setTimeout(() => { festa(`⭐ Nível ${nivel}!`, libs.length ? "🔓 Liberou: " + libs.join(" · ") : "Continue assim!"); som([523, 659, 784, 1047]); }, 900);
+    montaFerramentas();
+  }
+  salva(); atualizaHud();
+}
+
+// ---------- HUD ----------
+let moedasMostradas = prog.moedas;
+function atualizaHud() {
+  const de = xpDoNivel(nivel), ate = xpDoNivel(nivel + 1);
+  $("nv-txt").textContent = `⭐ Nível ${nivel}`;
+  $("xp-barra").style.width = clamp((prog.xp - de) / (ate - de) * 100, 0, 100) + "%";
+  if (missao) {
+    const d = missao.def;
+    $("m-txt").textContent = "🎯 " + d.texto.replace("{n}", d.n);
+    $("m-cont").textContent = `${Math.min(missao.feito, d.n)}/${d.n}`;
+    $("m-barra").style.width = clamp(missao.feito / d.n * 100, 0, 100) + "%";
+  }
+}
+
+// ---------- missões rápidas ----------
+const POR_DESENHO = ["cores", "balde", "tracos", "pintar"];   // estas contam só no desenho de agora
+let missao = null, missoesFeitas = 0;
+function novaMissao() {
+  const def = CONFIG.missoes[prog.idxMissao % CONFIG.missoes.length];
+  missao = { def, feito: 0 };
+  atualizaHud();
+}
+// tipo = o que aconteceu; valor = quanto. "absoluto" = o valor já é o total (ex.: cores usadas no desenho)
+function eventoMissao(tipo, valor, absoluto) {
+  if (!missao || missao.def.tipo !== tipo) return;
+  missao.feito = absoluto ? valor : missao.feito + valor;
+  atualizaHud();
+  if (missao.feito >= missao.def.n) {
+    const d = missao.def;
+    missao = null; missoesFeitas++; prog.idxMissao++;
+    festa("🎯 Missão cumprida!", `+${d.moedas} 🪙  +${d.xp} XP`);
+    som([660, 880, 1100]);
+    const el = $("h-missao"); el.classList.remove("festa"); void el.offsetWidth; el.classList.add("festa");
+    ganha(d.moedas, d.xp);
+    novaMissao();
+    // missão de desenho nova já conta o que está no quadro agora
+    if (telaAtual === "desenho" && POR_DESENHO.includes(missao.def.tipo)) eventoDesenho();
+  }
+}
+
+// ---------- telas ----------
+let telaAtual = "inicio", timerDemo = null;
+function mostra(nome) {
+  document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
+  $("t-" + nome).classList.add("ativa");
+  telaAtual = nome;
+  if (nome !== "final") pararConfete();          // o confete só fica na tela do campeão
+  clearTimeout(timerDemo);
+  ajustaLayout();
+}
+// no modo vitrine, faz a ação sozinho depois de um tempinho
+function autoDemo(fn, seg) { if (DEMO) { clearTimeout(timerDemo); timerDemo = setTimeout(fn, (seg || CONFIG.demo.pausa) * 1000); } }
+function ajustaLayout() {
+  if (telaAtual === "desenho") {
+    const a = $("area-tela"), s = Math.max(120, Math.floor(Math.min(a.clientWidth, a.clientHeight) - 10));
+    $("cv").style.width = $("cv").style.height = s + "px";
+  }
+  if (telaAtual === "galeria") ajustaGrade();
+}
+addEventListener("resize", ajustaLayout);
+
+/* ---------- FERRAMENTAS DE DESENHO ---------- */
+const cv = $("cv"), ctx = cv.getContext("2d", { willReadFrequently: true });
+let fer = "pincel", corSel = TINTA, tamIdx = 1, carimboIdx = 0;
+let tracando = false, ult = null, hueArco = 0;
+let pilhaDesfazer = [];
+// métricas do desenho de agora (servem para a nota e para as missões)
+let M = { cores: new Set(), tracos: 0, baldes: 0, usado: 0 };
+const CARIMBOS = ["estrela", "coracao", "carinha", "flor", "raio"];
+const ICONE_CARIMBO = { estrela: "⭐", coracao: "❤️", carinha: "😊", flor: "🌼", raio: "⚡" };
+
+function limpaQuadro() { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, S, S); }
+function salvaDesfazer() {
+  pilhaDesfazer.push(ctx.getImageData(0, 0, S, S));
+  if (pilhaDesfazer.length > CONFIG.maxDesfazer) pilhaDesfazer.shift();
+}
+function desfazer() { const img = pilhaDesfazer.pop(); if (img) { ctx.putImageData(img, 0, 0); som([300]); } else aviso("Nada para desfazer"); }
+function limpar() { salvaDesfazer(); limpaQuadro(); som([200, 150]); }
+function registraCor() {
+  if (fer === "borracha") return;
+  M.cores.add(fer === "arcoiris" ? "arcoiris" : corSel);
+}
+
+// um pedacinho de traço, do ponto (x0,y0) até (x1,y1)
+function segmento(x0, y0, x1, y1) {
+  const t = CONFIG.tamanhos[tamIdx];
+  ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = t;
+  if (fer === "borracha") ctx.strokeStyle = "#ffffff";           // a borracha pinta de branco (o fundo)
+  else if (fer === "arcoiris") { hueArco = (hueArco + Math.hypot(x1 - x0, y1 - y0) * 0.8 + 1) % 360; ctx.strokeStyle = `hsl(${hueArco} 90% 55%)`; }
+  else ctx.strokeStyle = corSel;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  if (fer === "glitter") {                                         // brilhinhos espalhados em volta do traço
+    const n = Math.max(1, Math.floor(Math.hypot(x1 - x0, y1 - y0) / 5));
+    for (let k = 0; k < n; k++) {
+      const f = Math.random(), x = x0 + (x1 - x0) * f + rnd(-t, t), y = y0 + (y1 - y0) * f + rnd(-t, t);
+      ctx.fillStyle = pick(["#ffffff", "#fde68a", "#fef9c3", corSel]);
+      brilho(ctx, x, y, rnd(1.5, 4));
+    }
+  }
+}
+function brilho(g, x, y, r) {                                       // estrelinha de 4 pontas
+  g.beginPath(); g.moveTo(x, y - r * 2); g.lineTo(x + r * .5, y - r * .5); g.lineTo(x + r * 2, y); g.lineTo(x + r * .5, y + r * .5);
+  g.lineTo(x, y + r * 2); g.lineTo(x - r * .5, y + r * .5); g.lineTo(x - r * 2, y); g.lineTo(x - r * .5, y - r * .5); g.closePath(); g.fill();
+}
+function inicioTraco(x, y) { salvaDesfazer(); tracando = true; ult = { x, y }; registraCor(); segmento(x, y, x + 0.1, y + 0.1); }
+function moveTraco(x, y) { if (!tracando) return; segmento(ult.x, ult.y, x, y); ult = { x, y }; }
+function fimTraco() { if (!tracando) return; tracando = false; M.tracos++; eventoDesenho(); }
+
+// BALDE: pinta a área de cor parecida em volta do ponto (algoritmo "flood fill" por linhas)
+function aplicaBalde(x, y) {
+  x = Math.floor(x); y = Math.floor(y);
+  if (x < 0 || y < 0 || x >= S || y >= S) return false;
+  const img = ctx.getImageData(0, 0, S, S), d = img.data;
+  const i0 = (y * S + x) * 4, r0 = d[i0], g0 = d[i0 + 1], b0 = d[i0 + 2];
+  const [r1, g1, b1] = hexRgb(corSel);
+  if (Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1) < 12) return false;   // já é dessa cor
+  pilhaDesfazer.push(new ImageData(new Uint8ClampedArray(d), S, S));
+  if (pilhaDesfazer.length > CONFIG.maxDesfazer) pilhaDesfazer.shift();
+  const tol = CONFIG.toleranciaBalde, vis = new Uint8Array(S * S);
+  const parecido = (p, t) => { const k = p * 4; return Math.abs(d[k] - r0) <= t && Math.abs(d[k + 1] - g0) <= t && Math.abs(d[k + 2] - b0) <= t; };
+  const pinta = p => { const k = p * 4; d[k] = r1; d[k + 1] = g1; d[k + 2] = b1; d[k + 3] = 255; vis[p] = 1; };
+  const pilha = [x, y];
+  while (pilha.length) {
+    const py = pilha.pop(); let px = pilha.pop(), p = py * S + px;
+    while (px >= 0 && !vis[p] && parecido(p, tol)) { px--; p--; }       // anda para a esquerda até a borda
+    px++; p++;
+    let cima = false, baixo = false;
+    while (px < S && !vis[p] && parecido(p, tol)) {                    // pinta para a direita e anota as linhas de cima e de baixo
+      pinta(p);
+      if (py > 0) { const q = p - S; if (!vis[q] && parecido(q, tol)) { if (!cima) { pilha.push(px, py - 1); cima = true; } } else cima = false; }
+      if (py < S - 1) { const q = p + S; if (!vis[q] && parecido(q, tol)) { if (!baixo) { pilha.push(px, py + 1); baixo = true; } } else baixo = false; }
+      px++; p++;
+    }
+  }
+  // engorda 1 pixel para não sobrar uma "aura" branca grudada no contorno
+  const borda = [];
+  for (let p = S; p < S * S - S; p++) if (!vis[p] && (vis[p - 1] || vis[p + 1] || vis[p - S] || vis[p + S]) && parecido(p, tol * 2.4)) borda.push(p);
+  borda.forEach(pinta);
+  ctx.putImageData(img, 0, 0);
+  M.baldes++; registraCor(); eventoDesenho(); som([440, 330], "triangle");
+  return true;
+}
+
+// CARIMBOS: desenhos prontos que você "carimba" com um toque
+function carimbo(g, tipo, x, y, r, cor) {
+  g.save(); g.translate(x, y); g.fillStyle = cor; g.strokeStyle = TINTA; g.lineWidth = Math.max(3, r / 8); g.lineJoin = "round";
+  g.beginPath();
+  if (tipo === "estrela") for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+  else if (tipo === "coracao") { g.moveTo(0, r * .9); g.bezierCurveTo(-r * 1.4, -r * .1, -r * .6, -r * 1.1, 0, -r * .4); g.bezierCurveTo(r * .6, -r * 1.1, r * 1.4, -r * .1, 0, r * .9); }
+  else if (tipo === "carinha") g.arc(0, 0, r, 0, Math.PI * 2);
+  else if (tipo === "flor") for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; g.moveTo(Math.cos(a) * r * .55 + r * .42, Math.sin(a) * r * .55); g.arc(Math.cos(a) * r * .55, Math.sin(a) * r * .55, r * .42, 0, Math.PI * 2); }
+  else { const pts = [[.2, -1], [-.5, .1], [0, .1], [-.2, 1], [.5, -.15], [0, -.15]]; pts.forEach(([a, b]) => g.lineTo(a * r, b * r)); }
+  g.closePath(); g.fill(); g.stroke();
+  if (tipo === "carinha") { g.fillStyle = TINTA; g.beginPath(); g.arc(-r * .35, -r * .2, r * .12, 0, 7); g.arc(r * .35, -r * .2, r * .12, 0, 7); g.fill();
+    g.beginPath(); g.arc(0, r * .1, r * .5, .2, Math.PI - .2); g.stroke(); }
+  if (tipo === "flor") { g.fillStyle = "#facc15"; g.beginPath(); g.arc(0, 0, r * .3, 0, 7); g.fill(); g.stroke(); }
+  g.restore();
+}
+function aplicaCarimbo(x, y) {
+  salvaDesfazer();
+  carimbo(ctx, CARIMBOS[carimboIdx], x, y, CONFIG.tamanhos[tamIdx] * 1.6 + 16, corSel);
+  M.tracos++; registraCor(); eventoDesenho(); som([700, 900], "triangle");
+}
+
+// quanto do quadro já tem tinta (0 a 100%), olhando 1 pixel a cada 4
+function pixelsPintados() {
+  const d = ctx.getImageData(0, 0, S, S).data; let n = 0, t = 0;
+  for (let y = 0; y < S; y += 4) for (let x = 0; x < S; x += 4) { const k = (y * S + x) * 4; t++; if (d[k] + d[k + 1] + d[k + 2] < 735) n++; }
+  return n / t * 100;
+}
+// depois de cada traço/balde: atualiza as missões de desenho
+function eventoDesenho() {
+  if (!missao) return;
+  const t = missao.def.tipo;
+  if (t === "cores") eventoMissao("cores", M.cores.size, true);
+  if (t === "balde") eventoMissao("balde", M.baldes, true);
+  if (t === "tracos") eventoMissao("tracos", M.tracos, true);
+  if (t === "pintar") eventoMissao("pintar", Math.floor(pixelsPintados()), true);
+}
+
+// ---------- mouse e dedo no quadro ----------
+function posNoQuadro(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * S / r.width, (e.clientY - r.top) * S / r.height]; }
+cv.addEventListener("pointerdown", e => {
+  if (telaAtual !== "desenho" || DEMO) return;
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+  const [x, y] = posNoQuadro(e);
+  if (fer === "balde") aplicaBalde(x, y);
+  else if (fer === "carimbo") aplicaCarimbo(x, y);
+  else inicioTraco(x, y);
+});
+cv.addEventListener("pointermove", e => {
+  if (!tracando) return;
+  const lista = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
+  lista.forEach(ev => { const [x, y] = posNoQuadro(ev); moveTraco(x, y); });
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach(n => cv.addEventListener(n, fimTraco));
+
+// ---------- barra de ferramentas ----------
+const FERRAMENTAS = [
+  { id: "pincel",   ic: "🖌️", rot: "Pincel" },
+  { id: "balde",    ic: "🪣", rot: "Balde" },
+  { id: "borracha", ic: "🧽", rot: "Borracha" },
+  { id: "glitter",  ic: "✨", rot: "Glitter" },
+  { id: "arcoiris", ic: "🌈", rot: "Arco-íris" },
+  { id: "carimbo",  ic: "⭐", rot: "Carimbo" },
+];
+function nivelDaFerramenta(id) { const d = CONFIG.desbloqueios.find(d => d.tipo === "pincel" && d.id === id); return d ? d.nivel : 1; }
+function coresLiberadas() { return CONFIG.cores.concat(CONFIG.desbloqueios.filter(d => d.tipo === "cor" && liberado(d)).map(d => d.cor)); }
+function montaFerramentas() {
+  $("f-cores").innerHTML = coresLiberadas().map((c, i) =>
+    `<button class="cor${c === corSel ? " sel" : ""}" id="cor-${i}" data-cor="${c}" style="background:${c}" aria-label="cor ${c}"></button>`).join("");
+  $("f-ferr").innerHTML = FERRAMENTAS.map(f => {
+    const nv = nivelDaFerramenta(f.id), tranca = nivel < nv;
+    const ic = f.id === "carimbo" ? ICONE_CARIMBO[CARIMBOS[carimboIdx]] : f.ic;
+    return `<button class="ferr${fer === f.id ? " sel" : ""}${tranca ? " trancado" : ""}" id="b-fer-${f.id}" data-f="${f.id}">${tranca ? "🔒" : ic}<span class="rot">${f.rot}</span>${tranca ? `<span class="cad">Nv ${nv}</span>` : ""}</button>`;
+  }).join("");
+  $("f-acoes").innerHTML = CONFIG.tamanhos.map((t, i) =>
+    `<button class="ferr${i === tamIdx ? " sel" : ""}" id="b-tam-${i}" data-t="${i}" aria-label="espessura ${i + 1}"><span class="bola" style="width:${6 + i * 6}px;height:${6 + i * 6}px"></span></button>`).join("")
+    + `<button class="ferr" id="b-desfazer">↩️<span class="rot">Desfazer</span></button>`
+    + `<button class="ferr" id="b-limpar">🗑️<span class="rot">Limpar</span></button>`
+    + `<button class="ferr" id="b-pronto">✅ Pronto!</button>`;
+}
+$("ferramentas").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || DEMO) return;
+  if (b.dataset.cor) { corSel = b.dataset.cor; if (fer === "borracha") fer = "pincel"; }
+  else if (b.dataset.f) {
+    const nv = nivelDaFerramenta(b.dataset.f);
+    if (nivel < nv) { aviso(`🔒 Chegue ao nível ${nv} para liberar`); return; }
+    if (b.dataset.f === "carimbo" && fer === "carimbo") carimboIdx = (carimboIdx + 1) % CARIMBOS.length;   // toque de novo = troca o carimbo
+    fer = b.dataset.f;
+  }
+  else if (b.dataset.t) tamIdx = +b.dataset.t;
+  else if (b.id === "b-desfazer") desfazer();
+  else if (b.id === "b-limpar") limpar();
+  else if (b.id === "b-pronto") { terminaDesenho(); return; }
+  montaFerramentas();
+});
+// teclado no PC: P pincel · B balde · E borracha · 1 2 3 espessura · Z desfazer · Enter pronto
+addEventListener("keydown", e => {
+  if (telaAtual !== "desenho" || DEMO || e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "z") desfazer();
+  else if (k === "p") fer = "pincel";
+  else if (k === "b") fer = "balde";
+  else if (k === "e") fer = "borracha";
+  else if ("123".includes(k) && k) tamIdx = +k - 1;
+  else if (k === "enter") { terminaDesenho(); return; }
+  else return;
+  montaFerramentas();
+});
+
+/* ---------- OS ROBÔS DESENHAM (tudo feito com formas simples e uma "mão tremida") ----------
+   q = qualidade do desenho, de 0 (oof total) a 1 (caprichado).
+   Quanto menor o q, mais a mão treme, mais a tinta escapa do contorno e mais cores erradas aparecem. */
+const CORES_LOUCAS = ["#ef4444", "#22c55e", "#3b82f6", "#a855f7", "#f97316", "#ec4899", "#14b8a6", "#facc15"];
+function mao(q) {
+  const off = q < 0.45 ? rnd(8, 26) * (1 - q) : rnd(0, 3);
+  return { q, j: 1.2 + (1 - q) * (1 - q) * 20, offX: off * pick([-1, 1]), offY: off * pick([-1, 1]),
+           lw: q > 0.6 ? 6 : rnd(4, 9), erra: q < 0.3 ? 0.55 : q < 0.5 ? 0.2 : 0, dupla: q > 0.3 && q < 0.75 };
+}
+const corDa = (h, c) => Math.random() < h.erra ? pick(CORES_LOUCAS) : c;
+// pontos de formas básicas (com vários pontos, para a mão tremida ficar natural)
+const elip = (x, y, rx, ry, n = 22) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return [x + Math.cos(a) * rx, y + Math.sin(a) * ry]; });
+function divide(pts, k = 4) {
+  const r = [];
+  pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length]; for (let s = 0; s < k; s++) r.push([p[0] + (q[0] - p[0]) * s / k, p[1] + (q[1] - p[1]) * s / k]); });
+  return r;
+}
+const ret = (x, y, w, h) => divide([[x, y], [x + w, y], [x + w, y + h], [x, y + h]]);
+const tri = (a, b, c) => divide([a, b, c]);
+function caminho(g, pts, j, fechado) {
+  g.beginPath();
+  pts.forEach(([x, y], i) => { const a = x + rnd(-j, j), b = y + rnd(-j, j); i ? g.lineTo(a, b) : g.moveTo(a, b); });
+  if (fechado) g.closePath();
+}
+// uma forma pintada com contorno escuro
+function forma(g, pts, cor, h) {
+  if (cor) { g.save(); g.translate(h.offX, h.offY); caminho(g, pts, h.j * 0.4, true); g.fillStyle = corDa(h, cor); g.fill(); g.restore(); }
+  g.lineWidth = h.lw; g.strokeStyle = TINTA; g.lineJoin = g.lineCap = "round";
+  caminho(g, pts, h.j, true); g.stroke();
+  if (h.dupla) { g.lineWidth = h.lw * 0.5; caminho(g, pts, h.j, true); g.stroke(); }
+}
+function linha(g, pts, h, cor, lw) { g.lineWidth = lw || h.lw; g.strokeStyle = cor || TINTA; g.lineCap = g.lineJoin = "round"; caminho(g, pts, h.j, false); g.stroke(); }
+function bola(g, x, y, r, cor) { g.fillStyle = cor; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+function olhos(g, x1, y1, x2, y2, r, h) {
+  [[x1, y1], [x2, y2]].forEach(([x, y]) => {
+    const rr = h.q < 0.3 ? r * rnd(0.6, 1.8) : r;
+    bola(g, x, y, rr + 3, TINTA); bola(g, x, y, rr, "#fff"); bola(g, x + rnd(-2, 2), y + rr * 0.2, rr * 0.5, TINTA);
+  });
+}
+function sorriso(g, x, y, w, h) { g.lineWidth = 5; g.strokeStyle = TINTA; g.beginPath(); g.arc(x, y - w * 0.4, w, 0.25 * Math.PI + rnd(-.2, .2) * (1 - h.q), 0.75 * Math.PI); g.stroke(); }
+
+// cada "sujeito" é desenhado em volta do ponto (0,0), com uns 300 px de tamanho.
+// Devolve onde fica a cabeça (cab) e os pés (pe) para os enfeites encaixarem.
+const SUJEITOS = {
+  gato(g, h) {
+    forma(g, elip(0, 65, 95, 70), "#f59e0b", h);
+    forma(g, elip(110, 40, 22, 60), "#f59e0b", h);
+    forma(g, tri([-64, -78], [-44, -150], [-10, -100]), "#f59e0b", h); forma(g, tri([64, -78], [44, -150], [10, -100]), "#f59e0b", h);
+    forma(g, elip(0, -45, 75, 62), "#fbbf24", h);
+    olhos(g, -27, -55, 27, -55, 11, h); bola(g, 0, -32, 7, "#ec4899"); sorriso(g, 0, -10, 18, h);
+    linha(g, [[-30, -28], [-85, -38]], h, TINTA, 3); linha(g, [[30, -28], [85, -38]], h, TINTA, 3);
+    return { cab: { x: 0, y: -45, r: 72 }, pe: { y: 130, x1: -45, x2: 45 } };
+  },
+  cachorro(g, h) {
+    forma(g, elip(0, 70, 95, 65), "#b45309", h);
+    forma(g, elip(0, -45, 72, 64), "#d97706", h);
+    forma(g, elip(-75, -40, 22, 50), "#78350f", h); forma(g, elip(75, -40, 22, 50), "#78350f", h);
+    forma(g, elip(0, -15, 32, 24), "#fde68a", h); bola(g, 0, -25, 9, TINTA);
+    olhos(g, -26, -60, 26, -60, 10, h);
+    return { cab: { x: 0, y: -45, r: 72 }, pe: { y: 130, x1: -45, x2: 45 } };
+  },
+  pizza(g, h) {
+    forma(g, tri([0, 140], [-115, -110], [115, -110]), "#fcd34d", h);
+    forma(g, ret(-125, -135, 250, 32), "#b45309", h);
+    [[-40, -60], [35, -70], [0, 10], [-15, 70], [55, -20]].forEach(([x, y]) => forma(g, elip(x, y, 17, 17, 12), "#dc2626", h));
+    olhos(g, -30, -20, 30, -20, 10, h); sorriso(g, 0, 15, 16, h);
+    return { cab: { x: 0, y: -40, r: 70 }, pe: { y: 120, x1: -25, x2: 25 } };
+  },
+  robo(g, h) {
+    forma(g, ret(-80, -5, 160, 135), "#94a3b8", h);
+    forma(g, ret(-62, -125, 124, 105), "#cbd5e1", h);
+    linha(g, [[0, -125], [0, -160]], h); forma(g, elip(0, -165, 12, 12, 10), "#ef4444", h);
+    forma(g, ret(-42, -95, 30, 26), "#22d3ee", h); forma(g, ret(12, -95, 30, 26), "#22d3ee", h);
+    forma(g, ret(-30, -50, 60, 14), "#475569", h);
+    forma(g, ret(-40, 30, 80, 50), "#facc15", h);
+    return { cab: { x: 0, y: -72, r: 70 }, pe: { y: 130, x1: -45, x2: 45 } };
+  },
+  peixe(g, h) {
+    forma(g, tri([90, 0], [160, -60], [160, 60]), "#fb923c", h);
+    forma(g, elip(0, 0, 120, 72), "#f97316", h);
+    forma(g, tri([-10, -60], [30, -105], [45, -55]), "#fdba74", h);
+    olhos(g, -65, -15, -65, -15, 13, h); sorriso(g, -95, 22, 12, h);
+    return { cab: { x: -55, y: -10, r: 60 }, pe: { y: 70, x1: -40, x2: 40 } };
+  },
+  tubarao(g, h) {
+    forma(g, tri([110, 0], [175, -70], [165, 60]), "#64748b", h);
+    forma(g, tri([-10, -50], [30, -125], [55, -45]), "#64748b", h);
+    forma(g, elip(0, 0, 140, 62), "#94a3b8", h);
+    forma(g, elip(-10, 22, 105, 30), "#e2e8f0", h);
+    linha(g, [[-120, 15], [-110, 30], [-100, 15], [-90, 30], [-80, 15], [-70, 30], [-60, 15]], h, TINTA, 4);
+    olhos(g, -85, -18, -85, -18, 10, h);
+    return { cab: { x: -75, y: -5, r: 60 }, pe: { y: 62, x1: -40, x2: 40 } };
+  },
+  casa(g, h) {
+    forma(g, ret(-100, -30, 200, 160), "#fde68a", h);
+    forma(g, tri([-125, -25], [0, -140], [125, -25]), "#dc2626", h);
+    forma(g, ret(-25, 50, 50, 80), "#92400e", h);
+    forma(g, ret(-80, 0, 45, 40), "#7dd3fc", h); forma(g, ret(35, 0, 45, 40), "#7dd3fc", h);
+    return { cab: { x: 0, y: -70, r: 75 }, pe: { y: 130, x1: -60, x2: 60 } };
+  },
+  arvore(g, h) {
+    forma(g, ret(-25, 20, 50, 120), "#92400e", h);
+    forma(g, elip(-55, -30, 65, 55), "#16a34a", h); forma(g, elip(55, -30, 65, 55), "#16a34a", h); forma(g, elip(0, -85, 75, 62), "#22c55e", h);
+    bola(g, -40, -40, 9, "#ef4444"); bola(g, 50, -10, 9, "#ef4444"); bola(g, 10, -100, 9, "#ef4444");
+    return { cab: { x: 0, y: -80, r: 80 }, pe: { y: 140, x1: -20, x2: 20 } };
+  },
+  sol(g, h) {
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; linha(g, [[Math.cos(a) * 100, Math.sin(a) * 100], [Math.cos(a) * 145, Math.sin(a) * 145]], h, "#f97316", 10); }
+    forma(g, elip(0, 0, 88, 88), "#facc15", h);
+    olhos(g, -30, -15, 30, -15, 11, h); sorriso(g, 0, 25, 28, h);
+    return { cab: { x: 0, y: 0, r: 88 }, pe: { y: 92, x1: -35, x2: 35 } };
+  },
+  foguete(g, h) {
+    forma(g, tri([-20, 110], [0, 175], [20, 110]), "#f97316", h);
+    forma(g, tri([-45, 40], [-95, 120], [-40, 110]), "#dc2626", h); forma(g, tri([45, 40], [95, 120], [40, 110]), "#dc2626", h);
+    forma(g, elip(0, 10, 50, 110), "#e5e7eb", h);
+    forma(g, tri([-44, -60], [0, -150], [44, -60]), "#dc2626", h);
+    forma(g, elip(0, -10, 24, 24, 14), "#38bdf8", h);
+    return { cab: { x: 0, y: -15, r: 40 }, pe: { y: 120, x1: -30, x2: 30 } };
+  },
+  dinossauro(g, h) {
+    forma(g, tri([80, 30], [180, 80], [70, 90]), "#22c55e", h);
+    for (let i = 0; i < 4; i++) forma(g, tri([-40 + i * 35, -25], [-22 + i * 35, -65], [-5 + i * 35, -25]), "#fbbf24", h);
+    forma(g, elip(15, 45, 110, 70), "#22c55e", h);
+    forma(g, ret(-95, -60, 45, 90), "#22c55e", h);
+    forma(g, elip(-95, -85, 55, 38), "#4ade80", h);
+    forma(g, ret(-40, 95, 30, 45), "#16a34a", h); forma(g, ret(50, 95, 30, 45), "#16a34a", h);
+    olhos(g, -105, -95, -105, -95, 10, h);
+    return { cab: { x: -95, y: -85, r: 50 }, pe: { y: 140, x1: -25, x2: 65 } };
+  },
+  bolo(g, h) {
+    forma(g, ret(-120, 40, 240, 90), "#f9a8d4", h);
+    forma(g, ret(-90, -40, 180, 80), "#fde68a", h);
+    linha(g, [[-120, 40], [-90, 60], [-60, 40], [-30, 60], [0, 40], [30, 60], [60, 40], [90, 60], [120, 40]], h, "#fff", 8);
+    [-50, 0, 50].forEach(x => { forma(g, ret(x - 7, -95, 14, 55), "#60a5fa", h); forma(g, elip(x, -108, 9, 14, 10), "#f97316", h); });
+    return { cab: { x: 0, y: -60, r: 80 }, pe: { y: 130, x1: -60, x2: 60 } };
+  },
+  carro(g, h) {
+    forma(g, ret(-70, -70, 130, 60), "#93c5fd", h);
+    forma(g, ret(-140, -15, 280, 80), "#ef4444", h);
+    forma(g, elip(-80, 70, 32, 32, 16), "#1f2937", h); forma(g, elip(80, 70, 32, 32, 16), "#1f2937", h);
+    bola(g, -80, 70, 10, "#d1d5db"); bola(g, 80, 70, 10, "#d1d5db"); bola(g, 128, 10, 10, "#fde047");
+    return { cab: { x: -5, y: -45, r: 55 }, pe: { y: 100, x1: -80, x2: 80 } };
+  },
+  flor(g, h) {
+    linha(g, [[0, 30], [5, 90], [0, 150]], h, "#16a34a", 12);
+    forma(g, elip(-35, 100, 30, 14), "#22c55e", h); forma(g, elip(38, 80, 30, 14), "#22c55e", h);
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; forma(g, elip(Math.cos(a) * 55, -40 + Math.sin(a) * 55, 34, 34, 14), "#f472b6", h); }
+    forma(g, elip(0, -40, 36, 36, 16), "#facc15", h);
+    olhos(g, -12, -48, 12, -48, 6, h);
+    return { cab: { x: 0, y: -40, r: 50 }, pe: { y: 150, x1: -15, x2: 15 } };
+  },
+  monstro(g, h) {
+    const pts = Array.from({ length: 26 }, (_, i) => { const a = i / 26 * Math.PI * 2, r = 120 + Math.sin(i * 1.7) * 18; return [Math.cos(a) * r, 10 + Math.sin(a) * r * 0.9]; });
+    forma(g, pts, "#a855f7", h);
+    olhos(g, -45, -35, 45, -35, 18, h); olhos(g, 0, -75, 0, -75, 12, h);
+    forma(g, elip(0, 45, 55, 26), "#4c1d95", h);
+    forma(g, tri([-30, 25], [-18, 50], [-6, 25]), "#fff", h); forma(g, tri([6, 25], [18, 50], [30, 25]), "#fff", h);
+    return { cab: { x: 0, y: -40, r: 95 }, pe: { y: 120, x1: -50, x2: 50 } };
+  },
+  sorvete(g, h) {
+    forma(g, tri([-62, 0], [0, 160], [62, 0]), "#d97706", h);
+    linha(g, [[-40, 20], [20, 110]], h, "#92400e", 4); linha(g, [[40, 20], [-20, 110]], h, "#92400e", 4);
+    forma(g, elip(0, -30, 68, 48), "#f9a8d4", h); forma(g, elip(0, -95, 55, 42), "#a7f3d0", h);
+    bola(g, 0, -150, 14, "#dc2626");
+    olhos(g, -22, -38, 22, -38, 8, h); sorriso(g, 0, -15, 12, h);
+    return { cab: { x: 0, y: -60, r: 65 }, pe: { y: 150, x1: -20, x2: 20 } };
+  },
+  banana(g, h) {
+    const pts = [];
+    for (let i = 0; i <= 12; i++) { const a = Math.PI * (0.15 + i / 12 * 0.7); pts.push([Math.cos(a) * 150, -60 + Math.sin(a) * 150]); }
+    for (let i = 12; i >= 0; i--) { const a = Math.PI * (0.2 + i / 12 * 0.6); pts.push([Math.cos(a) * 95, -20 + Math.sin(a) * 95]); }
+    forma(g, pts, "#facc15", h);
+    forma(g, ret(-8, 72, 16, 22), "#78350f", h);
+    olhos(g, -25, 40, 25, 40, 8, h);
+    return { cab: { x: 0, y: 40, r: 50 }, pe: { y: 95, x1: -50, x2: 50 } };
+  },
+  pinguim(g, h) {
+    forma(g, elip(0, 20, 85, 115), "#1f2937", h);
+    forma(g, elip(0, 40, 58, 85), "#f8fafc", h);
+    forma(g, tri([-14, -55], [0, -35], [14, -55]), "#f97316", h);
+    forma(g, elip(-35, 135, 26, 10), "#f97316", h); forma(g, elip(35, 135, 26, 10), "#f97316", h);
+    olhos(g, -24, -70, 24, -70, 9, h);
+    return { cab: { x: 0, y: -60, r: 60 }, pe: { y: 135, x1: -35, x2: 35 } };
+  },
+  unicornio(g, h) {
+    forma(g, ret(-60, 70, 22, 70), "#f1f5f9", h); forma(g, ret(40, 70, 22, 70), "#f1f5f9", h);
+    forma(g, elip(10, 50, 100, 55), "#f8fafc", h);
+    ["#f472b6", "#facc15", "#60a5fa", "#a78bfa"].forEach((c, i) => forma(g, elip(-70 + i * 6, -80 + i * 28, 22, 20, 12), c, h));
+    forma(g, elip(-95, -60, 48, 40), "#f8fafc", h);
+    forma(g, tri([-110, -95], [-95, -165], [-80, -95]), "#facc15", h);
+    olhos(g, -105, -65, -105, -65, 9, h);
+    return { cab: { x: -95, y: -60, r: 50 }, pe: { y: 140, x1: -50, x2: 50 } };
+  },
+  bicho(g, h) {                                                     // quando o tema não é conhecido: um bichinho genérico
+    forma(g, elip(0, 20, 110, 100), pick(CORES_LOUCAS), h);
+    olhos(g, -35, -10, 35, -10, 15, h); sorriso(g, 0, 30, 30, h);
+    return { cab: { x: 0, y: -10, r: 90 }, pe: { y: 120, x1: -45, x2: 45 } };
+  },
+};
+// palavra do tema → o que desenhar (o nome é usado nas piadas dos desenhos "oof")
+const PALAVRAS_SUJEITO = [["gato", "gato"], ["cachorro", "cachorro"], ["pizza", "pizza"], ["robo", "robo"], ["tubarao", "tubarao"], ["peixe", "peixe"],
+  ["casa", "casa"], ["arvore", "arvore"], ["sol", "sol"], ["foguete", "foguete"], ["dinossauro", "dinossauro"], ["bolo", "bolo"], ["carro", "carro"],
+  ["flor", "flor"], ["monstro", "monstro"], ["sorvete", "sorvete"], ["banana", "banana"], ["pinguim", "pinguim"], ["unicornio", "unicornio"]];
+const NOME_SUJEITO = { gato: "gato", cachorro: "cachorro", pizza: "pizza", robo: "robô", tubarao: "tubarão", peixe: "peixe", casa: "casa", arvore: "árvore",
+  sol: "sol", foguete: "foguete", dinossauro: "dinossauro", bolo: "bolo", carro: "carro", flor: "flor", monstro: "monstro", sorvete: "sorvete",
+  banana: "banana", pinguim: "pinguim", unicornio: "unicórnio", bicho: "bicho" };
+
+// enfeites que combinam com o tema
+const ENFEITES = {
+  astronauta: { palavras: ["astronauta"], f(g, a, h) {
+    const { x, y, r } = a.cab;
+    g.save(); g.globalAlpha = 0.35; bola(g, x, y, r * 1.4, "#7dd3fc"); g.restore();
+    forma(g, elip(x, y, r * 1.4, r * 1.4, 26), null, h);
+    g.lineWidth = 6; g.strokeStyle = "#fff"; g.beginPath(); g.arc(x, y, r * 1.15, 3.6, 4.4); g.stroke(); } },
+  oculos: { palavras: ["oculos"], f(g, a, h) {
+    const { x, y, r } = a.cab;
+    forma(g, elip(x - r * .38, y - r * .15, r * .3, r * .24, 14), "#111827", h); forma(g, elip(x + r * .38, y - r * .15, r * .3, r * .24, 14), "#111827", h);
+    linha(g, [[x - r * .1, y - r * .18], [x + r * .1, y - r * .18]], h, TINTA, 5);
+    bola(g, x - r * .45, y - r * .25, 5, "#fff"); bola(g, x + r * .31, y - r * .25, 5, "#fff"); } },
+  coroa: { palavras: ["coroa", "rei", "rainha"], f(g, a, h) {
+    const { x, y, r } = a.cab, b = y - r * .8, w = r * .7;
+    forma(g, divide([[x - w, b], [x - w, b - r * .6], [x - w / 2, b - r * .3], [x, b - r * .75], [x + w / 2, b - r * .3], [x + w, b - r * .6], [x + w, b]], 2), "#facc15", h);
+    bola(g, x, b - r * .2, 7, "#ef4444"); } },
+  chapeu: { palavras: ["chapeu", "cartola"], f(g, a, h) {
+    const { x, y, r } = a.cab, b = y - r * .75;
+    forma(g, ret(x - r * .9, b - 14, r * 1.8, 18), "#1f2937", h); forma(g, ret(x - r * .55, b - r * .95, r * 1.1, r * .85), "#1f2937", h);
+    forma(g, ret(x - r * .55, b - 40, r * 1.1, 16), "#ef4444", h); } },
+  cozinheiro: { palavras: ["cozinheir", "chef"], f(g, a, h) {
+    const { x, y, r } = a.cab, b = y - r * .75;
+    forma(g, ret(x - r * .5, b - r * .4, r, r * .45), "#fff", h);
+    [-.4, 0, .4].forEach(k => forma(g, elip(x + k * r, b - r * .6, r * .32, r * .3, 14), "#fff", h)); } },
+  pernas: { palavras: ["pernas"], f(g, a, h) {
+    const { y, x1, x2 } = a.pe;
+    [x1, x2].forEach((x, i) => { linha(g, [[x, y - 10], [x + (i ? 8 : -8), y + 60]], h, TINTA, 9); forma(g, elip(x + (i ? 22 : -22), y + 68, 28, 13, 14), "#ef4444", h); }); } },
+  asas: { palavras: ["asas", "voador", "voadora"], antes: true, f(g, a, h) {
+    forma(g, elip(-150, -20, 70, 34), "#f8fafc", h); forma(g, elip(150, -20, 70, 34), "#f8fafc", h); } },
+  skate: { palavras: ["skate"], f(g, a, h) {
+    const y = a.pe.y + 12;
+    forma(g, ret(-130, y, 260, 20), "#f97316", h);
+    forma(g, elip(-85, y + 32, 15, 15, 12), "#1f2937", h); forma(g, elip(85, y + 32, 15, 15, 12), "#1f2937", h); } },
+  capa: { palavras: ["super-heroi", "super-heroina", "heroi", "heroina"], antes: true, f(g, a, h) {
+    const { x, y, r } = a.cab;
+    forma(g, divide([[x - r * .7, y + r * .6], [x + r * .7, y + r * .6], [x + r * 1.9, y + r * 3], [x - r * 1.9, y + r * 3]], 3), "#dc2626", h); } },
+  mostratec: { palavras: ["mostratec"], f(g, a, h) {
+    linha(g, [[150, 140], [150, -40]], h, "#92400e", 10);
+    forma(g, ret(70, -120, 175, 80), "#fef08a", h);
+    g.fillStyle = TINTA; g.font = "900 26px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("MOSTRATEC", 157 + rnd(-3, 3), -72); } },
+};
+function fundo(g, toks, q) {
+  const tem = l => l.some(p => toks.some(t => t.startsWith(p)));
+  if (tem(["espaco", "astronauta", "foguete", "planeta"])) {
+    g.fillStyle = q > 0.4 ? "#1e1b4b" : "#312e81"; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 40; i++) { g.fillStyle = pick(["#fff", "#fde68a", "#c4b5fd"]); brilho(g, rnd(0, S), rnd(0, S), rnd(1, 3)); }
+    if (q > 0.5) { bola(g, 430, 80, 38, "#f472b6"); g.strokeStyle = "#fde68a"; g.lineWidth = 6; g.beginPath(); g.ellipse(430, 80, 60, 14, -.3, 0, 7); g.stroke(); }
+    return "espaco";
+  }
+  if (tem(["praia", "mar"])) {
+    g.fillStyle = "#bae6fd"; g.fillRect(0, 0, S, S);
+    g.fillStyle = "#3b82f6"; g.fillRect(0, 300, S, 80); g.fillStyle = "#fcd34d"; g.fillRect(0, 380, S, 140);
+    bola(g, 440, 70, 40, "#facc15");
+    return "praia";
+  }
+  if (q > 0.55) {
+    g.fillStyle = "#e0f2fe"; g.fillRect(0, 0, S, S);
+    g.fillStyle = "#86efac"; g.beginPath(); g.moveTo(0, 420); for (let x = 0; x <= S; x += 32) g.lineTo(x, 410 + Math.sin(x / 40) * 10); g.lineTo(S, S); g.lineTo(0, S); g.fill();
+    g.fillStyle = "#fff"; bola(g, 90, 70, 26, "#fff"); bola(g, 120, 62, 32, "#fff"); bola(g, 152, 72, 24, "#fff");
+  } else if (q > 0.35) {                                             // fundo feito com rabiscos de giz
+    g.strokeStyle = pick(["#bae6fd", "#bbf7d0", "#fde68a"]); g.lineWidth = 9;
+    g.beginPath(); for (let y = 20; y < S; y += 26) { g.moveTo(rnd(0, 30), y); g.lineTo(S - rnd(0, 60), y + rnd(-8, 8)); } g.stroke();
+  }
+  return "nada";
+}
+// desenhos "oof" bem engraçados (para qualidade muito baixa)
+function piadaOof(g, nome) {
+  const tipo = rint(0, 3);
+  g.fillStyle = TINTA; g.font = "800 34px 'Comic Sans MS','Comic Neue',cursive,sans-serif"; g.textAlign = "center";
+  if (tipo === 0) {                                                  // boneco de palito + legenda
+    g.lineWidth = 6; g.strokeStyle = TINTA; g.lineCap = "round";
+    g.beginPath(); g.arc(256, 170, 40, 0, 7); g.moveTo(256, 210); g.lineTo(250, 320); g.moveTo(180, 250); g.lineTo(330, 240);
+    g.moveTo(250, 320); g.lineTo(200, 410); g.moveTo(250, 320); g.lineTo(310, 400); g.stroke();
+    g.fillText(`é um ${nome}, juro`, 256, 470);
+  } else if (tipo === 1) {                                           // rabisco total
+    for (let i = 0; i < 9; i++) { g.strokeStyle = pick(CORES_LOUCAS); g.lineWidth = rnd(5, 16); g.beginPath(); g.moveTo(rnd(0, S), rnd(0, S));
+      for (let k = 0; k < 8; k++) g.lineTo(rnd(0, S), rnd(0, S)); g.stroke(); }
+    g.fillText("arte moderna?", 256, 480);
+  } else if (tipo === 2) {                                           // pontinho com flecha
+    bola(g, 420, 420, 12, pick(CORES_LOUCAS));
+    g.lineWidth = 5; g.strokeStyle = TINTA; g.beginPath(); g.moveTo(180, 200); g.lineTo(400, 400); g.moveTo(400, 400); g.lineTo(370, 395); g.moveTo(400, 400); g.lineTo(392, 370); g.stroke();
+    g.fillText(`o ${nome}`, 160, 180);
+  } else {                                                           // borrão gigante
+    const pts = Array.from({ length: 18 }, (_, i) => { const a = i / 18 * Math.PI * 2, r = rnd(150, 230); return [256 + Math.cos(a) * r, 256 + Math.sin(a) * r]; });
+    forma(g, pts, pick(CORES_LOUCAS), mao(0.2)); olhos(g, 220, 230, 300, 240, 14, mao(0.2));
+    g.fillText("ops", 256, 330);
+  }
+}
+// desenho completo de um robô: devolve a imagem (PNG) e a nota "real" do desenho
+function desenhoRobo(tema, talento) {
+  const q = clamp(talento + rnd(-0.32, 0.22), 0.03, 0.98);
+  const c = document.createElement("canvas"); c.width = c.height = S;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S);
+  const toks = semAcento(tema).split(/[^a-z-]+/).filter(Boolean);
+  const achou = PALAVRAS_SUJEITO.find(([p]) => toks.some(t => t.startsWith(p)));
+  const suj = achou ? achou[1] : "bicho";
+  if (q < 0.14) { piadaOof(g, NOME_SUJEITO[suj]); return { url: c.toDataURL(), nota: q }; }
+  const h = mao(q);
+  fundo(g, toks, q);
+  // onde o desenho fica: caprichado = no meio; oof = torto, pequeno ou gigante
+  const bom = q >= 0.45;
+  g.save();
+  g.translate(256 + (bom ? rnd(-12, 12) : rnd(-80, 80)), (bom ? 262 : rnd(200, 320)));
+  g.rotate(bom ? rnd(-0.06, 0.06) : rnd(-0.5, 0.5));
+  const k = bom ? rnd(0.95, 1.12) : rnd(0.55, 1.35); g.scale(k, k);
+  const enf = Object.values(ENFEITES).filter(e => e.palavras.some(p => toks.some(t => t.startsWith(p))))
+    .filter(() => q > 0.4 || Math.random() < 0.6);                  // desenho ruim às vezes esquece o enfeite
+  if (q < 0.3 && Math.random() < 0.4) enf.push(pick(Object.values(ENFEITES)));   // ...ou coloca um enfeite nada a ver
+  const ancoraFake = { cab: { x: 0, y: -45, r: 70 }, pe: { y: 130, x1: -45, x2: 45 } };
+  enf.filter(e => e.antes).forEach(e => e.f(g, ancoraFake, h));
+  const a = SUJEITOS[suj](g, h);
+  enf.filter(e => !e.antes).forEach(e => e.f(g, a, h));
+  g.restore();
+  if (q < 0.5) for (let i = rint(1, 4); i > 0; i--) {               // rabiscos sem querer
+    g.strokeStyle = pick(CORES_LOUCAS); g.lineWidth = rnd(4, 10); g.lineCap = "round";
+    g.beginPath(); g.moveTo(rnd(0, S), rnd(0, S)); g.quadraticCurveTo(rnd(0, S), rnd(0, S), rnd(0, S), rnd(0, S)); g.stroke();
+  }
+  return { url: c.toDataURL(), nota: clamp(q + rnd(-0.08, 0.08), 0, 1) };
+}
+
+// carinhas: robôs (cabeça quadrada) e pessoas (bolinha com a inicial)
+function avatarRobo(r) {
+  const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d");
+  g.lineWidth = 4; g.strokeStyle = TINTA; g.fillStyle = r.cor;
+  if (r.antena === "dupla") { g.beginPath(); g.moveTo(20, 16); g.lineTo(14, 4); g.moveTo(44, 16); g.lineTo(50, 4); g.stroke(); bola(g, 14, 5, 4, "#ef4444"); bola(g, 50, 5, 4, "#ef4444"); }
+  else if (r.antena === "raio") { g.beginPath(); g.moveTo(32, 16); g.lineTo(26, 9); g.lineTo(36, 8); g.lineTo(30, 1); g.stroke(); }
+  else { g.beginPath(); g.moveTo(32, 16); g.lineTo(32, 6); g.stroke(); bola(g, 32, 6, 5, "#facc15"); }
+  g.beginPath(); g.roundRect ? g.roundRect(8, 14, 48, 44, 10) : g.rect(8, 14, 48, 44); g.fill(); g.stroke();
+  if (r.olhos === "visor") { g.fillStyle = TINTA; g.fillRect(15, 26, 34, 12); g.fillStyle = "#22d3ee"; g.fillRect(19, 29, 26, 6); }
+  else if (r.olhos === "x") { g.beginPath(); [[20, 26], [38, 26]].forEach(([x, y]) => { g.moveTo(x, y); g.lineTo(x + 8, y + 8); g.moveTo(x + 8, y); g.lineTo(x, y + 8); }); g.stroke(); }
+  else { bola(g, 23, 32, 6, "#fff"); bola(g, 41, 32, 6, "#fff"); bola(g, 23, 33, 3, TINTA); bola(g, 41, 33, 3, TINTA); }
+  g.fillStyle = TINTA; g.fillRect(22, 45, 20, 4);
+  return c.toDataURL();
+}
+function avatarPessoa(nome, cor) {
+  const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d");
+  bola(g, 32, 32, 29, TINTA); bola(g, 32, 32, 25, cor);
+  g.fillStyle = "#fff"; g.font = "900 30px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.strokeStyle = TINTA; g.lineWidth = 4; const l = (nome.trim()[0] || "?").toUpperCase(); g.strokeText(l, 32, 34); g.fillText(l, 32, 34);
+  return c.toDataURL();
+}
+
+/* ---------- A PARTIDA ---------- */
+const CORES_PESSOAS = ["#f97316", "#3b82f6", "#22c55e", "#ec4899", "#a855f7", "#14b8a6", "#eab308", "#ef4444"];
+let J = null;                      // tudo da partida atual
+let tempoRestante = 0, revelaRapido = false, rodadasConcluidas = 0, segAnterior = 0, tPintar = 0;
+const ativos = () => J.pessoas.filter(p => p.ativo);
+const voce = () => J.pessoas.find(p => p.id === "voce");
+
+function novaPartida(modo, nomes) {
+  pararConfete();
+  J = { modo, rodada: 0, temas: embaralha(CONFIG.temas), nivelInicial: nivel, R: null, filaDesenho: [], filaVoto: [], ultimoDesenhoHumano: null };
+  if (modo === "robos") {
+    J.pessoas = [{ id: "voce", nome: DEMO ? "Você (demo)" : "Você", humano: true, avatar: avatarPessoa("V", "#facc15"), ativo: true }];
+    embaralha(CONFIG.robos).slice(0, CONFIG.numRobos).forEach((r, i) =>
+      J.pessoas.push({ id: "r" + i, nome: r.nome, humano: false, talento: r.talento, avatar: avatarRobo(r), ativo: true }));
+  } else {
+    J.pessoas = nomes.map((n, i) => ({ id: "p" + i, nome: n, humano: true, avatar: avatarPessoa(n, CORES_PESSOAS[i % 8]), ativo: true }));
+  }
+  J.pessoas.forEach(p => { p.estrelas = 0; p.colocacao = 0; p.ultimo = null; });
+  iniciaRodada();
+}
+function tempoDaRodada() { const L = CONFIG.tempoRodadas; return DEMO ? CONFIG.demo.tempo : L[Math.min(J.rodada - 1, L.length - 1)]; }
+function iniciaRodada() {
+  J.rodada++;
+  const tema = J.temas[(J.rodada - 1) % J.temas.length];
+  J.R = { tema, tempo: tempoDaRodada(), desenhos: {}, votos: [] };
+  // os robôs que ainda estão no jogo desenham "por trás"
+  ativos().filter(p => !p.humano).forEach(r => { const d = desenhoRobo(tema, r.talento); J.R.desenhos[r.id] = d; r.ultimo = d.url; });
+  J.filaDesenho = ativos().filter(p => p.humano);
+  if (!J.filaDesenho.length) {                                    // você caiu e está só assistindo: vai direto para a votação
+    msg(`<h2>🎨 Rodada ${J.rodada}</h2><div class="tema-cx"><small>TEMA</small>${esc(tema)}</div><p>Os robôs desenharam. Você é jurado!</p>`,
+        [["🗳️ Votar", comecaVotacao]]);
+    autoDemo(comecaVotacao);
+    return;
+  }
+  proximoDesenhista();
+}
+function proximoDesenhista() {
+  const p = J.filaDesenho.shift();
+  if (!p) return comecaVotacao();
+  const tema = `<div class="tema-cx"><small>RODADA ${J.rodada} · TEMA</small>${esc(J.R.tema)}</div>`;
+  if (J.modo === "amigos")
+    msg(`<h2>📱 Passe o celular para</h2><div class="nome-grande">${esc(p.nome)}</div>${tema}<p>Você tem <b>${J.R.tempo} segundos</b>. Ninguém espia!</p>`,
+        [["✋ Sou eu! Começar", () => comecaDesenho(p), "verde grande"]]);
+  else
+    msg(`<h2>🎨 Rodada ${J.rodada}</h2>${tema}<p>Você tem <b>${J.R.tempo} segundos</b>. Os robôs já pegaram os pincéis!<br>
+        Ainda no jogo: <b>${ativos().length}</b> desenhistas · ${ativos().length >= CONFIG.caemDoisSe ? "caem 2" : "cai 1"} nesta rodada.</p>`,
+        [["🎨 Começar", () => comecaDesenho(p), "verde grande"]]);
+  autoDemo(() => comecaDesenho(p));
+}
+// mensagem simples no meio da tela, com botões [texto, função, classe]
+function msg(html, botoes) {
+  $("msg-cx").innerHTML = html + `<div class="linha">${botoes.map((b, i) => `<button class="btn ${b[2] || ""}" id="msg-b${i}">${b[0]}</button>`).join("")}</div>`;
+  botoes.forEach((b, i) => $("msg-b" + i).onclick = b[1]);
+  mostra("msg");
+}
+
+// ---------- vez de desenhar ----------
+let planoDemo = [], passoDemo = 0;
+function comecaDesenho(p) {
+  J.desenhista = p;
+  limpaQuadro(); pilhaDesfazer = []; M = { cores: new Set(), tracos: 0, baldes: 0, usado: 0 };
+  fer = "pincel"; corSel = TINTA; tamIdx = 1;
+  tempoRestante = J.R.tempo; segAnterior = Math.ceil(tempoRestante);
+  $("d-tema").innerHTML = `<small>RODADA ${J.rodada} · DESENHE</small>${esc(J.R.tema)}`;
+  $("d-robos").innerHTML = J.modo === "amigos" ? `🎨 Vez de <b>&nbsp;${esc(p.nome)}</b>`
+    : ativos().filter(r => !r.humano).map(r => `<span class="rb" title="${esc(r.nome)}"><img src="${r.avatar}" alt=""><i>✏️</i></span>`).join("") + "<span>desenhando…</span>";
+  if (missao && POR_DESENHO.includes(missao.def.tipo)) { missao.feito = 0; atualizaHud(); }
+  montaFerramentas();
+  mostra("desenho");
+  if (DEMO) { planoDemo = criaPlanoDemo(); passoDemo = 0; }
+}
+function terminaDesenho() {
+  if (telaAtual !== "desenho" || !J) return;
+  tracando = false;
+  const p = J.desenhista, url = cv.toDataURL("image/png");
+  M.usado = J.R.tempo - Math.max(0, tempoRestante);
+  const nota = notaHumano();
+  J.R.desenhos[p.id] = { url, nota }; p.ultimo = url; J.ultimoDesenhoHumano = url;
+  guardaMeuDesenho(J.R.tema);
+  ganha(CONFIG.premios.desenho.moedas, CONFIG.premios.desenho.xp);
+  som([523, 392]);
+  proximoDesenhista();
+}
+// nota do desenho de uma pessoa (os robôs usam para votar): área pintada, cores, traços, tempo usado e um pouco de sorte
+function notaHumano() {
+  const area = pixelsPintados() / 100;
+  const sArea = area > 0.92 ? 0.7 : clamp(area / 0.35, 0, 1);
+  const sCores = Math.min(M.cores.size, 5) / 5, sTracos = Math.min(M.tracos + M.baldes, 12) / 12;
+  const sTempo = clamp(M.usado / (J.R.tempo * 0.6), 0, 1);
+  return 0.3 * sArea + 0.2 * sCores + 0.2 * sTracos + 0.1 * sTempo + 0.2 * Math.random();
+}
+
+// ---------- votação ----------
+function comecaVotacao() {
+  const at = ativos();
+  J.R.soEstrela = at.length <= 2;                                   // na final só se vota no melhor
+  let eleitores = J.R.soEstrela ? J.pessoas.filter(p => !p.ativo) : J.pessoas.slice();
+  if (!eleitores.length) eleitores = J.pessoas.slice();
+  J.R.ordem = embaralha(at.map(p => p.id));
+  eleitores.filter(p => !p.humano).forEach(r => J.R.votos.push(votoRobo(r)));   // robôs votam na hora
+  J.filaVoto = eleitores.filter(p => p.humano);
+  proximoEleitor();
+}
+function votoRobo(r) {
+  const op = ativos().filter(p => p.id !== r.id).map(p => ({ id: p.id, v: J.R.desenhos[p.id].nota + rnd(-0.18, 0.18) })).sort((a, b) => b.v - a.v);
+  return { eleitor: r.id, estrela: op[0].id, oof: J.R.soEstrela || op.length < 2 ? null : op[op.length - 1].id };
+}
+function proximoEleitor() {
+  const p = J.filaVoto.shift();
+  if (!p) return revelar();
+  if (J.modo === "amigos") {
+    msg(`<h2>🗳️ Hora de votar</h2><p>Passe o celular para</p><div class="nome-grande">${esc(p.nome)}</div><p>Não vale votar em você!</p>`,
+        [["✋ Sou eu! Votar", () => telaVoto(p), "verde grande"]]);
+    autoDemo(() => telaVoto(p));
+  } else telaVoto(p);
+}
+function telaVoto(p) {
+  J.eleitor = p; J.escolha = { estrela: null, oof: null };
+  $("g-titulo").textContent = J.R.soEstrela ? "🏆 FINAL! Toque ⭐ no MELHOR" : "Toque ⭐ no MELHOR e 💥 no PIOR";
+  $("g-sub").textContent = `Tema: ${J.R.tema}` + (J.modo === "amigos" ? ` · vez de ${p.nome}` : " · os robôs também votam");
+  montaGrade("voto");
+  $("g-rodape").innerHTML = `<button class="btn verde grande" id="b-confirma" disabled>✔ Confirmar votos</button>`;
+  $("b-confirma").onclick = confirmaVoto;
+  mostra("galeria");
+  if (DEMO) autoDemo(() => {
+    const op = embaralha(J.R.ordem.filter(id => id !== p.id));
+    escolhe("estrela", op[0]); if (!J.R.soEstrela) escolhe("oof", op[1]);
+    setTimeout(confirmaVoto, 400);
+  });
+}
+function escolhe(tipo, id) {
+  const e = J.escolha, outro = tipo === "estrela" ? "oof" : "estrela";
+  e[tipo] = e[tipo] === id ? null : id;
+  if (e[outro] === id) e[outro] = null;
+  document.querySelectorAll("#g-grade .carta").forEach(c => {
+    const i = c.dataset.id;
+    c.classList.toggle("estrela", e.estrela === i); c.classList.toggle("oof", e.oof === i);
+    const be = c.querySelector(".ve"), bo = c.querySelector(".vo");
+    if (be) be.classList.toggle("sel", e.estrela === i); if (bo) bo.classList.toggle("sel", e.oof === i);
+  });
+  som([tipo === "estrela" ? 880 : 220], "triangle");
+  $("b-confirma").disabled = !(e.estrela && (J.R.soEstrela || e.oof));
+}
+function confirmaVoto() {
+  if (telaAtual !== "galeria" || !J.escolha.estrela) return;
+  J.R.votos.push({ eleitor: J.eleitor.id, estrela: J.escolha.estrela, oof: J.escolha.oof });
+  eventoMissao("votar", 1);
+  proximoEleitor();
+}
+
+// monta as cartas da galeria. modo "voto" = botões ⭐/💥 · "placar" = contadores
+function montaGrade(modo) {
+  $("g-grade").innerHTML = J.R.ordem.map(id => {
+    const p = J.pessoas.find(x => x.id === id), d = J.R.desenhos[id];
+    const meu = modo === "voto" && J.eleitor && J.eleitor.id === id;
+    const baixo = modo === "placar" ? `<div class="placar"><span>⭐ <b class="ne">0</b></span>${J.R.soEstrela ? "" : `<span>💥 <b class="no">0</b></span>`}</div>`
+      : meu ? `<div class="eu">É o seu! 🙈</div>`
+      : `<div class="votos"><button class="ve" data-v="estrela" data-id="${id}" aria-label="melhor">⭐</button>${J.R.soEstrela ? "" : `<button class="vo" data-v="oof" data-id="${id}" aria-label="pior">💥</button>`}</div>`;
+    return `<div class="carta" data-id="${id}"><img class="des" src="${d.url}" alt="desenho de ${esc(p.nome)}"><div class="nome"><img src="${p.avatar}" alt=""><span>${esc(p.nome)}</span></div>${baixo}</div>`;
+  }).join("");
+  ajustaGrade();
+}
+$("g-grade").addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]"); if (!b || DEMO) return;
+  escolhe(b.dataset.v, b.dataset.id);
+});
+// escolhe quantas colunas cabem para as cartas ficarem do maior tamanho possível, sem rolar
+function ajustaGrade() {
+  const el = $("g-grade"), n = el.children.length; if (!n) return;
+  const W = el.clientWidth - 8, H = el.clientHeight - 8, gap = 8, extra = 92;
+  let melhor = 0, cols = 1;
+  for (let c = 1; c <= n; c++) {
+    const r = Math.ceil(n / c), s = Math.min((W - gap * (c - 1)) / c - 16, (H - gap * (r - 1)) / r - extra);
+    if (s > melhor) { melhor = s; cols = c; }
+  }
+  melhor = Math.max(92, Math.min(260, Math.floor(melhor)));
+  el.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+  el.style.setProperty("--img", melhor + "px");
+}
+
+// ---------- revelação dos votos e eliminação ----------
+function revelar() {
+  $("g-titulo").textContent = "🥁 Contando os votos…";
+  $("g-sub").textContent = `Tema: ${J.R.tema}`;
+  $("g-rodape").innerHTML = "";
+  montaGrade("placar");
+  mostra("galeria");
+  const fila = embaralha(J.R.votos.flatMap(v => [["ne", v.estrela], ["no", v.oof]]).filter(x => x[1]));
+  const cont = {};
+  const passo = () => {
+    if (telaAtual !== "galeria") return;
+    const lote = revelaRapido ? fila.length : 1;
+    for (let i = 0; i < lote && fila.length; i++) {
+      const [cls, id] = fila.shift(), k = cls + id; cont[k] = (cont[k] || 0) + 1;
+      const b = document.querySelector(`#g-grade .carta[data-id="${id}"] .${cls}`);
+      if (b) { b.textContent = cont[k]; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
+      som([cls === "ne" ? 990 : 180], cls === "ne" ? "triangle" : "sawtooth");
+    }
+    if (fila.length) setTimeout(passo, (DEMO ? CONFIG.demo.revelacaoIntervalo : CONFIG.revelacaoIntervalo) * 1000);
+    else setTimeout(decide, revelaRapido ? 50 : 700);
+  };
+  setTimeout(passo, revelaRapido ? 10 : 600);
+}
+function decide() {
+  if (telaAtual !== "galeria") return;
+  const at = ativos(), est = {}, oof = {};
+  at.forEach(p => { est[p.id] = 0; oof[p.id] = 0; });
+  J.R.votos.forEach(v => { if (v.estrela in est) est[v.estrela]++; if (v.oof && v.oof in oof) oof[v.oof]++; });
+  const sorte = {}; at.forEach(p => sorte[p.id] = Math.random());
+  // do pior para o melhor: menor saldo (⭐ − 💥), depois mais 💥, depois menos ⭐, depois sorte
+  const ordem = at.slice().sort((a, b) => (est[a.id] - oof[a.id]) - (est[b.id] - oof[b.id]) || oof[b.id] - oof[a.id] || est[a.id] - est[b.id] || sorte[a.id] - sorte[b.id]);
+  const caem = Math.min(at.length - 1, at.length >= CONFIG.caemDoisSe ? 2 : 1);
+  const esc0 = CONFIG.escudoIniciante;
+  const protegido = p => J.modo === "robos" && p.humano && J.nivelInicial <= esc0.ateNivel && J.rodada <= esc0.rodadas;
+  const fora = [];
+  let escudoUsado = false;
+  for (const p of ordem) { if (fora.length >= caem) break; if (protegido(p)) { escudoUsado = true; continue; } fora.push(p); }
+  if (escudoUsado && !fora.includes(voce()) && ordem.indexOf(voce()) >= caem) escudoUsado = false;   // só avisa se o escudo salvou mesmo
+  // colocação de quem caiu: os que ficaram + posição dentro do grupo que caiu
+  const ficam = at.length - fora.length;
+  fora.forEach((p, i) => { p.ativo = false; p.colocacao = ficam + fora.length - i; });
+  J.pessoas.forEach(p => { if (est[p.id]) p.estrelas += est[p.id]; });
+  rodadasConcluidas++;
+
+  // prêmios e missões de quem joga neste celular
+  const humanosNaRodada = at.filter(p => p.humano);
+  const estHumanas = humanosNaRodada.reduce((s, p) => s + est[p.id], 0);
+  if (estHumanas) { ganha(estHumanas * CONFIG.premios.estrela.moedas, estHumanas * CONFIG.premios.estrela.xp); eventoMissao("estrelas", estHumanas); }
+  if (humanosNaRodada.some(p => p.ativo)) { ganha(CONFIG.premios.sobreviver.moedas, CONFIG.premios.sobreviver.xp); eventoMissao("sobreviver", 1); }
+
+  // animação: as cartas que caem tremem e despencam; as outras ganham "Fica!"
+  document.querySelectorAll("#g-grade .carta").forEach(c => {
+    const p = J.pessoas.find(x => x.id === c.dataset.id);
+    if (fora.includes(p)) { c.classList.add("treme"); setTimeout(() => { c.classList.remove("treme"); c.insertAdjacentHTML("beforeend", `<div class="selo">💥 OOF!</div>`); c.classList.add("cai"); }, 600); }
+    else c.insertAdjacentHTML("beforeend", escudoUsado && p.id === "voce" ? `<div class="selo fica escudo">🛡️ Escudo!</div>` : `<div class="selo fica">✅ Fica!</div>`);
+  });
+  setTimeout(() => som([300, 220, 150, 90], "sawtooth"), 600);
+  const nomes = fora.map(p => p.id === "voce" ? "Você" : p.nome);
+  $("g-titulo").textContent = fora.length > 1 ? `💥 OOF! ${nomes.join(" e ")} caíram fora!` : `💥 OOF! ${nomes[0]} caiu fora!`;
+  const robo = fora.find(p => !p.humano);
+  $("g-sub").textContent = escudoUsado ? "🛡️ Escudo de iniciante: desta vez você ficou! Capriche na próxima."
+    : robo ? `${robo.nome}: "${pick(CONFIG.frasesQueda)}"` : "Quem ficou segue para a próxima rodada!";
+  const voceCaiu = J.modo === "robos" && fora.includes(voce());
+  setTimeout(() => {
+    let b;
+    if (ativos().length <= 1) b = [["🏆 Ver o campeão", final]];
+    else if (voceCaiu) b = [["Ver a minha colocação", telaCaiu]];
+    else b = [["Próxima rodada ▶", iniciaRodada]];
+    $("g-rodape").innerHTML = `<button class="btn grande" id="b-seguir">${b[0][0]}</button>`;
+    $("b-seguir").onclick = b[0][1];
+    autoDemo(b[0][1], CONFIG.demo.pausa * 1.6);
+  }, revelaRapido ? 100 : 1500);
+}
+function telaCaiu() {
+  const v = voce();
+  msg(`<h2>💥 Você caiu fora!</h2><p>Você ficou em <b>${v.colocacao}º lugar</b> de ${J.pessoas.length}.<br>Ganhou ⭐ ${v.estrelas} estrela${v.estrelas === 1 ? "" : "s"} na partida.</p>
+       <span class="nv">⭐ Nível ${nivel} · 🪙 ${prog.moedas}</span>`,
+      [["↻ Jogar de novo", () => novaPartida("robos"), "grande"], ["👀 Ver quem ganha", iniciaRodada, "sec"], ["⬇ Baixar meu desenho", baixaMeuDesenho, "sec"], ["⌂ Início", telaInicio, "sec"]]);
+  autoDemo(iniciaRodada);
+}
+function final() {
+  const c = ativos()[0]; c.colocacao = 1; J.campeao = c;
+  if (J.modo === "robos" && c.id === "voce") ganha(CONFIG.premios.campeao.moedas, CONFIG.premios.campeao.xp);
+  if (J.modo === "amigos") ganha(CONFIG.premios.campeao.moedas, CONFIG.premios.campeao.xp);
+  const rank = J.pessoas.slice().sort((a, b) => a.colocacao - b.colocacao);
+  const top = [rank[1], rank[0], rank[2]].filter(Boolean);
+  const titulo = c.id === "voce" ? "🏆 Você venceu! Campeão!" : `🏆 ${esc(c.nome)} venceu!`;
+  $("final-cx").innerHTML = `<h2>${titulo}</h2>
+    <div class="podio">${top.map(p => { const pos = p.colocacao, alt = pos === 1 ? 70 : pos === 2 ? 46 : 30, cor = pos === 1 ? "#facc15" : pos === 2 ? "#e5e7eb" : "#fdba74";
+      return `<div class="degrau">${pos === 1 ? `<div class="coroa">👑</div>` : ""}<img class="des" src="${p.ultimo}" alt=""><div class="nm">${esc(p.nome)}</div>
+        <div class="bloco" style="height:${alt}px;background:${cor}">${pos}º</div></div>`; }).join("")}</div>
+    <table class="ranking">${rank.map(p => `<tr class="${p.id === "voce" ? "voce" : ""}"><td>${p.colocacao}º</td><td>${esc(p.nome)}</td><td>⭐ ${p.estrelas}</td></tr>`).join("")}</table>
+    <span class="nv">⭐ Nível ${nivel} · 🪙 ${prog.moedas} · 🎯 ${missoesFeitas} missões</span>
+    <div class="linha"><button class="btn grande" id="f-denovo">↻ Jogar de novo</button><button class="btn sec" id="f-png">⬇ Baixar meu desenho</button>
+      <button class="btn sec" id="f-meus">🖼️ Meus desenhos</button><button class="btn sec" id="f-criar">🛠️ Criar a minha versão</button><button class="btn sec" id="f-inicio">⌂ Início</button></div>`;
+  $("f-denovo").onclick = () => J.modo === "robos" ? novaPartida("robos") : novaPartida("amigos", J.pessoas.map(p => p.nome));
+  $("f-png").onclick = baixaMeuDesenho; $("f-meus").onclick = telaMeus; $("f-criar").onclick = telaCriar; $("f-inicio").onclick = telaInicio;
+  mostra("final");
+  soltaConfete();
+  som([523, 659, 784, 1047, 1319]);
+  autoDemo(() => novaPartida("robos"), 6);
+}
+
+/* ---------- TELAS: início, amigos, meus desenhos, criar ---------- */
+function telaInicio() {
+  pararConfete();
+  const de = xpDoNivel(nivel), ate = xpDoNivel(nivel + 1);
+  const amostras = ["um gato astronauta", "pizza com pernas", "robô da Mostratec"].map((t, i) => desenhoRobo(t, [0.95, 0.12, 0.8][i]).url);
+  $("inicio-cx").innerHTML = `
+    <div class="logo"><span class="a">Desenho</span> <span class="b">ou</span> <span class="c">Oof!</span></div>
+    <div class="polaroids">${amostras.map(u => `<img src="${u}" alt="">`).join("")}</div>
+    <p>Desenhe o <b>tema</b> antes do tempo acabar. Todo mundo vota no <b>melhor ⭐</b> e no <b>pior 💥</b>.<br>
+    O pior <b>cai fora</b>, quem sobrar no fim é o <b>campeão</b>!</p>
+    <span class="nv">⭐ Nível ${nivel} · ${prog.xp - de}/${ate - de} XP · 🪙 ${prog.moedas}</span>
+    <div class="botoes-inicio">
+      <button class="btn grande" id="i-jogar">▶ Jogar</button>
+      <button class="btn sec" id="i-amigos">👫 Com amigos (passa o celular)</button>
+      <div class="linha" style="margin-top:0"><button class="btn sec" id="i-meus">🖼️ Meus desenhos</button>
+      <button class="btn sec" id="i-criar">🛠️ Criar a minha versão</button></div>
+    </div>
+    <p class="rodape-cx">Fábrica de Jogos INEMA · v${VERSAO}</p>`;
+  $("i-jogar").onclick = () => novaPartida("robos");
+  $("i-amigos").onclick = telaAmigos;
+  $("i-meus").onclick = telaMeus;
+  $("i-criar").onclick = telaCriar;
+  mostra("inicio");
+}
+let nomesAmigos = ["", "", ""];
+function telaAmigos() {
+  $("amigos-cx").innerHTML = `<h2>👫 Com amigos</h2><p>De 2 a 8 pessoas. Cada uma desenha na sua vez e depois todos votam, passando o celular.</p>
+    ${nomesAmigos.map((n, i) => `<div class="campo"><input id="nome-${i}" maxlength="14" placeholder="Jogador ${i + 1}" value="${esc(n)}"></div>`).join("")}
+    <div class="linha"><button class="btn sec" id="a-mais" ${nomesAmigos.length >= 8 ? "disabled" : ""}>＋ Pessoa</button>
+      <button class="btn sec" id="a-menos" ${nomesAmigos.length <= 2 ? "disabled" : ""}>－ Pessoa</button></div>
+    <div class="linha"><button class="btn verde grande" id="a-comecar">▶ Começar</button><button class="btn sec" id="a-voltar">Voltar</button></div>`;
+  const le = () => nomesAmigos = nomesAmigos.map((_, i) => $("nome-" + i).value);
+  $("a-mais").onclick = () => { le(); nomesAmigos.push(""); telaAmigos(); };
+  $("a-menos").onclick = () => { le(); nomesAmigos.pop(); telaAmigos(); };
+  $("a-voltar").onclick = () => { le(); telaInicio(); };
+  $("a-comecar").onclick = () => { le(); novaPartida("amigos", nomesAmigos.map((n, i) => n.trim() || `Jogador ${i + 1}`)); };
+  mostra("amigos");
+}
+// "Meus desenhos": guarda os últimos desenhos (pequenos, em JPEG) no navegador
+function leGaleria() { try { return JSON.parse(localStorage.getItem(CHAVE_GAL)) || []; } catch (e) { return []; } }
+function guardaMeuDesenho(tema) {
+  if (DEMO) return;
+  try {
+    const c = document.createElement("canvas"); c.width = c.height = 300;
+    c.getContext("2d").drawImage(cv, 0, 0, 300, 300);
+    const lista = leGaleria();
+    lista.unshift({ img: c.toDataURL("image/jpeg", 0.72), tema, quem: J.desenhista.nome, data: new Date().toLocaleDateString("pt-BR") });
+    localStorage.setItem(CHAVE_GAL, JSON.stringify(lista.slice(0, CONFIG.maxMeusDesenhos)));
+  } catch (e) {}
+}
+function baixaImagem(url, nome) { const a = document.createElement("a"); a.href = url; a.download = nome; a.click(); }
+function baixaMeuDesenho() {
+  if (!J || !J.ultimoDesenhoHumano) { aviso("Desenhe alguma coisa primeiro!"); return; }
+  baixaImagem(J.ultimoDesenhoHumano, "meu-desenho.png");
+}
+function telaMeus() {
+  const lista = leGaleria();
+  $("meus-cx").innerHTML = `<h2>🖼️ Meus desenhos</h2>
+    ${lista.length ? `<p>Toque num desenho para baixar.</p><div class="grade-meus">${lista.map((d, i) =>
+      `<button data-i="${i}"><img src="${d.img}" alt=""><div>${esc(d.tema)}</div><div style="color:#6b6280">${esc(d.quem)} · ${esc(d.data)}</div></button>`).join("")}</div>`
+      : `<p>Ainda não tem nenhum desenho aqui. Jogue uma rodada!</p>`}
+    <div class="linha"><button class="btn" id="m-jogar">▶ Jogar</button><button class="btn sec" id="m-voltar">Voltar</button></div>`;
+  $("meus-cx").querySelectorAll("button[data-i]").forEach(b => b.onclick = () => {
+    // converte o JPEG guardado em PNG para baixar
+    const im = new Image(); im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 300; c.getContext("2d").drawImage(im, 0, 0); baixaImagem(c.toDataURL("image/png"), "meu-desenho.png"); };
+    im.src = lista[+b.dataset.i].img;
+  });
+  $("m-jogar").onclick = () => novaPartida("robos"); $("m-voltar").onclick = telaInicio;
+  mostra("meus");
+}
+function telaCriar() {
+  $("criar-cx").innerHTML = `<h2>🛠️ Crie a sua versão</h2>
+    <p style="text-align:left"><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: <b>temas</b>, tempo de cada rodada, robôs, cores, prêmios, <b>missões</b> e <b>desbloqueios</b>.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo "Desenho ou Oof!", crie um modo novo "Desenho às cegas": o quadro fica coberto enquanto a pessoa desenha e só aparece na votação.
+Adicione também 10 temas sobre ciência e um pincel "neon" que brilha, liberado no nível 8. Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" id="c-baixar">⬇ Baixar o jogo</button><button class="btn sec" id="c-voltar">Voltar</button></div>
+    <p style="font-size:14px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`;
+  $("c-baixar").onclick = baixar; $("c-voltar").onclick = telaInicio;
+  mostra("criar");
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-desenho-ou-oof.html"; a.click();
+}
+
+/* ---------- MODO VITRINE: a "pessoa" desenha sozinha com as mesmas ferramentas ---------- */
+function criaPlanoDemo() {
+  const p = [], livres = coresLiberadas().filter(c => c !== "#ffffff" && c !== TINTA);
+  const cx = rnd(200, 310), cy = rnd(200, 280), r = rnd(85, 130);
+  const roda = (x, y, rx, ry, n) => { const l = elip(x, y, rx, ry, n); l.push(l[0], l[1]); return l; };
+  p.push({ t: "traco", cor: TINTA, tam: 1, pts: [[-10, 420], ...Array.from({ length: 12 }, (_, i) => [i * 48, 420 + rnd(-10, 10)]), [530, 420]] });
+  p.push({ t: "traco", cor: TINTA, tam: 1, pts: roda(cx, cy, r, r * rnd(0.8, 1.1), 36) });
+  p.push({ t: "balde", cor: pick(livres), x: cx, y: cy + r * 0.5 });
+  p.push({ t: "traco", cor: TINTA, tam: 2, pts: [[cx - r * .35, cy - r * .2], [cx - r * .34, cy - r * .18]] });
+  p.push({ t: "traco", cor: TINTA, tam: 2, pts: [[cx + r * .35, cy - r * .2], [cx + r * .36, cy - r * .18]] });
+  p.push({ t: "traco", cor: TINTA, tam: 1, pts: Array.from({ length: 10 }, (_, i) => [cx - r * .4 + i * r * .09, cy + r * .25 + Math.sin(i / 9 * Math.PI) * r * .2]) });
+  p.push({ t: "balde", cor: "#86efac", x: 256, y: 490 });
+  p.push({ t: "balde", cor: "#bae6fd", x: 12, y: 12 });
+  for (let i = rint(2, 4); i > 0; i--) { const x = rnd(60, 450), y = rnd(40, 400); p.push({ t: "traco", cor: pick(livres), tam: rint(0, 2), pts: Array.from({ length: 10 }, (_, k) => [x + k * 9, y + Math.sin(k) * 14]) }); }
+  return p.map(a => ({ ...a, i: 0 }));
+}
+let esperaDemo = 0;
+function andaDemo(dt) {
+  if (esperaDemo > 0) { esperaDemo -= dt; return; }
+  const a = planoDemo[passoDemo]; if (!a) return;
+  corSel = a.cor;
+  if (a.t === "balde") { fer = "balde"; aplicaBalde(a.x, a.y); passoDemo++; esperaDemo = 0.3; montaFerramentas(); return; }
+  fer = "pincel"; tamIdx = a.tam;
+  for (let k = 0; k < 3 && a.i < a.pts.length; k++, a.i++) { const [x, y] = a.pts[a.i]; a.i === 0 ? inicioTraco(x, y) : moveTraco(x, y); }
+  if (a.i >= a.pts.length) { fimTraco(); passoDemo++; esperaDemo = 0.15; }
+}
+
+/* ---------- CONFETE ---------- */
+const cf = $("confete"), cfx = cf.getContext("2d");
+let confetes = [];
+function soltaConfete() {
+  cf.width = innerWidth; cf.height = innerHeight;
+  confetes = Array.from({ length: 160 }, () => ({ x: rnd(0, cf.width), y: rnd(-cf.height, 0), vx: rnd(-40, 40), vy: rnd(120, 260), r: rnd(0, 6), vr: rnd(-6, 6),
+    c: pick(["#facc15", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"]), w: rnd(6, 12) }));
+}
+function pararConfete() { confetes = []; cfx.clearRect(0, 0, cf.width, cf.height); }
+function andaConfete(dt) {
+  if (!confetes.length) return;
+  cfx.clearRect(0, 0, cf.width, cf.height);
+  confetes.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; if (p.y > cf.height + 20) { p.y = -20; p.x = rnd(0, cf.width); }
+    cfx.save(); cfx.translate(p.x, p.y); cfx.rotate(p.r); cfx.fillStyle = p.c; cfx.fillRect(-p.w / 2, -3, p.w, 6); cfx.restore(); });
+}
+
+/* ---------- LAÇO PRINCIPAL ---------- */
+let tAnt = performance.now();
+function laco(t) {
+  const dt = Math.min(0.1, (t - tAnt) / 1000); tAnt = t;
+  if (telaAtual === "desenho" && J) {
+    tempoRestante -= dt;
+    const s = Math.max(0, Math.ceil(tempoRestante)), el = $("d-tempo");
+    el.textContent = s;
+    el.classList.toggle("urgente", s <= CONFIG.avisoFinal);
+    if (s !== segAnterior) { segAnterior = s; if (s <= CONFIG.avisoFinal && s > 0) som([s <= 3 ? 990 : 660]); }
+    if (DEMO) andaDemo(dt);
+    tPintar += dt;
+    if (tPintar > 0.5) { tPintar = 0; if (missao && missao.def.tipo === "pintar") eventoDesenho(); }
+    if (tempoRestante <= 0) { som([200, 160]); terminaDesenho(); }
+  }
+  // moedas sobem contando
+  if (moedasMostradas !== prog.moedas) {
+    moedasMostradas += (prog.moedas - moedasMostradas) * Math.min(1, dt * 6);
+    if (Math.abs(prog.moedas - moedasMostradas) < 0.5) moedasMostradas = prog.moedas;
+    $("h-moedas-n").textContent = Math.round(moedasMostradas);
+  }
+  if (avisoTimer > 0) { avisoTimer -= dt; if (avisoTimer <= 0) $("aviso").style.opacity = 0; }
+  andaConfete(dt);
+  requestAnimationFrame(laco);
+}
+
+// janela para o teste automático (testa.cjs) espiar e acelerar o jogo
+window.estadoDoJogo = () => ({
+  tela: telaAtual, modo: J && J.modo, rodada: J ? J.rodada : 0, rodadasConcluidas,
+  participantes: J ? J.pessoas.length : 0, ativos: J ? ativos().length : 0,
+  eliminados: J ? J.pessoas.filter(p => !p.ativo).map(p => p.nome) : [], campeao: J && J.campeao ? J.campeao.nome : null,
+  pixelsPintados: +pixelsPintados().toFixed(2), coresUsadas: M.cores.size, tracos: M.tracos, baldes: M.baldes, desfazer: pilhaDesfazer.length,
+  segundosRestantes: +Math.max(0, tempoRestante).toFixed(1), moedas: prog.moedas, xp: prog.xp, nivel,
+  missao: missao && missao.def.texto.replace("{n}", missao.def.n), missoesFeitas,
+  eleitor: J && J.eleitor ? J.eleitor.nome : null, votos: J && J.R ? J.R.votos.length : 0,
+});
+window.teste = { acabaTempo() { tempoRestante = 0.01; }, pulaRevelacao(v = true) { revelaRapido = v; } };
+
+limpaQuadro();
+novaMissao();
+montaFerramentas();
+atualizaHud();
+$("h-moedas-n").textContent = prog.moedas;
+if (DEMO) novaPartida("robos"); else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>

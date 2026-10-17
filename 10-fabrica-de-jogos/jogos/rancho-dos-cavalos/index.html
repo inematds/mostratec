@@ -1,0 +1,1938 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Rancho dos Cavalos — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5; --painel:#16161ee6; --borda:#272730; --base:120px }
+  /* a página rola (para mostrar o painel INEMA.CLUB embaixo), mas o jogo fica fixo atrás */
+  html { overflow-x:hidden; overflow-y:auto; overscroll-behavior:none }
+  html,body { margin:0; background:var(--preto); color:var(--texto);
+              touch-action:pan-y; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  /* só o canvas trava o gesto (arrastar o dedo = laçar, escovar, limpar) */
+  #c { display:block; position:fixed; inset:0; width:100vw; height:100vh; touch-action:none }
+
+  /* HUD: moedas, nível e missão na esquerda; botão do mapa na direita */
+  #hud { position:fixed; top:10px; left:10px; right:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
+         pointer-events:none; font-weight:800; text-shadow:0 2px 4px #000; z-index:2 }
+  #hud-esq { display:flex; flex-direction:column; gap:6px; width:min(310px, 64vw) }
+  #hud-moedas { font-size:clamp(22px,3.4vw,30px); color:var(--amarelo); line-height:1 }
+  #hud-dir { display:flex; flex-direction:column; align-items:flex-end; gap:6px }
+  #b-mapa { pointer-events:auto }
+  .cartao { background:var(--painel); border:1px solid var(--borda); border-radius:12px; padding:7px 10px; text-shadow:none }
+  .barra { height:9px; background:#00000088; border-radius:6px; overflow:hidden; margin-top:4px; border:1px solid #000 }
+  .barra > div { height:100%; width:0; background:var(--amarelo); border-radius:6px; transition:width .25s }
+  #nivel .linha1 { display:flex; justify-content:space-between; font-size:13px; gap:6px }
+  #nv-txt { color:var(--amarelo); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  #xp-txt { color:#a8a8b3; font-weight:700; white-space:nowrap }
+  #missao .topo { display:flex; justify-content:space-between; font-size:11px; letter-spacing:.06em; color:#a8a8b3 }
+  #m-txt { font-size:clamp(14px,2vw,16px); margin-top:2px; color:#fff; line-height:1.25 }
+  #m-barra { background:#22c55e !important }
+  #m-premio { font-size:12px; color:#a8a8b3; margin-top:3px; font-weight:700 }
+  #missao.festa { animation:pop .9s ease-out }
+  @keyframes pop { 0%{transform:scale(1)} 25%{transform:scale(1.1); background:#FACC15; color:#1a1206} 100%{transform:scale(1)} }
+
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+         padding:12px 16px; font-size:clamp(14px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207; font-family:inherit }
+  .btn:disabled { background:#555; color:#bbb; box-shadow:none }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  .btn.mini { padding:9px 11px; font-size:15px }
+  .btn.ativo { background:#22c55e; color:#052e16; box-shadow:0 4px 0 #15803d }
+  .btn.pisca { animation:pisca .5s infinite alternate }
+  @keyframes pisca { from { background:#f97316; color:#fff } to { background:#FACC15 } }
+
+  /* botões de cada lugar (sobem para caber acima da faixa amarela) */
+  #controles { position:fixed; left:8px; right:8px; bottom:66px; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:3 }
+  #controles .fila { display:flex; gap:6px; justify-content:center; flex-wrap:wrap }
+  #controles .and { min-width:76px }
+  /* botão com ícone em cima e nome embaixo (cabe 5 numa linha do celular) */
+  .btn.ico { display:flex; flex-direction:column; align-items:center; gap:1px; padding:6px 5px; font-size:12.5px; min-width:62px; line-height:1.1 }
+  .btn.ico i { font-style:normal; font-size:22px }
+  #controles .grande { padding:12px 20px; font-size:18px; min-width:130px }
+
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.88); z-index:5 }
+  #tela .caixa { max-width:580px; width:calc(100% - 24px); max-height:calc(100% - 24px); overflow:auto; text-align:center; padding:18px 16px; border:1px solid #333; border-radius:16px; background:#14141b; box-sizing:border-box }
+  #tela h1 { margin:.1em 0; font-size:clamp(28px,7vw,44px); color:var(--amarelo) }
+  #tela h2 { margin:.2em 0 .4em; color:var(--amarelo); font-size:clamp(22px,5vw,30px) }
+  #tela p { line-height:1.45; color:#d4d4d8; margin:.5em 0 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  .escolha { display:flex; gap:12px; justify-content:center; margin:10px 0 }
+  .pers { background:#1f2937; border:3px solid #333; border-radius:14px; color:#fff; font-weight:800; font-size:16px; padding:6px 10px 8px; cursor:pointer; font-family:inherit }
+  .pers.sel { border-color:var(--amarelo); background:#2a2a14 }
+  .pers canvas { display:block; width:96px; height:110px }
+  .cores { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:6px 0 }
+  .cor { width:36px; height:36px; border-radius:50%; border:3px solid #ffffff44; cursor:pointer; padding:0 }
+  .cor.sel { border-color:var(--amarelo); transform:scale(1.15) }
+  #tela input { font-size:18px; padding:9px 12px; border-radius:10px; border:2px solid #444; background:#0b0b0f; color:#fff; width:190px; text-align:center; font-family:inherit; user-select:text }
+  .opcoes { display:flex; flex-direction:column; gap:9px; margin-top:10px }
+  .op { display:flex; align-items:center; gap:10px; background:#1f2937; border:2px solid #333; border-radius:12px; padding:10px 12px; color:#fff;
+        text-align:left; cursor:pointer; font-family:inherit; font-size:15px }
+  .op b { color:var(--amarelo); font-size:16px }
+  .op .em { font-size:30px }
+  .op:disabled { opacity:.45; cursor:default }
+  .op small { color:#a8a8b3 }
+  .grade { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin:8px 0 }
+  .grade div { background:#1f2937; border-radius:10px; padding:8px; font-size:13px }
+  .grade div span { font-size:30px; display:block }
+  .podio { display:flex; align-items:flex-end; justify-content:center; gap:6px; margin:12px 0 }
+  .podio div { width:30%; max-width:130px; border:3px solid #000; border-radius:10px 10px 0 0; font-weight:800; color:#1a1206; padding-top:6px; font-size:13px }
+  .podio div span { font-size:30px; display:block }
+  .voce { outline:4px solid #22c55e }
+  #aviso { position:fixed; left:50%; bottom:calc(var(--base) + 12px); transform:translateX(-50%); background:#000d; padding:8px 14px; border-radius:10px;
+           font-weight:700; pointer-events:none; opacity:0; transition:opacity .3s; width:max-content; max-width:min(calc(100% - 40px), 520px); text-align:center; font-size:clamp(13px,2vw,16px); line-height:1.25; z-index:3 }
+  #festa { position:fixed; left:50%; top:47%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; opacity:0; z-index:4; width:92% }
+  #festa .g { font-size:clamp(32px,8vw,68px); font-weight:900; color:var(--amarelo); -webkit-text-stroke:2px #0c0c10; text-shadow:0 5px 0 #0c0c10 }
+  #festa .p { font-size:clamp(15px,2.6vw,22px); font-weight:800; color:#fff; text-shadow:0 2px 4px #000; margin-top:6px }
+  #festa.mostra { animation:festa 2.4s ease-out }
+  @keyframes festa { 0%{opacity:0; transform:translate(-50%,-50%) scale(.4)} 12%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+                     20%{transform:translate(-50%,-50%) scale(1)} 80%{opacity:1} 100%{opacity:0; transform:translate(-50%,-60%) scale(1)} }
+  #rodape { position:fixed; bottom:50px; left:0; right:0; text-align:center; font-size:11px; color:#ffffff90; pointer-events:none; z-index:1 }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:34vh; font-size:12px; white-space:pre-wrap }
+
+  /* ---------- painel INEMA.CLUB embaixo do jogo (deslize a tela para cima) ---------- */
+  #rolagem { position:relative; z-index:4; pointer-events:none }
+  #espaco { height:calc(100vh - 46px); height:calc(100dvh - 46px) }
+  #painel { pointer-events:auto; background:var(--preto); touch-action:pan-y; text-align:center; padding-bottom:28px }
+  #puxador { display:block; width:100%; height:46px; border:0; background:var(--amarelo); color:#1a1206; cursor:pointer;
+             font:800 clamp(14px,3.8vw,18px)/46px Sora,system-ui,sans-serif; box-shadow:0 -4px 14px #0008 }
+  #painel .faixa-g { background:var(--amarelo); color:#1a1206; font:800 clamp(24px,7vw,44px)/1.15 Sora,system-ui,sans-serif;
+                     padding:22px 16px 26px; border-top:4px solid var(--preto) }
+  #painel .faixa-g b { display:inline-block; background:var(--preto); color:var(--amarelo); padding:2px 14px; border-radius:10px; margin-top:8px }
+  #painel .qr-g { display:inline-block; background:#fff; color:#111; border-radius:16px; padding:14px 14px 10px; margin:22px 16px 10px }
+  #painel .qr-g svg { width:min(64vw,260px); height:auto; display:block }
+  #painel .qr-g p { margin:8px 0 0; font-weight:800 }
+  #painel .acoes-p { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:12px 16px }
+  #painel .txt-p { color:#d4d4d8; max-width:520px; margin:10px auto 0; padding:0 16px; line-height:1.5 }
+  #painel a { color:var(--amarelo) }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" class="hidden">
+  <div id="hud-esq">
+    <div id="hud-moedas">🪙 0</div>
+    <div id="nivel" class="cartao">
+      <div class="linha1"><span id="nv-txt">Nível 1</span><span id="xp-txt">0/40 XP</span></div>
+      <div class="barra"><div id="xp-barra"></div></div>
+    </div>
+    <div id="missao" class="cartao">
+      <div class="topo"><span>🎯 MISSÃO</span><span id="m-onde"></span></div>
+      <div id="m-txt"></div>
+      <div class="barra"><div id="m-barra"></div></div>
+      <div id="m-premio"></div>
+    </div>
+  </div>
+  <div id="hud-dir"><button class="btn sec mini hidden" id="b-mapa">🗺️ Mapa</button></div>
+</div>
+<div id="controles"></div>
+<div id="aviso"></div>
+<div id="festa"><div class="g" id="festa-g"></div><div class="p" id="festa-p"></div></div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="rolagem">
+  <div id="espaco"></div>
+  <div id="painel">
+    <button id="puxador">⬆ INEMA.CLUB · Jogue no seu celular</button>
+    <div class="faixa-g">Aprenda a criar jogos com IA<br>de graça<br><b>INEMA.CLUB</b></div>
+    <div class="qr-g"><div id="qr-painel"></div><p>📱 Jogue no seu celular</p></div>
+    <div class="acoes-p">
+      <button class="btn" id="p-baixar">⬇ Baixar o jogo</button>
+      <button class="btn" id="p-voltar">⬆ Voltar ao jogo</button>
+    </div>
+    <p class="txt-p">Baixe o jogo, abra num editor de texto e mude o <b>CONFIG</b>. Depois peça para uma IA criar raças, aventuras, provas e prêmios novos.
+      Mais jogos na <a href="../../">Fábrica de Jogos INEMA</a> · cursos grátis em <a href="https://inema.club" target="_blank" rel="noopener">inema.club</a></p>
+  </div>
+</div>
+<div id="tela" class="hidden"><div class="caixa" id="tela-conteudo"></div></div>
+<!-- QR code com o endereço do jogo (vem do arquivo qr-jogo.svg; fica aqui dentro para funcionar sem internet) -->
+<template id="tpl-qr"><svg version="1.1" viewBox="0 0 41 41" xmlns="http://www.w3.org/2000/svg"><path d="M2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM5,2H6V3H5zM6,2H7V3H6zM7,2H8V3H7zM8,2H9V3H8zM12,2H13V3H12zM14,2H15V3H14zM17,2H18V3H17zM21,2H22V3H21zM22,2H23V3H22zM25,2H26V3H25zM30,2H31V3H30zM32,2H33V3H32zM33,2H34V3H33zM34,2H35V3H34zM35,2H36V3H35zM36,2H37V3H36zM37,2H38V3H37zM38,2H39V3H38zM2,3H3V4H2zM8,3H9V4H8zM13,3H14V4H13zM15,3H16V4H15zM17,3H18V4H17zM22,3H23V4H22zM23,3H24V4H23zM27,3H28V4H27zM29,3H30V4H29zM32,3H33V4H32zM38,3H39V4H38zM2,4H3V5H2zM4,4H5V5H4zM5,4H6V5H5zM6,4H7V5H6zM8,4H9V5H8zM10,4H11V5H10zM13,4H14V5H13zM17,4H18V5H17zM18,4H19V5H18zM20,4H21V5H20zM23,4H24V5H23zM24,4H25V5H24zM25,4H26V5H25zM26,4H27V5H26zM28,4H29V5H28zM32,4H33V5H32zM34,4H35V5H34zM35,4H36V5H35zM36,4H37V5H36zM38,4H39V5H38zM2,5H3V6H2zM4,5H5V6H4zM5,5H6V6H5zM6,5H7V6H6zM8,5H9V6H8zM10,5H11V6H10zM14,5H15V6H14zM17,5H18V6H17zM18,5H19V6H18zM19,5H20V6H19zM22,5H23V6H22zM24,5H25V6H24zM26,5H27V6H26zM27,5H28V6H27zM30,5H31V6H30zM32,5H33V6H32zM34,5H35V6H34zM35,5H36V6H35zM36,5H37V6H36zM38,5H39V6H38zM2,6H3V7H2zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM10,6H11V7H10zM12,6H13V7H12zM13,6H14V7H13zM15,6H16V7H15zM20,6H21V7H20zM21,6H22V7H21zM22,6H23V7H22zM25,6H26V7H25zM27,6H28V7H27zM30,6H31V7H30zM32,6H33V7H32zM34,6H35V7H34zM35,6H36V7H35zM36,6H37V7H36zM38,6H39V7H38zM2,7H3V8H2zM8,7H9V8H8zM10,7H11V8H10zM11,7H12V8H11zM15,7H16V8H15zM18,7H19V8H18zM19,7H20V8H19zM22,7H23V8H22zM23,7H24V8H23zM26,7H27V8H26zM27,7H28V8H27zM28,7H29V8H28zM29,7H30V8H29zM32,7H33V8H32zM38,7H39V8H38zM2,8H3V9H2zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM18,8H19V9H18zM20,8H21V9H20zM22,8H23V9H22zM24,8H25V9H24zM26,8H27V9H26zM28,8H29V9H28zM30,8H31V9H30zM32,8H33V9H32zM33,8H34V9H33zM34,8H35V9H34zM35,8H36V9H35zM36,8H37V9H36zM37,8H38V9H37zM38,8H39V9H38zM10,9H11V10H10zM11,9H12V10H11zM12,9H13V10H12zM13,9H14V10H13zM17,9H18V10H17zM20,9H21V10H20zM23,9H24V10H23zM25,9H26V10H25zM28,9H29V10H28zM29,9H30V10H29zM30,9H31V10H30zM2,10H3V11H2zM4,10H5V11H4zM5,10H6V11H5zM6,10H7V11H6zM7,10H8V11H7zM8,10H9V11H8zM14,10H15V11H14zM16,10H17V11H16zM18,10H19V11H18zM19,10H20V11H19zM24,10H25V11H24zM25,10H26V11H25zM26,10H27V11H26zM27,10H28V11H27zM28,10H29V11H28zM29,10H30V11H29zM32,10H33V11H32zM33,10H34V11H33zM34,10H35V11H34zM35,10H36V11H35zM36,10H37V11H36zM6,11H7V12H6zM9,11H10V12H9zM10,11H11V12H10zM12,11H13V12H12zM15,11H16V12H15zM17,11H18V12H17zM20,11H21V12H20zM21,11H22V12H21zM22,11H23V12H22zM25,11H26V12H25zM27,11H28V12H27zM30,11H31V12H30zM33,11H34V12H33zM35,11H36V12H35zM36,11H37V12H36zM37,11H38V12H37zM2,12H3V13H2zM3,12H4V13H3zM5,12H6V13H5zM8,12H9V13H8zM10,12H11V13H10zM15,12H16V13H15zM17,12H18V13H17zM18,12H19V13H18zM22,12H23V13H22zM24,12H25V13H24zM26,12H27V13H26zM27,12H28V13H27zM28,12H29V13H28zM29,12H30V13H29zM30,12H31V13H30zM33,12H34V13H33zM37,12H38V13H37zM38,12H39V13H38zM2,13H3V14H2zM7,13H8V14H7zM9,13H10V14H9zM10,13H11V14H10zM11,13H12V14H11zM14,13H15V14H14zM15,13H16V14H15zM16,13H17V14H16zM17,13H18V14H17zM21,13H22V14H21zM23,13H24V14H23zM24,13H25V14H24zM25,13H26V14H25zM30,13H31V14H30zM31,13H32V14H31zM32,13H33V14H32zM33,13H34V14H33zM34,13H35V14H34zM38,13H39V14H38zM3,14H4V15H3zM4,14H5V15H4zM5,14H6V15H5zM6,14H7V15H6zM7,14H8V15H7zM8,14H9V15H8zM11,14H12V15H11zM12,14H13V15H12zM13,14H14V15H13zM14,14H15V15H14zM16,14H17V15H16zM17,14H18V15H17zM19,14H20V15H19zM25,14H26V15H25zM26,14H27V15H26zM27,14H28V15H27zM28,14H29V15H28zM31,14H32V15H31zM32,14H33V15H32zM34,14H35V15H34zM35,14H36V15H35zM36,14H37V15H36zM37,14H38V15H37zM38,14H39V15H38zM3,15H4V16H3zM4,15H5V16H4zM5,15H6V16H5zM6,15H7V16H6zM9,15H10V16H9zM11,15H12V16H11zM13,15H14V16H13zM16,15H17V16H16zM18,15H19V16H18zM20,15H21V16H20zM21,15H22V16H21zM22,15H23V16H22zM25,15H26V16H25zM26,15H27V16H26zM30,15H31V16H30zM33,15H34V16H33zM6,16H7V17H6zM8,16H9V17H8zM9,16H10V17H9zM10,16H11V17H10zM11,16H12V17H11zM12,16H13V17H12zM16,16H17V17H16zM17,16H18V17H17zM20,16H21V17H20zM24,16H25V17H24zM26,16H27V17H26zM27,16H28V17H27zM28,16H29V17H28zM29,16H30V17H29zM33,16H34V17H33zM34,16H35V17H34zM35,16H36V17H35zM37,16H38V17H37zM38,16H39V17H38zM3,17H4V18H3zM4,17H5V18H4zM6,17H7V18H6zM11,17H12V18H11zM13,17H14V18H13zM15,17H16V18H15zM18,17H19V18H18zM21,17H22V18H21zM23,17H24V18H23zM24,17H25V18H24zM25,17H26V18H25zM26,17H27V18H26zM28,17H29V18H28zM29,17H30V18H29zM30,17H31V18H30zM33,17H34V18H33zM34,17H35V18H34zM3,18H4V19H3zM6,18H7V19H6zM7,18H8V19H7zM8,18H9V19H8zM9,18H10V19H9zM10,18H11V19H10zM12,18H13V19H12zM13,18H14V19H13zM15,18H16V19H15zM17,18H18V19H17zM19,18H20V19H19zM26,18H27V19H26zM27,18H28V19H27zM28,18H29V19H28zM29,18H30V19H29zM31,18H32V19H31zM32,18H33V19H32zM34,18H35V19H34zM36,18H37V19H36zM38,18H39V19H38zM3,19H4V20H3zM4,19H5V20H4zM7,19H8V20H7zM12,19H13V20H12zM14,19H15V20H14zM17,19H18V20H17zM18,19H19V20H18zM20,19H21V20H20zM21,19H22V20H21zM22,19H23V20H22zM25,19H26V20H25zM35,19H36V20H35zM37,19H38V20H37zM3,20H4V21H3zM5,20H6V21H5zM6,20H7V21H6zM8,20H9V21H8zM11,20H12V21H11zM12,20H13V21H12zM14,20H15V21H14zM19,20H20V21H19zM20,20H21V21H20zM22,20H23V21H22zM24,20H25V21H24zM27,20H28V21H27zM28,20H29V21H28zM29,20H30V21H29zM30,20H31V21H30zM31,20H32V21H31zM33,20H34V21H33zM36,20H37V21H36zM37,20H38V21H37zM38,20H39V21H38zM4,21H5V22H4zM7,21H8V22H7zM16,21H17V22H16zM18,21H19V22H18zM22,21H23V22H22zM23,21H24V22H23zM24,21H25V22H24zM26,21H27V22H26zM28,21H29V22H28zM33,21H34V22H33zM38,21H39V22H38zM2,22H3V23H2zM5,22H6V23H5zM6,22H7V23H6zM7,22H8V23H7zM8,22H9V23H8zM11,22H12V23H11zM12,22H13V23H12zM14,22H15V23H14zM19,22H20V23H19zM20,22H21V23H20zM21,22H22V23H21zM22,22H23V23H22zM24,22H25V23H24zM26,22H27V23H26zM27,22H28V23H27zM28,22H29V23H28zM29,22H30V23H29zM30,22H31V23H30zM31,22H32V23H31zM32,22H33V23H32zM34,22H35V23H34zM35,22H36V23H35zM36,22H37V23H36zM7,23H8V24H7zM9,23H10V24H9zM10,23H11V24H10zM14,23H15V24H14zM15,23H16V24H15zM18,23H19V24H18zM19,23H20V24H19zM20,23H21V24H20zM21,23H22V24H21zM22,23H23V24H22zM25,23H26V24H25zM27,23H28V24H27zM30,23H31V24H30zM35,23H36V24H35zM37,23H38V24H37zM2,24H3V25H2zM5,24H6V25H5zM6,24H7V25H6zM8,24H9V25H8zM12,24H13V25H12zM17,24H18V25H17zM18,24H19V25H18zM23,24H24V25H23zM24,24H25V25H24zM27,24H28V25H27zM28,24H29V25H28zM29,24H30V25H29zM30,24H31V25H30zM31,24H32V25H31zM33,24H34V25H33zM34,24H35V25H34zM35,24H36V25H35zM37,24H38V25H37zM38,24H39V25H38zM3,25H4V26H3zM4,25H5V26H4zM6,25H7V26H6zM12,25H13V26H12zM13,25H14V26H13zM14,25H15V26H14zM17,25H18V26H17zM18,25H19V26H18zM20,25H21V26H20zM22,25H23V26H22zM23,25H24V26H23zM24,25H25V26H24zM28,25H29V26H28zM29,25H30V26H29zM31,25H32V26H31zM33,25H34V26H33zM34,25H35V26H34zM8,26H9V27H8zM11,26H12V27H11zM13,26H14V27H13zM14,26H15V27H14zM15,26H16V27H15zM19,26H20V27H19zM24,26H25V27H24zM26,26H27V27H26zM27,26H28V27H27zM28,26H29V27H28zM29,26H30V27H29zM30,26H31V27H30zM31,26H32V27H31zM32,26H33V27H32zM34,26H35V27H34zM36,26H37V27H36zM38,26H39V27H38zM2,27H3V28H2zM4,27H5V28H4zM5,27H6V28H5zM9,27H10V28H9zM12,27H13V28H12zM13,27H14V28H13zM14,27H15V28H14zM17,27H18V28H17zM19,27H20V28H19zM20,27H21V28H20zM21,27H22V28H21zM25,27H26V28H25zM27,27H28V28H27zM28,27H29V28H28zM30,27H31V28H30zM33,27H34V28H33zM35,27H36V28H35zM2,28H3V29H2zM4,28H5V29H4zM5,28H6V29H5zM8,28H9V29H8zM10,28H11V29H10zM12,28H13V29H12zM15,28H16V29H15zM17,28H18V29H17zM18,28H19V29H18zM19,28H20V29H19zM22,28H23V29H22zM23,28H24V29H23zM24,28H25V29H24zM26,28H27V29H26zM29,28H30V29H29zM30,28H31V29H30zM31,28H32V29H31zM32,28H33V29H32zM37,28H38V29H37zM38,28H39V29H38zM2,29H3V30H2zM7,29H8V30H7zM10,29H11V30H10zM11,29H12V30H11zM16,29H17V30H16zM18,29H19V30H18zM21,29H22V30H21zM23,29H24V30H23zM24,29H25V30H24zM25,29H26V30H25zM26,29H27V30H26zM28,29H29V30H28zM30,29H31V30H30zM31,29H32V30H31zM32,29H33V30H32zM33,29H34V30H33zM35,29H36V30H35zM2,30H3V31H2zM5,30H6V31H5zM8,30H9V31H8zM9,30H10V31H9zM11,30H12V31H11zM12,30H13V31H12zM13,30H14V31H13zM15,30H16V31H15zM16,30H17V31H16zM19,30H20V31H19zM20,30H21V31H20zM22,30H23V31H22zM24,30H25V31H24zM27,30H28V31H27zM28,30H29V31H28zM30,30H31V31H30zM31,30H32V31H31zM32,30H33V31H32zM33,30H34V31H33zM34,30H35V31H34zM35,30H36V31H35zM36,30H37V31H36zM38,30H39V31H38zM10,31H11V32H10zM11,31H12V32H11zM13,31H14V32H13zM15,31H16V32H15zM19,31H20V32H19zM21,31H22V32H21zM22,31H23V32H22zM23,31H24V32H23zM25,31H26V32H25zM28,31H29V32H28zM29,31H30V32H29zM30,31H31V32H30zM34,31H35V32H34zM35,31H36V32H35zM2,32H3V33H2zM3,32H4V33H3zM4,32H5V33H4zM5,32H6V33H5zM6,32H7V33H6zM7,32H8V33H7zM8,32H9V33H8zM13,32H14V33H13zM14,32H15V33H14zM15,32H16V33H15zM17,32H18V33H17zM19,32H20V33H19zM22,32H23V33H22zM23,32H24V33H23zM24,32H25V33H24zM26,32H27V33H26zM27,32H28V33H27zM30,32H31V33H30zM32,32H33V33H32zM34,32H35V33H34zM36,32H37V33H36zM37,32H38V33H37zM38,32H39V33H38zM2,33H3V34H2zM8,33H9V34H8zM10,33H11V34H10zM14,33H15V34H14zM17,33H18V34H17zM21,33H22V34H21zM23,33H24V34H23zM26,33H27V34H26zM28,33H29V34H28zM30,33H31V34H30zM34,33H35V34H34zM35,33H36V34H35zM37,33H38V34H37zM38,33H39V34H38zM2,34H3V35H2zM4,34H5V35H4zM5,34H6V35H5zM6,34H7V35H6zM8,34H9V35H8zM10,34H11V35H10zM14,34H15V35H14zM17,34H18V35H17zM19,34H20V35H19zM22,34H23V35H22zM24,34H25V35H24zM25,34H26V35H25zM27,34H28V35H27zM29,34H30V35H29zM30,34H31V35H30zM31,34H32V35H31zM32,34H33V35H32zM33,34H34V35H33zM34,34H35V35H34zM36,34H37V35H36zM38,34H39V35H38zM2,35H3V36H2zM4,35H5V36H4zM5,35H6V36H5zM6,35H7V36H6zM8,35H9V36H8zM10,35H11V36H10zM13,35H14V36H13zM14,35H15V36H14zM15,35H16V36H15zM21,35H22V36H21zM22,35H23V36H22zM25,35H26V36H25zM31,35H32V36H31zM32,35H33V36H32zM34,35H35V36H34zM36,35H37V36H36zM37,35H38V36H37zM38,35H39V36H38zM2,36H3V37H2zM4,36H5V37H4zM5,36H6V37H5zM6,36H7V37H6zM8,36H9V37H8zM10,36H11V37H10zM12,36H13V37H12zM14,36H15V37H14zM15,36H16V37H15zM17,36H18V37H17zM18,36H19V37H18zM20,36H21V37H20zM22,36H23V37H22zM24,36H25V37H24zM28,36H29V37H28zM30,36H31V37H30zM37,36H38V37H37zM38,36H39V37H38zM2,37H3V38H2zM8,37H9V38H8zM13,37H14V38H13zM16,37H17V38H16zM21,37H22V38H21zM22,37H23V38H22zM23,37H24V38H23zM24,37H25V38H24zM25,37H26V38H25zM29,37H30V38H29zM30,37H31V38H30zM31,37H32V38H31zM32,37H33V38H32zM34,37H35V38H34zM38,37H39V38H38zM2,38H3V39H2zM3,38H4V39H3zM4,38H5V39H4zM5,38H6V39H5zM6,38H7V39H6zM7,38H8V39H7zM8,38H9V39H8zM10,38H11V39H10zM11,38H12V39H11zM12,38H13V39H12zM13,38H14V39H13zM14,38H15V39H14zM16,38H17V39H16zM17,38H18V39H17zM18,38H19V39H18zM19,38H20V39H19zM20,38H21V39H20zM21,38H22V39H21zM22,38H23V39H22zM24,38H25V39H24zM25,38H26V39H25zM26,38H27V39H26zM27,38H28V39H27zM28,38H29V39H28zM31,38H32V39H31zM34,38H35V39H34zM35,38H36V39H35zM36,38H37V39H36zM37,38H38V39H37zM38,38H39V39H38z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none" /></svg></template>
+
+<script>
+/* =====================================================================
+   RANCHO DOS CAVALOS — Fábrica de Jogos INEMA
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione uma aventura que..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Rancho dos Cavalos",
+  som: true,                    // false = jogo sem som
+  comoJogar1: "Lace cavalos no curral, cuide deles e cavalgue: <b>passo, trote ou galope</b>.",
+  comoJogar2: "Faça aulas, aventuras, campeonatos e bailes para ganhar <b>troféus e prêmios</b>!",
+
+  // ---------- PERSONAGEM ----------
+  personagens: {
+    menina: { nome: "Menina", pele: "#e8b48a", cabelo: "#5a2d0c" },
+    menino: { nome: "Menino", pele: "#d9a066", cabelo: "#2b1a0e" },
+  },
+  coresRoupa: ["#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", "#ec4899"],
+  nomeCavaloPadrao: "Trovão",   // nome do primeiro cavalo, se a pessoa não digitar outro
+  nomesCavalos: ["Estrela", "Relâmpago", "Canela", "Pipoca", "Cometa", "Paçoca", "Ventania", "Biscoito", "Luar", "Faísca"],
+
+  // ---------- RAÇAS (os cavalos que aparecem no curral para laçar) ----------
+  // cor: pelo · crina: crina e cauda · manchas: manchas grandes · pintas: pintinhas no quadril
+  racas: [
+    { nome: "Crioulo",         cor: "#b5651d", crina: "#3b2414" },
+    { nome: "Mangalarga",      cor: "#8b5a2b", crina: "#1f140b" },
+    { nome: "Árabe",           cor: "#ece6da", crina: "#a8a090" },
+    { nome: "Pampa",           cor: "#fafafa", crina: "#2b2b2b", manchas: "#6b4226" },
+    { nome: "Appaloosa",       cor: "#f2efe8", crina: "#444444", pintas: "#3a2a1a" },
+    { nome: "Quarto de Milha", cor: "#a0522d", crina: "#2a160a" },
+    { nome: "Puro-sangue",     cor: "#3b2416", crina: "#120a05" },
+    { nome: "Pônei Dourado",   cor: "#e0b04a", crina: "#fff3c4" },
+  ],
+  maxEstabulo: 6,               // quantos cavalos cabem no estábulo
+
+  // ---------- ANDADURAS ----------
+  // vel: pixels por segundo · energia: quanto ganha (+) ou gasta (-) por segundo
+  andaduras: [
+    { nome: "Parado", botao: "Parar",  emoji: "⏹",  vel: 0,   energia: 14 },
+    { nome: "Passo",  botao: "Passo",  emoji: "🐴", vel: 95,  energia: 9 },
+    { nome: "Trote",  botao: "Trote",  emoji: "🐎", vel: 185, energia: 3 },
+    { nome: "Galope", botao: "Galope", emoji: "⚡",  vel: 320, energia: -10 },
+  ],
+  pulo: { forca: 520, gravidade: 1250 },
+  // susto: o medo sobe sozinho; segurar ACALMAR faz ele descer. Medo 100 = você cai (sem perder nada)
+  susto: { medoInicial: 35, sobeNivel1: 6, sobe: 13, desce: 48 },
+
+  // ---------- LAÇO ----------
+  laco: {
+    periodo: 1.3,               // segundos para a barra de força ir e voltar
+    zonaVerde: [0.55, 0.92],    // parte verde da barra (laço grande)
+    zonaVerdeNivel1: [0.35, 0.98],
+    raioBom: 62, raioRuim: 30,  // tamanho da argola (verde / fora do verde)
+    velocidadeCavalos: 85,      // como os cavalos correm no curral
+  },
+
+  // ---------- CUIDADOS ----------
+  // cada passeio cansa o cavalo; cavalo bem cuidado corre mais e se assusta menos
+  gastoPorPasseio: { fome: 12, sede: 15, limpeza: 18, carinho: 6 },
+  bonusMaximo: 0.15,            // 0.15 = até +15% de velocidade com tudo no máximo
+
+  // ---------- LUGARES DO MAPA (nivel = quando destrava) ----------
+  lugares: [
+    { id: "fazenda", nome: "Fazenda",             desc: "Laçar e cuidar", nivel: 1, cor: "#fde68a" },
+    { id: "campo",   nome: "Campo",               desc: "Trilhas e aventuras", nivel: 1, cor: "#bbf7d0" },
+    { id: "escola",  nome: "Escola de Equitação", desc: "Aulas e provas", nivel: 2, cor: "#bfdbfe" },
+    { id: "cidade",  nome: "Cidade",              desc: "Loja, escola e casa", nivel: 2, cor: "#e9d5ff" },
+    { id: "arena",   nome: "Arena",               desc: "Campeonatos", nivel: 3, cor: "#fecaca" },
+    { id: "baile",   nome: "Salão do Baile",      desc: "Dance no ritmo", nivel: 4, cor: "#fbcfe8" },
+  ],
+
+  // ---------- AVENTURAS NO CAMPO ----------
+  // objetos: tronco (pular), cobra/passaro/barulho (susto), rio (vá ao passo), potro, cidade, chegada
+  aventuras: [
+    { id: "passeio", nome: "Passeio na trilha", emoji: "🌳", nivel: 1, moedas: 15, xp: 15, comprimento: 2200,
+      objetos: [["tronco", 500], ["tronco", 950], ["cobra", 1250], ["tronco", 1650]] },
+    { id: "potro", nome: "Achar o potro perdido", emoji: "🐴", nivel: 1, moedas: 20, xp: 20, comprimento: 2400,
+      objetos: [["tronco", 600], ["passaro", 1050], ["tronco", 1500], ["potro", 2250]] },
+    { id: "carta", nome: "Entregar a carta na cidade", emoji: "✉️", nivel: 2, moedas: 30, xp: 20, comprimento: 2600,
+      objetos: [["tronco", 700], ["barulho", 1300], ["tronco", 1800], ["cidade", 2450]] },
+    { id: "rio", nome: "Atravessar o rio", emoji: "🌊", nivel: 2, moedas: 25, xp: 20, comprimento: 2100,
+      objetos: [["tronco", 450], ["rio", 800, 1300], ["tronco", 1650]] },
+  ],
+
+  // ---------- ESCOLA DE EQUITAÇÃO ----------
+  professores: [
+    { nome: "Professor Antônio", tipo: "menino", roupa: "#7c2d12", cabelo: "#9ca3af", pele: "#c68642", bigode: true },
+    { nome: "Professora Beatriz", tipo: "menina", roupa: "#0f766e", cabelo: "#1f1309", pele: "#e8b48a" },
+  ],
+  // passos: passo/trote/galope (fique X segundos) · bandeira (chegue na bandeira na andadura pedida)
+  //         parar · pular (pule N obstáculos) · acalmar (acalme o cavalo assustado)
+  aulas: [
+    { titulo: "Aula 1 · As andaduras", certificado: "Cavaleiro Iniciante", passos: [
+      { pede: "passo", seg: 2, fala: "Vamos começar ao PASSO, bem calminho." },
+      { pede: "trote", seg: 3, fala: "Muito bem! Agora mude para o TROTE." },
+      { pede: "parar", fala: "Ótimo. Agora PARE o cavalo." } ] },
+    { titulo: "Aula 2 · Galope até a bandeira", certificado: "Cavaleiro Aprendiz", passos: [
+      { pede: "trote", seg: 2, fala: "Aqueça no TROTE." },
+      { pede: "bandeira", andadura: 3, dist: 650, fala: "GALOPE até a bandeira vermelha!" },
+      { pede: "parar", fala: "Segura! PARE o cavalo." } ] },
+    { titulo: "Aula 3 · Saltos e sustos", certificado: "Cavaleiro de Prova", passos: [
+      { pede: "trote", seg: 2, fala: "TROTE para pegar ritmo." },
+      { pede: "pular", n: 2, fala: "PULE os 2 obstáculos (aperte Pular perto deles)." },
+      { pede: "acalmar", fala: "Um pássaro! Segure ACALMAR até o cavalo se acalmar." },
+      { pede: "parar", fala: "Excelente! Agora PARE." } ] },
+  ],
+  // provas com tempo: medalha de ouro/prata se fizer até X segundos (senão, bronze)
+  provas: [
+    { id: "tambor", nome: "Prova dos Tambores", emoji: "🛢️", nivel: 2, comprimento: 2300, tambores: 5, ouro: 12, prata: 16, penalidade: 3,
+      dica: "No tambor, passe ao TROTE ou ao PASSO. Galopando, o tambor cai (+3 s)." },
+    { id: "salto", nome: "Prova de Salto", emoji: "🚧", nivel: 3, comprimento: 2700, saltos: 6, ouro: 11, prata: 15, penalidade: 4,
+      dica: "Pule cada obstáculo. Se o cavalo refugar, ganha +4 s." },
+  ],
+
+  // ---------- ARENA DE CAMPEONATOS ----------
+  campeonatos: [
+    { id: "corrida", nome: "Grande Corrida", emoji: "🏁", nivel: 3, comprimento: 3400, desc: "Você contra 3 rivais. Galope, mas cuide da energia!" },
+    { id: "saltoCamp", nome: "Campeonato de Salto", emoji: "🏆", nivel: 4, comprimento: 2700, saltos: 6, desc: "Quem fizer o menor tempo nos saltos vence." },
+  ],
+  rivais: [
+    { nome: "Rita", cavalo: "Faísca", cor: "#3b2416", crina: "#120a05", roupa: "#3b82f6", rapidez: 0.80 },
+    { nome: "Léo",  cavalo: "Cometa", cor: "#ece6da", crina: "#a8a090", roupa: "#22c55e", rapidez: 0.85 },
+    { nome: "Bia",  cavalo: "Canela", cor: "#c27c3a", crina: "#3b2414", roupa: "#ec4899", rapidez: 0.90 },
+  ],
+  premiosCampeonato: [60, 35, 20, 10],   // moedas do 1º, 2º, 3º e 4º lugar
+
+  // ---------- BAILE ----------
+  baile: { notas: 16, bpm: 104, perfeito: 0.09, bom: 0.19 },
+
+  // ---------- LOJA DA CIDADE (itens aparecem no cavalo e no personagem) ----------
+  itens: [
+    { id: "fita-rosa",     nome: "Fita na crina",     tipo: "fita",   cor: "#ec4899", preco: 20,  emoji: "🎀" },
+    { id: "chapeu-palha",  nome: "Chapéu de palha",   tipo: "chapeu", cor: "#eab308", preco: 25,  emoji: "👒" },
+    { id: "sela-vermelha", nome: "Sela vermelha",     tipo: "sela",   cor: "#dc2626", preco: 30,  emoji: "🐎" },
+    { id: "manta-azul",    nome: "Manta azul",        tipo: "manta",  cor: "#2563eb", preco: 35,  emoji: "🧣" },
+    { id: "redea-arco",    nome: "Rédea arco-íris",   tipo: "redea",  cor: "arco",    preco: 40,  emoji: "🌈" },
+    { id: "chapeu-preto",  nome: "Chapéu de vaqueiro",tipo: "chapeu", cor: "#3f2a1d", preco: 50,  emoji: "🤠" },
+    { id: "manta-estrela", nome: "Manta de estrelas", tipo: "manta",  cor: "#7c3aed", preco: 80,  emoji: "⭐" },
+    { id: "sela-dourada",  nome: "Sela dourada",      tipo: "sela",   cor: "#facc15", preco: 150, emoji: "👑" },
+  ],
+  padrao: { sela: "#7c4a1e", manta: "#b91c1c", redea: "#3b2414" },
+
+  // ---------- ESCOLA NORMAL (na cidade): perguntas sobre cavalos ----------
+  quiz: [
+    { p: "Qual andadura é a mais rápida?", r: ["Passo", "Trote", "Galope"], c: 2 },
+    { p: "Como se chama o filhote do cavalo?", r: ["Bezerro", "Potro", "Cabrito"], c: 1 },
+    { p: "O que o cavalo mais come?", r: ["Feno e capim", "Pizza", "Chocolate"], c: 0 },
+    { p: "O cavalo consegue cochilar em pé?", r: ["Sim", "Não", "Só no inverno"], c: 0 },
+    { p: "Quantos anos um cavalo costuma viver?", r: ["5 anos", "25 a 30 anos", "100 anos"], c: 1 },
+    { p: "Para que serve escovar o cavalo?", r: ["Limpar o pelo e dar carinho", "Deixar ele azul", "Para nada"], c: 0 },
+    { p: "Com o que se guia o cavalo?", r: ["Rédea", "Guarda-chuva", "Mochila"], c: 0 },
+    { p: "Por que usar capacete ao cavalgar?", r: ["Proteger a cabeça numa queda", "Ficar mais alto", "Assustar o cavalo"], c: 0 },
+  ],
+
+  // ---------- MISSÕES ----------
+  // Sempre tem 1 missão na tela. Cumpriu? Comemoração, moedas, XP e a próxima na hora.
+  // tipo: lacar · escovar · comer · agua · carinho · limpar · andadura (g: 1 passo, 2 trote, 3 galope; n = segundos)
+  //       pular · acalmar · aula · prova · aventura · corrida · baile · comprar · escola
+  // onde: lugar do mapa (a missão só aparece quando o lugar está liberado) · {n} e {cavalo} viram número e nome
+  missoes: [
+    { tipo: "lacar",    n: 1, onde: "fazenda", texto: "Lace o seu primeiro cavalo no curral", moedas: 10, xp: 25 },
+    { tipo: "escovar",  n: 3, onde: "fazenda", texto: "Dê {n} escovadas no {cavalo}",         moedas: 10, xp: 20 },
+    { tipo: "comer",    n: 1, onde: "fazenda", texto: "Dê feno ou cenoura ao {cavalo}",       moedas: 10, xp: 15 },
+    { tipo: "andadura", n: 5, g: 2, onde: "campo", texto: "Cavalgue a TROTE por {n} segundos", moedas: 15, xp: 25 },
+    { tipo: "pular",    n: 2, onde: "campo",   texto: "Pule {n} troncos na trilha",           moedas: 15, xp: 25 },
+    { tipo: "acalmar",  n: 1, onde: "campo",   texto: "Acalme o cavalo quando ele se assustar", moedas: 15, xp: 25 },
+    { tipo: "aula",     n: 1, onde: "escola",  texto: "Faça uma aula na Escola de Equitação", moedas: 20, xp: 30 },
+    { tipo: "limpar",   n: 2, onde: "fazenda", texto: "Limpe a baia: arraste {n} sujeiras ao carrinho", moedas: 15, xp: 20 },
+    { tipo: "escola",   n: 1, onde: "cidade",  texto: "Acerte uma pergunta na escola da Cidade", moedas: 15, xp: 20 },
+    { tipo: "aventura", n: 1, onde: "campo",   texto: "Complete uma aventura no Campo",       moedas: 20, xp: 30 },
+    { tipo: "lacar",    n: 1, onde: "fazenda", texto: "Lace mais um cavalo para a coleção",   moedas: 15, xp: 20 },
+    { tipo: "andadura", n: 4, g: 3, onde: "campo", texto: "GALOPE por {n} segundos",          moedas: 15, xp: 25 },
+    { tipo: "corrida",  n: 1, onde: "arena",   texto: "Dispute a Grande Corrida na Arena",    moedas: 25, xp: 35 },
+    { tipo: "comprar",  n: 1, onde: "cidade",  texto: "Compre um item na Loja da Cidade",     moedas: 10, xp: 20 },
+    { tipo: "prova",    n: 1, onde: "escola",  texto: "Faça uma prova com tempo na Escola",   moedas: 20, xp: 30 },
+    { tipo: "baile",    n: 1, onde: "baile",   texto: "Dance no Salão do Baile",              moedas: 20, xp: 30 },
+    { tipo: "agua",     n: 1, onde: "fazenda", texto: "Dê água fresca ao {cavalo}",           moedas: 10, xp: 15 },
+    { tipo: "carinho",  n: 2, onde: "fazenda", texto: "Faça {n} carinhos no {cavalo}",        moedas: 10, xp: 15 },
+  ],
+  missoesRepetirDe: 1,          // depois da última, recomeça daqui (com números maiores)
+
+  // ---------- NÍVEIS (XP total para chegar) ----------
+  niveis: [
+    { xp: 0,   titulo: "Novato do rancho" },
+    { xp: 40,  titulo: "Ajudante" },
+    { xp: 100, titulo: "Cavaleiro aprendiz" },
+    { xp: 175, titulo: "Cavaleiro" },
+    { xp: 270, titulo: "Peão de rodeio" },
+    { xp: 380, titulo: "Campeão regional" },
+    { xp: 510, titulo: "Campeão nacional" },
+    { xp: 660, titulo: "Lenda do rancho" },
+  ],
+  xpPorNivelExtra: 180,
+
+  // ---------- DEMONSTRAÇÃO (?demo=1) ----------
+  demo: { nomeCavalo: "Trovão", comprimentoPasseio: 1500, comprimentoCorrida: 2600 },
+
+  promptExemplo: "Neste jogo Rancho dos Cavalos, adicione uma raça nova no CONFIG.racas: " +
+                 "o Cavalo Unicórnio, branco com crina arco-íris e um chifre dourado desenhado " +
+                 "no canvas, que só aparece no curral a partir do nível 5. Crie também uma " +
+                 "aventura nova no CONFIG.aventuras chamada \"Ponte da cachoeira\", com 3 troncos " +
+                 "e um susto de trovão. Explique o que você mudou.",
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML; // cópia do jogo para o botão "Baixar"
+const $ = id => document.getElementById(id);
+$("qr-painel").innerHTML = $("tpl-qr").innerHTML;
+// painel embaixo do jogo: o puxador amarelo sobe o painel; "Voltar ao jogo" desce
+$("puxador").onclick = () => scrollTo({ top: $("painel").offsetTop, behavior: "smooth" });
+$("p-voltar").onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+$("p-baixar").onclick = () => baixar();
+
+const cv = $("c");
+let ctx = cv.getContext("2d");               // "let" porque a tela inicial desenha prévias em outros canvas
+const DEMO = new URLSearchParams(location.search).has("demo");  // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const CHAVE = "rancho-dos-cavalos-v1";                          // nome do "save" no localStorage
+const TINTA = "#1b1b24";                                        // cor do contorno de tudo (estilo cartoon)
+
+let W = 0, H = 0, dpr = 1, relogio = 0;
+function redimensiona() {
+  dpr = window.devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+}
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = n => Math.floor(n).toLocaleString("pt-BR");
+function escurece(hex, f) {                 // deixa uma cor mais escura (f < 1) ou mais clara (f > 1)
+  if (!hex || hex[0] !== "#") return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => clamp(Math.round(f > 1 ? v + (255 - v) * (f - 1) : v * f), 0, 255));
+  return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+}
+
+// ---------- som (bipes feitos na hora, sem arquivo) ----------
+let AC = null;
+function tom(freq, dur, tipo = "square", vol = 0.06, atraso = 0) {
+  if (!CONFIG.som || DEMO) return;
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + atraso;
+    o.type = tipo; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function som(nome) {
+  if (nome === "moeda") { tom(880, .08); tom(1320, .12, "square", .05, .07); }
+  else if (nome === "festa") [523, 659, 784, 1046].forEach((f, i) => tom(f, .18, "triangle", .07, i * .09));
+  else if (nome === "erro") tom(160, .25, "sawtooth", .05);
+  else if (nome === "pulo") tom(420, .15, "triangle", .06);
+  else if (nome === "relincho") { [700, 900, 760, 980, 640].forEach((f, i) => tom(f, .09, "sawtooth", .035, i * .07)); }
+  else if (nome === "laco") tom(300, .3, "triangle", .04);
+  else if (nome === "ok") { tom(660, .1, "triangle"); tom(990, .14, "triangle", .06, .08); }
+}
+
+// ---------- estado do jogo (fica salvo no aparelho) ----------
+let E = null;                               // estado: moedas, XP, cavalos, prêmios...
+function novoEstado() {
+  return { personagem: { tipo: "menina", roupa: CONFIG.coresRoupa[0] }, nomeCavalo: CONFIG.nomeCavaloPadrao,
+    moedas: 0, xp: 0, nivel: 1, cavalos: [], ativo: 0, itens: [], equip: {},
+    trofeus: [], medalhas: [], certificados: [], aulasFeitas: 0, provasFeitas: 0, corridas: 0, bailes: 0,
+    aventuras: 0, lacados: 0, acalmados: 0, pulos: 0, quizIdx: 0, professor: 0,
+    missaoIdx: 0, mprog: 0, rodada: 0, feitasRodada: [], missoesFeitas: 0 };
+}
+function salvar() { if (DEMO || !E) return; try { localStorage.setItem(CHAVE, JSON.stringify(E)); } catch (e) {} }
+function carrega() {
+  try { const s = JSON.parse(localStorage.getItem(CHAVE) || "null"); return s ? Object.assign(novoEstado(), s) : null; } catch (e) { return null; }
+}
+const cavaloAtivo = () => E && E.cavalos[E.ativo] || null;
+const nomeAtivo = () => (cavaloAtivo() || { nome: E ? E.nomeCavalo : "cavalo" }).nome;
+function novoCavalo(raca, nome) {
+  return { raca, nome, fome: 75, sede: 70, limpeza: 55, carinho: 50, sujeira: 2 };
+}
+// cavalo bem cuidado = bônus (de 0 a 1). Vira velocidade a mais e menos medo
+function cuidado(c) { c = c || cavaloAtivo(); if (!c) return 0.5; return (c.fome + c.sede + c.limpeza + c.carinho) / 400; }
+const bonus = () => 1 + CONFIG.bonusMaximo * (cuidado() * 2 - 1);   // de 0,85 a 1,15
+
+// ---------- níveis e lugares ----------
+function xpDoNivel(n) {                     // XP total para chegar no nível n
+  const L = CONFIG.niveis;
+  return n <= L.length ? L[n - 1].xp : L[L.length - 1].xp + (n - L.length) * CONFIG.xpPorNivelExtra;
+}
+const tituloNivel = n => CONFIG.niveis[Math.min(n, CONFIG.niveis.length) - 1].titulo;
+const lugar = id => CONFIG.lugares.find(l => l.id === id);
+function lugarLiberado(id) { const l = lugar(id); return !l || E.nivel >= l.nivel; }
+function ganhaXP(n) {
+  E.xp += n;
+  while (E.xp >= xpDoNivel(E.nivel + 1)) {
+    E.nivel++;
+    const novos = CONFIG.lugares.filter(l => l.nivel === E.nivel).map(l => l.nome);
+    const presente = 10 * E.nivel; E.moedas += presente;
+    festa("NÍVEL " + E.nivel + "!", (novos.length ? "🔓 Novo lugar: " + novos.join(" e ") + " · " : "") + tituloNivel(E.nivel) + " · +" + presente + " 🪙");
+  }
+  atualizaHUD(); salvar();
+}
+function ganhaMoedas(n, x, y) {
+  E.moedas += n; atualizaHUD();
+  if (x !== undefined) textoVoa("+" + n + " 🪙", x, y, "#FACC15");
+}
+
+// ---------- missões ----------
+const missaoAtual = () => CONFIG.missoes[E.missaoIdx];
+const alvoMissao = m => Math.round(m.n * (1 + 0.5 * E.rodada));
+const textoMissao = m => m.texto.replace("{n}", alvoMissao(m)).replace("{cavalo}", nomeAtivo());
+function evento(tipo, qtd = 1, info = {}) {
+  if (!E) return;
+  const m = missaoAtual();
+  if (!m || m.tipo !== tipo) return;
+  if (m.g !== undefined && info.g !== m.g) return;
+  E.mprog += qtd;
+  if (E.mprog >= alvoMissao(m)) cumpreMissao(); else hudSujo = true;
+}
+function cumpreMissao() {
+  const m = missaoAtual();
+  E.missoesFeitas++; E.moedas += m.moedas;
+  festa("MISSÃO CUMPRIDA!", "+" + m.moedas + " 🪙 · +" + m.xp + " XP");
+  $("missao").classList.remove("festa"); void $("missao").offsetWidth; $("missao").classList.add("festa");
+  confete(W / 2, H * 0.4, 40);
+  som("festa");
+  proximaMissao();
+  ganhaXP(m.xp);
+}
+function proximaMissao() {
+  const L = CONFIG.missoes;
+  E.feitasRodada.push(E.missaoIdx);
+  const inicio = E.rodada ? CONFIG.missoesRepetirDe : 0;
+  const acha = (de, pulaFeitas) => {
+    for (let k = de; k < L.length; k++)
+      if (k !== E.missaoIdx && lugarLiberado(L[k].onde) && !(pulaFeitas && E.feitasRodada.includes(k))) return k;
+    return -1;
+  };
+  let i = acha(inicio, true);                   // a próxima ainda não feita, num lugar liberado
+  if (i < 0) {
+    let todas = true;
+    for (let k = inicio; k < L.length; k++) if (!E.feitasRodada.includes(k)) todas = false;
+    if (todas) { E.rodada++; E.feitasRodada = []; i = acha(CONFIG.missoesRepetirDe, true); }  // nova rodada, números maiores
+    else i = acha(CONFIG.missoesRepetirDe, false);   // as que faltam estão trancadas: repete uma liberada
+  }
+  E.missaoIdx = i < 0 ? 0 : i; E.mprog = 0; hudSujo = true;
+}
+
+// ---------- HUD (topo da tela) ----------
+let hudSujo = true;
+function atualizaHUD() {
+  if (!E) return;
+  hudSujo = false;
+  $("hud-moedas").textContent = "🪙 " + fmt(E.moedas) + (E.trofeus.length ? "  🏆 " + E.trofeus.length : "");
+  const a = xpDoNivel(E.nivel), b = xpDoNivel(E.nivel + 1);
+  $("nv-txt").textContent = "Nível " + E.nivel + " · " + tituloNivel(E.nivel);
+  $("xp-txt").textContent = (E.xp - a) + "/" + (b - a) + " XP";
+  $("xp-barra").style.width = clamp((E.xp - a) / (b - a) * 100, 0, 100) + "%";
+  const m = missaoAtual();
+  $("m-txt").textContent = textoMissao(m);
+  $("m-onde").textContent = "📍 " + lugar(m.onde).nome;
+  $("m-barra").style.width = clamp(E.mprog / alvoMissao(m) * 100, 0, 100) + "%";
+  $("m-premio").textContent = "Prêmio: " + m.moedas + " 🪙 · " + m.xp + " XP" + (m.tipo === "andadura" ? " · " + Math.floor(E.mprog) + "/" + alvoMissao(m) + " s" : "");
+}
+
+// ---------- avisos e comemorações ----------
+let avisoT = 0;
+function aviso(txt, seg = 2.4) { $("aviso").innerHTML = txt; $("aviso").style.opacity = 1; avisoT = seg; }
+const festas = []; let festaT = 0;
+function festa(g, p) { festas.push([g, p]); }
+function tocaFestas(dt) {
+  festaT -= dt;
+  if (festaT <= 0 && festas.length) {
+    const [g, p] = festas.shift();
+    $("festa-g").textContent = g; $("festa-p").textContent = p;
+    const f = $("festa"); f.classList.remove("mostra"); void f.offsetWidth; f.classList.add("mostra");
+    festaT = 2.0;
+  }
+}
+// partículas: confete, poeira, corações, água, textos que sobem
+let parts = [];
+function confete(x, y, n) {
+  const cores = ["#FACC15", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"];
+  for (let i = 0; i < n; i++) parts.push({ x, y, vx: rnd(-260, 260), vy: rnd(-420, -120), g: 600, vida: rnd(.8, 1.5), cor: cores[i % 6], r: rnd(3, 6), tipo: "q" });
+}
+function textoVoa(txt, x, y, cor = "#fff") { parts.push({ x, y, vx: 0, vy: -60, g: 0, vida: 1.2, cor, txt, tipo: "t" }); }
+function coracao(x, y) { parts.push({ x, y, vx: rnd(-30, 30), vy: rnd(-90, -50), g: 0, vida: 1, cor: "#ec4899", txt: "❤", tipo: "t", tam: 20 }); }
+function poeira(x, y, cor = "#c8a979") { parts.push({ x, y, vx: rnd(-120, -40), vy: rnd(-60, -10), g: 80, vida: rnd(.3, .6), cor, r: rnd(4, 8), tipo: "c" }); }
+function atualizaParts(dt) {
+  for (const p of parts) { p.vida -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+  parts = parts.filter(p => p.vida > 0);
+}
+function desenhaParts() {
+  for (const p of parts) {
+    ctx.globalAlpha = clamp(p.vida * 1.5, 0, 1);
+    if (p.tipo === "t") texto(p.txt, p.x, p.y, p.tam || 20, p.cor);
+    else if (p.tipo === "c") { ctx.fillStyle = p.cor; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+    else { ctx.fillStyle = p.cor; ctx.fillRect(p.x, p.y, p.r, p.r * 1.6); }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- desenho: formas com contorno escuro (cartoon) ----------
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function caixa(x, y, w, h, r, cor, borda = TINTA, lw = 3) {
+  rr(x, y, w, h, r); ctx.fillStyle = cor; ctx.fill();
+  if (borda) { ctx.lineWidth = lw; ctx.strokeStyle = borda; ctx.stroke(); }
+}
+function circ(x, y, r, cor, borda = TINTA, lw = 3) {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = cor; ctx.fill();
+  if (borda) { ctx.lineWidth = lw; ctx.strokeStyle = borda; ctx.stroke(); }
+}
+function elip(x, y, rx, ry, rot, cor, borda = TINTA, lw = 3) {
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); ctx.fillStyle = cor; ctx.fill();
+  if (borda) { ctx.lineWidth = lw; ctx.strokeStyle = borda; ctx.stroke(); }
+}
+function poli(pts, cor, borda = TINTA, lw = 3) {
+  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+  ctx.fillStyle = cor; ctx.fill(); if (borda) { ctx.lineWidth = lw; ctx.strokeStyle = borda; ctx.stroke(); }
+}
+// braço, perna, corda: uma linha grossa com contorno
+function membro(pts, larg, cor) {
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const [lw, c] of [[larg + 5, TINTA], [larg, cor]]) {
+    ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.lineWidth = lw; ctx.strokeStyle = c; ctx.stroke();
+  }
+}
+function texto(t, x, y, tam, cor = "#fff", alinha = "center", contorno = true) {
+  ctx.font = "800 " + tam + "px system-ui,-apple-system,'Segoe UI',sans-serif";
+  ctx.textAlign = alinha; ctx.textBaseline = "middle";
+  if (contorno) { ctx.lineWidth = Math.max(3, tam / 5); ctx.strokeStyle = TINTA; ctx.lineJoin = "round"; ctx.strokeText(t, x, y); }
+  ctx.fillStyle = cor; ctx.fillText(t, x, y);
+}
+function quebraTexto(t, larg, tam) {          // divide um texto em linhas que cabem na largura
+  ctx.font = "800 " + tam + "px system-ui,sans-serif";
+  const linhas = []; let l = "";
+  for (const p of t.split(" ")) { const n = l ? l + " " + p : p; if (ctx.measureText(n).width > larg && l) { linhas.push(l); l = p; } else l = n; }
+  if (l) linhas.push(l); return linhas;
+}
+function barraCanvas(x, y, w, h, frac, cor, fundo = "#00000066") {
+  caixa(x, y, w, h, h / 2, fundo, TINTA, 2);
+  if (frac > 0) caixa(x, y, Math.max(h, w * clamp(frac, 0, 1)), h, h / 2, cor, null);
+  rr(x, y, w, h, h / 2); ctx.lineWidth = 2; ctx.strokeStyle = TINTA; ctx.stroke();
+}
+
+// ---------- itens equipados ----------
+const item = id => CONFIG.itens.find(i => i.id === id);
+function corEquip(tipo) { const id = E && E.equip[tipo]; return id ? item(id).cor : (CONFIG.padrao[tipo] || null); }
+
+// ---------- O CAVALO ----------
+// Desenhado de lado, olhando para a direita, com a origem no chão embaixo da barriga.
+// o = { cor, crina, manchas, pintas, fase (passo das pernas), and (0 parado, 1 passo, 2 trote, 3 galope),
+//       empina (0 a 1), comer (0 a 1, baixa a cabeça), dir (1 ou -1), montador (personagem), lama, brilho, itens }
+function desenhaCavalo(x, y, s, o) {
+  const c = o.cor || "#8b5a2b", cr = o.crina || escurece(c, 0.4);
+  const f = o.fase || 0, and = o.and || 0, emp = o.empina || 0, comer = o.comer || 0;
+  const amp = [0, .35, .5, .78][and];
+  // diferença entre as pernas em cada andadura: [frente perto, frente longe, trás perto, trás longe]
+  const offs = [[0, 0, 0, 0], [0, Math.PI, Math.PI / 2, Math.PI * 1.5], [0, Math.PI, Math.PI, 0], [2.1, 1.6, 0, .5]][and];
+  let bob = 0, pitch = 0;
+  if (and === 1) bob = Math.sin(f * 2) * 1.2;
+  else if (and === 2) bob = -Math.abs(Math.sin(f)) * 5;
+  else if (and === 3) { bob = Math.sin(f) * 5; pitch = Math.sin(f + .6) * .07; }
+  ctx.save(); ctx.translate(x, y); ctx.scale((o.dir || 1) * s, s);
+  ctx.translate(-34, 0); ctx.rotate(-emp * 0.75); ctx.translate(34, 0);   // empinar: gira nos cascos de trás
+  ctx.translate(0, bob); ctx.translate(0, -62); ctx.rotate(pitch); ctx.translate(0, 62);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+  const perna = (px, py, off, frente, longe) => {
+    let a = amp * Math.sin(f + off), dobra = Math.max(0, Math.cos(f + off)) * amp * 1.5;
+    if (frente && emp > 0.05) { a = 0.9 * emp + Math.sin(relogio * 13 + off) * .3 * emp; dobra = 1.7 * emp; }
+    const L = 25, kx = px + Math.sin(a) * L, ky = py + Math.cos(a) * L;
+    const a2 = a - dobra, fx = kx + Math.sin(a2) * L, fy = ky + Math.cos(a2) * L;
+    const cp = longe ? escurece(c, .72) : c;
+    membro([[px, py], [kx, ky], [fx, fy]], 8, cp);
+    ctx.save(); ctx.translate(fx, fy); ctx.rotate(-a2); caixa(-6, -3, 12, 7, 2, "#2b2118", TINTA, 2.5); ctx.restore();
+  };
+  // pernas do outro lado (mais escuras, atrás do corpo)
+  perna(24, -50, offs[1], true, true); perna(-38, -52, offs[3], false, true);
+  // cauda
+  const bal = Math.sin(f * 1.5 + relogio * 2) * 6;
+  membro([[-46, -76], [-66, -66 + bal * .3], [-64 - bal, -34]], 9, cr);
+  // silhueta: primeiro o contorno de todas as peças, depois a cor (fica sem riscos por dentro)
+  const cabeca = () => { ctx.translate(34, -70); ctx.rotate(comer * 0.95 - emp * 0.25); ctx.translate(-34, 70); };
+  for (const modo of ["borda", "cor"]) {
+    ctx.save();
+    const pinta = (fn, cor) => { ctx.beginPath(); fn(); if (modo === "borda") { ctx.lineWidth = 6; ctx.strokeStyle = TINTA; ctx.stroke(); } else { ctx.fillStyle = cor; ctx.fill(); } };
+    pinta(() => ctx.ellipse(0, -62, 46, 21, 0, 0, 7), c);
+    pinta(() => ctx.arc(28, -63, 21, 0, 7), c);
+    pinta(() => ctx.arc(-30, -65, 22, 0, 7), c);
+    cabeca();
+    pinta(() => { ctx.moveTo(16, -76); ctx.lineTo(44, -114); ctx.lineTo(62, -106); ctx.lineTo(48, -56); ctx.closePath(); }, c);
+    pinta(() => ctx.ellipse(68, -101, 22, 11, .95, 0, 7), c);
+    pinta(() => ctx.arc(77, -90, 10, 0, 7), escurece(c, .78));
+    pinta(() => { ctx.moveTo(49, -114); ctx.lineTo(53, -133); ctx.lineTo(60, -113); ctx.closePath(); }, c);
+    ctx.restore();
+  }
+  // manchas (pampa) e pintas (appaloosa) só dentro do corpo
+  if (o.manchas || o.pintas || o.lama) {
+    ctx.save(); ctx.beginPath(); ctx.ellipse(0, -62, 46, 21, 0, 0, 7); ctx.arc(-30, -65, 22, 0, 7); ctx.clip();
+    if (o.manchas) { elip(-18, -66, 18, 13, .3, o.manchas, null); elip(20, -54, 13, 10, -.2, o.manchas, null); }
+    if (o.pintas) for (let i = 0; i < 9; i++) circ(-44 + (i * 37) % 30, -78 + (i * 23) % 26, 2.6, o.pintas, null);
+    for (let i = 0; i < (o.lama || 0); i++) elip(-36 + i * 15, -56 - (i % 2) * 12, 7, 5, i, "#7a5230cc", null);
+    ctx.restore();
+  }
+  // pernas deste lado
+  perna(30, -50, offs[0], true, false); perna(-32, -52, offs[2], false, false);
+  // cabeça: olho, narina, crina, fita, rédea
+  ctx.save(); cabeca();
+  circ(61, -107, 4.2, "#fff", TINTA, 2); circ(62.5, -107, 2.3, TINTA, null);
+  circ(82, -87, 1.8, TINTA, null);
+  ctx.strokeStyle = cr; ctx.lineWidth = 9;
+  ctx.beginPath(); ctx.moveTo(47, -120); ctx.quadraticCurveTo(36, -100, 18, -82); ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = TINTA;
+  ctx.beginPath(); ctx.moveTo(43, -124); ctx.quadraticCurveTo(30, -104, 12, -84); ctx.stroke();
+  membro([[56, -124], [62, -118]], 4, cr);                        // topete
+  const fita = o.itens && o.itens.fita;
+  if (fita) { poli([[38, -108], [30, -116], [30, -100]], fita, TINTA, 2); poli([[38, -108], [46, -116], [46, -100]], fita, TINTA, 2); circ(38, -108, 3, fita, TINTA, 2); }
+  const redea = o.itens ? o.itens.redea : null;
+  if (redea) {                                                    // cabeçada (tiras na cabeça)
+    ctx.lineWidth = 3; ctx.strokeStyle = redea === "arco" ? "#a855f7" : redea;
+    ctx.beginPath(); ctx.moveTo(52, -112); ctx.lineTo(76, -96); ctx.moveTo(54, -116); ctx.lineTo(66, -92); ctx.stroke();
+  }
+  ctx.restore();
+  // manta e sela
+  if (o.itens && o.itens.sela) {
+    caixa(-22, -86, 34, 22, 6, o.itens.manta || "#b91c1c", TINTA, 2.5);
+    ctx.beginPath(); ctx.moveTo(-22, -84); ctx.quadraticCurveTo(-6, -78, 12, -86); ctx.lineTo(10, -94); ctx.quadraticCurveTo(-6, -88, -18, -96); ctx.closePath();
+    ctx.fillStyle = o.itens.sela; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = TINTA; ctx.stroke();
+    if (o.itens.sela === "#facc15") { textoBrilho(-4, -100); }
+  }
+  // montador
+  if (o.montador) {
+    desenhaPessoa(o.montador, "montado", -3, -88, 1, o.fase);
+    if (o.itens && o.itens.redea) {                               // rédea: da boca até as mãos
+      ctx.save(); cabeca();
+      const ar = o.itens.redea === "arco";
+      ctx.lineWidth = 2.5; ctx.strokeStyle = ar ? "#ef4444" : o.itens.redea;
+      ctx.beginPath(); ctx.moveTo(76, -94); ctx.quadraticCurveTo(40, -96, 14, -104); ctx.stroke();
+      if (ar) { ctx.strokeStyle = "#22c55e"; ctx.beginPath(); ctx.moveTo(76, -92); ctx.quadraticCurveTo(40, -93, 14, -102); ctx.stroke(); }
+      ctx.restore();
+    }
+  }
+  if (o.brilho) for (let i = 0; i < 3; i++) { const t = relogio * 2 + i * 2.1; texto("✨", -40 + ((t * 30) % 90), -95 + Math.sin(t) * 18, 14, "#fff", "center", false); }
+  ctx.restore();
+}
+function textoBrilho(x, y) { texto("✦", x, y, 9, "#fff8c4", "center", false); }
+function itensDoCavalo() {
+  return { sela: corEquip("sela"), manta: corEquip("manta"), redea: corEquip("redea"), fita: E && E.equip.fita ? item(E.equip.fita).cor : null };
+}
+function corDaRaca(i) { const r = CONFIG.racas[i] || CONFIG.racas[0]; return { cor: r.cor, crina: r.crina, manchas: r.manchas, pintas: r.pintas }; }
+
+// ---------- AS PESSOAS (você, professores, rivais, seu par do baile) ----------
+// p = { tipo: "menino"/"menina", roupa, pele, cabelo, bigode, chapeu (cor) }
+// pose: "pe" (origem nos pés), "montado" (origem no quadril, em cima da sela), "danca"
+function desenhaPessoa(p, pose, x, y, s, fase = 0) {
+  const base = CONFIG.personagens[p.tipo] || CONFIG.personagens.menina;
+  const pele = p.pele || base.pele, cab = p.cabelo || base.cabelo, roupa = p.roupa || "#ef4444";
+  const calca = "#2b3a67", bota = "#3b2414";
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  let cy;                                                       // centro da cabeça
+  if (pose === "montado") {
+    const b = Math.sin(fase * 2) * 1.5;
+    membro([[0, -2], [13, 6], [11, 28]], 7, calca);              // perna (por cima do cavalo)
+    caixa(5, 25, 13, 7, 3, bota, TINTA, 2);
+    caixa(-8, -32 + b, 16, 32, 6, roupa, TINTA, 2.5);            // tronco
+    membro([[2, -26 + b], [14, -16], [20, -14]], 5, roupa);      // braço segurando a rédea
+    circ(20, -14, 3.5, pele, TINTA, 2);
+    cy = -44 + b;
+  } else {
+    const d = pose === "danca" ? Math.sin(fase) : 0;
+    membro([[-5, -36], [-6 + d * 3, 0]], 8, calca); membro([[5, -36], [6 - d * 3, 0]], 8, calca);
+    caixa(-12 + d * 3, -4, 13, 7, 3, bota, TINTA, 2); caixa(0 - d * 3, -4, 13, 7, 3, bota, TINTA, 2);
+    if (p.tipo === "menina" && !p.adulto) poli([[-13, -40], [13, -40], [17, -24], [-17, -24]], roupa, TINTA, 2.5); // saia
+    caixa(-12, -70, 24, 34, 8, roupa, TINTA, 2.5);
+    const br = pose === "danca" ? -1.2 - d * .4 : 0;
+    membro([[-11, -64], [-18 + br * 6, -46 + br * 14]], 6, roupa); membro([[11, -64], [18 - br * 6, -46 + br * 14]], 6, roupa);
+    circ(-18 + br * 6, -46 + br * 14, 4, pele, TINTA, 2); circ(18 - br * 6, -46 + br * 14, 4, pele, TINTA, 2);
+    cy = -82;
+  }
+  // cabelo de trás (menina: cabelo comprido / rabo de cavalo)
+  if (p.tipo === "menina") { elip(-6, cy + 8, 9, 15, .3, cab, TINTA, 2.5); membro([[-10, cy - 2], [-17, cy + 10 + Math.sin(fase * 2) * 3]], 6, cab); }
+  circ(0, cy, 12, pele, TINTA, 2.5);                            // cabeça
+  circ(4, cy - 1, 1.8, TINTA, null); circ(-3, cy - 1, 1.8, TINTA, null);
+  ctx.lineWidth = 1.8; ctx.strokeStyle = TINTA; ctx.beginPath(); ctx.arc(1, cy + 3, 4, .3, 2.8); ctx.stroke();
+  if (p.bigode) membro([[-3, cy + 4], [5, cy + 4]], 2, cab);
+  const chapeu = p.chapeu;
+  if (chapeu) {                                                 // chapéu comprado na loja
+    elip(0, cy - 9, 19, 4.5, 0, chapeu, TINTA, 2.5); caixa(-9, cy - 22, 18, 13, 5, chapeu, TINTA, 2.5);
+    ctx.fillStyle = "#7c2d12"; ctx.fillRect(-9, cy - 13, 18, 3);
+  } else if (pose === "montado" || p.capacete) {                // capacete de equitação (segurança!)
+    ctx.beginPath(); ctx.arc(0, cy - 2, 13, Math.PI, 0); ctx.closePath(); ctx.fillStyle = "#1f2937"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = TINTA; ctx.stroke();
+    membro([[2, cy - 3], [16, cy - 3]], 2, "#1f2937");
+  } else {
+    ctx.beginPath(); ctx.arc(0, cy - 2, 12.5, Math.PI * 1.05, -0.05); ctx.lineTo(8, cy - 6); ctx.lineTo(-8, cy - 7); ctx.closePath();
+    ctx.fillStyle = cab; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = TINTA; ctx.stroke();
+  }
+  ctx.restore();
+}
+function eu() {                              // o seu personagem, com o chapéu comprado
+  const p = E ? E.personagem : { tipo: "menina", roupa: "#ef4444" };
+  return { tipo: p.tipo, roupa: p.roupa, chapeu: E && E.equip.chapeu ? item(E.equip.chapeu).cor : null };
+}
+
+// ---------- CENAS: cada lugar tem update (lógica), draw (desenho) e toques ----------
+const CENAS = {};
+let modo = "mapa";
+const telaAberta = () => !$("tela").classList.contains("hidden");
+// área livre: abaixo do HUD e acima dos botões
+let topo = 160, base = 700;
+function medeLayout() {
+  const hud = $("hud");
+  topo = hud.classList.contains("hidden") ? 12 : $("hud-esq").getBoundingClientRect().bottom + 8;
+  if (W >= 1200 && modo === "trilha") topo = Math.min(topo, 175);  // no PC largo o cartão da cavalgada cabe ao lado do HUD
+  const ctr = $("controles"), hc = ctr.children.length ? ctr.offsetHeight : 0;
+  base = H - 66 - hc - 8;
+  document.documentElement.style.setProperty("--base", (H - base) + "px");
+}
+function setModo(m) {
+  modo = m;
+  $("b-mapa").classList.toggle("hidden", m === "mapa");
+  montaControles();
+  if (CENAS[m].entra) CENAS[m].entra();
+}
+// botões HTML de cada cena (ficam embaixo, acima da faixa amarela)
+function montaControles() {
+  const c = $("controles");
+  const b = (id, txt, cls = "") => `<button class="btn ${cls}" id="${id}">${txt}</button>`;
+  const ic = (id, em, txt, cls = "") => `<button class="btn ico ${cls}" id="${id}"><i>${em}</i>${txt}</button>`;
+  let h = "";
+  if (modo === "curral") h = `<div class="fila">${b("b-estabulo", "🧽 Estábulo", "sec mini")}${b("b-lancar", "🪢 Girar e soltar", "grande")}</div>`;
+  else if (modo === "estabulo") h = `<div class="fila">${ic("f-escova", "🪮", "Escovar")}${ic("f-carinho", "🤚", "Carinho")}${ic("f-feno", "🌾", "Feno")}${ic("f-cenoura", "🥕", "Cenoura")}${ic("f-agua", "💧", "Água")}</div>
+      <div class="fila">${ic("f-troca", "🔄", "Trocar cavalo", "sec")}${ic("f-curral", "🪢", "Curral", "sec")}${ic("f-cavalgar", "🐎", "Cavalgar")}</div>`;
+  else if (modo === "trilha") h = `<div class="fila">${CONFIG.andaduras.map((a, i) => ic("g" + i, a.emoji, a.botao, "and")).join("")}</div>
+      <div class="fila">${b("b-pular", "⤴ Pular", "grande")}${b("b-acalmar", "🤲 Acalmar", "grande sec")}</div>`;
+  else if (modo === "baile") h = `<div class="fila">${b("b-danca", "💃 Dançar no ritmo!", "grande")}</div>`;
+  c.innerHTML = h;
+  const liga = (id, fn) => { const el = $(id); if (el) el.addEventListener("pointerdown", e => { e.preventDefault(); fn(); }); };
+  if (modo === "curral") {
+    liga("b-estabulo", () => irPara("estabulo"));
+    const bl = $("b-lancar");                                    // segurar = girar o laço, soltar = jogar
+    bl.addEventListener("pointerdown", e => { e.preventDefault(); lacoGira(null); });
+    bl.addEventListener("pointerup", () => lacoSolta(true));
+    bl.addEventListener("pointerleave", () => { if (CU.girando && CU.porBotao) lacoSolta(true); });
+  }
+  if (modo === "estabulo") {
+    liga("f-escova", () => { ES.ferramenta = "escova"; marcaFerramenta(); aviso("Arraste o dedo no corpo do cavalo para escovar 🪮"); });
+    liga("f-carinho", () => { ES.ferramenta = "carinho"; marcaFerramenta(); aviso("Arraste na cabeça do cavalo para fazer carinho ❤"); });
+    liga("f-feno", () => dar("feno")); liga("f-cenoura", () => dar("cenoura")); liga("f-agua", () => dar("agua"));
+    liga("f-troca", trocaCavalo); liga("f-curral", () => irPara("curral")); liga("f-cavalgar", () => irPara("campo"));
+    marcaFerramenta();
+  }
+  if (modo === "trilha") {
+    CONFIG.andaduras.forEach((a, i) => liga("g" + i, () => mudaAndadura(i)));
+    liga("b-pular", pular);
+    const ba = $("b-acalmar");                                   // SEGURAR o botão acalma
+    ba.addEventListener("pointerdown", e => { e.preventDefault(); R.acalmando = true; });
+    for (const ev of ["pointerup", "pointerleave", "pointercancel"]) ba.addEventListener(ev, () => R.acalmando = false);
+  }
+  if (modo === "baile") liga("b-danca", () => bateBaile());
+  medeLayout();
+}
+
+// ---------- toque / mouse no canvas (pointer events servem para os dois) ----------
+function posDe(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+cv.addEventListener("pointerdown", e => { if (DEMO) return; try { cv.setPointerCapture(e.pointerId); } catch (_) {} const p = posDe(e); CENAS[modo].down && CENAS[modo].down(p.x, p.y); });
+cv.addEventListener("pointermove", e => { if (DEMO) return; const p = posDe(e); CENAS[modo].move && CENAS[modo].move(p.x, p.y); });
+const solta = e => { if (DEMO) return; const p = posDe(e); CENAS[modo].up && CENAS[modo].up(p.x, p.y); };
+cv.addEventListener("pointerup", solta); cv.addEventListener("pointercancel", solta);
+
+// ---------- teclado ----------
+const teclas = {};
+addEventListener("keydown", e => {
+  if (e.target && e.target.tagName === "INPUT") return;
+  if (DEMO || telaAberta()) return;
+  const k = e.key.toLowerCase(); if (teclas[k]) return; teclas[k] = true;
+  if (k === "escape" || k === "m") { if (modo !== "mapa") irPara("mapa"); return; }
+  if (CENAS[modo].tecla && CENAS[modo].tecla(k, true)) e.preventDefault();
+});
+addEventListener("keyup", e => {
+  const k = e.key.toLowerCase(); teclas[k] = false;
+  if (DEMO) return;
+  if (CENAS[modo].tecla) CENAS[modo].tecla(k, false);
+});
+
+// ---------- grade de cartões (usada no mapa e na cidade) ----------
+function grade(n, maxW) {
+  const retrato = W < H * 0.95;
+  const cols = retrato ? 2 : Math.min(n, 3), rows = Math.ceil(n / cols), gap = 12;
+  const areaW = Math.min(W - 24, maxW);
+  const cw = (areaW - gap * (cols - 1)) / cols;
+  const ch = Math.min((base - topo - gap * (rows - 1)) / rows, cw * 0.9);
+  const x0 = (W - areaW) / 2, y0 = topo + Math.max(0, (base - topo - (ch * rows + gap * (rows - 1))) / 2);
+  return Array.from({ length: n }, (_, i) => ({ x: x0 + (i % cols) * (cw + gap), y: y0 + Math.floor(i / cols) * (ch + gap), w: cw, h: ch }));
+}
+const dentro = (r, x, y) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+
+// ---------- fundo de grama com árvores (mapa, curral) ----------
+function fundoGrama() {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#6cc56a"); g.addColorStop(1, "#3f9a4a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 40; i++) { const x = (i * 197) % W, y = (i * 131) % H; ctx.fillStyle = "#ffffff18"; ctx.beginPath(); ctx.arc(x, y, 3 + (i % 4), 0, 7); ctx.fill(); }
+}
+function arvore(x, y, s) {
+  caixa(x - 5 * s, y - 22 * s, 10 * s, 24 * s, 3, "#7c4a1e", TINTA, 2.5);
+  circ(x, y - 34 * s, 20 * s, "#2f8f3a", TINTA, 2.5); circ(x - 12 * s, y - 26 * s, 13 * s, "#37a043", TINTA, 2.5); circ(x + 12 * s, y - 27 * s, 13 * s, "#37a043", TINTA, 2.5);
+}
+
+// ---------- ícones dos lugares (desenhados no código) ----------
+function icone(id, cx, cy, S) {
+  const u = S / 100;                                            // 1 "unidade" = 1% do tamanho
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(u, u);
+  if (id === "fazenda") {                                       // celeiro vermelho + feno
+    poli([[-40, 30], [-40, -10], [0, -42], [40, -10], [40, 30]], "#dc2626");
+    poli([[-46, -8], [0, -48], [46, -8], [40, -4], [0, -38], [-40, -4]], "#7f1d1d");
+    caixa(-16, 0, 32, 30, 2, "#fff7ed"); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(16, 30); ctx.moveTo(16, 0); ctx.lineTo(-16, 30); ctx.stroke();
+    caixa(-8, -26, 16, 12, 2, "#fde68a"); caixa(30, 12, 26, 18, 4, "#eab308");
+  } else if (id === "campo") {                                  // colinas, sol, árvore, cerca
+    circ(28, -30, 14, "#fde047"); elip(-20, 30, 50, 30, 0, "#4ade80"); elip(30, 34, 45, 24, 0, "#22c55e");
+    arvore(-22, 14, .9);
+    for (let i = -40; i <= 40; i += 20) caixa(i - 2, 18, 5, 18, 1, "#a16207", TINTA, 2);
+    caixa(-44, 22, 90, 4, 1, "#ca8a04", TINTA, 2);
+  } else if (id === "escola") {                                 // picadeiro com obstáculo e casinha
+    elip(0, 20, 52, 20, 0, "#e9c98f"); caixa(-46, -38, 36, 30, 3, "#60a5fa"); poli([[-50, -36], [-28, -54], [-6, -36]], "#1d4ed8");
+    caixa(-14, 4, 4, 18, 1, "#fff"); caixa(22, 4, 4, 18, 1, "#fff"); caixa(-14, 8, 40, 5, 2, "#ef4444"); caixa(-14, 15, 40, 4, 2, "#fff");
+    poli([[10, -20], [10, -46], [30, -40], [10, -34]], "#ef4444", TINTA, 2);
+  } else if (id === "cidade") {                                 // prédios e casinhas
+    caixa(-44, -30, 26, 62, 3, "#94a3b8"); caixa(-16, -46, 30, 78, 3, "#a78bfa"); caixa(16, -14, 28, 46, 3, "#fca5a5");
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) caixa(-12 + i * 9, -40 + j * 16, 6, 9, 1, "#fef08a", TINTA, 1.5);
+    poli([[12, -14], [30, -32], [48, -14]], "#b91c1c"); caixa(24, 10, 10, 22, 1, "#7c2d12");
+  } else if (id === "arena") {                                  // arquibancada com bandeiras e troféu
+    caixa(-50, -6, 100, 38, 6, "#f87171"); for (let i = 0; i < 4; i++) caixa(-46 + i * 25, 2, 18, 30, 8, "#7f1d1d");
+    ["#22c55e", "#3b82f6", "#FACC15"].forEach((c, i) => { caixa(-40 + i * 40, -40, 3, 34, 1, "#fff"); poli([[-37 + i * 40, -40], [-20 + i * 40, -34], [-37 + i * 40, -28]], c, TINTA, 2); });
+    poli([[-10, -30], [10, -30], [6, -14], [-6, -14]], "#FACC15"); caixa(-6, -14, 12, 8, 2, "#ca8a04");
+  } else if (id === "baile") {                                  // salão com globo de luz e notas
+    caixa(-44, -16, 88, 48, 4, "#c084fc"); poli([[-50, -14], [0, -44], [50, -14]], "#7e22ce");
+    caixa(-12, 4, 24, 28, 3, "#4c1d95"); circ(0, -24, 9, "#e5e7eb"); texto("♪", -30, 4, 26, "#fef08a", "center", true); texto("♫", 30, 2, 26, "#fef08a", "center", true);
+  }
+  ctx.restore();
+}
+
+// ---------- MAPA (o centro do jogo) ----------
+CENAS.mapa = {
+  draw() {
+    fundoGrama();
+    const rs = grade(CONFIG.lugares.length, 1000);
+    // estradinha de terra ligando os lugares
+    ctx.strokeStyle = "#d9b77a"; ctx.lineWidth = 18; ctx.lineCap = "round"; ctx.setLineDash([]);
+    ctx.beginPath(); rs.forEach((r, i) => i ? ctx.lineTo(r.x + r.w / 2, r.y + r.h / 2) : ctx.moveTo(r.x + r.w / 2, r.y + r.h / 2)); ctx.stroke();
+    const m = missaoAtual();
+    rs.forEach((r, i) => {
+      const l = CONFIG.lugares[i], ok = lugarLiberado(l.id), alvo = m && m.onde === l.id;
+      if (alvo) { ctx.save(); ctx.shadowColor = "#FACC15"; ctx.shadowBlur = 24 + Math.sin(relogio * 5) * 10; caixa(r.x, r.y, r.w, r.h, 18, l.cor, "#FACC15", 6); ctx.restore(); }
+      caixa(r.x, r.y, r.w, r.h, 18, l.cor, TINTA, 4);
+      const S = Math.min(r.w, r.h - 40) * 0.95;
+      icone(l.id, r.x + r.w / 2, r.y + (r.h - 34) / 2 + 6, S);
+      const tam = clamp(r.w / 12, 13, 20);
+      caixa(r.x + 8, r.y + r.h - 40, r.w - 16, 32, 10, "#fff", TINTA, 2.5);
+      texto(l.nome, r.x + r.w / 2, r.y + r.h - 24, l.nome.length > 14 ? tam * 0.82 : tam, "#1a1206", "center", false);
+      if (!ok) {
+        caixa(r.x, r.y, r.w, r.h, 18, "#0c0c10b8", TINTA, 4);
+        texto("🔒", r.x + r.w / 2, r.y + r.h / 2 - 16, 34); texto("Nível " + l.nivel, r.x + r.w / 2, r.y + r.h / 2 + 20, 18, "#FACC15");
+      } else if (alvo) {
+        const y = r.y - 4 + Math.sin(relogio * 6) * 5;
+        poli([[r.x + r.w - 34, y - 18], [r.x + r.w - 14, y - 18], [r.x + r.w - 24, y]], "#FACC15", TINTA, 3);
+      }
+    });
+    CENAS.mapa.rects = rs;
+  },
+  down(x, y) {
+    (CENAS.mapa.rects || []).forEach((r, i) => { if (dentro(r, x, y)) irPara(CONFIG.lugares[i].id); });
+  },
+  tecla(k) { const n = +k; if (n >= 1 && n <= CONFIG.lugares.length) { irPara(CONFIG.lugares[n - 1].id); return true; } },
+};
+
+// ---------- ir para um lugar ----------
+function irPara(id) {
+  fechaTela();
+  if (id === "mapa") return setModo("mapa");
+  if (CONFIG.lugares.find(l => l.id === id) && !lugarLiberado(id) && !DEMO) { som("erro"); return aviso("🔒 " + lugar(id).nome + " abre no nível " + lugar(id).nivel + ". Cumpra missões!"); }
+  if (id === "fazenda") return setModo(E.cavalos.length ? "estabulo" : "curral");
+  if (id === "curral" || id === "estabulo" || id === "cidade" || id === "baile") {
+    if (id === "estabulo" && !E.cavalos.length) return setModo("curral");
+    return setModo(id);
+  }
+  if (!E.cavalos.length) { som("erro"); aviso("Primeiro lace um cavalo na Fazenda! 🪢"); return setModo("curral"); }
+  if (id === "campo") return menuCampo();
+  if (id === "escola") return menuEscola();
+  if (id === "arena") return menuArena();
+}
+$("b-mapa").onclick = () => irPara("mapa");
+
+// =====================================================================
+// CURRAL: laçar os cavalos soltos
+// segure (girar o laço) → a barra de força sobe e desce → solte no VERDE (argola grande)
+// =====================================================================
+const CU = { cavalos: [], girando: false, fase: 0, mira: null, laco: null, cai: null, pegando: null, porBotao: false };
+function curralLayout() {
+  const cx = W / 2, py = base - 6, cima = topo + 40, baixo = base - 120, cy = (cima + baixo) / 2;
+  const ry = Math.max(60, (baixo - cima) / 2), rx = Math.min(W * 0.44, 470);
+  return { cx, cy, rx, ry, py, s: clamp(ry / 160, .3, .6), ps: clamp(ry / 120, .7, 1.2) };
+}
+function novoCavaloCurral() {
+  const L = curralLayout(), tem = new Set(E.cavalos.map(c => c.raca));
+  const faltam = CONFIG.racas.map((_, i) => i).filter(i => !tem.has(i));
+  const lista = faltam.length && Math.random() < .8 ? faltam : CONFIG.racas.map((_, i) => i);
+  const a = rnd(0, 7), vel = CONFIG.laco.velocidadeCavalos * (E.nivel <= 1 ? .8 : 1) * rnd(.8, 1.2);
+  return { raca: lista[Math.floor(Math.random() * lista.length)], x: L.cx + Math.cos(a) * L.rx * .5, y: L.cy + Math.sin(a) * L.ry * .5,
+           vx: Math.cos(a + 1.6) * vel, vy: Math.sin(a + 1.6) * vel * .6, vel, fase: rnd(0, 6), troca: rnd(1, 3), parado: 0 };
+}
+const forcaLaco = () => (1 - Math.cos(CU.fase * Math.PI * 2)) / 2;  // 0 → 1 → 0 enquanto segura
+function zonaVerde() { return E.nivel <= 1 ? CONFIG.laco.zonaVerdeNivel1 : CONFIG.laco.zonaVerde; }
+function maoDoLaco() { const L = curralLayout(); return { x: L.cx + 14 * L.ps, y: L.py - 80 * L.ps }; }
+function centroCavalo(h, prev = 0) { const s = curralLayout().s; return { x: h.x + h.vx * prev, y: h.y + h.vy * prev - 62 * s }; }
+function maisPerto(x, y, prev = 0) {
+  let m = null, d = 1e9;
+  for (const h of CU.cavalos) { if (h === (CU.pegando && CU.pegando.h)) continue; const c = centroCavalo(h, prev), dd = Math.hypot(c.x - x, c.y - y); if (dd < d) { d = dd; m = h; } }
+  return { h: m, d };
+}
+function lacoGira(mira) {
+  if (CU.laco || CU.pegando || telaAberta()) return;
+  CU.girando = true; CU.fase = 0; CU.porBotao = !mira; if (mira) CU.mira = mira;
+  som("laco");
+}
+function lacoSolta(auto) {
+  if (!CU.girando) return;
+  CU.girando = false;
+  const v = forcaLaco(), z = zonaVerde(), bom = v >= z[0] && v <= z[1];
+  const m = maoDoLaco(), voo = 0.45;
+  let alvo = CU.mira || { x: W / 2, y: curralLayout().cy };
+  const p = maisPerto(alvo.x, alvo.y, voo);
+  // mira automática: pelo botão/teclado ou, no nível 1, se soltou perto de um cavalo
+  if (p.h && (auto || (E.nivel <= 2 && p.d < 90))) alvo = centroCavalo(p.h, voo);
+  CU.laco = { x0: m.x, y0: m.y, x1: alvo.x, y1: alvo.y, t: 0, voo, raio: bom ? CONFIG.laco.raioBom : CONFIG.laco.raioRuim, bom };
+  if (!bom) aviso(v < z[0] ? "Pouca força! Solte quando a barra estiver no VERDE 🟢" : "Força demais! Solte no VERDE 🟢");
+}
+function pegouCavalo(raca) {
+  const r = CONFIG.racas[raca];
+  if (E.cavalos.length >= CONFIG.maxEstabulo) {
+    ganhaMoedas(25, W / 2, H / 2); aviso("Estábulo cheio! O " + r.nome + " foi morar num rancho vizinho: +25 🪙");
+  } else {
+    const nome = E.cavalos.length === 0 ? E.nomeCavalo : CONFIG.nomesCavalos[(E.lacados + raca) % CONFIG.nomesCavalos.length];
+    E.cavalos.push(novoCavalo(raca, nome)); E.ativo = E.cavalos.length - 1;
+    festa("LAÇOU!", "🐴 " + nome + " · " + r.nome + " (" + new Set(E.cavalos.map(c => c.raca)).size + "/" + CONFIG.racas.length + " raças)");
+  }
+  E.lacados++; som("relincho"); confete(W / 2, H / 2, 30);
+  ganhaMoedas(5); ganhaXP(10); evento("lacar"); salvar();
+}
+CENAS.curral = {
+  entra() {
+    CU.cavalos = []; CU.laco = null; CU.pegando = null; CU.girando = false; CU.mira = null;
+    medeLayout();
+    const n = 3 + Math.min(2, Math.floor(E.nivel / 2));
+    for (let i = 0; i < n; i++) CU.cavalos.push(novoCavaloCurral());
+    aviso(W > 700 ? "Segure o mouse no cavalo, espere a barra ficar VERDE e solte!" : "Segure o dedo no cavalo, espere a barra ficar VERDE e solte!", 3.5);
+  },
+  update(dt) {
+    const L = curralLayout();
+    for (const h of CU.cavalos) {
+      h.fase += dt * (2 + h.vel / 40);
+      if (CU.pegando && CU.pegando.h === h) continue;
+      h.troca -= dt;
+      if (h.troca <= 0) { const a = Math.atan2(h.vy, h.vx) + rnd(-1.4, 1.4); h.vx = Math.cos(a) * h.vel; h.vy = Math.sin(a) * h.vel * .6; h.troca = rnd(1, 2.6); }
+      const ex = (h.x - L.cx) / L.rx, ey = (h.y - L.cy) / L.ry;
+      if (ex * ex + ey * ey > .62) { const a = Math.atan2(L.cy - h.y, L.cx - h.x) + rnd(-.5, .5); h.vx = Math.cos(a) * h.vel; h.vy = Math.sin(a) * h.vel * .6; h.troca = rnd(.8, 1.6); }
+      h.x += h.vx * dt; h.y += h.vy * dt;
+    }
+    if (CU.girando) CU.fase += dt / CONFIG.laco.periodo;
+    if (CU.laco) {
+      const l = CU.laco; l.t += dt / l.voo;
+      if (l.t >= 1) {
+        CU.laco = null;
+        const p = maisPerto(l.x1, l.y1);
+        if (p.h && p.d < l.raio + 16) { CU.pegando = { h: p.h, t: 0 }; som("ok"); }
+        else { CU.cai = { x: l.x1, y: l.y1, raio: l.raio, t: .7 }; som("erro"); if (l.bom) aviso("Errou o cavalo! Mire bem em cima dele 🎯"); }
+      }
+    }
+    if (CU.cai && (CU.cai.t -= dt) <= 0) CU.cai = null;
+    if (CU.pegando) {
+      const pg = CU.pegando; pg.t += dt;
+      const m = maoDoLaco(); pg.h.x = lerp(pg.h.x, m.x, dt * 1.2); pg.h.y = lerp(pg.h.y, L.py - 30, dt * 1.2);
+      if (pg.t > 1.2) {
+        CU.cavalos = CU.cavalos.filter(h => h !== pg.h); CU.pegando = null;
+        pegouCavalo(pg.h.raca);
+        setTimeout(() => { if (modo === "curral") CU.cavalos.push(novoCavaloCurral()); }, 900);
+      }
+    }
+  },
+  draw() {
+    const L = curralLayout();
+    fundoGrama();
+    arvore(30, L.cy - L.ry + 20, .9); arvore(W - 30, L.cy + 10, 1);
+    elip(L.cx, L.cy, L.rx + 16, L.ry + 16, 0, "#d9b77a", TINTA, 4);   // areia do curral
+    elip(L.cx, L.cy, L.rx, L.ry, 0, "#e4c690", null);
+    const cerca = (fundo) => {                                         // cerca de madeira (metade de trás / da frente)
+      for (let i = 0; i < 28; i++) {
+        const a = i / 28 * Math.PI * 2, s = Math.sin(a); if ((s < 0) !== fundo) continue;
+        const x = L.cx + Math.cos(a) * (L.rx + 16), y = L.cy + s * (L.ry + 16);
+        caixa(x - 4, y - 30, 8, 32, 2, "#a16207", TINTA, 2.5);
+      }
+    };
+    cerca(true);
+    ctx.lineWidth = 6; ctx.strokeStyle = "#ca8a04";
+    for (const dy of [-22, -10]) { ctx.beginPath(); ctx.ellipse(L.cx, L.cy + dy, L.rx + 16, L.ry + 16, 0, Math.PI, Math.PI * 2); ctx.stroke(); }
+    // cavalos (os de trás primeiro)
+    [...CU.cavalos].sort((a, b) => a.y - b.y).forEach(h => {
+      const pego = CU.pegando && CU.pegando.h === h;
+      elip(h.x, h.y + 2, 40 * L.s, 8 * L.s, 0, "#00000030", null);
+      desenhaCavalo(h.x, h.y, L.s, { ...corDaRaca(h.raca), fase: h.fase, and: pego ? 1 : 3, dir: h.vx < 0 ? -1 : 1, empina: pego ? .3 + Math.sin(relogio * 8) * .1 : 0 });
+    });
+    ctx.lineWidth = 6; ctx.strokeStyle = "#ca8a04";
+    for (const dy of [-22, -10]) { ctx.beginPath(); ctx.ellipse(L.cx, L.cy + dy, L.rx + 16, L.ry + 16, 0, 0, Math.PI); ctx.stroke(); }
+    cerca(false);
+    // você, com o laço
+    desenhaPessoa(eu(), "pe", L.cx, L.py, L.ps);
+    const m = maoDoLaco();
+    if (CU.girando) {
+      const v = forcaLaco(), a = relogio * 14;
+      membro([[m.x, m.y], [m.x + Math.cos(a) * 10, m.y - 22]], 2, "#d6b37a");
+      ctx.lineWidth = 4; ctx.strokeStyle = "#d6b37a"; ctx.beginPath(); ctx.ellipse(m.x, m.y - 26, 16 + 30 * v, 6 + 6 * v, Math.sin(a) * .2, 0, 7); ctx.stroke();
+      // barra de força
+      const z = zonaVerde(), bx = L.cx + 46 * L.ps + 14, bh = 90 * L.ps, by = L.py - 10 - bh;
+      caixa(bx, by, 18, bh, 8, "#1f2937", TINTA, 3);
+      caixa(bx + 2, by + bh * (1 - z[1]), 14, bh * (z[1] - z[0]), 4, "#22c55e", null);
+      caixa(bx - 6, by + bh * (1 - v) - 4, 30, 8, 3, "#FACC15", TINTA, 2.5);
+    }
+    if (CU.mira && CU.girando && !CU.porBotao) { ctx.lineWidth = 3; ctx.strokeStyle = "#fff"; ctx.beginPath(); ctx.arc(CU.mira.x, CU.mira.y, 22, 0, 7); ctx.moveTo(CU.mira.x - 30, CU.mira.y); ctx.lineTo(CU.mira.x + 30, CU.mira.y); ctx.moveTo(CU.mira.x, CU.mira.y - 30); ctx.lineTo(CU.mira.x, CU.mira.y + 30); ctx.stroke(); }
+    if (CU.laco) {
+      const l = CU.laco, t = l.t, x = lerp(l.x0, l.x1, t), y = lerp(l.y0, l.y1, t) - Math.sin(Math.PI * t) * 80;
+      ctx.lineWidth = 3; ctx.strokeStyle = "#d6b37a"; ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.quadraticCurveTo((m.x + x) / 2, Math.min(m.y, y) - 40, x, y); ctx.stroke();
+      ctx.lineWidth = 5; ctx.strokeStyle = l.bom ? "#FACC15" : "#d6b37a"; ctx.beginPath(); ctx.ellipse(x, y, l.raio * (.5 + t * .5), l.raio * .45 * (.5 + t * .5), 0, 0, 7); ctx.stroke();
+    }
+    if (CU.cai) { ctx.globalAlpha = CU.cai.t / .7; ctx.lineWidth = 4; ctx.strokeStyle = "#d6b37a"; ctx.beginPath(); ctx.ellipse(CU.cai.x, CU.cai.y + 20, CU.cai.raio, CU.cai.raio * .4, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+    if (CU.pegando) { const c = centroCavalo(CU.pegando.h); ctx.lineWidth = 3; ctx.strokeStyle = "#d6b37a"; ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(c.x, c.y - 10); ctx.stroke(); }
+    // placa: quantas raças você já tem
+    const nr = new Set(E.cavalos.map(c => c.raca)).size;
+    caixa(W - 150, topo, 140, 34, 10, "#fff", TINTA, 3);
+    texto("🐴 " + E.cavalos.length + " · raças " + nr + "/" + CONFIG.racas.length, W - 80, topo + 17, 14, "#1a1206", "center", false);
+  },
+  down(x, y) { lacoGira({ x, y }); },
+  move(x, y) { if (CU.girando && !CU.porBotao) CU.mira = { x, y }; },
+  up() { if (CU.girando && !CU.porBotao) lacoSolta(false); },
+  tecla(k, baixo) { if (k === " " || k === "enter") { if (baixo) lacoGira(null); else lacoSolta(true); return true; } },
+};
+
+// =====================================================================
+// ESTÁBULO: cuidar do cavalo (escovar, feno, cenoura, água, carinho, limpar a baia)
+// =====================================================================
+const ES = { ferramenta: "escova", comendo: 0, bebendo: 0, cenoura: null, arrasto: null, acum: 0, acumC: 0 };
+function estabuloLayout() {
+  const hy = base - 34;
+  const s = clamp(Math.min((W - 190) / 170, (hy - topo - 100) / 140), .7, 1.9);
+  const hx = W / 2 + 12 * s;
+  return { hx, hy, s,
+    corpo: { x: hx - 70 * s, y: hy - 90 * s, w: 115 * s, h: 60 * s },
+    cabeca: { x: hx + 40 * s, y: hy - 140 * s, w: 55 * s, h: 60 * s },
+    cocho: { x: hx + 62 * s, y: hy - 56 * s, w: 52 * s, h: 22 * s },
+    balde: { x: W - 60, y: hy - 42, w: 46, h: 42 },
+    carrinho: { x: 8, y: hy - 58, w: 88, h: 56 } };
+}
+function posMonte(i, n) { const L = estabuloLayout(); return { x: W / 2 + (i - (n - 1) / 2) * 62, y: Math.min(base - 14, L.hy + 18) }; }
+function marcaFerramenta() { ["escova", "carinho"].forEach(f => { const b = $("f-" + f); if (b) b.classList.toggle("ativo", ES.ferramenta === f); }); }
+function trocaCavalo() { if (E.cavalos.length < 2) return aviso("Lace mais cavalos no curral para ter uma coleção! 🪢"); E.ativo = (E.ativo + 1) % E.cavalos.length; som("ok"); hudSujo = true; salvar(); }
+function dar(tipo) {
+  const c = cavaloAtivo(); if (!c) return;
+  const L = estabuloLayout();
+  if (tipo === "feno") {
+    if (c.fome >= 99) return aviso("O " + c.nome + " está de barriga cheia! 😋");
+    c.fome = Math.min(100, c.fome + 35); ES.comendo = 2.2; evento("comer");
+  } else if (tipo === "cenoura") {
+    c.fome = Math.min(100, c.fome + 10); c.carinho = Math.min(100, c.carinho + 15);
+    ES.cenoura = { t: 0, x: W / 2, y: base - 20 }; evento("comer"); for (let i = 0; i < 3; i++) coracao(L.hx + 80 * L.s, L.hy - 120 * L.s);
+  } else if (tipo === "agua") {
+    if (c.sede >= 99) return aviso("O " + c.nome + " já bebeu bastante água! 💧");
+    c.sede = Math.min(100, c.sede + 40); ES.bebendo = 2; evento("agua");
+  }
+  som("ok"); ganhaMoedas(1, L.hx, L.hy - 150 * L.s); ganhaXP(3);
+}
+CENAS.estabulo = {
+  entra() { ES.arrasto = null; medeLayout(); aviso("Cuide do cavalo: escove, dê comida e água, limpe a baia!", 3); },
+  update(dt) {
+    ES.comendo = Math.max(0, ES.comendo - dt); ES.bebendo = Math.max(0, ES.bebendo - dt);
+    if (ES.cenoura) { ES.cenoura.t += dt / .6; if (ES.cenoura.t >= 1) { ES.cenoura = null; ES.comendo = Math.max(ES.comendo, .8); } }
+  },
+  draw() {
+    const L = estabuloLayout(), c = cavaloAtivo(), s = L.s;
+    // parede de tábuas e chão de palha
+    ctx.fillStyle = "#b07a45"; ctx.fillRect(0, 0, W, H);
+    for (let x = 0; x < W; x += 46) { ctx.fillStyle = (x / 46) % 2 ? "#a06c3a" : "#b98350"; ctx.fillRect(x, 0, 44, H); ctx.fillStyle = "#7a4f28"; ctx.fillRect(x + 44, 0, 2, H); }
+    caixa(-10, L.hy - 170 * s - 30, W + 20, 16, 0, "#7a4f28", TINTA, 3);
+    ctx.fillStyle = "#e9c46a"; ctx.fillRect(0, L.hy - 6, W, H); ctx.fillStyle = "#d4a843";
+    for (let i = 0; i < 60; i++) ctx.fillRect((i * 83) % W, L.hy + (i * 29) % Math.max(10, H - L.hy), 18, 3);
+    ctx.fillStyle = TINTA; ctx.fillRect(0, L.hy - 8, W, 3);
+    if (!c) return;
+    // cocho de feno
+    const k = L.cocho; caixa(k.x, k.y, k.w, k.h, 4, "#7c4a1e", TINTA, 3);
+    if (c.fome < 100 || ES.comendo) for (let i = 0; i < 5; i++) membro([[k.x + 6 + i * k.w / 5, k.y + 4], [k.x + 12 + i * k.w / 5, k.y - 6]], 2, "#facc15");
+    // balde de água
+    const b = L.balde; poli([[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w - 6, b.y + b.h], [b.x + 6, b.y + b.h]], "#94a3b8");
+    caixa(b.x + 3, b.y + 3, b.w - 6, 8, 3, ES.bebendo ? "#38bdf8" : "#7dd3fc", TINTA, 2);
+    // carrinho de mão (para a sujeira)
+    const r = L.carrinho; poli([[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w - 12, r.y + r.h - 14], [r.x + 10, r.y + r.h - 14]], "#16a34a");
+    circ(r.x + r.w / 2, r.y + r.h - 8, 9, "#374151"); texto("🧹 aqui", r.x + r.w / 2, r.y + 18, 13, "#fff");
+    // o cavalo
+    const comer = ES.comendo > 0 ? .85 + Math.sin(relogio * 10) * .08 : 0;
+    elip(L.hx, L.hy, 60 * s, 9 * s, 0, "#00000030", null);
+    desenhaCavalo(L.hx, L.hy, s, { ...corDaRaca(c.raca), and: 0, comer, lama: Math.ceil((100 - c.limpeza) / 22), brilho: c.limpeza >= 95, itens: itensDoCavalo() });
+    if (ES.cenoura) { const t = ES.cenoura.t, x = lerp(ES.cenoura.x, L.hx + 80 * s, t), y = lerp(ES.cenoura.y, L.hy - 95 * s, t) - Math.sin(Math.PI * t) * 60; poli([[x - 14, y - 4], [x + 12, y], [x - 14, y + 4]], "#f97316", TINTA, 2); membro([[x - 14, y], [x - 22, y - 6]], 3, "#22c55e"); }
+    // montinhos de sujeira (arraste até o carrinho)
+    for (let i = 0; i < c.sujeira; i++) {
+      let p = posMonte(i, c.sujeira); if (ES.arrasto && ES.arrasto.tipo === "monte" && ES.arrasto.i === i) p = ES.arrasto;
+      elip(p.x, p.y, 20, 12, 0, "#6b4423"); elip(p.x - 2, p.y - 8, 12, 8, 0, "#7c5030"); circ(p.x, p.y - 15, 4, "#8b5a34", TINTA, 2);
+      if (!ES.arrasto) texto("↖", p.x + 18, p.y - 18, 14, "#fff");
+    }
+    if (ES.arrasto && ES.arrasto.tipo !== "monte") texto(ES.arrasto.tipo === "escova" ? "🪮" : "🤚", ES.arrasto.x, ES.arrasto.y, 34, "#fff", "center", false);
+    // cartão com nome, raça e as 4 barras
+    const cw = Math.min(W - 20, 520), cx = (W - cw) / 2, cy = topo;
+    caixa(cx, cy, cw, 82, 14, "#fffbeb", TINTA, 3);
+    texto(c.nome + " · " + CONFIG.racas[c.raca].nome + (E.cavalos.length > 1 ? "  (" + (E.ativo + 1) + "/" + E.cavalos.length + ")" : ""), cx + 12, cy + 16, 15, "#1a1206", "left", false);
+    const bn = Math.round((bonus() - 1) * 100);
+    texto((bn >= 0 ? "+" : "") + bn + "% no galope", cx + cw - 12, cy + 16, 13, bn >= 0 ? "#15803d" : "#b91c1c", "right", false);
+    [["🌾 Fome", c.fome, "#f59e0b"], ["💧 Sede", c.sede, "#38bdf8"], ["🧼 Limpeza", c.limpeza, "#a3e635"], ["❤ Carinho", c.carinho, "#f472b6"]].forEach(([n, v, cor], i) => {
+      const bx = cx + 10 + (i % 2) * (cw / 2), by = cy + 36 + Math.floor(i / 2) * 22;
+      texto(n, bx, by + 6, 12, "#1a1206", "left", false);
+      barraCanvas(bx + 78, by, cw / 2 - 100, 12, v / 100, cor);
+    });
+  },
+  down(x, y) {
+    const c = cavaloAtivo(); if (!c) return;
+    const L = estabuloLayout();
+    for (let i = 0; i < c.sujeira; i++) { const p = posMonte(i, c.sujeira); if (Math.hypot(p.x - x, p.y - y) < 32) { ES.arrasto = { tipo: "monte", i, x, y }; return; } }
+    if (dentro(L.cabeca, x, y)) ES.arrasto = { tipo: "carinho", x, y };
+    else if (dentro(L.corpo, x, y) || dentro({ x: L.corpo.x - 20, y: L.corpo.y - 20, w: L.corpo.w + 40, h: L.corpo.h + 60 }, x, y))
+      ES.arrasto = { tipo: ES.ferramenta, x, y };
+  },
+  move(x, y) {
+    const a = ES.arrasto, c = cavaloAtivo(); if (!a || !c) return;
+    const d = Math.hypot(x - a.x, y - a.y); a.x = x; a.y = y;
+    if (a.tipo === "escova") {
+      c.limpeza = Math.min(100, c.limpeza + d * .07); ES.acum += d;
+      if (Math.random() < .3) parts.push({ x, y, vx: rnd(-40, 40), vy: rnd(-60, -20), g: 0, vida: .5, cor: "#fff", txt: "✨", tipo: "t", tam: 14 });
+      if (ES.acum > 140) { ES.acum = 0; evento("escovar"); ganhaXP(1); if (c.limpeza >= 100) aviso("O " + c.nome + " está brilhando! ✨"); }
+    } else if (a.tipo === "carinho") {
+      c.carinho = Math.min(100, c.carinho + d * .09); ES.acumC += d;
+      if (ES.acumC > 110) { ES.acumC = 0; coracao(x, y - 10); evento("carinho"); ganhaXP(1); if (Math.random() < .3) som("relincho"); }
+    }
+  },
+  up(x, y) {
+    const a = ES.arrasto, c = cavaloAtivo(); ES.arrasto = null;
+    if (a && a.tipo === "monte" && c && dentro(estabuloLayout().carrinho, x, y)) {
+      c.sujeira--; c.limpeza = Math.min(100, c.limpeza + 6); evento("limpar"); som("ok"); ganhaMoedas(2, x, y - 20); ganhaXP(3);
+      if (!c.sujeira) aviso("Baia limpinha! 🧹✨");
+    } else if (a && a.tipo === "monte") aviso("Arraste a sujeira até o carrinho verde 🧹");
+  },
+  tecla(k) {
+    const m = { e: () => { ES.ferramenta = "escova"; marcaFerramenta(); }, f: () => dar("feno"), c: () => dar("cenoura"), a: () => dar("agua"), t: trocaCavalo };
+    if (m[k]) { m[k](); return true; }
+  },
+};
+
+// =====================================================================
+// TRILHA: cavalgar de lado (usado nas aventuras, aulas, provas e campeonatos)
+// =====================================================================
+const R = {};
+function objeto(tipo, x, x2) { return { tipo, x, x2, passou: false }; }
+function iniciaTrilha(cfg) {
+  for (const k in R) delete R[k];
+  Object.assign(R, { cfg, x: 0, v: 0, g: 1, energia: 100, alt: 0, vy: 0, noAr: false, susto: null, empina: 0, caindo: 0, fase: 0,
+    tempo: 0, penal: 0, objs: cfg.objs || [], acalmando: false, refuga: 0, pulos: 0, acalmou: 0, derrubados: 0, terminou: false,
+    fimT: 0, chamou: false, passo: 0, tPasso: 0, emRio: false, rivais: null, gMostrado: -1 });
+  if (cfg.rivais) R.rivais = CONFIG.rivais.map((r, k) => ({ ...r, x: 0, v: 0, fase: k * 2, chegou: null,
+    vMax: CONFIG.andaduras[3].vel * r.rapidez * clamp(.92 + .03 * (E.nivel - 3), .9, 1.02) }));
+  if (cfg.aula) iniciaPassoAula();
+  setModo("trilha");
+  aviso(cfg.dica || "Troque a andadura nos botões ou nas teclas 1, 2, 3 (0 para parar). Espaço = pular", 3.5);
+}
+function mudaAndadura(g) {
+  if (R.terminou) return;
+  g = clamp(g, 0, 3);
+  if (g === 3 && R.energia < 8) { aviso("Sem energia para galopar! Vá ao passo um pouco 🐴"); som("erro"); return; }
+  R.g = g; som("ok");
+}
+function pular() {
+  if (R.noAr || R.susto || R.caindo > 0 || R.terminou) return;
+  R.noAr = true; R.vy = CONFIG.pulo.forca * (R.v < 30 ? .6 : 1); som("pulo");
+}
+// o cavalo se assusta (cobra, pássaro, barulho): empina e o medo começa a subir
+function assusta(tipo = "barulho") {
+  if (R.susto || R.terminou || modo !== "trilha") return;
+  const nomes = { cobra: "🐍 Uma cobra!", passaro: "🐦 Um pássaro voou!", barulho: "💥 BUM! Um barulho!" };
+  R.susto = { medo: CONFIG.susto.medoInicial + (R.g === 3 ? 20 : 0), tipo };
+  aviso(nomes[tipo] + " O cavalo empinou: SEGURE ACALMAR!", 3); som("relincho");
+}
+function terminaTrilha() {
+  if (R.terminou) return;
+  R.terminou = true; R.fimT = 1.3; R.tFinal = R.tempo + R.penal;
+  const c = cavaloAtivo(), g = CONFIG.gastoPorPasseio;           // o passeio cansa e suja o cavalo
+  if (c) { c.fome = Math.max(5, c.fome - g.fome); c.sede = Math.max(5, c.sede - g.sede); c.limpeza = Math.max(5, c.limpeza - g.limpeza);
+           c.carinho = Math.max(5, c.carinho - g.carinho); c.sujeira = Math.min(4, c.sujeira + 1); }
+  confete(W * .3, H * .4, 30); som("festa");
+}
+// ----- aula: o professor pede uma coisa de cada vez -----
+const passoAula = () => R.cfg.aula && R.cfg.aula.passos[R.passo];
+function iniciaPassoAula() {
+  const p = passoAula(); if (!p) return;
+  R.tPasso = 0; R.pulosPasso = R.pulos; R.acalmPasso = R.acalmou;
+  if (p.pede === "bandeira") R.objs.push(objeto("bandeira", R.x + p.dist));
+  if (p.pede === "pular") for (let i = 0; i < p.n; i++) R.objs.push(objeto("cerca", R.x + 420 + i * 380));
+  if (p.pede === "acalmar") R.objs.push(objeto("passaro", R.x + 360));
+}
+function proximoPassoAula() {
+  R.passo++; som("ok"); textoVoa("✓ Muito bem!", W * .3, H * .45, "#22c55e"); ganhaXP(3);
+  if (!passoAula()) terminaTrilha(); else iniciaPassoAula();
+}
+function atualizaAula(dt) {
+  const p = passoAula(); if (!p || R.terminou) return;
+  const ga = { passo: 1, trote: 2, galope: 3 }[p.pede];
+  if (ga) { if (R.g === ga && R.v > 20 && !R.susto) { R.tPasso += dt; if (R.tPasso >= p.seg) proximoPassoAula(); } }
+  else if (p.pede === "parar") { if (R.g === 0 && R.v < 6) proximoPassoAula(); }
+  else if (p.pede === "pular") { if (R.pulos - R.pulosPasso >= p.n) proximoPassoAula(); }
+  else if (p.pede === "acalmar") { if (R.acalmou > R.acalmPasso) proximoPassoAula(); }
+}
+const chao = () => base - 26;
+const escalaTrilha = () => clamp(Math.min((chao() - topo - 90) / 200, W / 330), .6, 1.7);
+const hxTrilha = () => Math.max(110, W * .3);
+
+CENAS.trilha = {
+  update(dt) {
+    if (R.terminou) {
+      R.v *= Math.pow(.2, dt); R.x += R.v * dt; R.fase += dt * R.v / 22;
+      if ((R.fimT -= dt) <= 0 && !R.chamou) { R.chamou = true; R.cfg.aoTerminar(R); }
+      return;
+    }
+    R.tempo += dt;
+    const A = CONFIG.andaduras, bn = bonus();
+    // susto: o medo sobe sozinho; segurar ACALMAR derruba o medo
+    if (R.susto) {
+      const sobe = (E.nivel <= 1 ? CONFIG.susto.sobeNivel1 : CONFIG.susto.sobe) * (2 - bn);
+      R.susto.medo += (R.acalmando ? -CONFIG.susto.desce * bn : sobe) * dt;
+      if (R.susto.medo <= 0) {
+        R.susto = null; R.acalmou++; E.acalmados++; som("ok");
+        textoVoa("😌 Calminho...", hxTrilha(), chao() - 200 * escalaTrilha(), "#a7f3d0"); evento("acalmar"); ganhaXP(6);
+        if (R.g === 0) R.g = 1;
+      } else if (R.susto.medo >= 100) {
+        R.susto = null; R.caindo = 1.8; som("erro");
+        aviso("Você escorregou da sela! Tudo bem, levanta e sobe de novo. Da próxima, segure ACALMAR 🤲", 3);
+      }
+    }
+    R.empina = lerp(R.empina, R.susto ? (R.acalmando ? .3 : .62) + Math.sin(relogio * 9) * .06 : 0, Math.min(1, dt * 6));
+    R.caindo = Math.max(0, R.caindo - dt); R.refuga = Math.max(0, R.refuga - dt);
+    // velocidade: andadura × bônus de cuidado
+    let alvo = A[R.g].vel * bn;
+    if (R.susto || R.caindo > 0 || R.refuga > 0) alvo = 0;
+    R.emRio = R.objs.some(o => o.tipo === "rio" && R.x > o.x && R.x < o.x2);
+    if (R.emRio && R.g >= 2) { alvo = Math.min(alvo, 70); if (Math.random() < dt * 2) aviso("No rio, vá ao PASSO! 🌊"); }
+    R.v += (alvo - R.v) * Math.min(1, dt * (alvo < R.v ? 4 : 2.2));
+    R.x += R.v * dt;
+    const vg = Math.max(1, A[Math.max(1, R.g)].vel * bn);
+    R.fase += dt * [9, 9, 13.5, 15][R.v < 8 ? 0 : R.g] * clamp(R.v / vg, .35, 1.2);
+    // energia
+    const ganho = A[R.susto ? 0 : R.g].energia;
+    R.energia = clamp(R.energia + (ganho < 0 ? ganho / bn : ganho) * dt, 0, 100);
+    if (R.g === 3 && R.energia <= 0) { R.g = 2; aviso("Seu cavalo cansou! Trote ou vá ao passo para recuperar ⚡"); }
+    // pulo
+    if (R.noAr) { R.alt += R.vy * dt; R.vy -= CONFIG.pulo.gravidade * dt; if (R.alt <= 0) { R.alt = 0; R.noAr = false; } }
+    if (R.v > 230 && !R.noAr && Math.random() < dt * 25) poeira(hxTrilha() - 30, chao() - 4, R.emRio ? "#7dd3fc" : "#c8a979");
+    // missões de andadura e distância
+    if (R.v > 20 && !R.susto) evento("andadura", dt, { g: R.g });
+    // objetos da trilha
+    for (const o of R.objs) {
+      const d = o.x - R.x;
+      if ((o.tipo === "tronco" || o.tipo === "cerca") && !o.passou && d < 18 && d > -60) {
+        o.passou = true;
+        if (R.alt > (o.tipo === "cerca" ? 30 : 24)) {
+          R.pulos++; E.pulos++; evento("pular"); ganhaXP(2); textoVoa("Pulou! ⤴", hxTrilha(), chao() - 220 * escalaTrilha(), "#FACC15");
+        } else {
+          o.caiu = true; R.refuga = .7; R.derrubados++; som("erro");
+          if (R.cfg.prova) { R.penal += R.cfg.prova.penalidade; aviso("Refugou! +" + R.cfg.prova.penalidade + " s. Aperte PULAR antes do obstáculo."); }
+          else aviso("O cavalo refugou! Aperte PULAR um pouco antes do obstáculo ⤴");
+          if (passoAula() && passoAula().pede === "pular") R.objs.push(objeto("cerca", R.x + 420));
+        }
+      }
+      if (o.tipo === "tambor" && !o.passou && d < 0) {
+        o.passou = true;
+        if (R.g === 3) { o.caiu = true; R.penal += R.cfg.prova.penalidade; som("erro"); aviso("Derrubou o tambor! +" + R.cfg.prova.penalidade + " s. No tambor, vá ao TROTE."); }
+        else { textoVoa("Contornou! ✓", hxTrilha(), chao() - 200 * escalaTrilha(), "#22c55e"); som("ok"); }
+      }
+      if ((o.tipo === "cobra" || o.tipo === "passaro" || o.tipo === "barulho") && !o.passou && d < 150 + R.v * .3) { o.passou = true; o.t = 0; assusta(o.tipo); }
+      if (o.tipo === "bandeira" && !o.passou && d < 0) {
+        o.passou = true; const p = passoAula();
+        if (p && p.pede === "bandeira") {
+          if (R.g === p.andadura) proximoPassoAula();
+          else { aviso("Quase! Era para chegar a " + CONFIG.andaduras[p.andadura].nome.toUpperCase() + ". Vamos de novo!"); R.objs.push(objeto("bandeira", R.x + p.dist)); }
+        }
+      }
+      if (o.tipo === "rio" && !o.passou && R.x > o.x2) { o.passou = true; textoVoa("Atravessou o rio! 🌊", hxTrilha(), chao() - 200 * escalaTrilha(), "#7dd3fc"); }
+      if (o.t !== undefined) o.t += dt;
+    }
+    if (R.cfg.aula) atualizaAula(dt);
+    if (R.rivais) for (const [k, r] of R.rivais.entries()) {
+      if (R.tempo < .3 + k * .15) continue;
+      const alvoR = r.vMax * (.93 + .07 * Math.sin(R.tempo * .8 + k * 2));
+      r.v += (alvoR - r.v) * Math.min(1, dt * 1.5); r.x += r.v * dt; r.fase += dt * 15;
+      if (r.x >= R.cfg.comprimento && r.chegou === null) r.chegou = R.tempo;
+    }
+    if (R.x >= R.cfg.comprimento) terminaTrilha();
+    // botões: acende a andadura atual e pisca o ACALMAR no susto
+    if (R.gMostrado !== R.g + (R.susto ? 10 : 0)) {
+      R.gMostrado = R.g + (R.susto ? 10 : 0);
+      CONFIG.andaduras.forEach((_, i) => { const b = $("g" + i); if (b) b.classList.toggle("ativo", i === R.g); });
+      const ba = $("b-acalmar"); if (ba) ba.classList.toggle("pisca", !!R.susto);
+    }
+  },
+  draw() {
+    const cen = R.cfg.cenario || "campo", gy = chao(), s = escalaTrilha(), hx = hxTrilha();
+    // céu
+    const g = ctx.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, "#7cc8f5"); g.addColorStop(1, "#dff3ff");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    circ(W - 70, (topo + gy) / 2 - 60, 30, "#fde047", "#f59e0b", 3);
+    // camadas que andam em velocidades diferentes (parallax)
+    const camada = (fator, periodo, fn) => { const off = -((R.x * fator) % periodo); for (let x = off - periodo; x < W + periodo; x += periodo) fn(x); };
+    camada(.05, 420, x => { elip(x + 100, topo + 110 + Math.sin(x) * 5, 50, 16, 0, "#ffffffcc", null); });
+    camada(.15, 700, x => { poli([[x, gy - 40], [x + 180, gy - 190], [x + 360, gy - 40]], "#8fb9a8"); poli([[x + 300, gy - 40], [x + 480, gy - 150], [x + 700, gy - 40]], "#9cc7b4"); });
+    if (cen === "arena") {
+      camada(.5, 300, x => { caixa(x, gy - 150, 300, 110, 0, "#ef4444", TINTA, 3); for (let i = 0; i < 12; i++) circ(x + 14 + i * 24, gy - 120 + (i % 2) * 22, 8, ["#FACC15", "#3b82f6", "#fff", "#22c55e"][i % 4], TINTA, 2); });
+      camada(1, 120, x => { caixa(x, gy - 46, 6, 44, 2, "#fff", TINTA, 2); });
+      caixa(-10, gy - 40, W + 20, 6, 2, "#fff", TINTA, 2);
+    } else if (cen === "escola") {
+      camada(.5, 360, x => { arvore(x + 60, gy - 50, 1.1); });
+      camada(1, 90, x => { caixa(x, gy - 50, 7, 50, 2, "#fff", TINTA, 2); });
+      caixa(-10, gy - 44, W + 20, 6, 2, "#fff", TINTA, 2); caixa(-10, gy - 26, W + 20, 6, 2, "#fff", TINTA, 2);
+    } else {
+      camada(.5, 280, x => { arvore(x + 40, gy - 40, 1.2); arvore(x + 190, gy - 46, .9); });
+      camada(1, 160, x => { caixa(x, gy - 34, 7, 34, 2, "#a16207", TINTA, 2); });
+      caixa(-10, gy - 28, W + 20, 5, 2, "#ca8a04", TINTA, 2);
+    }
+    // chão
+    ctx.fillStyle = cen === "campo" ? "#5cb85c" : "#e2c290"; ctx.fillRect(0, gy - 10, W, H);
+    ctx.fillStyle = cen === "campo" ? "#c9a26b" : "#d6b07a"; ctx.fillRect(0, gy - 4, W, 24);
+    ctx.fillStyle = TINTA; ctx.fillRect(0, gy - 11, W, 2);
+    camada(1, 70, x => { ctx.fillStyle = "#00000022"; ctx.fillRect(x, gy + 6, 16, 3); });
+    // objetos
+    const sxDe = x => hx + (x - R.x);
+    for (const o of R.objs) {
+      const sx = sxDe(o.x);
+      if (o.tipo === "rio") { const a = sx, b = sxDe(o.x2); if (b < -50 || a > W + 50) continue;
+        ctx.fillStyle = "#38bdf8"; ctx.fillRect(a, gy - 8, b - a, 30); ctx.fillStyle = "#bae6fd";
+        for (let x = a; x < b; x += 40) ctx.fillRect(x + ((relogio * 30) % 40), gy + 2, 16, 3); continue; }
+      if (sx < -150 || sx > W + 250) continue;
+      if (o.tipo === "tronco") { if (o.caiu) elip(sx, gy - 6, 30, 8, 0, "#8b5a2b"); else { caixa(sx - 26, gy - 30, 52, 24, 12, "#8b5a2b"); circ(sx + 20, gy - 18, 10, "#d6a76b"); } }
+      else if (o.tipo === "cerca") { caixa(sx - 24, gy - 54, 7, 50, 2, "#fff"); caixa(sx + 17, gy - 54, 7, 50, 2, "#fff");
+        if (o.caiu) caixa(sx - 26, gy - 10, 52, 7, 3, "#ef4444"); else { caixa(sx - 26, gy - 44, 52, 7, 3, "#ef4444"); caixa(sx - 26, gy - 28, 52, 7, 3, "#fff"); } }
+      else if (o.tipo === "tambor") { if (o.caiu) elip(sx, gy - 10, 26, 13, 0, "#2563eb"); else { caixa(sx - 16, gy - 48, 32, 44, 6, "#2563eb"); ctx.fillStyle = "#fff"; ctx.fillRect(sx - 15, gy - 34, 30, 4); ctx.fillRect(sx - 15, gy - 20, 30, 4); } }
+      else if (o.tipo === "bandeira") { caixa(sx - 2, gy - 110, 5, 108, 2, "#fff"); poli([[sx + 3, gy - 110], [sx + 46, gy - 96 + Math.sin(relogio * 6) * 3], [sx + 3, gy - 82]], "#ef4444"); }
+      else if (o.tipo === "cobra") { const y = gy - 6; ctx.lineWidth = 9; ctx.strokeStyle = TINTA; ctx.beginPath(); for (let i = 0; i < 6; i++) ctx.lineTo(sx + i * 9 - (o.t || 0) * 30, y + Math.sin(i + relogio * 8) * 4); ctx.stroke();
+        ctx.lineWidth = 5; ctx.strokeStyle = "#65a30d"; ctx.stroke(); circ(sx - 4 - (o.t || 0) * 30, y, 6, "#65a30d", TINTA, 2); }
+      else if (o.tipo === "passaro") { const t = o.t || 0, x = sx + t * 160, y = gy - 120 - t * 120 + Math.sin(relogio * 20) * 4;
+        elip(x, y, 13, 9, 0, "#f97316"); poli([[x - 4, y - 2], [x - 18, y - 16 - Math.sin(relogio * 25) * 8], [x + 6, y - 4]], "#ea580c", TINTA, 2); circ(x + 9, y - 3, 2, TINTA, null); }
+      else if (o.tipo === "barulho") { if (o.t !== undefined && o.t < 1.5) texto("💥 BUM!", sx, gy - 160 - o.t * 30, 34, "#fef08a"); else if (o.t === undefined) caixa(sx - 14, gy - 30, 28, 26, 4, "#a8a29e"); }
+      else if (o.tipo === "potro") desenhaCavalo(sx, gy, s * .55, { ...corDaRaca(0), cor: "#d2a26c", crina: "#5a3a22", and: 0, dir: -1, fase: relogio * 4 });
+      else if (o.tipo === "cidade") { for (let i = 0; i < 4; i++) { const hgt = 110 + (i * 37) % 70; caixa(sx + i * 70, gy - 10 - hgt, 62, hgt, 3, ["#94a3b8", "#a78bfa", "#fca5a5", "#fde68a"][i]); for (let j = 0; j < 3; j++) caixa(sx + i * 70 + 10, gy - hgt + 6 + j * 30, 14, 16, 2, "#fef08a", TINTA, 1.5); } texto("✉️ Correio", sx + 140, gy - 150, 18); }
+    }
+    // chegada
+    if (isFinite(R.cfg.comprimento)) { const sx = sxDe(R.cfg.comprimento); if (sx < W + 60) for (let i = 0; i < 10; i++) for (let j = 0; j < 2; j++) { ctx.fillStyle = (i + j) % 2 ? "#fff" : TINTA; ctx.fillRect(sx + j * 10, gy - 120 + i * 12, 10, 12); } }
+    // rivais (correm na raia de trás)
+    if (R.rivais) R.rivais.forEach((r, k) => {
+      const sx = sxDe(r.x), y = gy - 14 - k * 9;
+      if (sx < -150 || sx > W + 150) { texto((sx < 0 ? "◀ " : "") + r.nome + (sx > 0 ? " ▶" : ""), sx < 0 ? 44 : W - 44, gy - 150 * s - k * 22, 14, "#fff"); return; }
+      desenhaCavalo(sx, y, s * .85, { cor: r.cor, crina: r.crina, fase: r.fase, and: r.v > 230 ? 3 : r.v > 120 ? 2 : 1, montador: { tipo: k === 1 ? "menino" : "menina", roupa: r.roupa }, itens: { sela: "#6b3f1d", manta: r.roupa, redea: "#3b2414" } });
+      texto(r.nome, sx, y - 200 * s * .85, 13, "#fff");
+    });
+    // o seu cavalo
+    const c = cavaloAtivo(), and = R.v < 8 ? 0 : R.v < 140 ? 1 : R.v < 250 ? 2 : 3;
+    elip(hx, gy + 2, 50 * s * (1 - R.alt / 300), 8 * s, 0, "#00000033", null);
+    desenhaCavalo(hx, gy - R.alt, s, { ...corDaRaca(c ? c.raca : 0), fase: R.fase, and: R.noAr ? 3 : and, empina: R.empina,
+      montador: R.caindo > 0 ? null : eu(), itens: itensDoCavalo(), lama: c ? Math.ceil((100 - c.limpeza) / 30) : 0 });
+    if (R.caindo > 0) {                                          // caiu sentado no chão (e já levanta)
+      ctx.save(); ctx.translate(hx - 70 * s, gy); ctx.rotate(-1.3 * Math.min(1, R.caindo)); desenhaPessoa(eu(), "pe", 0, 0, s); ctx.restore();
+      texto("Ops! 😵", hx - 70 * s, gy - 120 * s, 20, "#fff");
+    }
+    if (R.emRio && R.v > 10 && Math.random() < .4) poeira(hx + 20, gy - 6, "#bae6fd");
+    // medo (no susto)
+    if (R.susto) {
+      const bx = Math.min(W - 160, hx + 100 * s), by = gy - 170 * s - R.alt;
+      caixa(bx - 6, by - 26, 152, 50, 10, "#000000aa", null);
+      texto("😨 Medo", bx, by - 12, 14, "#fff", "left");
+      barraCanvas(bx + 70, by - 19, 70, 14, R.susto.medo / 100, "#ef4444");
+      texto(R.acalmando ? "Acalmando... 🤲" : "Segure ACALMAR!", bx + 70, by + 12, 13, R.acalmando ? "#a7f3d0" : "#FACC15");
+    }
+    // cartão de cima: andadura, energia e progresso
+    const cw = Math.min(W - 20, 540), cx = (W - cw) / 2; let cy = topo;
+    caixa(cx, cy, cw, 60, 14, "#fffbeb", TINTA, 3);
+    texto(CONFIG.andaduras[R.g].nome.toUpperCase(), cx + 12, cy + 18, 18, ["#6b7280", "#15803d", "#1d4ed8", "#b91c1c"][R.g], "left", false);
+    texto("⚡", cx + cw * .42, cy + 18, 15, "#1a1206", "center", false);
+    barraCanvas(cx + cw * .42 + 12, cy + 11, cw * .58 - 34, 14, R.energia / 100, R.energia < 25 ? "#ef4444" : "#facc15");
+    if (isFinite(R.cfg.comprimento)) {
+      barraCanvas(cx + 12, cy + 36, cw - 24 - (R.cfg.cronometro || R.rivais ? 110 : 0), 12, R.x / R.cfg.comprimento, "#22c55e");
+      if (R.rivais) { const pos = 1 + R.rivais.filter(r => r.x > R.x).length; texto(pos + "º lugar", cx + cw - 12, cy + 42, 15, "#1a1206", "right", false); }
+      else if (R.cfg.cronometro) texto("⏱ " + (R.tempo + R.penal).toFixed(1) + " s", cx + cw - 12, cy + 42, 15, "#1a1206", "right", false);
+    } else texto(R.cfg.titulo, cx + 12, cy + 43, 14, "#1a1206", "left", false);
+    cy += 68;
+    // professor(a) falando
+    const p = passoAula();
+    if (p) {
+      const prof = CONFIG.professores[E.professor] || CONFIG.professores[0];
+      caixa(cx, cy, cw, 74, 14, "#ecfeff", TINTA, 3);
+      ctx.save(); rr(cx + 6, cy + 6, 62, 62, 10); ctx.clip(); ctx.fillStyle = "#a5f3fc"; ctx.fillRect(cx + 6, cy + 6, 62, 62);
+      desenhaPessoa({ ...prof, adulto: true }, "pe", cx + 37, cy + 140, 1.3); ctx.restore();
+      texto(prof.nome, cx + 78, cy + 16, 13, "#0e7490", "left", false);
+      quebraTexto(p.fala, cw - 92, 15).slice(0, 2).forEach((l, i) => texto(l, cx + 78, cy + 36 + i * 19, 15, "#1a1206", "left", false));
+      const ga = { passo: 1, trote: 2, galope: 3 }[p.pede];
+      if (ga) barraCanvas(cx + cw - 70, cy + 10, 60, 10, R.tPasso / p.seg, "#22c55e");
+    }
+  },
+  tecla(k, baixo) {
+    if (baixo) {
+      if (k >= "0" && k <= "3") { mudaAndadura(+k); return true; }
+      if (k === "s") { mudaAndadura(0); return true; }
+      if (k === "arrowright" || k === "d") { mudaAndadura(R.g + 1); return true; }
+      if (k === "arrowleft") { mudaAndadura(R.g - 1); return true; }
+      if (k === " " || k === "arrowup" || k === "w") { pular(); return true; }
+    }
+    if (k === "a" || k === "c" || k === "shift" || k === "arrowdown") { R.acalmando = baixo; return true; }
+  },
+};
+
+// =====================================================================
+// TELAS (janelas por cima do jogo): menus e resultados
+// =====================================================================
+let telaAuto = 0, telaDepois = null;            // no ?demo=1 as janelas fecham sozinhas
+function tela(html, demoSeg = 0, depois = null) {
+  $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); $("tela-conteudo").scrollTop = 0;
+  telaAuto = DEMO ? (demoSeg || 2.5) : 0; telaDepois = depois;
+}
+function fechaTela() { $("tela").classList.add("hidden"); telaAuto = 0; }
+const linhaCavalo = () => { const c = cavaloAtivo(), bn = Math.round((bonus() - 1) * 100);
+  return `<p>🐴 <b>${c.nome}</b> (${CONFIG.racas[c.raca].nome}) · cuidado ${Math.round(cuidado() * 100)}% · ${bn >= 0 ? "+" : ""}${bn}% no galope` +
+    (cuidado() < .45 ? `<br><small>⚠️ Seu cavalo está cansado e sujo. Cuide dele na Fazenda para correr mais!</small>` : "") + "</p>"; };
+const opcao = (fn, em, nome, desc, trancado) =>
+  `<button class="op" ${trancado ? "disabled" : ""} onclick="${fn}"><span class="em">${trancado ? "🔒" : em}</span><span><b>${nome}</b><br><small>${desc}</small></span></button>`;
+const rodapeTela = (extra = "") => `<div class="linha">${extra}<button class="btn sec" onclick="irPara('mapa')">🗺️ Mapa</button></div>`;
+
+// ----- CAMPO: aventuras -----
+function menuCampo() {
+  tela(`<h2>🌳 Campo · Aventuras</h2>${linhaCavalo()}<div class="opcoes">` +
+    CONFIG.aventuras.map((a, i) => opcao(`iniciaAventura(${i})`, a.emoji, a.nome, E.nivel < a.nivel ? "Abre no nível " + a.nivel : "Prêmio: " + a.moedas + " 🪙 · " + a.xp + " XP", E.nivel < a.nivel)).join("") +
+    `</div>` + rodapeTela(`<button class="btn sec" onclick="irPara('estabulo')">🧽 Cuidar do cavalo</button>`));
+}
+function iniciaAventura(i) {
+  fechaTela();
+  const a = CONFIG.aventuras[i], comp = DEMO && a.id === "passeio" ? CONFIG.demo.comprimentoPasseio : a.comprimento;
+  iniciaTrilha({ titulo: a.emoji + " " + a.nome, comprimento: comp, cenario: "campo",
+    objs: a.objetos.filter(o => o[1] < comp).map(o => objeto(o[0], o[1], o[2])), aoTerminar: () => fimAventura(a, i) });
+}
+function fimAventura(a, i) {
+  E.aventuras++; let extra = "";
+  if (a.id === "potro") {
+    if (E.cavalos.length < CONFIG.maxEstabulo) { E.cavalos.push(novoCavalo(7, "Potrinho " + (E.aventuras))); extra = "<p>🐴 O potro agora mora no seu estábulo!</p>"; }
+    else extra = "<p>🐴 O potro voltou para a mãe. Que alegria!</p>";
+  }
+  if (a.id === "carta" && !E.medalhas.some(m => m.nome === "Carteiro do Rancho")) { E.medalhas.push({ nome: "Carteiro do Rancho", emoji: "✉️" }); extra = "<p>🏅 Nova medalha: <b>Carteiro do Rancho</b></p>"; }
+  ganhaMoedas(a.moedas); ganhaXP(a.xp); evento("aventura"); salvar();
+  tela(`<h2>${a.emoji} Aventura completa!</h2><p><b>${a.nome}</b></p><p style="font-size:24px">+${a.moedas} 🪙 · +${a.xp} XP</p>${extra}
+    <p>Pulos: ${R.pulos} · Sustos acalmados: ${R.acalmou}</p>` +
+    rodapeTela(`<button class="btn" onclick="iniciaAventura(${i})">🔁 De novo</button><button class="btn sec" onclick="menuCampo()">🌳 Outras</button>`), 2.5, () => irPara("mapa"));
+}
+
+// ----- ESCOLA DE EQUITAÇÃO: aulas (com professor ou professora) e provas -----
+function menuEscola() {
+  const p = CONFIG.professores;
+  tela(`<h2>🏫 Escola de Equitação</h2>
+    <p>Escolha quem vai dar a aula:</p>
+    <div class="escolha">${p.map((x, i) => `<button class="pers ${E.professor === i ? "sel" : ""}" onclick="E.professor=${i};salvar();menuEscola()"><span style="font-size:40px">${x.tipo === "menino" ? "👨‍🏫" : "👩‍🏫"}</span><br>${x.nome}</button>`).join("")}</div>
+    <div class="opcoes">` +
+    CONFIG.aulas.map((a, i) => opcao(`iniciaAula(${i})`, E.certificados.includes(a.certificado) ? "📜" : "🎓", a.titulo,
+      i > E.certificados.length ? "Faça a aula anterior primeiro" : "Certificado: " + a.certificado, i > E.certificados.length)).join("") +
+    CONFIG.provas.map(pr => opcao(`iniciaProva('${pr.id}')`, pr.emoji, pr.nome + " ⏱", E.nivel < pr.nivel ? "Abre no nível " + pr.nivel : "Ouro até " + pr.ouro + " s · prata até " + pr.prata + " s", E.nivel < pr.nivel)).join("") +
+    `</div>` + rodapeTela());
+}
+function iniciaAula(k) {
+  fechaTela();
+  const a = CONFIG.aulas[k];
+  iniciaTrilha({ titulo: "🎓 " + a.titulo, comprimento: Infinity, cenario: "escola", aula: a, objs: [], aoTerminar: () => fimAula(k),
+    dica: "Faça o que o(a) professor(a) pedir! Andaduras: 1, 2, 3 · Parar: 0" });
+}
+function fimAula(k) {
+  const a = CONFIG.aulas[k], prof = CONFIG.professores[E.professor] || CONFIG.professores[0], novo = !E.certificados.includes(a.certificado);
+  if (novo) E.certificados.push(a.certificado);
+  E.aulasFeitas++; ganhaMoedas(20); ganhaXP(novo ? 30 : 12); evento("aula"); salvar();
+  tela(`<h2>📜 Certificado</h2>
+    <div style="border:4px double #FACC15;border-radius:12px;padding:14px;background:#fffbeb;color:#1a1206">
+      <p style="color:#1a1206;margin:0">A Escola de Equitação certifica que</p>
+      <p style="font-size:22px;font-weight:900;color:#1a1206;margin:6px 0">${E.personagem.tipo === "menino" ? "o cavaleiro" : "a amazona"} e ${nomeAtivo()}</p>
+      <p style="color:#1a1206;margin:0">concluíram a <b>${a.titulo}</b></p>
+      <p style="font-size:20px;font-weight:900;color:#b45309;margin:8px 0">🎖️ ${a.certificado}</p>
+      <p style="color:#555;margin:0">${prof.nome}</p></div>
+    <p>+20 🪙 · +${novo ? 30 : 12} XP</p>` +
+    rodapeTela((k + 1 < CONFIG.aulas.length ? `<button class="btn" onclick="iniciaAula(${k + 1})">🎓 Próxima aula</button>` : "") + `<button class="btn sec" onclick="menuEscola()">🏫 Escola</button>`), 2.5, () => irPara("mapa"));
+}
+function objsProva(n, comp, tipo) { const a = 450, b = comp - 300; return Array.from({ length: n }, (_, i) => objeto(tipo, a + i * (b - a) / (n - 1))); }
+function iniciaProva(id) {
+  fechaTela();
+  const p = CONFIG.provas.find(x => x.id === id);
+  iniciaTrilha({ titulo: p.nome, comprimento: p.comprimento, cenario: "escola", cronometro: true, prova: p, dica: p.dica,
+    objs: objsProva(p.tambores || p.saltos, p.comprimento, p.tambores ? "tambor" : "cerca"), aoTerminar: () => fimProva(p) });
+}
+function fimProva(p) {
+  const t = R.tFinal, tipo = t <= p.ouro ? "ouro" : t <= p.prata ? "prata" : "bronze";
+  const em = { ouro: "🥇", prata: "🥈", bronze: "🥉" }[tipo], moedas = { ouro: 30, prata: 20, bronze: 12 }[tipo];
+  E.medalhas.push({ nome: p.nome, emoji: em, tipo }); E.provasFeitas++;
+  ganhaMoedas(moedas); ganhaXP(20); evento("prova"); salvar();
+  tela(`<h2>${em} Medalha de ${tipo}!</h2><p><b>${p.nome}</b></p><p style="font-size:26px">⏱ ${t.toFixed(1)} s</p>
+    <p>${R.penal ? "Penalidades: +" + R.penal + " s" : "Sem penalidades! 👏"}</p>
+    <p>Ouro até ${p.ouro} s · prata até ${p.prata} s</p><p style="font-size:20px">+${moedas} 🪙 · +20 XP</p>` +
+    rodapeTela(`<button class="btn" onclick="iniciaProva('${p.id}')">🔁 Tentar de novo</button>`), 2.5, () => irPara("mapa"));
+}
+
+// ----- ARENA: campeonatos com pódio -----
+function menuArena() {
+  tela(`<h2>🏟️ Arena de Campeonatos</h2>${linhaCavalo()}<div class="opcoes">` +
+    CONFIG.campeonatos.map(c => opcao(`iniciaCampeonato('${c.id}')`, c.emoji, c.nome, E.nivel < c.nivel ? "Abre no nível " + c.nivel : c.desc, E.nivel < c.nivel)).join("") +
+    `</div><p>Troféus na estante: ${E.trofeus.length ? E.trofeus.map(t => t.emoji).join(" ") : "nenhum ainda"}</p>` + rodapeTela());
+}
+function iniciaCampeonato(id) {
+  fechaTela();
+  const c = CONFIG.campeonatos.find(x => x.id === id);
+  if (id === "corrida") iniciaTrilha({ titulo: c.nome, comprimento: DEMO ? CONFIG.demo.comprimentoCorrida : c.comprimento, cenario: "arena", rivais: true, objs: [],
+    dica: "Galope para vencer, mas a energia acaba! Trote um pouco quando ficar vermelha.", aoTerminar: () => fimCampeonato(c) });
+  else iniciaTrilha({ titulo: c.nome, comprimento: c.comprimento, cenario: "arena", cronometro: true, prova: { penalidade: 4 },
+    objs: objsProva(c.saltos, c.comprimento, "cerca"), dica: "Pule todos os obstáculos no menor tempo!", aoTerminar: () => fimCampeonato(c) });
+}
+function fimCampeonato(c) {
+  // tempos de todo mundo → classificação
+  const lista = [{ nome: "Você", cavalo: nomeAtivo(), t: R.tFinal, voce: true, roupa: E.personagem.roupa }];
+  CONFIG.rivais.forEach((r, k) => {
+    let t;
+    if (c.id === "corrida") { const rv = R.rivais[k]; t = rv.chegou !== null ? rv.chegou : R.tempo + (R.cfg.comprimento - rv.x) / Math.max(150, rv.v); }
+    else t = c.comprimento / (CONFIG.andaduras[3].vel * (r.rapidez + .02)) + [4, 0, 4, 8][(E.corridas + k) % 4] * Math.random();
+    lista.push({ nome: r.nome, cavalo: r.cavalo, t, roupa: r.roupa });
+  });
+  lista.sort((a, b) => a.t - b.t);
+  const pos = lista.findIndex(x => x.voce) + 1, moedas = CONFIG.premiosCampeonato[pos - 1];
+  const emoji = ["🏆", "🥈", "🥉", "🎗️"][pos - 1];
+  if (pos <= 3) E.trofeus.push({ nome: c.nome, lugar: pos, emoji }); else E.medalhas.push({ nome: c.nome + " (participação)", emoji });
+  E.corridas++; ganhaMoedas(moedas); ganhaXP(pos === 1 ? 40 : 25); if (c.id === "corrida") evento("corrida"); salvar();
+  const bloco = (x, h, cor, p) => x ? `<div style="height:${h}px;background:${cor}" class="${x.voce ? "voce" : ""}"><span>${["🏆", "🥈", "🥉"][p]}</span>${x.nome}<br><small>${x.t.toFixed(1)} s</small></div>` : "";
+  tela(`<h2>${pos === 1 ? (E.personagem.tipo === "menino" ? "🏆 CAMPEÃO!" : "🏆 CAMPEÃ!") : pos + "º lugar!"}</h2><p><b>${c.nome}</b></p>
+    <div class="podio">${bloco(lista[1], 90, "#e5e7eb", 1)}${bloco(lista[0], 130, "#FACC15", 0)}${bloco(lista[2], 70, "#d97706", 2)}</div>
+    <p>4º: ${lista[3].nome} (${lista[3].t.toFixed(1)} s)</p>
+    <p style="font-size:22px">${emoji} +${moedas} 🪙 · +${pos === 1 ? 40 : 25} XP</p>${pos > 1 ? "<p><small>Dica: cavalo bem cuidado corre até 15% mais!</small></p>" : ""}` +
+    rodapeTela(`<button class="btn" onclick="iniciaCampeonato('${c.id}')">🔁 Revanche</button>`), 3, () => irPara("mapa"));
+}
+
+// =====================================================================
+// CIDADE: sua casa (estante de troféus), escola normal, loja e vizinha
+// =====================================================================
+const PREDIOS = [
+  { id: "casa",    nome: "Minha casa",      cor: "#fde68a", telhado: "#b45309" },
+  { id: "escolaN", nome: "Escola",          cor: "#bfdbfe", telhado: "#1d4ed8" },
+  { id: "loja",    nome: "Loja de prêmios", cor: "#fecaca", telhado: "#b91c1c" },
+  { id: "vizinha", nome: "Casa da vizinha", cor: "#bbf7d0", telhado: "#15803d" },
+];
+let vizinhaT = 0;
+CENAS.cidade = {
+  entra() { aviso("Toque numa casa da cidade 🏘️"); },
+  draw() {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#93c5fd"); g.addColorStop(1, "#e0f2fe");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#6b7280"; ctx.fillRect(0, base - 30, W, H); ctx.fillStyle = "#fde047";
+    for (let x = 0; x < W; x += 60) ctx.fillRect(x, base - 12, 30, 5);
+    const rs = grade(PREDIOS.length, 900); CENAS.cidade.rects = rs;
+    rs.forEach((r, i) => {
+      const p = PREDIOS[i], tw = r.w * .8, tx = r.x + (r.w - tw) / 2, ty = r.y + r.h * .3, th = r.h * .58;
+      poli([[tx - 8, ty + 2], [r.x + r.w / 2, r.y + 8], [tx + tw + 8, ty + 2]], p.telhado, TINTA, 3);
+      caixa(tx, ty, tw, th, 4, p.cor, TINTA, 3);
+      caixa(r.x + r.w / 2 - tw * .12, ty + th * .45, tw * .24, th * .55, 3, "#7c2d12", TINTA, 2.5);
+      caixa(tx + tw * .1, ty + th * .15, tw * .22, th * .25, 3, "#fef9c3", TINTA, 2); caixa(tx + tw * .68, ty + th * .15, tw * .22, th * .25, 3, "#fef9c3", TINTA, 2);
+      if (p.id === "escolaN") { caixa(r.x + r.w / 2 - 2, r.y - 4, 4, 24, 1, "#fff"); poli([[r.x + r.w / 2 + 2, r.y - 4], [r.x + r.w / 2 + 22, r.y + 2], [r.x + r.w / 2 + 2, r.y + 8]], "#22c55e", TINTA, 2); }
+      if (p.id === "loja") texto("🛍️", tx + tw * .21, ty + th * .27, 18, "#fff", "center", false);
+      if (p.id === "casa") texto("🏆", tx + tw * .79, ty + th * .27, 18, "#fff", "center", false);
+      caixa(r.x + 8, r.y + r.h - 32, r.w - 16, 28, 9, "#fff", TINTA, 2.5);
+      texto(p.nome, r.x + r.w / 2, r.y + r.h - 18, clamp(r.w / 13, 12, 18), "#1a1206", "center", false);
+    });
+  },
+  down(x, y) { (CENAS.cidade.rects || []).forEach((r, i) => { if (dentro(r, x, y)) abrePredio(PREDIOS[i].id); }); },
+};
+function abrePredio(id) {
+  if (id === "loja") return telaLoja();
+  if (id === "casa") return telaEstante();
+  if (id === "escolaN") return telaQuiz();
+  if (id === "vizinha") {
+    const c = cavaloAtivo();
+    if (relogio - vizinhaT > 20) { vizinhaT = relogio; ganhaMoedas(3); if (c) c.carinho = Math.min(100, c.carinho + 10); }
+    tela(`<h2>👵 Dona Rosa, a vizinha</h2><p>"Que cavalo lindo${c ? ", o " + c.nome : ""}! Tome uma cenoura para ele 🥕 e umas moedinhas para você."</p><p>+3 🪙 · carinho do cavalo +10</p>` +
+      rodapeTela(`<button class="btn" onclick="irPara('cidade')">🏘️ Voltar à cidade</button>`), 2);
+  }
+}
+function telaLoja(msg = "") {
+  tela(`<h2>🛍️ Loja de prêmios</h2><p>Você tem <b>${fmt(E.moedas)} 🪙</b>. O item aparece no seu cavalo ou em você!</p>${msg ? "<p><b>" + msg + "</b></p>" : ""}
+    <div class="grade">` + CONFIG.itens.map(it => {
+      const tem = E.itens.includes(it.id), usando = E.equip[it.tipo] === it.id;
+      return `<div><span>${it.emoji}</span><b>${it.nome}</b><br>${tem ? (usando ? "✅ usando" : "") : it.preco + " 🪙"}<br>
+        <button class="btn mini ${tem ? "sec" : ""}" style="margin-top:6px" onclick="comprar('${it.id}')">${tem ? (usando ? "Tirar" : "Usar") : "Comprar"}</button></div>`;
+    }).join("") + `</div>` + rodapeTela(`<button class="btn sec" onclick="irPara('cidade')">🏘️ Cidade</button>`), 2);
+}
+function comprar(id) {
+  const it = item(id);
+  if (E.itens.includes(id)) { E.equip[it.tipo] = E.equip[it.tipo] === id ? null : id; salvar(); return telaLoja(); }
+  if (E.moedas < it.preco) { som("erro"); return telaLoja("Faltam " + (it.preco - E.moedas) + " 🪙. Cumpra missões e campeonatos!"); }
+  E.moedas -= it.preco; E.itens.push(id); E.equip[it.tipo] = id; som("festa"); confete(W / 2, H / 3, 30);
+  festa("NOVO ITEM!", it.emoji + " " + it.nome); ganhaXP(10); evento("comprar"); salvar(); telaLoja("Você comprou: " + it.emoji + " " + it.nome + "!");
+}
+function telaEstante() {
+  const sec = (tit, arr, vazio) => `<p style="margin-top:12px"><b>${tit}</b></p>` + (arr.length ? `<div class="grade">${arr.join("")}</div>` : `<p><small>${vazio}</small></p>`);
+  const racas = new Set(E.cavalos.map(c => c.raca));
+  tela(`<h2>🏠 Minha casa · Estante</h2>` +
+    sec("🏆 Troféus", E.trofeus.map(t => `<div><span>${t.emoji}</span>${t.lugar}º · ${t.nome}</div>`), "Vença um campeonato na Arena!") +
+    sec("🏅 Medalhas", E.medalhas.map(m => `<div><span>${m.emoji}</span>${m.nome}</div>`), "Faça provas na Escola de Equitação.") +
+    sec("📜 Certificados", E.certificados.map(c => `<div><span>📜</span>${c}</div>`), "Faça aulas na Escola de Equitação.") +
+    sec(`🐴 Cavalos (${racas.size}/${CONFIG.racas.length} raças)`, E.cavalos.map(c => `<div><span>🐴</span><b>${c.nome}</b><br>${CONFIG.racas[c.raca].nome}</div>`), "Lace cavalos no curral.") +
+    sec("🎒 Itens", E.itens.map(i => `<div><span>${item(i).emoji}</span>${item(i).nome}</div>`), "Compre na Loja de prêmios.") +
+    rodapeTela(`<button class="btn" onclick="irPara('cidade')">🏘️ Cidade</button>`), 2);
+}
+function telaQuiz() {
+  const q = CONFIG.quiz[E.quizIdx % CONFIG.quiz.length];
+  tela(`<h2>🏫 Escola · Aula de ciências</h2><p style="font-size:19px"><b>${q.p}</b></p><div class="opcoes">` +
+    q.r.map((r, i) => `<button class="op" onclick="responde(${i})"><span class="em">${"ABC"[i]}</span><b>${r}</b></button>`).join("") + `</div>` + rodapeTela(), 2);
+}
+function responde(i) {
+  const q = CONFIG.quiz[E.quizIdx % CONFIG.quiz.length]; E.quizIdx++;
+  const certo = i === q.c;
+  if (certo) { som("ok"); ganhaMoedas(10); ganhaXP(12); evento("escola"); } else { som("erro"); ganhaXP(4); }
+  salvar();
+  tela(`<h2>${certo ? "✅ Acertou!" : "❌ Quase!"}</h2><p>${q.p}<br>Resposta: <b>${q.r[q.c]}</b></p><p>${certo ? "+10 🪙 · +12 XP" : "+4 XP por tentar"}</p>` +
+    rodapeTela(`<button class="btn" onclick="telaQuiz()">❓ Outra pergunta</button><button class="btn sec" onclick="irPara('cidade')">🏘️ Cidade</button>`), 2);
+}
+
+// =====================================================================
+// BAILE: toque no tempo certo, quando a nota chega no círculo
+// =====================================================================
+const B = { notas: [], t: 0, perf: 0, bom: 0, erro: 0, combo: 0, fim: false, giro: 0, msg: null };
+CENAS.baile = {
+  entra() {
+    const bt = 60 / CONFIG.baile.bpm; let t = 0;
+    B.notas = []; for (let i = 0; i < CONFIG.baile.notas; i++) { B.notas.push({ t, feito: null }); t += bt * (i % 4 === 3 ? 2 : 1); }
+    Object.assign(B, { t: -2.2, perf: 0, bom: 0, erro: 0, combo: 0, fim: false, giro: 0, msg: null, chamou: false });
+  },
+  update(dt) {
+    if (B.fim) return;
+    const ant = B.t; B.t += dt; B.giro = Math.max(0, B.giro - dt);
+    for (const n of B.notas) {
+      if (ant < n.t && B.t >= n.t) tom(n.t % 1 < .3 ? 523 : 659, .12, "triangle", .05);
+      if (n.feito === null && B.t > n.t + CONFIG.baile.bom) { n.feito = "erro"; B.erro++; B.combo = 0; B.msg = { txt: "Errou", cor: "#f87171", t: .6 }; }
+    }
+    if (B.msg && (B.msg.t -= dt) <= 0) B.msg = null;
+    if (B.t > B.notas[B.notas.length - 1].t + 1) { B.fim = true; fimBaile(); }
+  },
+  draw() {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#3b0764"); g.addColorStop(1, "#7e22ce");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // luzinhas penduradas e globo
+    for (let x = 10; x < W; x += 34) circ(x, topo + 12 + Math.sin(x) * 6, 6, ["#FACC15", "#22c55e", "#ec4899", "#38bdf8"][(Math.floor(x / 34) + Math.floor(relogio * 3)) % 4], TINTA, 2);
+    const gx = W / 2, gy = topo + 60; caixa(gx - 1, topo, 2, 40, 1, "#ddd", null);
+    circ(gx, gy, 24, "#e5e7eb", TINTA, 3);
+    for (let i = 0; i < 6; i++) { const a = relogio * 1.5 + i; ctx.fillStyle = "#ffffff33"; ctx.beginPath(); ctx.arc(gx + Math.cos(a) * W * .4, base - 100 + Math.sin(a * 1.3) * 60, 26, 0, 7); ctx.fill(); }
+    // chão de madeira
+    const fy = base - 70; ctx.fillStyle = "#a16207"; ctx.fillRect(0, fy, W, H);
+    for (let x = -40; x < W + 40; x += 40) { ctx.strokeStyle = "#78350f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + (x - W / 2) * .4, H); ctx.stroke(); }
+    // o casal dançando (gira no "perfeito")
+    const bt = 60 / CONFIG.baile.bpm, fase = (B.t / bt) * Math.PI, s = clamp((fy - topo - 140) / 120, .9, 1.6);
+    const par = { tipo: E.personagem.tipo === "menino" ? "menina" : "menino", roupa: "#0ea5e9" };
+    [[eu(), -1], [par, 1]].forEach(([p, lado]) => {
+      ctx.save(); ctx.translate(W / 2 + lado * 34 * s, fy + 10);
+      if (B.giro > 0) ctx.scale(Math.cos(B.giro * 20), 1);
+      desenhaPessoa(p, "danca", 0, -Math.abs(Math.sin(fase)) * 6, s, fase + (lado > 0 ? Math.PI : 0)); ctx.restore();
+    });
+    // trilho das notas
+    const ly = base - 34, tx = Math.max(60, W * .2), vel = (W - tx) / 1.6;
+    caixa(10, ly - 26, W - 20, 52, 26, "#00000066", TINTA, 2);
+    circ(tx, ly, 22, "#00000000", "#FACC15", 5);
+    for (const n of B.notas) {
+      if (n.feito) continue; const x = tx + (n.t - B.t) * vel; if (x > W + 30 || x < -30) continue;
+      circ(x, ly, 17, "#ec4899", TINTA, 3); texto("❤", x, ly + 1, 16, "#fff", "center", false);
+    }
+    if (B.msg) { ctx.font = "800 24px system-ui"; texto(B.msg.txt, Math.max(tx, ctx.measureText(B.msg.txt).width / 2 + 12), ly - 50, 24, B.msg.cor); }
+    if (B.t < 0) texto(Math.ceil(-B.t) > 2 ? "Prepare-se!" : String(Math.ceil(-B.t)), W / 2, topo + 130, 46, "#FACC15");
+    if (B.t < 2) quebraTexto("Toque (ou Espaço) quando o ❤ chegar no círculo amarelo!", Math.min(W - 40, 520), 17)
+      .forEach((l, i) => texto(l, W / 2, topo + 180 + i * 24, 17, "#fff"));
+    texto("Perfeito " + B.perf + " · Bom " + B.bom + (B.combo > 2 ? " · Combo x" + B.combo : ""), W / 2, gy + 44, 16, "#fff");
+  },
+  down() { bateBaile(); },
+  tecla(k, baixo) { if (baixo && (k === " " || k === "enter")) { bateBaile(); return true; } },
+};
+function bateBaile() {
+  if (B.fim || modo !== "baile") return;
+  let melhor = null, d = 1;
+  for (const n of B.notas) if (n.feito === null && Math.abs(n.t - B.t) < d) { d = Math.abs(n.t - B.t); melhor = n; }
+  if (!melhor || d > .35) return;
+  if (d <= CONFIG.baile.perfeito) { melhor.feito = "perf"; B.perf++; B.combo++; B.giro = .3; B.msg = { txt: "PERFEITO!", cor: "#FACC15", t: .6 }; confete(W / 2, base - 160, 8); }
+  else if (d <= CONFIG.baile.bom) { melhor.feito = "bom"; B.bom++; B.combo++; B.msg = { txt: "Bom!", cor: "#86efac", t: .6 }; }
+  else { melhor.feito = "erro"; B.erro++; B.combo = 0; B.msg = { txt: "Fora do ritmo", cor: "#f87171", t: .6 }; }
+  if (melhor.feito !== "erro") tom(880, .08, "sine", .05);
+}
+function fimBaile() {
+  const N = B.notas.length, pct = (B.perf * 2 + B.bom) / (N * 2), moedas = 5 + B.perf * 2 + B.bom;
+  let extra = "";
+  const titulo = E.personagem.tipo === "menino" ? "Rei do Baile" : "Rainha do Baile";
+  if (pct >= .6 && !E.medalhas.some(m => m.nome === titulo)) { E.medalhas.push({ nome: titulo, emoji: "👑" }); extra += `<p>👑 Nova medalha: <b>${titulo}</b></p>`; }
+  if (!E.itens.includes("fita-rosa")) { E.itens.push("fita-rosa"); E.equip.fita = "fita-rosa"; extra += "<p>🎀 Prêmio: <b>Fita na crina</b> para o seu cavalo!</p>"; }
+  E.bailes++; ganhaMoedas(moedas); ganhaXP(20); evento("baile"); salvar(); som("festa");
+  tela(`<h2>💃 Fim do baile!</h2><p style="font-size:20px">Perfeito: ${B.perf} · Bom: ${B.bom} · Errou: ${B.erro}</p>
+    <p style="font-size:22px">${pct >= .8 ? "⭐⭐⭐" : pct >= .5 ? "⭐⭐" : "⭐"} +${moedas} 🪙 · +20 XP</p>${extra}` +
+    rodapeTela(`<button class="btn" onclick="irPara('baile')">🔁 Dançar de novo</button>`), 2.5, () => irPara("mapa"));
+}
+
+// =====================================================================
+// TELA INICIAL: escolher menino ou menina, cor da roupa e nome do cavalo
+// =====================================================================
+const escolha = { tipo: "menina", roupa: CONFIG.coresRoupa[0] };
+function previa(canvas, tipo) {               // desenha o personagem num canvas pequeno
+  const real = ctx; ctx = canvas.getContext("2d");
+  canvas.width = 192; canvas.height = 220; ctx.setTransform(2, 0, 0, 2, 0, 0);
+  ctx.fillStyle = "#bbf7d0"; ctx.fillRect(0, 80, 96, 30); ctx.fillStyle = "#bae6fd"; ctx.fillRect(0, 0, 96, 80);
+  desenhaPessoa({ tipo, roupa: escolha.roupa }, "pe", 48, 104, 1.05);
+  ctx = real;
+}
+function telaInicio() {
+  const s = carrega();
+  if (s) { escolha.tipo = s.personagem.tipo; escolha.roupa = s.personagem.roupa; }
+  const P = CONFIG.personagens;
+  tela(`<h1>🐴 ${CONFIG.titulo}</h1>
+    <p>${CONFIG.comoJogar1}<br>${CONFIG.comoJogar2}</p>
+    <div class="escolha">${Object.keys(P).map(t => `<button class="pers ${escolha.tipo === t ? "sel" : ""}" data-tipo="${t}"><canvas></canvas>${P[t].nome}</button>`).join("")}</div>
+    <div class="cores">${CONFIG.coresRoupa.map(c => `<button class="cor ${escolha.roupa === c ? "sel" : ""}" data-cor="${c}" style="background:${c}" aria-label="cor da roupa"></button>`).join("")}</div>
+    <p style="margin:8px 0 4px">Nome do seu cavalo:</p>
+    <input id="nome-cavalo" maxlength="12" value="${s ? (s.cavalos[0] ? s.cavalos[0].nome : s.nomeCavalo) : CONFIG.nomeCavaloPadrao}">
+    <div class="linha"><button class="btn" id="b-jogar">▶ Jogar</button><button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    ${s ? `<p style="font-size:13px">Seu rancho está salvo: nível ${s.nivel}, ${s.cavalos.length} cavalo(s). <a href="#" id="b-zera" style="color:#a8a8b3">Recomeçar do zero</a></p>` : ""}`);
+  const redesenha = () => document.querySelectorAll(".pers").forEach(b => { b.classList.toggle("sel", b.dataset.tipo === escolha.tipo); previa(b.querySelector("canvas"), b.dataset.tipo); });
+  document.querySelectorAll(".pers").forEach(b => b.onclick = () => { escolha.tipo = b.dataset.tipo; som("ok"); redesenha(); });
+  document.querySelectorAll(".cor").forEach(b => b.onclick = () => { escolha.roupa = b.dataset.cor; document.querySelectorAll(".cor").forEach(x => x.classList.toggle("sel", x === b)); redesenha(); });
+  redesenha();
+  $("b-jogar").onclick = comecar;
+  if ($("b-zera")) $("b-zera").onclick = e => { e.preventDefault(); try { localStorage.removeItem(CHAVE); } catch (_) {} E = null; telaInicio(); };
+}
+function comecar() {
+  const nome = ($("nome-cavalo").value || "").trim().slice(0, 12) || CONFIG.nomeCavaloPadrao;
+  E = carrega() || novoEstado();
+  E.personagem = { tipo: escolha.tipo, roupa: escolha.roupa };
+  E.nomeCavalo = nome; if (E.cavalos[0]) E.cavalos[0].nome = nome;
+  salvar(); fechaTela();
+  $("hud").classList.remove("hidden"); atualizaHUD();
+  setModo("mapa");
+  aviso("Toque no lugar que está brilhando: é onde está a sua missão! ✨", 3.5);
+}
+
+// ---------- criar a minha versão ----------
+function telaCriar() {
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: raças, cores, velocidades das andaduras, aventuras, aulas, itens da loja, missões.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>${CONFIG.promptExemplo}</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="E && !$('hud').classList.contains('hidden') ? fechaTela() : telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-rancho-dos-cavalos.html"; a.click();
+}
+
+// =====================================================================
+// DEMONSTRAÇÃO (?demo=1): o jogo joga sozinho no telão do estande
+// =====================================================================
+const DM = { etapa: -1, t: 0, f: {}, mao: null };
+function estadoDemo() {
+  const e = novoEstado();
+  e.personagem = { tipo: Math.random() < .5 ? "menina" : "menino", roupa: CONFIG.coresRoupa[Math.floor(Math.random() * CONFIG.coresRoupa.length)] };
+  e.nomeCavalo = CONFIG.demo.nomeCavalo; return e;
+}
+// pilota o cavalo: troca andadura, pula obstáculos e acalma nos sustos
+function pilotoDemo() {
+  if (R.terminou) return;
+  R.acalmando = !!R.susto;
+  const ob = R.objs.find(o => (o.tipo === "tronco" || o.tipo === "cerca") && !o.passou && o.x > R.x);
+  if (ob && ob.x - R.x < R.v * .3 + 26 && R.v > 40) pular();
+  let g;
+  const p = passoAula();
+  if (p) g = { passo: 1, trote: 2, galope: 3, parar: 0, pular: 2, acalmar: 1 }[p.pede] ?? p.andadura;
+  else if (R.rivais) g = R.energia > 15 ? 3 : 2;
+  else g = R.emRio ? 1 : R.tempo < 2 ? 1 : R.tempo < 5 ? 2 : R.tempo < 8.5 && R.energia > 20 ? 3 : 2;
+  if (g === 3 && R.energia < 10) g = 2;
+  if (g !== R.g) mudaAndadura(g);
+}
+// arrasta a "mão" da demo entre dois pontos (escovar, limpar, carinho)
+function arrastoDemo(nome, t0, t1, ponto) {
+  if (DM.t < t0) return;
+  const f = DM.f;
+  if (DM.t <= t1) { const p = ponto((DM.t - t0) / (t1 - t0)); DM.mao = p; if (!f[nome]) { f[nome] = 1; CENAS[modo].down(p.x, p.y); } else CENAS[modo].move(p.x, p.y); }
+  else if (f[nome] === 1) { f[nome] = 2; const p = ponto(1); CENAS[modo].up(p.x, p.y); DM.mao = null; }
+}
+const ETAPAS = [
+  { ini() { irPara("fazenda"); }, passo() {                       // 1) laçar dois cavalos
+      if (!CU.girando && !CU.laco && !CU.pegando && CU.cavalos.length && DM.t > .8) { DM.alvo = CU.cavalos[0]; CU.mira = centroCavalo(DM.alvo, .5); lacoGira(CU.mira); }
+      else if (CU.girando && DM.alvo) { CU.mira = centroCavalo(DM.alvo, .45); DM.mao = CU.mira; const z = zonaVerde(); if (forcaLaco() >= (z[0] + z[1]) / 2) lacoSolta(true); }
+      return E.cavalos.length >= 2 && !CU.pegando || DM.t > 16; } },
+  { ini() { setModo("estabulo"); }, passo() {                      // 2) cuidar
+      const L = estabuloLayout(), f = DM.f, c = cavaloAtivo();
+      if (DM.t > .5 && !f.feno) { f.feno = 1; dar("feno"); }
+      if (DM.t > 1.4 && !f.agua) { f.agua = 1; dar("agua"); }
+      arrastoDemo("escova", 2.2, 4.8, k => ({ x: L.corpo.x + L.corpo.w * (.5 + .45 * Math.sin(k * 14)), y: L.corpo.y + L.corpo.h * (.3 + .4 * k) }));
+      if (c && c.sujeira) { const p0 = posMonte(0, c.sujeira), r = L.carrinho; arrastoDemo("monte", 5.2, 6.4, k => ({ x: lerp(p0.x, r.x + r.w / 2, k), y: lerp(p0.y, r.y + r.h / 2, k) - Math.sin(k * 3.14) * 40 })); }
+      arrastoDemo("carinho", 6.8, 8, k => ({ x: L.cabeca.x + L.cabeca.w * (.3 + .3 * Math.sin(k * 12)), y: L.cabeca.y + L.cabeca.h * .5 }));
+      if (DM.t > 8.3 && !f.cen) { f.cen = 1; dar("cenoura"); }
+      return DM.t > 9.4; } },
+  { ini() { iniciaAventura(0); }, passo() { pilotoDemo(); return R.chamou && !telaAberta(); } },          // 3) passeio
+  { ini() { iniciaAula(0); }, passo() { pilotoDemo(); return R.chamou && !telaAberta(); } },             // 4) aula
+  { ini() { iniciaCampeonato("corrida"); }, passo() { pilotoDemo(); return R.chamou && !telaAberta(); } }, // 5) corrida
+  { ini() { setModo("baile"); }, passo() {                         // 6) baile
+      for (const n of B.notas) if (n.feito === null && Math.abs(n.t - B.t) < .03 && Math.random() < .9) { bateBaile(); break; }
+      return B.fim && !telaAberta(); } },
+  { ini() { setModo("cidade"); }, passo() {                        // 7) cidade: loja e escola
+      const f = DM.f;
+      if (DM.t > 1 && !f.loja) { f.loja = 1; const it = CONFIG.itens.filter(i => i.preco <= E.moedas && !E.itens.includes(i.id)).pop(); telaLoja(); if (it) comprar(it.id); }
+      if (DM.t > 3.6 && !f.quiz) { f.quiz = 1; telaQuiz(); }
+      if (DM.t > 5.2 && !f.resp) { f.resp = 1; responde(CONFIG.quiz[E.quizIdx % CONFIG.quiz.length].c); }
+      return DM.t > 7.5; } },
+  { ini() { irPara("mapa"); }, passo() { if (DM.t > 3) { E = estadoDemo(); atualizaHUD(); DM.etapa = -1; } return false; } },
+];
+function demoPasso(dt) {
+  DM.t += dt;
+  if (DM.etapa < 0 || ETAPAS[DM.etapa].passo()) {
+    DM.etapa = DM.etapa + 1; DM.t = 0; DM.f = {}; DM.mao = null;
+    fechaTela(); ETAPAS[DM.etapa].ini();
+  }
+}
+
+// =====================================================================
+// LAÇO PRINCIPAL: atualiza e desenha ~60 vezes por segundo
+// =====================================================================
+let ultimo = performance.now(), hudT = 0;
+function fundoInicio() {                      // atrás da tela inicial: um cavalo galopando
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#7cc8f5"); g.addColorStop(1, "#dff3ff");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#5cb85c"; ctx.fillRect(0, H * .72, W, H);
+  desenhaCavalo(W / 2, H * .74, clamp(W / 500, .8, 1.6), { ...corDaRaca(0), and: 3, fase: relogio * 15, itens: { sela: "#7c4a1e", manta: "#b91c1c", redea: "#3b2414" }, montador: { tipo: escolha.tipo, roupa: escolha.roupa } });
+}
+function laco(agora) {
+  const dt = Math.min(.05, (agora - ultimo) / 1000); ultimo = agora; relogio += dt;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  medeLayout();
+  if (E) {
+    if (!telaAberta() && CENAS[modo].update) CENAS[modo].update(dt);
+    CENAS[modo].draw();
+  } else fundoInicio();
+  atualizaParts(dt); desenhaParts();
+  if (DEMO && DM.mao) texto("👆", DM.mao.x + 10, DM.mao.y + 18, 38, "#fff", "center", false);
+  if (avisoT > 0 && (avisoT -= dt) <= 0) $("aviso").style.opacity = 0;
+  tocaFestas(dt);
+  if (telaAuto > 0 && (telaAuto -= dt) <= 0) { const fn = telaDepois; fechaTela(); if (fn) fn(); }
+  if (DEMO && E) demoPasso(dt);
+  if (hudSujo && (hudT -= dt) <= 0) { hudT = .12; atualizaHUD(); }
+  requestAnimationFrame(laco);
+}
+
+// para o teste automático (testa.cjs) e para quem quiser espiar o jogo pelo console
+window.estadoDoJogo = () => !E ? { modo: "inicio" } : ({
+  modo, moedas: E.moedas, xp: E.xp, nivel: E.nivel, missoesFeitas: E.missoesFeitas, missao: textoMissao(missaoAtual()),
+  cavalos: E.cavalos.length, lacados: E.lacados, personagem: E.personagem.tipo, nomeCavalo: E.nomeCavalo,
+  andadura: R.g, velocidade: R.v, energia: R.energia, distancia: R.x, empinando: R.empina > .2, assustado: !!R.susto,
+  medo: R.susto ? R.susto.medo : 0, acalmados: E.acalmados, pulos: E.pulos, aulas: E.aulasFeitas, corridas: E.corridas,
+  provas: E.provasFeitas, bailes: E.bailes, aventuras: E.aventuras, trofeus: E.trofeus.length, medalhas: E.medalhas.length,
+  itens: E.itens.length, cuidado: cuidado(), limpeza: cavaloAtivo() ? cavaloAtivo().limpeza : 0, sujeira: cavaloAtivo() ? cavaloAtivo().sujeira : 0,
+  fome: cavaloAtivo() ? cavaloAtivo().fome : 0, curral: CU.cavalos.map(h => centroCavalo(h)), lugares: CENAS.mapa.rects || [],
+  estabulo: modo === "estabulo" ? estabuloLayout() : null, demoEtapa: DM.etapa,
+});
+
+// ---------- começo ----------
+$("rodape").textContent = "Fábrica de Jogos INEMA · v" + VERSAO;
+if (DEMO) { E = estadoDemo(); $("hud").classList.remove("hidden"); atualizaHUD(); setModo("mapa"); }
+else telaInicio();
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
