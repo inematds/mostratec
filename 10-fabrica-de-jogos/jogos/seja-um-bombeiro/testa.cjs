@@ -73,7 +73,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   await p.evaluate(() => telaCriar());
   await espera(300);
   await p.screenshot({ path: path.join(SHOTS, "criar-1280.png") });
-  const [dl] = await Promise.all([p.waitForEvent("download"), p.click("text=⬇ Baixar o jogo")]);
+  const [dl] = await Promise.all([p.waitForEvent("download"), p.click("#tela >> text=⬇ Baixar o jogo")]);
   const tmp = path.join(SHOTS, "_download.html");
   await dl.saveAs(tmp);
   const tamDl = fs.statSync(tmp).size, tamArq = fs.statSync(ARQ).size;
@@ -92,6 +92,41 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   const c1 = await m.evaluate(() => window.estadoDoJogo());
   ok(c1.y < c0.y - 30 || c1.x !== c0.x, `celular: arraste move (${c0.y.toFixed(0)} → ${c1.y.toFixed(0)})`);
   await m.screenshot({ path: path.join(SHOTS, "jogo-celular.png") });
+
+  // 5) faixa INEMA.CLUB + painel com QR (regra 17/10)
+  const faixa = await m.evaluate(() => { const r = document.getElementById("puxador").getBoundingClientRect();
+    const el = document.elementFromPoint(innerWidth / 2, innerHeight - 20);
+    return { top: r.top, bottom: r.bottom, h: r.height, vh: innerHeight, emCima: el && el.id };
+  });
+  ok(faixa.h === 46 && Math.abs(faixa.bottom - faixa.vh) <= 1 && faixa.emCima === "puxador",
+     `faixa amarela visível embaixo (${faixa.top}–${faixa.bottom} de ${faixa.vh}, toque cai em #${faixa.emCima})`);
+  const sobe = await m.evaluate(() => { const v = n => document.getElementById(n).getBoundingClientRect().bottom;
+    return { tanque: v("tanque"), botoes: v("botoes"), limite: innerHeight - 46 }; });
+  ok(sobe.tanque <= sobe.limite && sobe.botoes <= sobe.limite, `tanque e botões acima da faixa (${sobe.tanque.toFixed(0)}, ${sobe.botoes.toFixed(0)} ≤ ${sobe.limite})`);
+  await m.tap("#puxador");
+  await espera(1200);
+  const pain = await m.evaluate(() => { const q = document.querySelector("#qr-painel svg"); const r = q && q.getBoundingClientRect();
+    return { y: scrollY, alvo: Math.min(document.getElementById("painel").offsetTop, document.documentElement.scrollHeight - innerHeight), qr: !!q, qrTop: r && r.top, qrBot: r && r.bottom, qrW: r && r.width, vh: innerHeight }; });
+  ok(pain.qr && pain.y > 300 && Math.abs(pain.y - pain.alvo) <= 2 && pain.qrTop >= 0 && pain.qrBot <= pain.vh && pain.qrW > 150,
+     `puxador rola até o painel (scrollY ${pain.y}, QR ${pain.qrW && pain.qrW.toFixed(0)} px em ${pain.qrTop && pain.qrTop.toFixed(0)}–${pain.qrBot && pain.qrBot.toFixed(0)})`);
+  await m.screenshot({ path: path.join(SHOTS, "painel-celular.png") });
+  await m.tap("text=⬆ Voltar ao jogo");
+  await espera(1200);
+  const yv = await m.evaluate(() => scrollY);
+  ok(yv === 0, `"Voltar ao jogo" volta ao topo (scrollY ${yv})`);
+  // toque de verdade (eventos de touch) no canvas ainda move o bombeiro (para baixo: o arraste anterior levou o bombeiro ao topo do bairro)
+  const cdp = await m.context().newCDPSession(m);
+  const toque = async (type, x, y) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] });
+  const t0 = await m.evaluate(() => window.estadoDoJogo());
+  await toque("touchStart", 200, 450);
+  for (let i = 1; i <= 6; i++) { await toque("touchMove", 200, 450 + i * 20); await espera(30); }
+  await espera(700);
+  await toque("touchEnd");
+  await espera(100);
+  const t1 = await m.evaluate(() => window.estadoDoJogo());
+  const y2 = await m.evaluate(() => scrollY);
+  ok(t1.y > t0.y + 30 && y2 === 0, `toque no canvas move o bombeiro depois do painel (${t0.y.toFixed(0)} → ${t1.y.toFixed(0)}), página parada (scrollY ${y2})`);
+  await m.screenshot({ path: path.join(SHOTS, "jogo-celular-depois.png") });
   await m.evaluate(() => telaCriar());
   await espera(300);
   await m.screenshot({ path: path.join(SHOTS, "criar-celular.png") });
