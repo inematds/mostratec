@@ -39,3 +39,9 @@ O script de teste fica em `testa.cjs`, ao lado do `index.html`.
 ## Não fazer
 - Commit nem push (o agente principal faz).
 - Usar API, chave, serviço externo ou gerar imagem por IA.
+
+## Regra do Nei (17/10): INEMA.CLUB + QR em todo jogo
+- Embaixo do jogo, uma **faixa amarela fixa** ("⬆ INEMA.CLUB · Jogue no seu celular", 46 px). Os controles de baixo sobem para caber.
+- Ao tocar nela, ou ao **deslizar a tela para cima** no celular, aparece o **painel**: banner grande "Aprenda a criar jogos com IA — de graça — INEMA.CLUB", o **QR do jogo** (`qr-jogo.svg`, embutido no HTML), "⬇ Baixar o jogo", "⬆ Voltar ao jogo" e links para a Fábrica (`../../`) e para o inema.club.
+- O jogo continua fixo atrás: a página rola, mas só o canvas trava o gesto (`touch-action:none` no canvas, `pan-y` na página). Coordenadas de toque não mudam.
+- Implementação de referência: `jogos/evolua-a-capivara/index.html` (v0.3.0). Procure por `#rolagem`, `#painel`, `#puxador`.
