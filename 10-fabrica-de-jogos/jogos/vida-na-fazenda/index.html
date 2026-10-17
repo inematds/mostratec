@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vida na Fazenda — Fábrica de Jogos INEMA</title>
+<style>
+  :root { --amarelo:#FACC15; --preto:#0c0c10; --texto:#f5f5f5; --verde:#22c55e }
+  html,body { margin:0; height:100%; background:#7ccf5a; color:var(--texto); overflow:hidden;
+              touch-action:none; user-select:none; -webkit-user-select:none; font-family:system-ui,-apple-system,"Segoe UI",sans-serif }
+  canvas { display:block; width:100vw; height:100vh }
+  /* ---- barra do topo (moedas, nível, missão, celeiro) ---- */
+  #topo { position:fixed; top:8px; left:8px; right:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:stretch; z-index:2 }
+  .chip { background:rgba(12,12,16,.82); border:2px solid var(--preto); border-radius:12px; padding:5px 10px;
+          font-weight:800; font-size:clamp(13px,1.9vw,17px); display:flex; align-items:center; gap:6px; white-space:nowrap }
+  #c-moedas { color:var(--amarelo); font-size:clamp(17px,2.6vw,24px); min-width:86px }
+  #c-nivel { flex-direction:column; align-items:stretch; gap:3px; min-width:96px }
+  .barra { height:8px; background:#333; border-radius:99px; overflow:hidden }
+  .barra > i { display:block; height:100%; width:0; background:var(--amarelo); transition:width .25s }
+  #c-missao { flex:1 1 200px; flex-direction:column; align-items:stretch; gap:3px; min-width:0 }
+  #c-missao b { overflow:hidden; text-overflow:ellipsis }
+  #c-missao .barra > i { background:var(--verde) }
+  #c-missao.feita { background:#166534 }
+  .mini { background:rgba(12,12,16,.82); color:#fff; border:2px solid var(--preto); border-radius:12px; font-size:18px;
+          width:42px; cursor:pointer; padding:0 }
+  #celeiro { flex-basis:100%; display:flex; gap:5px; overflow:hidden; font-size:clamp(12px,1.7vw,15px) }
+  #celeiro span { background:rgba(255,255,255,.88); color:#1c1917; border:2px solid var(--preto); border-radius:99px;
+                  padding:1px 8px; font-weight:800; white-space:nowrap }
+  /* ---- barra de sementes (embaixo) ---- */
+  #sementes { position:fixed; left:8px; right:8px; bottom:15px; display:flex; gap:6px; justify-content:center; z-index:2 }
+  .sem { flex:1 1 0; max-width:130px; min-width:0; background:#fff8e1; color:#1c1917; border:3px solid var(--preto);
+         border-radius:14px; box-shadow:0 4px 0 var(--preto); padding:4px 2px; cursor:pointer; font-weight:800;
+         display:flex; flex-direction:column; align-items:center; line-height:1.1; font-size:clamp(11px,1.6vw,14px) }
+  .sem .e { font-size:clamp(22px,3.4vw,30px) }
+  .sem.sel { background:var(--amarelo); transform:translateY(-5px); box-shadow:0 9px 0 var(--preto) }
+  .sem.bloq { background:#9ca3af; color:#374151; cursor:default }
+  /* ---- telas (início, criar) ---- */
+  .btn { background:var(--amarelo); color:#1a1206; border:0; border-radius:12px; font-weight:800;
+         padding:12px 16px; font-size:clamp(14px,2vw,17px); cursor:pointer; box-shadow:0 4px 0 #a16207 }
+  .btn.sec { background:#1f2937; color:#fff; box-shadow:0 4px 0 #000 }
+  #tela { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(12,12,16,.86); z-index:5 }
+  #tela .caixa { max-width:560px; width:calc(100% - 32px); max-height:calc(100% - 32px); overflow:auto; text-align:center;
+                 padding:20px; border:1px solid #333; border-radius:16px; background:#14141b; box-sizing:border-box }
+  #tela h1 { margin:.2em 0; font-size:clamp(28px,6vw,46px); color:var(--amarelo) }
+  #tela p { line-height:1.45; color:#d4d4d8 }
+  #tela .linha { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+  #aviso { position:fixed; left:50%; top:45%; transform:translateX(-50%); background:#000d; padding:9px 15px; border-radius:12px;
+           font-weight:800; pointer-events:none; opacity:0; transition:opacity .3s; z-index:4; text-align:center;
+           font-size:clamp(14px,2.2vw,18px); max-width:90vw }
+  #banner { position:fixed; left:50%; top:38%; transform:translate(-50%,-50%) scale(0); z-index:4; pointer-events:none;
+            background:var(--amarelo); color:var(--preto); border:4px solid var(--preto); border-radius:20px; padding:14px 22px;
+            text-align:center; font-weight:900; font-size:clamp(20px,4vw,34px); box-shadow:0 8px 0 var(--preto);
+            transition:transform .35s cubic-bezier(.3,1.6,.5,1); max-width:86vw }
+  #banner small { display:block; font-size:clamp(13px,2vw,17px); font-weight:700; margin-top:4px }
+  #banner.on { transform:translate(-50%,-50%) scale(1) }
+  #dedo { position:fixed; width:44px; height:44px; margin:-8px 0 0 -14px; font-size:38px; pointer-events:none; z-index:6;
+          filter:drop-shadow(0 3px 2px #0008); transition:transform .1s }
+  #dedo.toca { transform:scale(.8) }
+  #rodape { position:fixed; left:0; right:0; text-align:center; bottom:1px; font-size:10px; color:#ffffffaa; pointer-events:none; z-index:1 }
+  .hidden { display:none !important }
+  pre { text-align:left; background:#0b0b0f; padding:10px; border-radius:10px; overflow:auto; max-height:32vh; font-size:12px; white-space:pre-wrap }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="topo">
+  <div class="chip" id="c-moedas">🪙 0</div>
+  <div class="chip" id="c-nivel"><span id="t-nivel">Nível 1</span><div class="barra"><i id="b-xp"></i></div></div>
+  <div class="chip" id="c-missao"><b id="t-missao">…</b><div class="barra"><i id="b-missao"></i></div></div>
+  <button class="mini" id="b-som" title="Som">🔊</button>
+  <button class="mini" id="b-menu" title="Menu">☰</button>
+  <div id="celeiro"></div>
+</div>
+<div id="sementes"></div>
+<div id="aviso"></div>
+<div id="banner"></div>
+<div id="dedo" class="hidden">👆</div>
+<div id="rodape">Fábrica de Jogos INEMA · v0.1.0</div>
+<div id="tela"><div class="caixa" id="tela-conteudo"></div></div>
+
+<script>
+/* =====================================================================
+   VIDA NA FAZENDA — Fábrica de Jogos INEMA (versão 0.1.0)
+   ---------------------------------------------------------------------
+   QUER CRIAR A SUA VERSÃO? Comece mudando os valores do CONFIG abaixo.
+   Salve o arquivo e abra de novo no navegador para ver o efeito.
+   Depois, peça para uma IA: "neste jogo, adicione uma ovelha que dá lã..."
+   ===================================================================== */
+const CONFIG = {
+  titulo: "Vida na Fazenda",
+  moedasIniciais: 20,          // com quantas moedas você começa
+  presenteVizinho: 5,          // moedas que o vizinho dá se você ficar sem nada (assim ninguém fica preso)
+
+  // SEMENTES: preço da semente, preço de venda, tempo para crescer (segundos),
+  // XP ganho ao colher e o nível em que a semente aparece.
+  sementes: [
+    { id: "cenoura", nome: "Cenoura",         curto: "Cenoura", emoji: "🥕", preco: 1,  venda: 4,  tempo: 3, xp: 2,  nivel: 1 },
+    { id: "trigo",   nome: "Trigo",           curto: "Trigo",   emoji: "🌾", preco: 2,  venda: 5,  tempo: 4, xp: 3,  nivel: 2 },
+    { id: "milho",   nome: "Milho",           curto: "Milho",   emoji: "🌽", preco: 3,  venda: 9,  tempo: 5, xp: 4,  nivel: 3 },
+    { id: "morango", nome: "Morango",         curto: "Morango", emoji: "🍓", preco: 5,  venda: 15, tempo: 6, xp: 6,  nivel: 4 },
+    { id: "abobora", nome: "Abóbora gigante", curto: "Abóbora", emoji: "🎃", preco: 12, venda: 45, tempo: 9, xp: 15, nivel: 7 },
+  ],
+
+  // ANIMAIS: compre uma vez e eles produzem sozinhos a cada "tempo" segundos.
+  animais: [
+    { id: "galinha", nome: "Galinha", produto: "ovo",   preco: 30,  tempo: 5, nivel: 2 },
+    { id: "vaca",    nome: "Vaca",    produto: "leite", preco: 100, tempo: 7, nivel: 4 },
+    { id: "abelha",  nome: "Abelhas", produto: "mel",   preco: 120, tempo: 8, nivel: 6 },
+  ],
+
+  // MÁQUINAS: juntam ingredientes do celeiro e fazem um produto mais caro.
+  maquinas: [
+    { id: "padaria",    nome: "Padaria",    receita: { trigo: 1, ovo: 1 },     produto: "pao",     preco: 60,  tempo: 4, nivel: 3 },
+    { id: "sorveteria", nome: "Sorveteria", receita: { leite: 1, morango: 1 }, produto: "sorvete", preco: 150, tempo: 5, nivel: 6 },
+  ],
+
+  // ROBÔ AJUDANTE: anda pela fazenda e colhe sozinho.
+  robo: { nome: "Robô ajudante", preco: 150, nivel: 5, velocidade: 150 },
+
+  // PRODUTOS dos animais e das máquinas (preço de venda e XP ao pegar)
+  produtos: {
+    ovo:     { nome: "Ovo",     emoji: "🥚", venda: 6,  xp: 2 },
+    leite:   { nome: "Leite",   emoji: "🥛", venda: 12, xp: 3 },
+    mel:     { nome: "Mel",     emoji: "🍯", venda: 18, xp: 4 },
+    pao:     { nome: "Pão",     emoji: "🍞", venda: 25, xp: 8 },
+    sorvete: { nome: "Sorvete", emoji: "🍦", venda: 45, xp: 12 },
+  },
+
+  // NÍVEIS: XP total para chegar em cada nível e quantos canteiros ficam liberados.
+  niveis: [
+    { xp: 0,   canteiros: 4 },   // nível 1
+    { xp: 15,  canteiros: 6 },   // nível 2
+    { xp: 45,  canteiros: 6 },   // nível 3
+    { xp: 90,  canteiros: 8 },   // nível 4
+    { xp: 150, canteiros: 8 },   // nível 5
+    { xp: 230, canteiros: 9 },   // nível 6
+    { xp: 330, canteiros: 12 },  // nível 7
+    { xp: 460, canteiros: 12 },  // nível 8
+  ],
+  xpExtraPorNivel: 180,        // depois do último nível da lista, cada nível novo pede mais isto de XP
+  bonusVendaPorNivel: 0.05,    // +5% no preço de venda a cada nível
+  reservaIngredientes: 2,      // o caminhão deixa no celeiro até 2 de cada ingrediente das suas máquinas
+  caminhaoVolta: 1.6,          // segundos que o caminhão leva para ir à feira e voltar
+
+  // MISSÕES em ordem. Tipos: plantar, colher, coletar (de animal), produzir (máquina),
+  // vender (item ou "qualquer"), comprar (animal, máquina ou "robo"), ganhar (moedas).
+  // Quando a lista acaba (ou a próxima ainda não dá), o jogo inventa missões sozinho.
+  missoes: [
+    { tipo: "plantar",  item: "cenoura",  qtd: 4,   texto: "Plante 4 cenouras",          moedas: 5,  xp: 5 },
+    { tipo: "colher",   item: "cenoura",  qtd: 5,   texto: "Colha 5 cenouras",           moedas: 8,  xp: 6 },
+    { tipo: "vender",   item: "qualquer", qtd: 5,   texto: "Venda 5 itens no caminhão",  moedas: 10, xp: 6 },
+    { tipo: "comprar",  item: "galinha",  qtd: 1,   texto: "Compre uma galinha",         moedas: 10, xp: 8 },
+    { tipo: "colher",   item: "trigo",    qtd: 3,   texto: "Colha 3 trigos",             moedas: 10, xp: 8 },
+    { tipo: "coletar",  item: "ovo",      qtd: 2,   texto: "Pegue 2 ovos da galinha",    moedas: 10, xp: 8 },
+    { tipo: "comprar",  item: "padaria",  qtd: 1,   texto: "Compre a padaria",           moedas: 15, xp: 10 },
+    { tipo: "produzir", item: "pao",      qtd: 1,   texto: "Asse 1 pão",                 moedas: 15, xp: 10 },
+    { tipo: "vender",   item: "pao",      qtd: 1,   texto: "Venda 1 pão",                moedas: 15, xp: 10 },
+    { tipo: "colher",   item: "milho",    qtd: 4,   texto: "Colha 4 milhos",             moedas: 15, xp: 12 },
+    { tipo: "comprar",  item: "vaca",     qtd: 1,   texto: "Compre uma vaca",            moedas: 20, xp: 12 },
+    { tipo: "colher",   item: "morango",  qtd: 3,   texto: "Colha 3 morangos",           moedas: 20, xp: 12 },
+    { tipo: "comprar",  item: "robo",     qtd: 1,   texto: "Compre o robô ajudante",     moedas: 25, xp: 15 },
+    { tipo: "ganhar",   item: null,       qtd: 100, texto: "Ganhe 100 moedas vendendo",  moedas: 25, xp: 15 },
+    { tipo: "comprar",  item: "abelha",   qtd: 1,   texto: "Compre as abelhas",          moedas: 25, xp: 15 },
+    { tipo: "comprar",  item: "sorveteria", qtd: 1, texto: "Compre a sorveteria",        moedas: 30, xp: 18 },
+    { tipo: "produzir", item: "sorvete",  qtd: 1,   texto: "Faça 1 sorvete",             moedas: 30, xp: 18 },
+    { tipo: "colher",   item: "abobora",  qtd: 1,   texto: "Colha 1 abóbora gigante",    moedas: 40, xp: 25 },
+  ],
+
+  // CORES do cenário
+  cores: { ceu: "#8fd3ff", grama: "#7ccf5a", grama2: "#6fc04e", terra: "#9a5b34", terraEscura: "#7a4426", contorno: "#2b1a10" },
+
+  demoReiniciaNoNivel: 8,      // no ?demo=1, quando chega neste nível a fazenda recomeça (vitrine do estande)
+};
+/* ===================== daqui para baixo é o motor ===================== */
+
+const VERSAO = "0.1.0";
+// guarda o HTML original agora, antes de o jogo mexer na página (é ele que o botão "Baixar" entrega)
+const FONTE_HTML = "<!doctype html>\n" + document.documentElement.outerHTML;
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.has("demo");          // ?demo=1 → o jogo joga sozinho (vitrine do estande)
+const CHAVE_SAVE = "vida-na-fazenda-save", CHAVE_RECORDE = "vida-na-fazenda-recorde";
+
+// ---------- utilidades ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rndInt = (a, b) => Math.floor(rnd(a, b + 1));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const SEMENTE = Object.fromEntries(CONFIG.sementes.map(s => [s.id, s]));
+const ANIMAL = Object.fromEntries(CONFIG.animais.map(a => [a.id, a]));
+const MAQUINA = Object.fromEntries(CONFIG.maquinas.map(m => [m.id, m]));
+// informações de qualquer item (semente colhida ou produto)
+function item(id) {
+  if (SEMENTE[id]) return { nome: SEMENTE[id].nome, emoji: SEMENTE[id].emoji, venda: SEMENTE[id].venda };
+  return CONFIG.produtos[id] || { nome: id, emoji: "❓", venda: 1 };
+}
+// algo comprável: animal, máquina ou robô
+function compravel(id) { return ANIMAL[id] || MAQUINA[id] || (id === "robo" ? CONFIG.robo : null); }
+
+// ---------- tela do canvas ----------
+let LW = innerWidth, LH = innerHeight, DPR = 1;
+function redimensiona() {
+  DPR = window.devicePixelRatio || 1; LW = innerWidth; LH = innerHeight;
+  cv.width = LW * DPR; cv.height = LH * DPR;
+}
+addEventListener("resize", redimensiona); redimensiona();
+
+// ---------- som (feito na hora, sem arquivos) ----------
+let audio = null, somLigado = true;
+function bip(freq, dur = 0.08, tipo = "square", vol = 0.05) {
+  if (DEMO || !somLigado) return;
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = tipo; o.frequency.value = freq; g.gain.value = vol;
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+    o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + dur);
+  } catch (e) {}
+}
+const somPlantar = () => bip(330, 0.06, "triangle");
+const somColher = () => { bip(660, 0.06); setTimeout(() => bip(880, 0.07), 50); };
+const somMoeda = () => { bip(988, 0.05, "square", 0.04); setTimeout(() => bip(1319, 0.12, "square", 0.04), 60); };
+const somFesta = () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => bip(f, 0.12, "triangle", 0.07), i * 90));
+
+// ---------- avisos ----------
+let avisoTimer = 0, bannerTimer = 0;
+function aviso(txt) { const a = $("aviso"); a.textContent = txt; a.style.opacity = 1; avisoTimer = 2.2; }
+function banner(titulo, sub = "") {
+  const b = $("banner"); b.innerHTML = titulo + (sub ? `<small>${sub}</small>` : "");
+  b.classList.add("on"); bannerTimer = 2.6;
+}
+
+// ---------- estado do jogo ----------
+let estado, rodando = false, robo = null, moedasMostradas = 0, tempoDemo = 0, seleciona = "cenoura", cursor = 0;
+let particulas = [], voando = [], textos = [], caminhao = { anim: 0 }, slots = [], cena = { x: 0, y: 0, w: 0, h: 0 };
+
+function estadoNovo() {
+  return {
+    moedas: CONFIG.moedasIniciais, xp: 0, nivel: 1,
+    canteiros: Array.from({ length: 12 }, () => ({ s: null, t: 0 })),  // s = semente plantada, t = tempo crescendo
+    inv: {},                                                            // celeiro: { cenoura: 3, ovo: 1 ... }
+    animais: {},  maquinas: {},  robo: false,
+    missao: null, seqFeitas: [], missoesFeitas: 0, proximaMissao: 0,
+    ganhou: 0, colheitas: 0,
+  };
+}
+
+// ---------- níveis ----------
+function xpDoNivel(n) {  // XP total para chegar no nível n
+  const L = CONFIG.niveis;
+  return n <= L.length ? L[n - 1].xp : L[L.length - 1].xp + (n - L.length) * CONFIG.xpExtraPorNivel;
+}
+const canteirosLiberados = () => CONFIG.niveis[Math.min(estado.nivel, CONFIG.niveis.length) - 1].canteiros;
+function nivelDoCanteiro(i) { const k = CONFIG.niveis.findIndex(n => n.canteiros > i); return k < 0 ? 99 : k + 1; }
+const multVenda = () => 1 + CONFIG.bonusVendaPorNivel * (estado.nivel - 1);
+
+function ganhaXp(q) {
+  estado.xp += q;
+  while (estado.xp >= xpDoNivel(estado.nivel + 1)) {
+    const antes = canteirosLiberados();
+    estado.nivel++;
+    // o que chegou de novo neste nível?
+    const n = estado.nivel, novos = [];
+    if (canteirosLiberados() > antes) novos.push(`+${canteirosLiberados() - antes} canteiros`);
+    CONFIG.sementes.filter(s => s.nivel === n).forEach(s => novos.push(`${s.emoji} ${s.nome}`));
+    CONFIG.animais.filter(a => a.nivel === n).forEach(a => novos.push(`${a.nome} na loja`));
+    CONFIG.maquinas.filter(m => m.nivel === n).forEach(m => novos.push(`${m.nome} na loja`));
+    if (CONFIG.robo.nivel === n) novos.push("🤖 Robô ajudante na loja");
+    if (!novos.length) novos.push(`Vendas +${Math.round(CONFIG.bonusVendaPorNivel * 100)}%`);
+    banner(`⭐ Nível ${n}!`, "Chegou: " + novos.join(" · "));
+    confete(LW / 2, LH * 0.38, 70); somFesta();
+    montaSementes();
+    if (!DEMO) try { if (n > (+localStorage.getItem(CHAVE_RECORDE) || 0)) localStorage.setItem(CHAVE_RECORDE, n); } catch (e) {}
+  }
+}
+
+// ---------- celeiro ----------
+function poeNoCeleiro(id, q, x, y) {
+  estado.inv[id] = (estado.inv[id] || 0) + q;
+  const alvo = $("celeiro").getBoundingClientRect();
+  voando.push({ id, x0: x, y0: y, x1: alvo.left + 40, y1: alvo.top + 10, t: 0, dur: 0.6 });
+}
+const totalCeleiro = () => Object.values(estado.inv).reduce((s, v) => s + v, 0);
+
+// ---------- ações do jogador (tocar, robô e demo usam as mesmas) ----------
+function acaoCanteiro(i, deslizando = false, porRobo = false) {
+  if (i >= canteirosLiberados()) { if (!deslizando) aviso(`🔒 Esse canteiro abre no nível ${nivelDoCanteiro(i)}`); return false; }
+  const c = estado.canteiros[i], r = slots.find(s => s.tipo === "canteiro" && s.i === i);
+  const cx = r ? r.x + r.w / 2 : LW / 2, cy = r ? r.y + r.h / 2 : LH / 2;
+  if (!c.s) {                                   // vazio → planta a semente escolhida
+    if (porRobo) return false;
+    const s = SEMENTE[seleciona];
+    if (s.nivel > estado.nivel) { aviso(`🔒 ${s.nome} chega no nível ${s.nivel}`); return false; }
+    if (estado.moedas < s.preco) { if (!deslizando) aviso("Sem moedas: venda no caminhão! 🚚"); return false; }
+    estado.moedas -= s.preco; c.s = s.id; c.t = 0;
+    poeira(cx, cy + 10, "#7a4426", 8); somPlantar();
+    evento("plantar", s.id, 1);
+    return true;
+  }
+  const s = SEMENTE[c.s];
+  if (c.t >= s.tempo) {                         // maduro → colhe
+    c.s = null; c.t = 0;
+    poeNoCeleiro(s.id, 1, cx, cy);
+    texto(`+1 ${s.emoji}`, cx, cy - 20, "#fff");
+    estrelas(cx, cy, 10); somColher();
+    estado.colheitas++;
+    ganhaXp(s.xp); evento("colher", s.id, 1);
+    return true;
+  }
+  if (!deslizando && !porRobo) texto(`${Math.ceil(s.tempo - c.t)} s`, cx, cy - 10, "#fff");
+  return false;
+}
+
+function comprar(id) {
+  const c = compravel(id);
+  if (c.nivel > estado.nivel) { aviso(`🔒 ${c.nome} chega no nível ${c.nivel}`); return false; }
+  if (estado.moedas < c.preco) { aviso(`Faltam 🪙 ${c.preco - Math.floor(estado.moedas)} para comprar ${c.nome}`); return false; }
+  estado.moedas -= c.preco;
+  if (ANIMAL[id]) estado.animais[id] = { t: 0, pronto: false };
+  else if (MAQUINA[id]) estado.maquinas[id] = { t: 0, fazendo: false, pronto: false };
+  else { estado.robo = true; criaRobo(); }
+  const r = slots.find(s => s.id === id);
+  if (r) confete(r.x + r.w / 2, r.y + r.h / 2, 40);
+  banner(`🎉 ${c.nome}!`, ANIMAL[id] ? `Produz ${item(ANIMAL[id].produto).emoji} sozinha` :
+         MAQUINA[id] ? receitaTexto(MAQUINA[id]) : "Ele colhe sozinho para você");
+  somFesta(); evento("comprar", id, 1);
+  return true;
+}
+const receitaTexto = m => Object.keys(m.receita).map(k => item(k).emoji + " " + item(k).nome).join(" + ") + " = " + item(m.produto).emoji + " " + item(m.produto).nome;
+
+function acaoAnimal(id, porRobo = false) {
+  const a = estado.animais[id];
+  if (!a) return porRobo ? false : comprar(id);
+  const r = slots.find(s => s.id === id);
+  if (!a.pronto) { if (!porRobo) texto(`${Math.ceil(ANIMAL[id].tempo - a.t)} s`, r.x + r.w / 2, r.y + 20, "#fff"); return false; }
+  const p = ANIMAL[id].produto;
+  a.pronto = false; a.t = 0;
+  poeNoCeleiro(p, 1, r.x + r.w / 2, r.y + r.h * 0.3);
+  texto(`+1 ${item(p).emoji}`, r.x + r.w / 2, r.y + 10, "#fff"); estrelas(r.x + r.w / 2, r.y + r.h * 0.3, 8); somColher();
+  ganhaXp(CONFIG.produtos[p].xp); evento("coletar", p, 1);
+  return true;
+}
+
+function acaoMaquina(id, porRobo = false) {
+  const m = estado.maquinas[id];
+  if (!m) return porRobo ? false : comprar(id);
+  const r = slots.find(s => s.id === id), M = MAQUINA[id];
+  if (m.pronto) {
+    m.pronto = false; m.t = 0;
+    poeNoCeleiro(M.produto, 1, r.x + r.w / 2, r.y + r.h * 0.3);
+    texto(`+1 ${item(M.produto).emoji}`, r.x + r.w / 2, r.y + 10, "#fff"); estrelas(r.x + r.w / 2, r.y + r.h * 0.3, 12); somColher();
+    ganhaXp(CONFIG.produtos[M.produto].xp); evento("produzir", M.produto, 1);
+    return true;
+  }
+  if (!porRobo) aviso(m.fazendo ? `${M.nome} trabalhando… ${Math.ceil(M.tempo - m.t)} s` : `${M.nome} precisa de: ${receitaTexto(M)}`);
+  return false;
+}
+
+function vender() {
+  if (caminhao.anim > 0) { aviso("O caminhão já volta! 🚚"); return false; }
+  // ingredientes das máquinas que você tem ficam guardados (até "reservaIngredientes")
+  const guarda = {};
+  for (const id in estado.maquinas) for (const k in MAQUINA[id].receita) guarda[k] = CONFIG.reservaIngredientes;
+  let total = 0, qtd = 0;
+  for (const id in estado.inv) {
+    const v = Math.max(0, estado.inv[id] - (guarda[id] || 0));
+    if (!v) continue;
+    estado.inv[id] -= v; qtd += v;
+    total += item(id).venda * v;
+    evento("vender", id, v);
+  }
+  if (!qtd) { aviso(totalCeleiro() ? "Guardei os ingredientes das máquinas 😉" : "Celeiro vazio: colha algo primeiro 🌱"); return false; }
+  total = Math.round(total * multVenda());
+  estado.moedas += total; estado.ganhou += total;
+  const r = slots.find(s => s.tipo === "caminhao");
+  if (r) { moedasVoando(r.x + r.w / 2, r.y + r.h / 2, Math.min(14, 3 + qtd)); texto(`+${total} 🪙`, r.x + r.w / 2, r.y + 20, "#FACC15", 30); }
+  caminhao.anim = CONFIG.caminhaoVolta; somMoeda();
+  ganhaXp(1 + Math.floor(total / 15));
+  evento("ganhar", null, total);
+  return true;
+}
+
+// ---------- missões ----------
+function itemDisponivel(id) {  // dá para conseguir esse item agora?
+  if (SEMENTE[id]) return SEMENTE[id].nivel <= estado.nivel;
+  return CONFIG.animais.some(a => a.produto === id && estado.animais[a.id]) ||
+         CONFIG.maquinas.some(m => m.produto === id && estado.maquinas[m.id]);
+}
+function missaoDisponivel(m) {
+  if (m.tipo === "comprar") return compravel(m.item).nivel <= estado.nivel;
+  if (m.tipo === "ganhar" || m.item === "qualquer") return true;
+  return itemDisponivel(m.item);
+}
+const jaTem = id => !!(estado.animais[id] || estado.maquinas[id] || (id === "robo" && estado.robo));
+function missaoAleatoria() {
+  const n = estado.nivel, op = [];
+  const sem = CONFIG.sementes.filter(s => s.nivel <= n);
+  const s = sem[rndInt(Math.max(0, sem.length - 3), sem.length - 1)], q = s.id === "abobora" ? 2 : rndInt(3, 6);
+  op.push({ tipo: "colher", item: s.id, qtd: q, texto: `Colha ${q} × ${s.emoji} ${s.nome}` });
+  const v = rndInt(6, 12); op.push({ tipo: "vender", item: "qualquer", qtd: v, texto: `Venda ${v} itens no caminhão` });
+  const g = 60 + n * 30; op.push({ tipo: "ganhar", item: null, qtd: g, texto: `Ganhe ${g} moedas vendendo` });
+  for (const a of CONFIG.animais) if (estado.animais[a.id]) { const k = rndInt(2, 3); op.push({ tipo: "coletar", item: a.produto, qtd: k, texto: `Pegue ${k} × ${item(a.produto).emoji} ${item(a.produto).nome}` }); }
+  for (const m of CONFIG.maquinas) if (estado.maquinas[m.id]) { const k = rndInt(1, 2); op.push({ tipo: "produzir", item: m.produto, qtd: k, texto: `Faça ${k} × ${item(m.produto).emoji} ${item(m.produto).nome}` }); }
+  const m = op[rndInt(0, op.length - 1)];
+  return { ...m, moedas: 5 + n * 4, xp: 6 + n * 3 };
+}
+function novaMissao() {
+  let m = null;
+  for (let k = 0; k < CONFIG.missoes.length; k++) {
+    if (estado.seqFeitas.includes(k)) continue;
+    const c = CONFIG.missoes[k];
+    if (c.tipo === "comprar" && jaTem(c.item)) { estado.seqFeitas.push(k); continue; }  // já comprou antes
+    if (missaoDisponivel(c)) { m = { ...c, seq: k }; break; }
+  }
+  if (!m) m = missaoAleatoria();
+  estado.missao = { ...m, prog: 0, feita: false };
+}
+function evento(tipo, id, q) {
+  const m = estado.missao;
+  if (!m || m.feita || m.tipo !== tipo) return;
+  if (m.item && m.item !== "qualquer" && m.item !== id) return;
+  m.prog = Math.min(m.qtd, m.prog + q);
+  if (m.prog >= m.qtd) {
+    m.feita = true; estado.missoesFeitas++;
+    if (m.seq !== undefined) estado.seqFeitas.push(m.seq);
+    estado.moedas += m.moedas;
+    aviso(`✅ Missão cumprida! +${m.moedas} 🪙  +${m.xp} XP`);
+    confete(LW / 2, 60, 50); somFesta();
+    estado.proximaMissao = 1.2;  // próxima missão em 1,2 s
+    ganhaXp(m.xp);
+  }
+}
+
+// ---------- robô ajudante ----------
+function criaRobo() {
+  const d = slots.find(s => s.id === "robo");
+  robo = { x: d ? d.x + d.w / 2 : LW / 2, y: d ? d.y + d.h / 2 : LH / 2, alvo: null, dir: 1, t: 0 };
+}
+function alvosProntos() {  // tudo que está pronto para pegar
+  const lista = [];
+  for (const s of slots) {
+    if (s.tipo === "canteiro") { const c = estado.canteiros[s.i]; if (c.s && c.t >= SEMENTE[c.s].tempo) lista.push(s); }
+    else if (s.tipo === "animal" && estado.animais[s.id]?.pronto) lista.push(s);
+    else if (s.tipo === "maquina" && estado.maquinas[s.id]?.pronto) lista.push(s);
+  }
+  return lista;
+}
+function passoRobo(dt) {
+  if (!estado.robo) { robo = null; return; }
+  if (!robo) criaRobo();
+  robo.t += dt;
+  if (!robo.alvo || !alvosProntos().includes(robo.alvo)) {
+    const lista = alvosProntos();
+    lista.sort((a, b) => Math.hypot(a.x + a.w / 2 - robo.x, a.y + a.h / 2 - robo.y) - Math.hypot(b.x + b.w / 2 - robo.x, b.y + b.h / 2 - robo.y));
+    robo.alvo = lista[0] || null;
+  }
+  const casa = slots.find(s => s.id === "robo");
+  const ax = robo.alvo ? robo.alvo.x + robo.alvo.w / 2 : casa.x + casa.w / 2;
+  const ay = robo.alvo ? robo.alvo.y + robo.alvo.h * 0.55 : casa.y + casa.h * 0.55;
+  const dx = ax - robo.x, dy = ay - robo.y, d = Math.hypot(dx, dy);
+  const vel = CONFIG.robo.velocidade * Math.max(0.6, Math.min(LW, LH) / 600);
+  if (d > 6) { robo.x += dx / d * Math.min(d, vel * dt); robo.y += dy / d * Math.min(d, vel * dt); if (Math.abs(dx) > 2) robo.dir = Math.sign(dx); }
+  else if (robo.alvo) {
+    const a = robo.alvo; robo.alvo = null;
+    if (a.tipo === "canteiro") acaoCanteiro(a.i, true, true);
+    else if (a.tipo === "animal") acaoAnimal(a.id, true);
+    else acaoMaquina(a.id, true);
+  }
+}
+
+// ---------- tempo passando ----------
+function passo(dt) {
+  if (avisoTimer > 0 && (avisoTimer -= dt) <= 0) $("aviso").style.opacity = 0;
+  if (bannerTimer > 0 && (bannerTimer -= dt) <= 0) $("banner").classList.remove("on");
+  atualizaEfeitos(dt);
+  if (!rodando) return;
+  // plantas crescem
+  for (const c of estado.canteiros) if (c.s) c.t = Math.min(SEMENTE[c.s].tempo, c.t + dt);
+  // animais produzem
+  for (const id in estado.animais) { const a = estado.animais[id]; if (!a.pronto && (a.t += dt) >= ANIMAL[id].tempo) a.pronto = true; }
+  // máquinas puxam ingredientes do celeiro e trabalham
+  for (const id in estado.maquinas) {
+    const m = estado.maquinas[id], M = MAQUINA[id];
+    if (!m.fazendo && !m.pronto && Object.entries(M.receita).every(([k, q]) => (estado.inv[k] || 0) >= q)) {
+      for (const k in M.receita) estado.inv[k] -= M.receita[k];
+      m.fazendo = true; m.t = 0;
+    }
+    if (m.fazendo && (m.t += dt) >= M.tempo) { m.fazendo = false; m.pronto = true; }
+  }
+  if (caminhao.anim > 0) caminhao.anim = Math.max(0, caminhao.anim - dt);
+  passoRobo(dt);
+  if (estado.missao?.feita && (estado.proximaMissao -= dt) <= 0) novaMissao();
+  // ninguém fica preso: sem moedas, sem planta, sem nada no celeiro → o vizinho ajuda
+  const barata = Math.min(...CONFIG.sementes.map(s => s.preco));
+  if (estado.moedas < barata && !estado.canteiros.some(c => c.s) && totalCeleiro() === 0 && caminhao.anim === 0) {
+    estado.moedas += CONFIG.presenteVizinho; aviso(`🎁 O vizinho te deu ${CONFIG.presenteVizinho} moedas!`);
+  }
+  if (DEMO) passoDemo(dt);
+  else salvaDeVezEmQuando(dt);
+}
+
+// ---------- salvar progresso ----------
+let timerSave = 0;
+function salvaDeVezEmQuando(dt) {
+  if ((timerSave += dt) < 3) return; timerSave = 0;
+  try { localStorage.setItem(CHAVE_SAVE, JSON.stringify(estado)); } catch (e) {}
+}
+function carregaSave() {
+  try { const s = JSON.parse(localStorage.getItem(CHAVE_SAVE)); if (s && s.canteiros) return Object.assign(estadoNovo(), s); } catch (e) {}
+  return null;
+}
+
+// ---------- layout: onde fica cada coisa na tela ----------
+function grade(r, cols, rows, itens, gap) {
+  const cw = (r.w - gap * (cols - 1)) / cols, ch = (r.h - gap * (rows - 1)) / rows;
+  let col = 0, lin = 0;
+  for (const it of itens) {
+    const span = it.span || 1;
+    if (col + span > cols) { col = 0; lin++; }
+    slots.push({ ...it, x: r.x + col * (cw + gap), y: r.y + lin * (ch + gap), w: cw * span + gap * (span - 1), h: ch });
+    col += span;
+  }
+}
+function layout() {
+  const topo = $("topo").getBoundingClientRect().bottom + 6, base = $("sementes").getBoundingClientRect().top - 8;
+  cena = { x: 8, y: topo, w: LW - 16, h: Math.max(200, base - topo) };
+  slots = [];
+  const canteiros = Array.from({ length: 12 }, (_, i) => ({ tipo: "canteiro", i }));
+  const extras = [
+    ...CONFIG.animais.map(a => ({ tipo: "animal", id: a.id })),
+    { tipo: "robo", id: "robo" },
+    ...CONFIG.maquinas.map(m => ({ tipo: "maquina", id: m.id })),
+    { tipo: "caminhao", id: "caminhao", span: 2 },
+  ];
+  const gap = Math.max(5, Math.min(LW, LH) * 0.012);
+  if (cena.w > cena.h * 1.15) {                // tela deitada: canteiros à esquerda, resto à direita
+    const wc = cena.w * 0.54;
+    grade({ x: cena.x, y: cena.y, w: wc, h: cena.h }, 4, 3, canteiros, gap);
+    // linha 1: animais · linha 2: máquinas + robô · linha 3: caminhão bem largo
+    const ex = [extras[0], extras[1], extras[2], extras[4], extras[5], extras[3], { ...extras[6], span: 3 }];
+    grade({ x: cena.x + wc + gap * 2, y: cena.y, w: cena.w - wc - gap * 2, h: cena.h }, 3, 3, ex, gap);
+  } else {                                      // tela em pé (celular): canteiros em cima, resto embaixo
+    const hc = cena.h * 0.52;
+    grade({ x: cena.x, y: cena.y, w: cena.w, h: hc }, 4, 3, canteiros, gap);
+    grade({ x: cena.x, y: cena.y + hc + gap * 1.5, w: cena.w, h: cena.h - hc - gap * 1.5 }, 4, 2, extras, gap);
+  }
+}
+
+// ---------- efeitos (partículas, textos, itens voando) ----------
+function confete(x, y, n) {
+  const cores = ["#FACC15", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"];
+  for (let i = 0; i < n; i++) particulas.push({ x, y, vx: rnd(-260, 260), vy: rnd(-420, -80), vida: rnd(0.9, 1.6), cor: cores[i % 6], tam: rnd(4, 8), gira: rnd(0, 6) });
+}
+function poeira(x, y, cor, n) { for (let i = 0; i < n; i++) particulas.push({ x, y, vx: rnd(-80, 80), vy: rnd(-140, -40), vida: rnd(0.3, 0.6), cor, tam: rnd(3, 6), gira: 0 }); }
+function estrelas(x, y, n) { for (let i = 0; i < n; i++) particulas.push({ x, y, vx: rnd(-160, 160), vy: rnd(-260, -60), vida: rnd(0.4, 0.8), cor: "#FDE047", tam: rnd(4, 7), gira: rnd(0, 6), estrela: true }); }
+function moedasVoando(x, y, n) {
+  const alvo = $("c-moedas").getBoundingClientRect();
+  for (let i = 0; i < n; i++) voando.push({ id: "moeda", x0: x + rnd(-20, 20), y0: y + rnd(-10, 10), x1: alvo.left + 20, y1: alvo.top + 16, t: -i * 0.05, dur: 0.7 });
+}
+function texto(txt, x, y, cor, tam = 22) { textos.push({ txt, x, y, cor, tam, vida: 1.1 }); }
+function atualizaEfeitos(dt) {
+  for (const p of particulas) { p.vida -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 700 * dt; p.gira += dt * 6; }
+  particulas = particulas.filter(p => p.vida > 0);
+  for (const v of voando) v.t += dt;
+  voando = voando.filter(v => v.t < v.dur);
+  for (const t of textos) { t.vida -= dt; t.y -= 40 * dt; }
+  textos = textos.filter(t => t.vida > 0);
+}
+
+/* =================== DESENHOS (tudo feito com formas simples) =================== */
+const CONT = () => CONFIG.cores.contorno;
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function circ(x, y, r, cor, linha = 2.5) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = cor; ctx.fill(); if (linha) { ctx.lineWidth = linha; ctx.strokeStyle = CONT(); ctx.stroke(); } }
+function elip(x, y, rx, ry, cor, linha = 2.5, rot = 0) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot, 0, 7); ctx.fillStyle = cor; ctx.fill(); if (linha) { ctx.lineWidth = linha; ctx.strokeStyle = CONT(); ctx.stroke(); } }
+function folha(x, y, comp, ang, cor) { ctx.save(); ctx.translate(x, y); ctx.rotate(ang); elip(0, -comp / 2, comp * 0.28, comp / 2, cor, 2); ctx.restore(); }
+
+// desenha um item (colheita ou produto) centrado em x,y; tam ≈ altura em pixels
+function desenhaItem(id, x, y, tam) {
+  ctx.save(); ctx.translate(x, y); const k = tam / 40; ctx.scale(k, k); ctx.lineJoin = "round";
+  switch (id) {
+    case "cenoura":
+      folha(-3, -10, 14, -0.4, "#22c55e"); folha(3, -10, 14, 0.4, "#22c55e");
+      ctx.beginPath(); ctx.moveTo(-9, -10); ctx.quadraticCurveTo(0, -14, 9, -10); ctx.lineTo(1, 18); ctx.quadraticCurveTo(0, 20, -1, 18); ctx.closePath();
+      ctx.fillStyle = "#f97316"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+      ctx.strokeStyle = "#c2410c"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-5, -3); ctx.lineTo(-1, -3); ctx.moveTo(1, 5); ctx.lineTo(4, 5); ctx.stroke(); break;
+    case "trigo":
+      ctx.strokeStyle = "#a16207"; ctx.lineWidth = 2.5;
+      for (const a of [-0.25, 0, 0.25]) { ctx.save(); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0, 18); ctx.lineTo(0, -4); ctx.stroke();
+        for (let j = 0; j < 4; j++) { elip(-3, -6 - j * 5, 3, 4.5, "#facc15", 1.5, -0.4); elip(3, -6 - j * 5, 3, 4.5, "#facc15", 1.5, 0.4); } ctx.restore(); }
+      break;
+    case "milho":
+      folha(-6, 14, 26, -0.35, "#4ade80"); folha(6, 14, 26, 0.35, "#4ade80");
+      elip(0, -2, 8, 16, "#fde047", 2.5);
+      ctx.fillStyle = "#eab308"; for (let j = -2; j <= 2; j++) for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.arc(i * 4, -2 + j * 5.5, 1.4, 0, 7); ctx.fill(); }
+      folha(-4, 16, 22, -0.15, "#22c55e"); folha(4, 16, 22, 0.15, "#22c55e"); break;
+    case "morango":
+      ctx.beginPath(); ctx.moveTo(-14, -6); ctx.quadraticCurveTo(-15, 10, 0, 18); ctx.quadraticCurveTo(15, 10, 14, -6); ctx.quadraticCurveTo(0, -12, -14, -6);
+      ctx.fillStyle = "#ef4444"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+      ctx.fillStyle = "#fef08a"; for (const [a, b] of [[-6, 0], [4, -1], [-1, 6], [7, 7], [-6, 9], [1, 13]]) { ctx.beginPath(); ctx.ellipse(a, b, 1.2, 1.8, 0, 0, 7); ctx.fill(); }
+      for (const a of [-0.9, -0.3, 0.3, 0.9]) folha(0, -7, 10, a, "#16a34a"); break;
+    case "abobora":
+      elip(-9, 4, 9, 13, "#f97316"); elip(9, 4, 9, 13, "#f97316"); elip(0, 4, 9, 14, "#fb923c");
+      ctx.fillStyle = "#65a30d"; rr(-2.5, -15, 5, 8, 2); ctx.fill(); ctx.stroke(); folha(3, -11, 10, 1.1, "#22c55e"); break;
+    case "ovo": elip(0, 2, 12, 15, "#fffbeb"); elip(-4, -3, 3, 5, "#ffffff", 0); break;
+    case "leite":
+      ctx.fillStyle = "#f8fafc"; rr(-9, -10, 18, 28, 4); ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+      ctx.fillStyle = "#93c5fd"; rr(-6, -18, 12, 9, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#3b82f6"; rr(-9, 2, 18, 8, 0); ctx.fill(); break;
+    case "mel":
+      ctx.fillStyle = "#f59e0b"; rr(-12, -8, 24, 26, 7); ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+      ctx.fillStyle = "#ef4444"; rr(-13, -15, 26, 8, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fde68a"; rr(-7, -1, 14, 10, 3); ctx.fill(); break;
+    case "pao":
+      elip(0, 4, 18, 12, "#d97706"); elip(0, 0, 16, 10, "#f59e0b", 0);
+      ctx.strokeStyle = "#fde68a"; ctx.lineWidth = 2.5; for (const a of [-8, 0, 8]) { ctx.beginPath(); ctx.moveTo(a - 3, -4); ctx.lineTo(a + 3, 4); ctx.stroke(); } break;
+    case "sorvete":
+      ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(0, 20); ctx.lineTo(10, 0); ctx.closePath(); ctx.fillStyle = "#d97706"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+      circ(-5, -4, 8, "#fbcfe8"); circ(5, -4, 8, "#fef3c7"); circ(0, -12, 8, "#f9a8d4"); circ(0, -21, 3.5, "#ef4444"); break;
+    case "moeda":
+      circ(0, 0, 13, "#FACC15"); ctx.fillStyle = "#a16207"; ctx.font = "900 15px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("$", 0, 1); break;
+  }
+  ctx.restore();
+}
+
+// planta no canteiro em 4 estágios: 0 semente, 1 broto, 2 crescendo, 3 pronta
+function desenhaPlanta(id, est, x, y, tam, t) {
+  ctx.save(); ctx.translate(x, y); const k = tam / 100; ctx.scale(k, k);
+  if (est === 0) { for (const a of [-14, 0, 14]) elip(a, 8, 6, 4, "#5b3a1e", 2); }
+  else if (est === 1) {
+    ctx.strokeStyle = "#15803d"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, -4); ctx.stroke();
+    folha(0, -2, 16, -0.9, "#4ade80"); folha(0, -2, 16, 0.9, "#4ade80");
+  } else if (est === 2) {
+    const verde = id === "trigo" ? "#a3e635" : "#22c55e";
+    if (id === "abobora") { folha(-6, 12, 30, -1.1, verde); folha(6, 12, 30, 1.1, verde); elip(0, 6, 12, 10, "#bef264"); }
+    else { for (const a of [-0.7, -0.25, 0.25, 0.7]) folha(0, 14, id === "milho" ? 46 : 32, a, verde); }
+  } else {
+    const pulo = Math.abs(Math.sin(t * 5)) * -5;
+    ctx.translate(0, pulo);
+    if (id === "cenoura") { for (const a of [-0.5, 0, 0.5]) folha(0, -8, 26, a, "#22c55e"); elip(0, 2, 13, 9, "#f97316"); }
+    else if (id === "trigo") { ctx.translate(0, -10); for (const a of [-22, 0, 22]) desenhaItem("trigo", a, 0, 52); }
+    else if (id === "milho") { for (const a of [-0.3, 0.3]) folha(0, 16, 50, a, "#16a34a"); desenhaItem("milho", 10, -14, 46); }
+    else if (id === "morango") { for (const a of [-1, -0.4, 0.4, 1]) folha(0, 16, 34, a, "#16a34a"); desenhaItem("morango", -14, 2, 26); desenhaItem("morango", 14, 0, 26); desenhaItem("morango", 0, -16, 26); }
+    else if (id === "abobora") { folha(-20, 18, 30, -1.3, "#16a34a"); folha(20, 18, 30, 1.3, "#16a34a"); desenhaItem("abobora", 0, -2, 78); }
+  }
+  ctx.restore();
+}
+
+function desenhaFundo(t) {
+  // céu atrás da barra do topo
+  const g = ctx.createLinearGradient(0, 0, 0, cena.y + 20);
+  g.addColorStop(0, "#5ec2ff"); g.addColorStop(1, CONFIG.cores.ceu);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, LW, cena.y + 20);
+  circ(LW - 60, 40, 26, "#fde047", 0);
+  ctx.fillStyle = "#ffffffcc";
+  for (let i = 0; i < 3; i++) { const cx = ((t * 12 + i * 380) % (LW + 200)) - 100, cy = 24 + i * 14; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, 7); ctx.arc(cx + 16, cy - 6, 18, 0, 7); ctx.arc(cx + 34, cy, 13, 0, 7); ctx.fill(); }
+  // grama com faixas
+  ctx.fillStyle = CONFIG.cores.grama; ctx.fillRect(0, cena.y + 10, LW, LH);
+  ctx.fillStyle = CONFIG.cores.grama2;
+  for (let y = cena.y + 10; y < LH; y += 60) ctx.fillRect(0, y, LW, 30);
+  // florzinhas
+  for (let i = 0; i < 26; i++) { const fx = (i * 137.5) % LW, fy = cena.y + 20 + ((i * 89) % Math.max(1, LH - cena.y)); circ(fx, fy, 3, i % 2 ? "#fff" : "#fde047", 0); }
+}
+
+function desenhaCanteiro(s, t) {
+  const liberado = s.i < canteirosLiberados(), c = estado.canteiros[s.i];
+  const lado = Math.min(s.w, s.h), x = s.x + (s.w - lado) / 2, y = s.y + (s.h - lado) / 2;
+  if (!liberado) {
+    ctx.setLineDash([6, 6]); ctx.strokeStyle = "#ffffff99"; ctx.lineWidth = 2.5; rr(x + 4, y + 4, lado - 8, lado - 8, 14); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#ffffffcc"; ctx.font = `800 ${Math.max(11, lado * 0.13)}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("🔒 Nível " + nivelDoCanteiro(s.i), x + lado / 2, y + lado / 2); return;
+  }
+  const pronto = c.s && c.t >= SEMENTE[c.s].tempo;
+  if (pronto) { ctx.fillStyle = `rgba(253,224,71,${0.35 + Math.sin(t * 6) * 0.2})`; rr(x - 3, y - 3, lado + 6, lado + 6, 18); ctx.fill(); }
+  ctx.fillStyle = CONFIG.cores.terra; rr(x + 3, y + 3, lado - 6, lado - 6, 14); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke();
+  ctx.strokeStyle = CONFIG.cores.terraEscura; ctx.lineWidth = 3;
+  for (let j = 1; j <= 3; j++) { const yy = y + lado * j / 4; ctx.beginPath(); ctx.moveTo(x + 12, yy); ctx.lineTo(x + lado - 12, yy); ctx.stroke(); }
+  if (c.s) {
+    const S = SEMENTE[c.s], f = c.t / S.tempo, est = f >= 1 ? 3 : f < 0.25 ? 0 : f < 0.6 ? 1 : 2;
+    const cresce = c.s === "abobora" ? 0.6 + f * 0.4 : 1;
+    desenhaPlanta(c.s, est, x + lado / 2, y + lado * 0.55, lado * 0.95 * cresce, t);
+    if (f < 1) {  // barrinha de tempo
+      ctx.fillStyle = "#0008"; rr(x + lado * 0.15, y + lado - 14, lado * 0.7, 7, 4); ctx.fill();
+      ctx.fillStyle = "#4ade80"; rr(x + lado * 0.15, y + lado - 14, lado * 0.7 * f, 7, 4); ctx.fill();
+    }
+  } else {
+    ctx.fillStyle = "#ffffff55"; ctx.font = `900 ${lado * 0.3}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("+", x + lado / 2, y + lado / 2);
+  }
+  if (!DEMO && rodando && cursorVisivel && cursor === s.i) { ctx.strokeStyle = "#FACC15"; ctx.lineWidth = 4; rr(x, y, lado, lado, 16); ctx.stroke(); }
+}
+
+// cartão (cercadinho) onde ficam animais, máquinas, robô e caminhão
+function cartao(s, cor) { ctx.fillStyle = cor; rr(s.x, s.y, s.w, s.h, 16); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke(); }
+function rotulo(s, txt) {
+  const tam = clamp(s.h * 0.11, 11, 16);
+  ctx.font = `800 ${tam}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#1c1917"; ctx.fillText(txt, s.x + s.w / 2, s.y + s.h - tam * 0.9, s.w - 8);
+}
+function etiquetaCompra(s, id, t) {  // "🪙 30" ou "🔒 Nível 4"
+  const c = compravel(id), pode = c.nivel <= estado.nivel, tem = estado.moedas >= c.preco;
+  const txt = pode ? `🪙 ${c.preco}` : `🔒 Nível ${c.nivel}`;
+  let tam = clamp(s.h * 0.12, 11, 17);
+  ctx.font = `900 ${tam}px system-ui`;
+  const cabe = (s.w - 12) / (ctx.measureText(txt).width + 16);   // diminui a letra se o cartão for estreito
+  if (cabe < 1) { tam = Math.max(9, tam * cabe); ctx.font = `900 ${tam}px system-ui`; }
+  const w = ctx.measureText(txt).width + 12;
+  const esc = pode && tem ? 1 + Math.sin(t * 6) * 0.06 : 1;
+  ctx.save(); ctx.translate(s.x + s.w / 2, s.y + s.h * 0.5); ctx.scale(esc, esc);
+  ctx.fillStyle = pode ? (tem ? "#FACC15" : "#fef3c7") : "#e5e7eb"; rr(-w / 2, -tam * 0.85, w, tam * 1.7, 10); ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke();
+  ctx.fillStyle = "#1c1917"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, 0, 1); ctx.restore();
+}
+function bolha(x, y, id, tam, t) {  // balão com produto pronto
+  const p = Math.sin(t * 6) * 3;
+  circ(x, y + p, tam * 0.62, "#fff", 3);
+  desenhaItem(id, x, y + p, tam * 0.85);
+}
+function barrinha(s, f, cor = "#4ade80") {
+  const w = s.w * 0.6, x = s.x + (s.w - w) / 2, y = s.y + 8;
+  ctx.fillStyle = "#0008"; rr(x, y, w, 7, 4); ctx.fill(); ctx.fillStyle = cor; rr(x, y, w * f, 7, 4); ctx.fill();
+}
+
+function desenhaAnimal(s, t) {
+  const A = ANIMAL[s.id], a = estado.animais[s.id];
+  cartao(s, "#d9f99d");
+  // cerquinha
+  ctx.strokeStyle = "#92400e"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(s.x + 6, s.y + s.h * 0.62); ctx.lineTo(s.x + s.w - 6, s.y + s.h * 0.62); ctx.stroke();
+  for (let x = s.x + 12; x < s.x + s.w - 6; x += 18) { ctx.beginPath(); ctx.moveTo(x, s.y + s.h * 0.52); ctx.lineTo(x, s.y + s.h * 0.72); ctx.stroke(); }
+  const tam = Math.min(s.w, s.h) * 0.55, cx = s.x + s.w / 2, cy = s.y + s.h * 0.5;
+  ctx.save(); if (!a) ctx.globalAlpha = 0.35;
+  const bob = a ? Math.sin(t * 4 + s.x) * 2 : 0;
+  ctx.translate(cx, cy + bob); ctx.scale(tam / 100, tam / 100);
+  if (s.id === "galinha") {
+    elip(0, 10, 30, 26, "#fff"); elip(14, -18, 15, 15, "#fff");
+    circ(14, -36, 6, "#ef4444", 2); circ(22, -34, 5, "#ef4444", 2);
+    ctx.beginPath(); ctx.moveTo(28, -18); ctx.lineTo(40, -14); ctx.lineTo(28, -10); ctx.closePath(); ctx.fillStyle = "#f59e0b"; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = CONT(); ctx.stroke();
+    circ(18, -21, 2.6, CONT(), 0); elip(-10, 10, 14, 9, "#f1f5f9", 2, 0.3);
+    ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-6, 34); ctx.lineTo(-6, 42); ctx.moveTo(6, 34); ctx.lineTo(6, 42); ctx.stroke();
+  } else if (s.id === "vaca") {
+    elip(-4, 10, 38, 24, "#fff"); elip(-14, 4, 10, 8, "#1f2937", 0); elip(8, 18, 8, 6, "#1f2937", 0);
+    for (const px of [-28, -12, 6, 20]) { ctx.fillStyle = "#fff"; rr(px, 26, 8, 16, 3); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = CONT(); ctx.stroke(); }
+    elip(32, -8, 16, 16, "#fff"); elip(36, 2, 12, 8, "#fbcfe8");
+    circ(32, 0, 1.8, CONT(), 0); circ(40, 0, 1.8, CONT(), 0); circ(28, -12, 2.6, CONT(), 0);
+    ctx.strokeStyle = CONT(); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(24, -22); ctx.lineTo(20, -30); ctx.moveTo(40, -22); ctx.lineTo(44, -30); ctx.stroke();
+  } else {  // abelhas: colmeia + abelhinhas voando
+    ctx.fillStyle = "#fbbf24"; for (let j = 0; j < 4; j++) { rr(-26 + j * 4, -30 + j * 16, 52 - j * 8, 16, 8); ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = CONT(); ctx.stroke(); }
+    circ(0, 14, 6, "#78350f", 2);
+    for (let i = 0; i < 2; i++) {
+      const bx = Math.cos(t * 3 + i * 3) * 38, by = -10 + Math.sin(t * 5 + i) * 18;
+      elip(bx, by - 7, 6, 4, "#e0f2fe", 1.5); elip(bx, by, 8, 6, "#facc15", 2);
+      ctx.fillStyle = CONT(); ctx.fillRect(bx - 2, by - 5, 3, 10);
+    }
+  }
+  ctx.restore();
+  if (!a) etiquetaCompra(s, s.id, t);
+  else if (a.pronto) bolha(cx, s.y + s.h * 0.24, A.produto, Math.min(s.w, s.h) * 0.36, t);
+  else barrinha(s, a.t / A.tempo);
+  rotulo(s, A.nome);
+}
+
+function desenhaMaquina(s, t) {
+  const M = MAQUINA[s.id], m = estado.maquinas[s.id];
+  cartao(s, "#fde68a");
+  const tam = Math.min(s.w, s.h) * 0.58, cx = s.x + s.w / 2, cy = s.y + s.h * 0.5;
+  ctx.save(); if (!m) ctx.globalAlpha = 0.35;
+  ctx.translate(cx, cy); ctx.scale(tam / 100, tam / 100);
+  if (s.id === "padaria") {
+    ctx.fillStyle = "#fca5a5"; rr(-38, -14, 76, 50, 6); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-46, -12); ctx.lineTo(0, -44); ctx.lineTo(46, -12); ctx.closePath(); ctx.fillStyle = "#b91c1c"; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#78716c"; rr(18, -48, 12, 22, 2); ctx.fill(); ctx.stroke();
+    const fogo = m?.fazendo ? 0.6 + Math.sin(t * 12) * 0.4 : 0;
+    ctx.fillStyle = `rgba(249,115,22,${0.3 + fogo * 0.7})`; rr(-16, 4, 32, 26, 12); ctx.fill(); ctx.stroke();
+    if (m?.fazendo) for (let i = 0; i < 3; i++) { const f = (t * 0.8 + i / 3) % 1; ctx.globalAlpha = 1 - f; circ(24 + Math.sin(f * 6) * 5, -52 - f * 40, 6 + f * 8, "#e5e7eb", 0); ctx.globalAlpha = 1; }
+  } else {
+    ctx.fillStyle = "#93c5fd"; rr(-36, -4, 72, 40, 8); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke();
+    circ(-22, 38, 8, "#374151"); circ(22, 38, 8, "#374151");
+    ctx.strokeStyle = CONT(); ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, -34); ctx.stroke();
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(0, -48); ctx.arc(0, -30, 44, Math.PI + i * Math.PI / 4, Math.PI + (i + 1) * Math.PI / 4); ctx.closePath(); ctx.fillStyle = i % 2 ? "#fff" : "#f472b6"; ctx.fill(); ctx.lineWidth = 2.5; ctx.stroke(); }
+    if (m?.fazendo) { ctx.save(); ctx.translate(0, 14); ctx.rotate(Math.sin(t * 10) * 0.2); desenhaItem("sorvete", 0, 0, 30); ctx.restore(); }
+  }
+  ctx.restore();
+  if (!m) etiquetaCompra(s, s.id, t);
+  else if (m.pronto) bolha(cx, s.y + s.h * 0.24, M.produto, Math.min(s.w, s.h) * 0.36, t);
+  else if (m.fazendo) barrinha(s, m.t / M.tempo, "#f97316");
+  else { // mostra a receita pequenininha
+    const k = Math.min(s.w, s.h) * 0.16, ids = Object.keys(M.receita);
+    ids.forEach((id, i) => desenhaItem(id, s.x + 12 + k / 2 + i * (k + 4), s.y + 6 + k / 2, k));
+  }
+  rotulo(s, M.nome);
+}
+
+function desenhaRoboFigura(x, y, tam, t, dir = 1, andando = false) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(tam / 100 * dir, tam / 100);
+  const b = andando ? Math.sin(t * 14) * 2 : 0;
+  ctx.strokeStyle = CONT(); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -42 + b); ctx.lineTo(0, -54 + b); ctx.stroke();
+  circ(0, -56 + b, 5, "#ef4444");
+  ctx.fillStyle = "#cbd5e1"; rr(-24, -42 + b, 48, 34, 12); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke();
+  ctx.fillStyle = "#0f172a"; rr(-17, -36 + b, 34, 20, 8); ctx.fill();
+  ctx.fillStyle = "#4ade80"; circ(-7, -26 + b, 4, "#4ade80", 0); circ(9, -26 + b, 4, "#4ade80", 0);
+  ctx.fillStyle = "#60a5fa"; rr(-18, -6, 36, 26, 8); ctx.fill(); ctx.stroke();
+  circ(0, 7, 4, "#FACC15", 2);
+  circ(0, 28, 9, "#374151");
+  ctx.restore();
+}
+function desenhaRoboCasa(s, t) {
+  cartao(s, "#e0e7ff");
+  ctx.fillStyle = "#a5b4fc"; elip(s.x + s.w / 2, s.y + s.h * 0.62, s.w * 0.3, s.h * 0.08, "#a5b4fc");
+  if (!estado.robo) {
+    ctx.save(); ctx.globalAlpha = 0.35; desenhaRoboFigura(s.x + s.w / 2, s.y + s.h * 0.55, Math.min(s.w, s.h) * 0.6, t); ctx.restore();
+    etiquetaCompra(s, "robo", t);
+  }
+  rotulo(s, "Robô");
+}
+function desenhaCaminhao(s, t) {
+  cartao(s, "#bae6fd");
+  // estrada
+  ctx.fillStyle = "#57534e"; ctx.fillRect(s.x + 3, s.y + s.h * 0.66, s.w - 6, s.h * 0.16);
+  ctx.save(); rr(s.x, s.y, s.w, s.h, 16); ctx.clip();
+  const f = caminhao.anim > 0 ? 1 - caminhao.anim / CONFIG.caminhaoVolta : 0;
+  const desloca = f === 0 ? 0 : f < 0.5 ? f * 2 * s.w : -(1 - (f - 0.5) * 2) * s.w;
+  const tam = Math.min(s.w * 0.55, s.h * 0.75), cx = s.x + s.w * 0.45 + desloca, cy = s.y + s.h * 0.48;
+  ctx.translate(cx, cy); ctx.scale(tam / 100, tam / 100);
+  const pula = Math.sin(t * 10) * (f > 0 ? 1.5 : 0.4);
+  ctx.translate(0, pula);
+  ctx.fillStyle = "#ef4444"; rr(-50, -30, 66, 44, 6); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CONT(); ctx.stroke();
+  ctx.fillStyle = "#f87171"; rr(16, -14, 32, 28, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#e0f2fe"; rr(26, -10, 16, 12, 3); ctx.fill(); ctx.stroke();
+  // caixotes com o que tem no celeiro
+  const tem = Object.keys(estado.inv).filter(k => estado.inv[k] > 0).slice(0, 3);
+  tem.forEach((id, i) => desenhaItem(id, -36 + i * 20, -40, 22));
+  ctx.fillStyle = "#fff"; ctx.font = "900 13px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("FEIRA", -17, -8);
+  circ(-32, 18, 10, "#1f2937"); circ(30, 18, 10, "#1f2937"); circ(-32, 18, 4, "#9ca3af", 0); circ(30, 18, 4, "#9ca3af", 0);
+  ctx.restore();
+  // valor da carga
+  const n = totalCeleiro(), tamT = clamp(s.h * 0.12, 12, 18);
+  ctx.font = `900 ${tamT}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#1c1917";
+  ctx.fillText(n ? "Toque para VENDER 🪙" : "Celeiro vazio", s.x + s.w / 2, s.y + tamT + 4, s.w - 10);
+  rotulo(s, "Caminhão da feira");
+  if (n && caminhao.anim === 0) { ctx.strokeStyle = `rgba(250,204,21,${0.5 + Math.sin(t * 6) * 0.5})`; ctx.lineWidth = 4; rr(s.x - 2, s.y - 2, s.w + 4, s.h + 4, 18); ctx.stroke(); }
+}
+
+function desenha(t) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  layout();
+  desenhaFundo(t);
+  if (!estado) return;
+  for (const s of slots) {
+    if (s.tipo === "canteiro") desenhaCanteiro(s, t);
+    else if (s.tipo === "animal") desenhaAnimal(s, t);
+    else if (s.tipo === "maquina") desenhaMaquina(s, t);
+    else if (s.tipo === "robo") desenhaRoboCasa(s, t);
+    else desenhaCaminhao(s, t);
+  }
+  if (estado.robo && robo) desenhaRoboFigura(robo.x, robo.y, Math.min(LW, LH) * 0.11, t, robo.dir, !!robo.alvo);
+  for (const p of particulas) {
+    ctx.save(); ctx.globalAlpha = Math.min(1, p.vida * 2); ctx.translate(p.x, p.y); ctx.rotate(p.gira); ctx.fillStyle = p.cor;
+    if (p.estrela) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? p.tam * 0.45 : p.tam; ctx.lineTo(Math.cos(i * Math.PI / 5) * r, Math.sin(i * Math.PI / 5) * r); } ctx.fill(); }
+    else ctx.fillRect(-p.tam / 2, -p.tam / 4, p.tam, p.tam / 2);
+    ctx.restore();
+  }
+  for (const v of voando) {
+    if (v.t < 0) continue;
+    const f = v.t / v.dur, x = v.x0 + (v.x1 - v.x0) * f, y = v.y0 + (v.y1 - v.y0) * f - Math.sin(f * Math.PI) * 80;
+    desenhaItem(v.id, x, y, 30 * (1 - f * 0.4));
+  }
+  for (const tx of textos) {
+    ctx.globalAlpha = Math.min(1, tx.vida * 2); ctx.font = `900 ${tx.tam}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineWidth = 4; ctx.strokeStyle = "#0c0c10"; ctx.strokeText(tx.txt, tx.x, tx.y); ctx.fillStyle = tx.cor; ctx.fillText(tx.txt, tx.x, tx.y);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ---------- barra do topo e de sementes ----------
+let hudCache = {};
+function poeTexto(id, txt) { if (hudCache[id] !== txt) { hudCache[id] = txt; $(id).innerHTML = txt; } }
+function atualizaHud(dt) {
+  if (!estado) return;
+  moedasMostradas += (estado.moedas - moedasMostradas) * Math.min(1, dt * 8);
+  if (Math.abs(estado.moedas - moedasMostradas) < 0.5) moedasMostradas = estado.moedas;
+  poeTexto("c-moedas", "🪙 " + Math.round(moedasMostradas));
+  const a = xpDoNivel(estado.nivel), b = xpDoNivel(estado.nivel + 1);
+  poeTexto("t-nivel", `⭐ Nível ${estado.nivel}`);
+  $("b-xp").style.width = Math.round(100 * (estado.xp - a) / (b - a)) + "%";
+  const m = estado.missao;
+  if (m) {
+    poeTexto("t-missao", (m.feita ? "✅ " : "🎯 ") + m.texto + ` <span style="color:#a3e635">${m.prog}/${m.qtd}</span>`);
+    $("b-missao").style.width = Math.round(100 * m.prog / m.qtd) + "%";
+    $("c-missao").classList.toggle("feita", m.feita);
+  }
+  const itens = Object.keys(estado.inv).filter(k => estado.inv[k] > 0);
+  poeTexto("celeiro", itens.length ? "<span>📦 Celeiro</span>" + itens.map(k => `<span>${item(k).emoji} ${estado.inv[k]}</span>`).join("")
+                                   : "<span>📦 Celeiro vazio: colha e venda no caminhão</span>");
+}
+function montaSementes() {
+  if (!estado) return;
+  const box = $("sementes"); box.innerHTML = "";
+  if (SEMENTE[seleciona].nivel > estado.nivel) seleciona = "cenoura";
+  CONFIG.sementes.forEach((s, i) => {
+    const b = document.createElement("button");
+    const livre = s.nivel <= estado.nivel;
+    b.className = "sem" + (livre ? "" : " bloq") + (s.id === seleciona ? " sel" : "");
+    b.id = "sem-" + s.id;
+    b.innerHTML = `<span class="e">${livre ? s.emoji : "🔒"}</span><span>${livre ? s.curto : "Nível " + s.nivel}</span><span>${livre ? "🪙" + s.preco + " · " + s.tempo + "s" : "&nbsp;"}</span>`;
+    b.onclick = () => escolheSemente(s.id);
+    box.appendChild(b);
+  });
+}
+function escolheSemente(id) {
+  const s = SEMENTE[id];
+  if (s.nivel > estado.nivel) { aviso(`🔒 ${s.nome} chega no nível ${s.nivel}`); return; }
+  seleciona = id; montaSementes(); bip(520, 0.04, "triangle");
+}
+
+// ---------- entrada: toque, mouse e teclado ----------
+function slotEm(x, y) { return slots.find(s => x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h); }
+function tocar(x, y, deslizando = false) {
+  if (!rodando) return;
+  const s = slotEm(x, y);
+  if (!s) return;
+  if (s.tipo === "canteiro") { cursor = s.i; return acaoCanteiro(s.i, deslizando); }
+  if (deslizando) return;
+  if (s.tipo === "animal") return acaoAnimal(s.id);
+  if (s.tipo === "maquina") return acaoMaquina(s.id);
+  if (s.tipo === "robo") return estado.robo ? aviso("🤖 O robô colhe tudo que estiver pronto!") : comprar("robo");
+  if (s.tipo === "caminhao") return vender();
+}
+// arrastar o dedo por cima dos canteiros planta/colhe vários de uma vez
+let arrastando = false, ultimoSlot = null, cursorVisivel = false;
+cv.addEventListener("pointerdown", e => { if (DEMO) return; cursorVisivel = false; arrastando = true; ultimoSlot = slotEm(e.clientX, e.clientY); tocar(e.clientX, e.clientY); });
+addEventListener("pointermove", e => {
+  if (!arrastando || DEMO) return;
+  const s = slotEm(e.clientX, e.clientY);
+  if (s && s !== ultimoSlot && s.tipo === "canteiro") { ultimoSlot = s; tocar(e.clientX, e.clientY, true); }
+});
+addEventListener("pointerup", () => { arrastando = false; ultimoSlot = null; });
+addEventListener("keydown", e => {
+  if (!rodando || DEMO) return;
+  const k = e.key.toLowerCase(), n = canteirosLiberados();
+  const sem = CONFIG.sementes[+e.key - 1];
+  if (sem) return escolheSemente(sem.id);
+  if (k === "v") return vender();
+  if (k === "c") { for (const id in estado.animais) acaoAnimal(id, true); for (const id in estado.maquinas) acaoMaquina(id, true); return; }
+  const mov = { arrowleft: -1, a: -1, arrowright: 1, d: 1, arrowup: -4, w: -4, arrowdown: 4, s: 4 }[k];
+  if (mov) { cursorVisivel = true; cursor = clamp(cursor + mov, 0, n - 1); e.preventDefault(); }
+  if (k === " " || k === "enter") { cursorVisivel = true; acaoCanteiro(cursor); e.preventDefault(); }
+});
+$("b-som").onclick = () => { somLigado = !somLigado; $("b-som").textContent = somLigado ? "🔊" : "🔇"; };
+$("b-menu").onclick = () => telaInicio();
+
+// ---------- modo demo: um dedo virtual joga usando os mesmos toques ----------
+const dedo = { x: 0, y: 0, alvo: null, espera: 0 };
+function decideDemo() {
+  const n = canteirosLiberados(), m = estado.missao;
+  // 1) comprar o que já dá (sobra um troco para sementes)
+  for (const id of ["galinha", "padaria", "robo", "vaca", "abelha", "sorveteria"]) {
+    const c = compravel(id);
+    if (!jaTem(id) && c.nivel <= estado.nivel && estado.moedas >= c.preco + 3) return { slot: slots.find(s => s.id === id) };
+  }
+  // 2) pegar o que estiver pronto
+  const prontos = alvosProntos().filter(s => !(robo && robo.alvo === s));
+  if (prontos.length) return { slot: prontos[0] };
+  // 3) vender quando o celeiro encher (ou se a missão pede)
+  const vendeMissao = m && !m.feita && (m.tipo === "vender" || m.tipo === "ganhar") && totalCeleiro() > 0;
+  if (caminhao.anim === 0 && (totalCeleiro() >= 6 || vendeMissao || estado.moedas < 3 && totalCeleiro() > 0)) return { slot: slots.find(s => s.tipo === "caminhao") };
+  // 4) plantar num canteiro vazio, escolhendo a semente
+  const vazio = estado.canteiros.findIndex((c, i) => i < n && !c.s);
+  if (vazio >= 0) {
+    let quer = m && !m.feita && (m.tipo === "colher" || m.tipo === "plantar") ? m.item : null;
+    if (m && !m.feita && m.tipo === "coletar" && m.item === "ovo") quer = "trigo";
+    if (!quer || !SEMENTE[quer] || SEMENTE[quer].preco > estado.moedas) {
+      const opc = CONFIG.sementes.filter(s => s.nivel <= estado.nivel && s.preco <= estado.moedas);
+      if (estado.maquinas.padaria && (estado.inv.trigo || 0) < 2) quer = "trigo";
+      else if (estado.maquinas.sorveteria && (estado.inv.morango || 0) < 2 && SEMENTE.morango.preco <= estado.moedas) quer = "morango";
+      else quer = opc.length ? opc[rndInt(Math.max(0, opc.length - 2), opc.length - 1)].id : null;
+    }
+    if (quer && SEMENTE[quer].preco <= estado.moedas) {
+      if (seleciona !== quer) { const r = $("sem-" + quer).getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, semente: quer }; }
+      return { slot: slots.find(s => s.tipo === "canteiro" && s.i === vazio) };
+    }
+  }
+  if (totalCeleiro() > 0 && caminhao.anim === 0) return { slot: slots.find(s => s.tipo === "caminhao") };
+  return null;
+}
+function passoDemo(dt) {
+  tempoDemo += dt;
+  if (estado.nivel >= CONFIG.demoReiniciaNoNivel || tempoDemo > 300) {
+    banner("🏆 Fazenda completa!", "Agora é a sua vez: toque em Jogar"); tempoDemo = 0;
+    rodando = false; setTimeout(novaPartida, 4000); return;
+  }
+  if (dedo.espera > 0) { dedo.espera -= dt; return; }
+  if (!dedo.alvo) {
+    const d = decideDemo();
+    if (!d) { dedo.espera = 0.3; return; }
+    if (d.slot) d.x = d.slot.x + d.slot.w / 2, d.y = d.slot.y + d.slot.h * 0.55;
+    dedo.alvo = d;
+  }
+  const a = dedo.alvo, dx = a.x - dedo.x, dy = a.y - dedo.y, dist = Math.hypot(dx, dy), vel = 1100 * dt;
+  if (dist > vel) { dedo.x += dx / dist * vel; dedo.y += dy / dist * vel; }
+  else {
+    dedo.x = a.x; dedo.y = a.y;
+    if (a.semente) escolheSemente(a.semente); else tocar(a.x, a.y);
+    $("dedo").classList.add("toca"); setTimeout(() => $("dedo").classList.remove("toca"), 120);
+    dedo.alvo = null; dedo.espera = 0.28;
+  }
+  const el = $("dedo"); el.style.left = dedo.x + "px"; el.style.top = dedo.y + "px";
+}
+
+// ---------- laço principal ----------
+let ultimo = performance.now();
+function laco(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
+  passo(dt); desenha(agora / 1000); atualizaHud(dt);
+  requestAnimationFrame(laco);
+}
+
+// ---------- telas ----------
+function tela(html) { $("tela-conteudo").innerHTML = html; $("tela").classList.remove("hidden"); }
+function novaPartida(continuar = false) {
+  estado = (continuar && carregaSave()) || estadoNovo();
+  if (!continuar && !DEMO) try { localStorage.removeItem(CHAVE_SAVE); } catch (e) {}
+  if (!estado.missao) novaMissao();
+  moedasMostradas = estado.moedas; robo = null; tempoDemo = 0; particulas = []; voando = []; textos = []; caminhao.anim = 0;
+  seleciona = "cenoura"; montaSementes(); layout();
+  if (DEMO) { $("dedo").classList.remove("hidden"); dedo.x = LW / 2; dedo.y = LH / 2; dedo.alvo = null; }
+  rodando = true;
+  $("tela").classList.add("hidden");
+}
+function telaInicio() {
+  if (rodando && !DEMO) try { localStorage.setItem(CHAVE_SAVE, JSON.stringify(estado)); } catch (e) {}
+  rodando = false;
+  const save = carregaSave();
+  let recorde = 0; try { recorde = +localStorage.getItem(CHAVE_RECORDE) || 0; } catch (e) {}
+  tela(`<h1>🌻 ${CONFIG.titulo}</h1>
+    <p>Toque no <b>canteiro</b> para plantar a semente escolhida embaixo. Quando crescer, toque de novo para <b>colher</b>.
+    Venda no <b>caminhão</b>, compre animais, a padaria e um robô que colhe sozinho!</p>
+    <p style="font-size:14px"><b>Dica:</b> arraste o dedo por vários canteiros de uma vez.<br>
+    PC: <b>1–5</b> escolhem a semente · <b>setas + espaço</b> plantam/colhem · <b>V</b> vende · <b>C</b> pega produtos</p>
+    <div class="linha">${save ? `<button class="btn" onclick="novaPartida(true)">▶ Jogar (continuar no nível ${save.nivel})</button>
+      <button class="btn sec" onclick="novaPartida(false)">↻ Começar do zero</button>` : `<button class="btn" onclick="novaPartida(false)">▶ Jogar</button>`}
+    <button class="btn sec" onclick="telaCriar()">🛠️ Criar a minha versão</button></div>
+    <p style="font-size:12px;color:#888;margin-top:14px">${recorde ? `Seu recorde: nível ${recorde} · ` : ""}Fábrica de Jogos INEMA · v${VERSAO}</p>`);
+}
+function telaCriar() {
+  if (rodando && !DEMO) try { localStorage.setItem(CHAVE_SAVE, JSON.stringify(estado)); } catch (e) {}
+  rodando = false;
+  tela(`<h1>🛠️ Crie a sua versão</h1>
+    <p><b>1.</b> Baixe este jogo (é um arquivo só).<br>
+    <b>2.</b> Abra o arquivo num editor de texto e mude o <b>CONFIG</b> no topo: sementes, preços, tempo de crescer, animais, missões.<br>
+    <b>3.</b> Quer mais? Cole o arquivo numa IA (ChatGPT, Gemini, Claude) e peça, por exemplo:</p>
+    <pre>Neste jogo da fazenda, adicione uma ovelha que dá lã
+a cada 6 segundos e uma máquina de tecelagem:
+lã + algodão = cachecol. Coloque o algodão como
+semente nova no nível 5. Explique o que você mudou.</pre>
+    <div class="linha"><button class="btn" onclick="baixar()">⬇ Baixar o jogo</button>
+    <button class="btn sec" onclick="telaInicio()">Voltar</button></div>
+    <p style="font-size:13px">Aprenda a criar jogos com IA, de graça, no <b>INEMA.CLUB</b>.</p>`);
+}
+function baixar() {
+  const blob = new Blob([FONTE_HTML], { type: "text/html" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meu-vida-na-fazenda.html"; a.click();
+}
+
+// para os testes automáticos poderem espiar o jogo
+window.__fazenda = () => ({ moedas: estado?.moedas, xp: estado?.xp, nivel: estado?.nivel, missoesFeitas: estado?.missoesFeitas,
+  colheitas: estado?.colheitas, plantados: estado?.canteiros.filter(c => c.s).length, missao: estado?.missao?.texto, rodando });
+window.__slots = () => slots.map(s => ({ tipo: s.tipo, id: s.id, i: s.i, x: s.x, y: s.y, w: s.w, h: s.h }));
+
+if (DEMO) novaPartida(false); else { estado = estadoNovo(); moedasMostradas = estado.moedas; novaMissao(); montaSementes(); telaInicio(); }
+requestAnimationFrame(laco);
+</script>
+</body>
+</html>
