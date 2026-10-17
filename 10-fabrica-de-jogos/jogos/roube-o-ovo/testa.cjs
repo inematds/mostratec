@@ -52,7 +52,7 @@ function vigia(page, erros) {
     const page = await ctx.newPage(); const erros = []; vigia(page, erros);
     await page.goto(URL);
     await page.screenshot({ path: path.join(SHOTS, "inicio-1280.png") });
-    await page.click("text=▶ Jogar");
+    await page.click("#tela >> text=▶ Jogar");
     await espera(300);
     const p0 = (await page.evaluate(() => jogo.estado())).jogador;
     await page.keyboard.down("ArrowRight"); await espera(600); await page.keyboard.up("ArrowRight");
@@ -81,13 +81,13 @@ function vigia(page, erros) {
     await page.reload();
     const e = await page.evaluate(() => jogo.estado());
     ok(e.nivel === 5 && e.cenario === "Neve", `progresso salvo: nível ${e.nivel}, ${e.cenario}`);
-    await page.click("text=▶ Jogar"); await espera(4000);
+    await page.click("#tela >> text=▶ Jogar"); await espera(4000);
     const e2 = await page.evaluate(() => jogo.estado());
     ok(e2.pedestais === 8 && e2.velRobo > 0.9, `nível 5: ${e2.pedestais} pedestais, robôs fator ${e2.velRobo.toFixed(2)}`);
     await page.screenshot({ path: path.join(SHOTS, "nivel5-neve-1280.png") });
     // nível 7: cenário Espaço e 10 pedestais
     await page.evaluate(() => localStorage.setItem("roube-ovo-progresso", JSON.stringify({ xp: 760 })));
-    await page.reload(); await page.click("text=▶ Jogar"); await espera(4000);
+    await page.reload(); await page.click("#tela >> text=▶ Jogar"); await espera(4000);
     const e3 = await page.evaluate(() => jogo.estado());
     ok(e3.nivel === 7 && e3.cenario === "Espaço" && e3.pedestais === 10, `nível 7 com 760 XP: ${e3.cenario}, ${e3.pedestais} pedestais`);
     await page.screenshot({ path: path.join(SHOTS, "nivel7-espaco-1280.png") });
@@ -100,14 +100,14 @@ function vigia(page, erros) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
     const page = await ctx.newPage();
     await page.goto(URL);
-    await page.click("text=🛠️ Criar a minha versão");
+    await page.click("#tela >> text=🛠️ Criar a minha versão");
     await page.screenshot({ path: path.join(SHOTS, "criar-1280.png") });
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("text=⬇ Baixar o jogo")]);
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#tela >> text=⬇ Baixar o jogo")]);
     const destino = path.join(SHOTS, "baixado.html"); await dl.saveAs(destino);
     const a = fs.statSync(ARQ).size, b = fs.statSync(destino).size;
     ok(Math.abs(a - b) / a < 0.03, `download ${b} bytes vs arquivo ${a} bytes`);
     const txt = fs.readFileSync(destino, "utf8");
-    ok(txt.includes('const VERSAO = "0.2.0"') && txt.includes("missoes:") && txt.includes("niveis:"), "download traz VERSAO 0.2.0, missões e níveis");
+    ok(txt.includes('const VERSAO = "0.3.0"') && txt.includes("missoes:") && txt.includes("niveis:"), "download traz VERSAO 0.3.0, missões e níveis");
     await ctx.close();
   }
 
@@ -117,10 +117,45 @@ function vigia(page, erros) {
     const page = await ctx.newPage(); const erros = []; vigia(page, erros);
     await page.goto(URL);
     await page.screenshot({ path: path.join(SHOTS, "inicio-390.png") });
-    await page.tap("text=▶ Jogar"); await espera(6000);
+    await page.tap("#tela >> text=▶ Jogar"); await espera(6000);
     await page.screenshot({ path: path.join(SHOTS, "jogo-390.png") });
     const sobra = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok(sobra <= 0, "celular sem rolagem lateral");
+
+    // 5b. Faixa INEMA.CLUB + painel com QR (regra do Nei 17/10)
+    const cdp = await ctx.newCDPSession(page);
+    const arrasta = async (x, y0, y1) => {           // dedo de verdade (eventos de toque) arrastando no canvas
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: y0 }] });
+      for (let i = 1; i <= 6; i++) { await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y0 + (y1 - y0) * i / 6 }] }); await espera(30); }
+      await espera(500);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    };
+    const fx = await page.evaluate(() => { const r = document.getElementById("puxador").getBoundingClientRect();
+      const b = document.getElementById("botoes").getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, h: innerHeight, botoes: b.bottom, txt: document.getElementById("puxador").textContent }; });
+    ok(Math.abs(fx.bottom - fx.h) < 2 && Math.abs(fx.bottom - fx.top - 46) < 2, `faixa amarela fixa embaixo (${fx.top.toFixed(0)}–${fx.bottom.toFixed(0)} de ${fx.h}): "${fx.txt}"`);
+    ok(fx.botoes <= fx.top, `botões acima da faixa (fundo dos botões ${fx.botoes.toFixed(0)} ≤ ${fx.top.toFixed(0)})`);
+    const ta = await page.evaluate(() => getComputedStyle(document.getElementById("c")).touchAction);
+    ok(ta === "none", "canvas com touch-action:none (" + ta + ")");
+    const j0 = (await page.evaluate(() => jogo.estado())).jogador;
+    await arrasta(195, 600, 450);
+    const j1 = (await page.evaluate(() => jogo.estado())).jogador;
+    ok(j1.y < j0.y - 20 && await page.evaluate(() => scrollY) === 0, `toque move o jogador sem rolar a página (${j0.y.toFixed(0)} → ${j1.y.toFixed(0)})`);
+    await page.tap("#puxador"); await espera(1500);
+    const pn = await page.evaluate(() => { const q = document.querySelector("#qr-painel svg").getBoundingClientRect();
+      return { y: scrollY, qTop: q.top, qBot: q.bottom, qW: q.width, h: innerHeight }; });
+    ok(pn.y > 400 && pn.qW > 150 && pn.qTop >= 0 && pn.qBot <= pn.h, `puxador rola até o painel (scrollY ${pn.y.toFixed(0)}), QR visível ${pn.qW.toFixed(0)}px em ${pn.qTop.toFixed(0)}–${pn.qBot.toFixed(0)}`);
+    await page.screenshot({ path: path.join(SHOTS, "painel-390.png") });
+    await page.tap("#painel >> text=⬆ Voltar ao jogo"); await espera(1500);
+    const yv = await page.evaluate(() => scrollY);
+    ok(yv === 0, `"Voltar ao jogo" volta ao topo (scrollY ${yv})`);
+    await page.screenshot({ path: path.join(SHOTS, "jogo-390-depois-painel.png") });
+    const j2 = (await page.evaluate(() => jogo.estado())).jogador;
+    await arrasta(195, 450, 650);
+    const j3 = (await page.evaluate(() => jogo.estado())).jogador;
+    ok(j3.y > j2.y + 20, `depois do painel o toque ainda move o jogador (${j2.y.toFixed(0)} → ${j3.y.toFixed(0)})`);
+    await page.tap("#b-tranca"); await espera(200);
+    ok((await page.evaluate(() => jogo.estado())).trancada, "botão Trancar responde ao toque");
     ok(erros.length === 0, "celular sem erros " + (erros.join(" | ") || ""));
     await ctx.close();
     const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
