@@ -181,6 +181,9 @@
       .card-front::after { font-size: 1.8rem; }
       h1 { font-size: 1.8rem; }
     }
+  
+    /* revisão MOSTRATEC (19/10/2026): não rolar de lado no celular */
+@media (max-width:440px){ .game-board{padding:.8rem;gap:.4rem} .card{width:min(60px,calc((100vw - 64px)/6));height:min(60px,calc((100vw - 64px)/6))} }
   </style>
 </head>
 <body>

@@ -5,7 +5,6 @@ class SpaceExplorerKids {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
-    this.resize();
     window.addEventListener('resize', () => this.resize());
 
     // Tutorial
@@ -106,6 +105,7 @@ class SpaceExplorerKids {
     // Visual
     this.backgroundStars = [];
     this.particles = [];
+    this.resize(); // depois de criar tudo o que o resize usa (revisão MOSTRATEC)
     this.generateBackgroundStars();
 
     // Scrolling

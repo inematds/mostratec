@@ -8,7 +8,6 @@ class RhythmBattle {
     this.ctx = canvas.getContext('2d');
 
     // Configurações do canvas
-    this.resize();
     window.addEventListener('resize', () => this.resize());
 
     // Estado do jogo
@@ -117,6 +116,7 @@ class RhythmBattle {
     this.eaiCoins = 0;
     this.eaiXP = 0;
     this.unlockedSongs = ['tutorial', 'neon-nights'];
+    this.resize(); // depois de criar tudo o que o resize usa (revisão MOSTRATEC)
     this.loadProgress();
 
     // Controles
@@ -686,7 +686,7 @@ class RhythmBattle {
 
     // Título
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 56px Arial';
+    ctx.font = 'bold ' + Math.min(56, Math.floor(this.canvas.width / 12)) + 'px Arial'; // cabe no celular (revisão MOSTRATEC)
     ctx.textAlign = 'center';
     ctx.fillText('RHYTHM BATTLE', cx, 100);
 

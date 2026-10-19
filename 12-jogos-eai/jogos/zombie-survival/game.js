@@ -5,7 +5,6 @@ class ZombieSurvivalIdle {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
-    this.resize();
     window.addEventListener('resize', () => this.resize());
 
     // Tutorial
@@ -104,6 +103,7 @@ class ZombieSurvivalIdle {
 
     // Input
     this.lastShot = 0;
+    this.resize(); // depois de criar tudo o que o resize usa (revisão MOSTRATEC)
     this.setupInput();
 
     // Start

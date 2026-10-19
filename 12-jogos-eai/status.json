@@ -14,22 +14,18 @@
   "testadoEm": "2026-10-19T04:45"
  },
  "jogo-da-memoria": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (397px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:45"
+  "testadoEm": "2026-10-19T04:57"
  },
  "hextris-eai": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (445px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:45"
+  "testadoEm": "2026-10-19T04:57"
  },
  "capivara-evolution": {
   "teste": "ok",
@@ -39,13 +35,11 @@
   "testadoEm": "2026-10-19T04:45"
  },
  "dragon-world": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (502px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:46"
+  "testadoEm": "2026-10-19T04:57"
  },
  "horse-academy": {
   "teste": "ok",
@@ -83,15 +77,11 @@
   "testadoEm": "2026-10-19T04:46"
  },
  "rhythm-battle": {
-  "teste": "atencao",
-  "problemas": [
-   "1 erro(s)"
-  ],
-  "erros": [
-   "Cannot read properties of undefined (reading 'forEach')"
-  ],
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:46"
+  "testadoEm": "2026-10-19T04:58"
  },
  "hex-racer": {
   "teste": "ok",
@@ -115,15 +105,11 @@
   "testadoEm": "2026-10-19T04:46"
  },
  "plinko-tycoon": {
-  "teste": "atencao",
-  "problemas": [
-   "1 erro(s)"
-  ],
-  "erros": [
-   "Cannot read properties of undefined (reading 'luckySlots')"
-  ],
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:46"
+  "testadoEm": "2026-10-19T04:57"
  },
  "ball-fusion": {
   "teste": "ok",
@@ -280,26 +266,18 @@
   "testadoEm": "2026-10-19T04:47"
  },
  "space-explorer": {
-  "teste": "atencao",
-  "problemas": [
-   "1 erro(s)"
-  ],
-  "erros": [
-   "Cannot set properties of undefined (setting 'x')"
-  ],
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:47"
+  "testadoEm": "2026-10-19T04:58"
  },
  "zombie-survival": {
-  "teste": "atencao",
-  "problemas": [
-   "1 erro(s)"
-  ],
-  "erros": [
-   "Cannot set properties of undefined (setting 'x')"
-  ],
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:47"
+  "testadoEm": "2026-10-19T04:58"
  },
  "quiz-matematica": {
   "teste": "ok",
@@ -330,13 +308,11 @@
   "testadoEm": "2026-10-19T04:48"
  },
  "numeros-100": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (494px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:48"
+  "testadoEm": "2026-10-19T04:58"
  },
  "soma-subtracao": {
   "teste": "ok",
@@ -346,13 +322,11 @@
   "testadoEm": "2026-10-19T04:48"
  },
  "soletrando": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (583px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:48"
+  "testadoEm": "2026-10-19T04:58"
  },
  "palavras-embaralhadas": {
   "teste": "ok",
@@ -362,13 +336,11 @@
   "testadoEm": "2026-10-19T04:48"
  },
  "heroi-digitacao": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (458px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:48"
+  "testadoEm": "2026-10-19T04:58"
  },
  "alfabeto-divertido": {
   "teste": "ok",
@@ -385,13 +357,11 @@
   "testadoEm": "2026-10-19T04:48"
  },
  "laboratorio-ciencias": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (635px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:48"
+  "testadoEm": "2026-10-19T04:58"
  },
  "mapa-brasil-interativo": {
   "teste": "ok",
@@ -429,13 +399,11 @@
   "testadoEm": "2026-10-19T04:48"
  },
  "quebra-cabecas-logica": {
-  "teste": "atencao",
-  "problemas": [
-   "rola de lado no celular (635px)"
-  ],
+  "teste": "ok",
+  "problemas": [],
   "erros": [],
   "faltando": [],
-  "testadoEm": "2026-10-19T04:48"
+  "testadoEm": "2026-10-19T04:58"
  },
  "bingo-letras": {
   "teste": "ok",

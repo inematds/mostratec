@@ -375,7 +375,12 @@
                 font-size: 14px;
             }
         }
-    </style>
+    
+    /* revisão MOSTRATEC (19/10/2026): não rolar de lado no celular */
+.game-container{max-width:100%}
+#gameCanvas{max-width:calc(100vw - 24px);height:auto}
+@media (max-width:520px){ .controls{flex-wrap:wrap;justify-content:center;gap:8px;max-width:calc(100vw - 24px)} .modal-content{padding:22px 14px;max-width:calc(100vw - 24px)} .level-select{grid-template-columns:repeat(2,1fr)!important} .header{width:100%;max-width:calc(100vw - 24px);gap:6px} .stat{min-width:0;padding:6px 10px} }
+  </style>
 </head>
 <body>
     <div class="game-container">

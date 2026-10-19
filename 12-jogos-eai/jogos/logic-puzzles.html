@@ -539,7 +539,13 @@
             .memory-cell { width: 50px; height: 50px; }
             .pyramid-cell { width: 50px; height: 50px; font-size: 1.2rem; }
         }
-    </style>
+    
+    /* revisão MOSTRATEC (19/10/2026): não rolar de lado no celular */
+body>div{max-width:100%}
+#main-menu{width:100%;max-width:900px}
+.menu-container{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+@media (max-width:600px){ h1{font-size:1.6rem} }
+  </style>
 </head>
 <body>
     <!-- Menu Principal -->

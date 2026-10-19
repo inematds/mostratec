@@ -8,7 +8,6 @@ class PlinkoTycoon {
     this.ctx = canvas.getContext('2d');
 
     // Configurações
-    this.resize();
     window.addEventListener('resize', () => this.resize());
 
     // Tutorial
@@ -64,11 +63,9 @@ class PlinkoTycoon {
 
     // Pegs (pinos)
     this.pegs = [];
-    this.generatePegs();
 
     // Slots no fundo
     this.slots = [];
-    this.generateSlots();
 
     // Bolas ativas
     this.balls = [];
@@ -108,6 +105,7 @@ class PlinkoTycoon {
     this.loadProgress();
 
     // Controles
+    this.resize(); // depois de criar tudo o que o resize usa (revisão MOSTRATEC)
     this.setupControls();
 
     // Iniciar loop

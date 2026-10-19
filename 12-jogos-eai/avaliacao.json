@@ -1,1 +1,38 @@
-{}
+{
+ "jogo-da-memoria": {
+  "revisao": "cartas menores no celular (não rola de lado) (19/10)"
+ },
+ "hextris-eai": {
+  "revisao": "tabuleiro, botões e tela de níveis cabem no celular (19/10)"
+ },
+ "dragon-world": {
+  "revisao": "barra de moedas quebra linha no celular (19/10)"
+ },
+ "rhythm-battle": {
+  "revisao": "erro ao abrir corrigido; título cabe no celular (19/10)"
+ },
+ "plinko-tycoon": {
+  "revisao": "erro ao abrir corrigido (casas de multiplicador) (19/10)"
+ },
+ "space-explorer": {
+  "revisao": "erro ao abrir corrigido (nave e estrelas) (19/10)"
+ },
+ "zombie-survival": {
+  "revisao": "erro ao abrir corrigido (base) (19/10)"
+ },
+ "numeros-100": {
+  "revisao": "botões de navegação quebram linha no celular (19/10)"
+ },
+ "soletrando": {
+  "revisao": "teclado virtual cabe no celular (19/10)"
+ },
+ "heroi-digitacao": {
+  "revisao": "texto da digitação quebra linha no celular (19/10)"
+ },
+ "laboratorio-ciencias": {
+  "revisao": "menu em 1 coluna no celular (19/10)"
+ },
+ "quebra-cabecas-logica": {
+  "revisao": "menu em 1 coluna no celular (19/10)"
+ }
+}
