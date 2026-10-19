@@ -59,7 +59,7 @@
   "descricao": "Plataforma BNCC do 6º ao 9º ano com gamificação, painel do professor e tutor IA.",
   "datas": "criado 05/03/2026 · último commit 06/03/2026",
   "situacao": "no ar",
-  "nota": "Só a página-guia está no ar. O app no Vercel responde 402 (bloqueado).",
+  "nota": "Só a página-guia está no ar; o app em si está fora (Vercel 402). Roda completo localmente. Para publicar, falta mais conteúdo do que estrutura.",
   "link": "https://inematds.github.io/inemaacademia/",
   "rotulo": "Abrir o guia",
   "capa": "capas/proj-inemaacademia.jpg"

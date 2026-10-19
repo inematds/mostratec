@@ -37,5 +37,8 @@
  },
  "P6": {
   "revisao": "v1.2.0 (19/10): leitor e editores funcionam no celular, tela de Fim, erro React corrigido; relatório REVISAO-2026-10.md no repo"
+ },
+ "P5": {
+  "revisao": "v0.2.0 (19/10): aluno, professor e admin funcionam de ponta a ponta; 20 correções (cadastro, segurança de papéis, XP, turmas, admin); falta conteúdo: 6º ano com 89 lições só com título, sem exercícios reais"
  }
 }
