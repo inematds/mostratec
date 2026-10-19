@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digitação Ninja - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      padding: 1rem;
+      color: white;
+    }
+    .game-container {
+      max-width: 700px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94A3B8;
+      margin-bottom: 1.5rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #10B981;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #94A3B8;
+    }
+    .level-select {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .level-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #334155;
+      border-radius: 0.75rem;
+      background: transparent;
+      color: #94A3B8;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .level-btn.active {
+      border-color: #10B981;
+      background: rgba(16, 185, 129, 0.2);
+      color: #10B981;
+    }
+    .typing-area {
+      background: rgba(0,0,0,0.5);
+      border: 2px solid #334155;
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .text-display {
+      font-size: 1.5rem;
+      line-height: 2;
+      margin-bottom: 1.5rem;
+      min-height: 100px;
+    }
+    .char {
+      transition: color 0.1s;
+    }
+    .char.correct {
+      color: #10B981;
+    }
+    .char.wrong {
+      color: #EF4444;
+      text-decoration: underline;
+    }
+    .char.current {
+      background: #10B981;
+      color: #0F172A;
+      padding: 2px;
+      border-radius: 3px;
+      animation: blink 1s infinite;
+    }
+    .char.pending {
+      color: #64748B;
+    }
+    @keyframes blink {
+      50% { opacity: 0.7; }
+    }
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid #334155;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      font-size: 1.2rem;
+      color: white;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus {
+      border-color: #10B981;
+    }
+    .input-field::placeholder {
+      color: #64748B;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #34D399);
+      transition: width 0.2s;
+    }
+    .timer-bar {
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #EAB308, #EF4444);
+      transition: width 0.1s linear;
+    }
+    .btn {
+      display: block;
+      margin: 0 auto;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message.success { background: rgba(16, 185, 129, 0.2); color: #10B981; }
+    .message.error { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+    .keyboard-hint {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .key-hint {
+      background: #334155;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      color: #94A3B8;
+    }
+    .key-hint.next {
+      background: #10B981;
+      color: #0F172A;
+    }
+    .combo-display {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      display: none;
+    }
+    .combo-display.show {
+      display: block;
+      animation: comboIn 0.3s ease;
+    }
+    @keyframes comboIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .wpm-display {
+      text-align: center;
+      font-size: 3rem;
+      font-weight: bold;
+      color: #10B981;
+      margin-bottom: 0.5rem;
+    }
+    .result-details {
+      text-align: center;
+      color: #94A3B8;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="combo-display" id="comboDisplay">🔥 <span id="comboNum">0</span> Combo!</div>
+
+  <div class="game-container">
+    <h1>⌨️ Digitação Ninja</h1>
+    <p class="subtitle">Pratique sua velocidade de digitação!</p>
+
+    <div class="level-select">
+      <button class="level-btn active" data-level="easy">🐢 Iniciante</button>
+      <button class="level-btn" data-level="medium">🐇 Intermediário</button>
+      <button class="level-btn" data-level="hard">🚀 Avançado</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="wpm">0</div>
+        <div class="stat-label">PPM</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="accuracy">100%</div>
+        <div class="stat-label">Precisão</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="time">60</div>
+        <div class="stat-label">Tempo</div>
+      </div>
+    </div>
+
+    <div class="timer-bar">
+      <div class="timer-fill" id="timerFill" style="width: 100%"></div>
+    </div>
+
+    <div class="typing-area">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+
+      <div class="text-display" id="textDisplay"></div>
+
+      <input type="text" class="input-field" id="inputField" placeholder="Clique aqui e comece a digitar..." autocomplete="off" autocapitalize="off" autocorrect="off">
+
+      <div class="keyboard-hint" id="keyboardHint"></div>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <button class="btn" id="startBtn">▶️ Iniciar</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('typing-hero'));</script>
+  <script>
+    const texts = {
+      easy: [
+        'o sol brilha no ceu azul',
+        'a casa tem um jardim lindo',
+        'o gato dorme no sofa macio',
+        'a lua ilumina a noite escura',
+        'o mar tem ondas muito grandes',
+        'as flores crescem no jardim',
+        'o passaro canta de manha cedo',
+        'a chuva cai sobre as plantas',
+      ],
+      medium: [
+        'O Brasil tem uma cultura rica e diversificada.',
+        'A tecnologia muda o mundo rapidamente.',
+        'Estudar todos os dias melhora o aprendizado.',
+        'Os animais precisam de cuidado e respeito.',
+        'A natureza oferece paisagens incriveis.',
+        'Livros abrem portas para novos mundos.',
+        'A musica alegra e acalma a alma.',
+        'Amigos verdadeiros sao tesouros raros.',
+      ],
+      hard: [
+        'A programacao de computadores requer logica e criatividade para resolver problemas complexos.',
+        'O conhecimento cientifico avanca atraves de experimentacao, observacao e analise cuidadosa dos dados.',
+        'A literatura brasileira apresenta obras magnificas que refletem nossa historia e sociedade.',
+        'O desenvolvimento sustentavel busca equilibrar crescimento economico com preservacao ambiental.',
+        'A inteligencia artificial esta revolucionando diversos setores da economia mundial.',
+      ]
+    };
+
+    let level = 'easy';
+    let currentText = '';
+    let currentIndex = 0;
+    let startTime = null;
+    let timer = null;
+    let timeLeft = 60;
+    let totalChars = 0;
+    let correctChars = 0;
+    let wrongChars = 0;
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let gameActive = false;
+
+    function selectText() {
+      const textList = texts[level];
+      return textList[Math.floor(Math.random() * textList.length)];
+    }
+
+    function renderText() {
+      const display = document.getElementById('textDisplay');
+      display.innerHTML = '';
+
+      for (let i = 0; i < currentText.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'char';
+
+        if (i < currentIndex) {
+          // Already typed
+          const correct = currentText[i] === currentText[i]; // Simplified - we track correctness elsewhere
+          span.classList.add('correct');
+        } else if (i === currentIndex) {
+          span.classList.add('current');
+        } else {
+          span.classList.add('pending');
+        }
+
+        span.textContent = currentText[i] === ' ' ? '␣' : currentText[i];
+        display.appendChild(span);
+      }
+    }
+
+    function updateKeyboardHint() {
+      const hint = document.getElementById('keyboardHint');
+      if (currentIndex >= currentText.length) {
+        hint.innerHTML = '<span class="key-hint">Texto completo!</span>';
+        return;
+      }
+
+      const nextChar = currentText[currentIndex];
+      const nextFew = currentText.slice(currentIndex, currentIndex + 5);
+
+      hint.innerHTML = nextFew.split('').map((char, i) => {
+        const isNext = i === 0;
+        const displayChar = char === ' ' ? 'Espaço' : char.toUpperCase();
+        return `<span class="key-hint ${isNext ? 'next' : ''}">${displayChar}</span>`;
+      }).join('');
+    }
+
+    function handleInput(e) {
+      if (!gameActive) return;
+
+      const input = e.target;
+      const typed = input.value;
+
+      if (typed.length === 0) return;
+
+      const lastChar = typed[typed.length - 1];
+      const expectedChar = currentText[currentIndex];
+
+      totalChars++;
+
+      if (lastChar === expectedChar) {
+        correctChars++;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+
+        currentIndex++;
+        score += 10 + (combo >= 5 ? combo : 0);
+
+        // Mark as correct
+        const chars = document.querySelectorAll('.char');
+        if (chars[currentIndex - 1]) {
+          chars[currentIndex - 1].classList.remove('current');
+          chars[currentIndex - 1].classList.add('correct');
+        }
+        if (chars[currentIndex]) {
+          chars[currentIndex].classList.add('current');
+        }
+
+        updateCombo();
+
+        // Check if text is complete
+        if (currentIndex >= currentText.length) {
+          // Bonus for completing text
+          score += 100;
+          giveReward('coins', 10);
+
+          // Load new text
+          currentText = selectText();
+          currentIndex = 0;
+          renderText();
+        }
+      } else {
+        wrongChars++;
+        combo = 0;
+        updateCombo();
+
+        // Visual feedback for wrong
+        const chars = document.querySelectorAll('.char');
+        if (chars[currentIndex]) {
+          chars[currentIndex].classList.add('wrong');
+          setTimeout(() => {
+            chars[currentIndex]?.classList.remove('wrong');
+          }, 200);
+        }
+      }
+
+      input.value = '';
+      updateStats();
+      updateKeyboardHint();
+      updateProgress();
+    }
+
+    function updateCombo() {
+      const display = document.getElementById('comboDisplay');
+      if (combo >= 5) {
+        display.classList.add('show');
+        document.getElementById('comboNum').textContent = combo;
+      } else {
+        display.classList.remove('show');
+      }
+    }
+
+    function updateStats() {
+      // Calculate WPM
+      if (startTime) {
+        const elapsedMinutes = (Date.now() - startTime) / 60000;
+        const wpm = Math.round((correctChars / 5) / elapsedMinutes) || 0;
+        document.getElementById('wpm').textContent = wpm;
+      }
+
+      // Calculate accuracy
+      const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+      document.getElementById('accuracy').textContent = accuracy + '%';
+
+      document.getElementById('score').textContent = score;
+    }
+
+    function updateProgress() {
+      const progress = (currentIndex / currentText.length) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    function startGame() {
+      gameActive = true;
+      currentText = selectText();
+      currentIndex = 0;
+      startTime = Date.now();
+      totalChars = 0;
+      correctChars = 0;
+      wrongChars = 0;
+      score = 0;
+      combo = 0;
+      maxCombo = 0;
+      timeLeft = level === 'easy' ? 60 : level === 'medium' ? 45 : 30;
+
+      document.getElementById('startBtn').textContent = '🔄 Reiniciar';
+      document.getElementById('inputField').value = '';
+      document.getElementById('inputField').focus();
+      document.getElementById('message').className = 'message';
+
+      renderText();
+      updateKeyboardHint();
+      updateStats();
+      updateProgress();
+
+      // Start timer
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time').textContent = timeLeft;
+        document.getElementById('timerFill').style.width = (timeLeft / (level === 'easy' ? 60 : level === 'medium' ? 45 : 30) * 100) + '%';
+
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      gameActive = false;
+      clearInterval(timer);
+
+      const elapsedMinutes = (Date.now() - startTime) / 60000;
+      const wpm = Math.round((correctChars / 5) / elapsedMinutes) || 0;
+      const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
+
+      let message = `🏆 Fim! ${wpm} PPM | ${accuracy}% precisão | Combo máximo: ${maxCombo}`;
+
+      // Rating
+      if (wpm >= 60) message += ' | ⭐⭐⭐ Incrível!';
+      else if (wpm >= 40) message += ' | ⭐⭐ Muito bom!';
+      else if (wpm >= 20) message += ' | ⭐ Continue praticando!';
+
+      showMessage(message, 'success');
+
+      // Rewards
+      giveReward('coins', Math.round(score / 10));
+      if (wpm >= 40) {
+        setTimeout(() => giveReward('diamonds', 1), 1000);
+      }
+      if (wpm >= 60 && accuracy >= 95) {
+        setTimeout(() => giveReward('gold', 1), 2000);
+      }
+
+      // Save best
+      const key = `typing_best_${level}`;
+      const best = parseInt(localStorage.getItem(key) || '0');
+      if (wpm > best) {
+        localStorage.setItem(key, wpm.toString());
+      }
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+    }
+
+    // Event listeners
+    document.getElementById('inputField').addEventListener('input', handleInput);
+
+    document.getElementById('startBtn').addEventListener('click', startGame);
+
+    document.querySelectorAll('.level-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        level = btn.dataset.level;
+        if (gameActive) startGame();
+      });
+    });
+
+    // Prevent paste
+    document.getElementById('inputField').addEventListener('paste', e => e.preventDefault());
+
+    // Initial render
+    currentText = selectText();
+    renderText();
+    updateKeyboardHint();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

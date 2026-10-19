@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ball Fusion Arena - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1a2e;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .ball-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fusion-ball {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      animation: orbit 2s linear infinite;
+    }
+
+    .fusion-ball:nth-child(1) {
+      background: linear-gradient(135deg, #FF6B6B, #ee5a5a);
+      animation-delay: 0s;
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
+    }
+
+    .fusion-ball:nth-child(2) {
+      background: linear-gradient(135deg, #74B9FF, #5dade2);
+      animation-delay: 0.5s;
+      box-shadow: 0 0 20px rgba(116, 185, 255, 0.6);
+    }
+
+    .fusion-ball:nth-child(3) {
+      background: linear-gradient(135deg, #FDCB6E, #f1c40f);
+      animation-delay: 1s;
+      box-shadow: 0 0 20px rgba(253, 203, 110, 0.6);
+    }
+
+    .fusion-ball:nth-child(4) {
+      background: linear-gradient(135deg, #A29BFE, #9b59b6);
+      animation-delay: 1.5s;
+      box-shadow: 0 0 20px rgba(162, 155, 254, 0.6);
+    }
+
+    .center-ball {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #4ECDC4, #44bd32);
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(78, 205, 196, 0.8);
+      animation: pulse 1s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    @keyframes orbit {
+      0% { transform: rotate(0deg) translateX(70px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(70px) rotate(-360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    #loading h1 {
+      color: #fff;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 32px;
+      margin-top: 30px;
+      text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+      text-align: center;
+    }
+
+    #loading p {
+      color: #4ECDC4;
+      font-family: Arial, sans-serif;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .brick-demo {
+      display: flex;
+      gap: 5px;
+      margin-top: 20px;
+    }
+
+    .brick {
+      width: 30px;
+      height: 15px;
+      border-radius: 3px;
+      animation: brickPulse 0.5s ease-in-out infinite alternate;
+    }
+
+    .brick:nth-child(1) { background: #e74c3c; animation-delay: 0s; }
+    .brick:nth-child(2) { background: #f39c12; animation-delay: 0.1s; }
+    .brick:nth-child(3) { background: #2ecc71; animation-delay: 0.2s; }
+    .brick:nth-child(4) { background: #3498db; animation-delay: 0.3s; }
+    .brick:nth-child(5) { background: #9b59b6; animation-delay: 0.4s; }
+
+    @keyframes brickPulse {
+      0% { opacity: 0.6; transform: scaleY(0.9); }
+      100% { opacity: 1; transform: scaleY(1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="ball-container">
+      <div class="fusion-ball"></div>
+      <div class="fusion-ball"></div>
+      <div class="fusion-ball"></div>
+      <div class="fusion-ball"></div>
+      <div class="center-ball"></div>
+    </div>
+    <h1>BALL FUSION ARENA</h1>
+    <p>Preparando a arena...</p>
+    <div class="brick-demo">
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+      <div class="brick"></div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

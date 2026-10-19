@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio de Desenho Criativo - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        .challenge-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .challenge-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .challenge-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #feca57;
+            margin-bottom: 5px;
+        }
+
+        .challenge-description {
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .timer-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f1c40f, #e74c3c);
+            border-radius: 5px;
+            transition: width 0.1s linear;
+        }
+
+        .canvas-container {
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        #drawing-canvas {
+            display: block;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 10px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .tools-panel {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tool-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .tool-btn.active {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.3);
+        }
+
+        .color-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover, .color-btn.active {
+            transform: scale(1.15);
+            border-color: white;
+        }
+
+        .size-slider {
+            width: 100px;
+            cursor: pointer;
+        }
+
+        .size-label {
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        .actions-panel {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-finish {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-undo {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .challenge-selector {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .challenge-selector.show {
+            display: block;
+        }
+
+        .selector-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .challenge-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .challenge-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .challenge-card:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-5px);
+        }
+
+        .challenge-card.selected {
+            border-color: #4ecdc4;
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-difficulty {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .result-drawing {
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        .result-drawing img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .result-score {
+            font-size: 2em;
+            color: #feca57;
+            margin: 15px 0;
+        }
+
+        .result-message {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .gallery-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            margin: 5px;
+        }
+
+        .gallery-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-container {
+            display: none;
+            padding: 20px;
+        }
+
+        .gallery-container.show {
+            display: block;
+        }
+
+        .gallery-title {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery-item {
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .gallery-item-label {
+            color: #333;
+            font-size: 0.8em;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .tip-box {
+            background: rgba(155, 89, 182, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            .tool-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.1em;
+            }
+
+            .color-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="drawings">0</div>
+            <div class="stat-label">Desenhos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="streak">0</div>
+            <div class="stat-label">Sequência</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Iniciante: 5 desenhos">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Artista: 15 desenhos">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Mestre: 30 desenhos">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Leonardo: 50 desenhos">💎</div>
+    </div>
+
+    <div class="game-area">
+        <div class="challenge-selector show" id="challenge-selector">
+            <div class="selector-title">🎨 Escolha um Desafio</div>
+            <div class="challenge-cards" id="challenge-cards"></div>
+        </div>
+
+        <div id="drawing-area" style="display: none;">
+            <div class="challenge-header">
+                <div class="challenge-icon" id="current-icon">🎨</div>
+                <div class="challenge-title" id="current-title">Desenhe!</div>
+                <div class="challenge-description" id="current-description">Solte sua criatividade!</div>
+            </div>
+
+            <div class="timer-bar">
+                <div class="timer-fill" id="timer-fill" style="width: 100%"></div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="drawing-canvas" width="500" height="400"></canvas>
+            </div>
+
+            <div class="tools-panel">
+                <div class="tool-group">
+                    <button class="tool-btn active" data-tool="brush" title="Pincel">🖌️</button>
+                    <button class="tool-btn" data-tool="pencil" title="Lápis">✏️</button>
+                    <button class="tool-btn" data-tool="eraser" title="Borracha">🧽</button>
+                    <button class="tool-btn" data-tool="fill" title="Balde">🪣</button>
+                </div>
+
+                <div class="tool-group" id="color-palette">
+                    <button class="color-btn active" style="background: #000000" data-color="#000000"></button>
+                    <button class="color-btn" style="background: #e74c3c" data-color="#e74c3c"></button>
+                    <button class="color-btn" style="background: #f39c12" data-color="#f39c12"></button>
+                    <button class="color-btn" style="background: #f1c40f" data-color="#f1c40f"></button>
+                    <button class="color-btn" style="background: #27ae60" data-color="#27ae60"></button>
+                    <button class="color-btn" style="background: #3498db" data-color="#3498db"></button>
+                    <button class="color-btn" style="background: #9b59b6" data-color="#9b59b6"></button>
+                    <button class="color-btn" style="background: #e91e63" data-color="#e91e63"></button>
+                </div>
+
+                <div class="tool-group" style="flex-direction: column; align-items: center;">
+                    <input type="range" class="size-slider" id="size-slider" min="2" max="30" value="8">
+                    <span class="size-label">Tamanho: <span id="size-value">8</span></span>
+                </div>
+            </div>
+
+            <div class="actions-panel">
+                <button class="action-btn btn-undo" onclick="undo()">↩️ Desfazer</button>
+                <button class="action-btn btn-clear" onclick="clearCanvas()">🗑️ Limpar</button>
+                <button class="action-btn btn-finish" onclick="finishDrawing()">✅ Concluir</button>
+            </div>
+
+            <div class="tip-box">
+                <span>💡</span> <span id="tip-text">Dica: Use cores diferentes para deixar seu desenho mais bonito!</span>
+            </div>
+        </div>
+
+        <div class="result-screen" id="result-screen">
+            <div class="result-title">🎉 Desenho Concluído!</div>
+            <div class="result-drawing" id="result-drawing"></div>
+            <div class="result-score" id="result-score">+50 pontos</div>
+            <div class="result-message" id="result-message">Que criatividade incrível!</div>
+            <button class="gallery-btn" onclick="newChallenge()">🎨 Novo Desafio</button>
+            <button class="gallery-btn" onclick="showGallery()">🖼️ Galeria</button>
+        </div>
+
+        <div class="gallery-container" id="gallery-container">
+            <div class="gallery-title">🖼️ Minha Galeria de Arte</div>
+            <div class="gallery-grid" id="gallery-grid"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="gallery-btn" onclick="hideGallery()">← Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            drawings: 0,
+            streak: 0,
+            currentChallenge: null,
+            gallery: []
+        };
+
+        // Canvas State
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentTool = 'brush';
+        let currentColor = '#000000';
+        let brushSize = 8;
+        let history = [];
+        let historyIndex = -1;
+        let timerInterval = null;
+        let timeLeft = 120;
+
+        // Challenges
+        const challenges = [
+            { id: 'animal', icon: '🐕', title: 'Animal Favorito', description: 'Desenhe seu animal favorito!', difficulty: 'Fácil', time: 120 },
+            { id: 'house', icon: '🏠', title: 'Minha Casa', description: 'Desenhe uma casa dos sonhos!', difficulty: 'Fácil', time: 120 },
+            { id: 'flower', icon: '🌸', title: 'Jardim Florido', description: 'Desenhe flores coloridas!', difficulty: 'Fácil', time: 90 },
+            { id: 'family', icon: '👨‍👩‍👧', title: 'Minha Família', description: 'Desenhe sua família!', difficulty: 'Médio', time: 150 },
+            { id: 'monster', icon: '👾', title: 'Monstro Amigável', description: 'Crie um monstro simpático!', difficulty: 'Médio', time: 120 },
+            { id: 'space', icon: '🚀', title: 'Viagem Espacial', description: 'Desenhe o espaço sideral!', difficulty: 'Médio', time: 150 },
+            { id: 'underwater', icon: '🐠', title: 'Fundo do Mar', description: 'Crie um mundo submarino!', difficulty: 'Médio', time: 150 },
+            { id: 'fantasy', icon: '🏰', title: 'Reino Mágico', description: 'Desenhe um castelo encantado!', difficulty: 'Difícil', time: 180 },
+            { id: 'robot', icon: '🤖', title: 'Robô do Futuro', description: 'Invente um robô incrível!', difficulty: 'Difícil', time: 150 },
+            { id: 'dragon', icon: '🐲', title: 'Dragão Mitológico', description: 'Desenhe um dragão épico!', difficulty: 'Difícil', time: 180 },
+            { id: 'free', icon: '✨', title: 'Desenho Livre', description: 'Desenhe o que quiser!', difficulty: 'Livre', time: 300 },
+            { id: 'selfportrait', icon: '🧑‍🎨', title: 'Auto-Retrato', description: 'Desenhe você mesmo!', difficulty: 'Médio', time: 150 }
+        ];
+
+        const tips = [
+            'Use cores diferentes para deixar seu desenho mais bonito!',
+            'Comece pelos contornos principais.',
+            'Não tenha medo de errar - use a borracha!',
+            'Detalhes pequenos fazem grande diferença!',
+            'Misture cores quentes e frias.',
+            'O fundo também é importante!',
+            'Pratique formas básicas: círculos, quadrados, triângulos.',
+            'Observe o mundo ao seu redor para inspiração!'
+        ];
+
+        // Audio
+        let audioCtx = null;
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+            if (type === 'draw') {
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.02);
+            } else if (type === 'complete') {
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // Initialize
+        function init() {
+            loadProgress();
+            setupCanvas();
+            setupTools();
+            loadChallenges();
+            updateDisplay();
+            updateMedals();
+        }
+
+        function loadChallenges() {
+            const container = document.getElementById('challenge-cards');
+            container.innerHTML = challenges.map(c => `
+                <div class="challenge-card" onclick="selectChallenge('${c.id}')">
+                    <div class="card-icon">${c.icon}</div>
+                    <div class="card-title">${c.title}</div>
+                    <div class="card-difficulty">${c.difficulty} - ${Math.floor(c.time/60)}:${(c.time%60).toString().padStart(2,'0')}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectChallenge(id) {
+            const challenge = challenges.find(c => c.id === id);
+            gameState.currentChallenge = challenge;
+
+            document.getElementById('current-icon').textContent = challenge.icon;
+            document.getElementById('current-title').textContent = challenge.title;
+            document.getElementById('current-description').textContent = challenge.description;
+            document.getElementById('tip-text').textContent = tips[Math.floor(Math.random() * tips.length)];
+
+            document.getElementById('challenge-selector').classList.remove('show');
+            document.getElementById('drawing-area').style.display = 'block';
+            document.getElementById('result-screen').classList.remove('show');
+
+            clearCanvas();
+            startTimer(challenge.time);
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('drawing-canvas');
+            ctx = canvas.getContext('2d');
+
+            // Make canvas responsive
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            // Touch events
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // Initialize with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        }
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = Math.min(500, container.clientWidth - 20);
+            canvas.style.width = maxWidth + 'px';
+            canvas.style.height = (maxWidth * 0.8) + 'px';
+        }
+
+        function setupTools() {
+            // Tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTool = btn.dataset.tool;
+                });
+            });
+
+            // Color buttons
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentColor = btn.dataset.color;
+                });
+            });
+
+            // Size slider
+            const sizeSlider = document.getElementById('size-slider');
+            sizeSlider.addEventListener('input', () => {
+                brushSize = sizeSlider.value;
+                document.getElementById('size-value').textContent = brushSize;
+            });
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getMousePos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const pos = getMousePos(e);
+
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = brushSize * 2;
+            } else if (currentTool === 'pencil') {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+            } else {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = brushSize;
+            }
+
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                ctx.beginPath();
+                saveState();
+            }
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+
+            if (e.type === 'touchstart') {
+                startDrawing(mouseEvent);
+            } else {
+                draw(mouseEvent);
+            }
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function saveState() {
+            historyIndex++;
+            history = history.slice(0, historyIndex);
+            history.push(canvas.toDataURL());
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = history[historyIndex];
+            }
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            history = [];
+            historyIndex = -1;
+            saveState();
+        }
+
+        function startTimer(seconds) {
+            timeLeft = seconds;
+            updateTimerDisplay();
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishDrawing();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const percentage = (timeLeft / gameState.currentChallenge.time) * 100;
+            document.getElementById('timer-fill').style.width = percentage + '%';
+        }
+
+        function finishDrawing() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            playSound('complete');
+
+            // Calculate points based on time used and difficulty
+            const timeUsed = gameState.currentChallenge.time - timeLeft;
+            const difficultyBonus = { 'Fácil': 1, 'Médio': 1.5, 'Difícil': 2, 'Livre': 1 };
+            const bonus = difficultyBonus[gameState.currentChallenge.difficulty] || 1;
+            const points = Math.floor((50 + Math.min(timeUsed, 60)) * bonus);
+
+            gameState.points += points;
+            gameState.drawings++;
+            gameState.streak++;
+
+            // Save to gallery
+            const drawingData = {
+                image: canvas.toDataURL(),
+                challenge: gameState.currentChallenge.title,
+                date: new Date().toLocaleDateString('pt-BR')
+            };
+            gameState.gallery.unshift(drawingData);
+            if (gameState.gallery.length > 20) gameState.gallery.pop();
+
+            // Check level up
+            const newLevel = Math.floor(gameState.points / 300) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+            }
+
+            // Show result
+            document.getElementById('drawing-area').style.display = 'none';
+            document.getElementById('result-screen').classList.add('show');
+            document.getElementById('result-drawing').innerHTML = `<img src="${canvas.toDataURL()}" alt="Seu desenho">`;
+            document.getElementById('result-score').textContent = `+${points} pontos!`;
+
+            const messages = [
+                'Que criatividade incrível! 🌟',
+                'Você é um verdadeiro artista! 🎨',
+                'Desenho fantástico! 👏',
+                'Continue assim, está ótimo! ✨',
+                'Sua imaginação é incrível! 🚀'
+            ];
+            document.getElementById('result-message').textContent = messages[Math.floor(Math.random() * messages.length)];
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        function newChallenge() {
+            document.getElementById('result-screen').classList.remove('show');
+            document.getElementById('challenge-selector').classList.add('show');
+        }
+
+        function showGallery() {
+            document.getElementById('result-screen').classList.remove('show');
+            document.getElementById('drawing-area').style.display = 'none';
+            document.getElementById('challenge-selector').classList.remove('show');
+            document.getElementById('gallery-container').classList.add('show');
+
+            const grid = document.getElementById('gallery-grid');
+            if (gameState.gallery.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; opacity: 0.7;">Sua galeria está vazia. Faça seu primeiro desenho!</p>';
+            } else {
+                grid.innerHTML = gameState.gallery.map((item, i) => `
+                    <div class="gallery-item">
+                        <img src="${item.image}" alt="Desenho ${i+1}">
+                        <div class="gallery-item-label">${item.challenge}<br>${item.date}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function hideGallery() {
+            document.getElementById('gallery-container').classList.remove('show');
+            document.getElementById('challenge-selector').classList.add('show');
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('drawings').textContent = gameState.drawings;
+            document.getElementById('streak').textContent = gameState.streak;
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.drawings >= 5);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.drawings >= 15);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.drawings >= 30);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.drawings >= 50);
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('desenhoCriativoProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+                gameState.drawings = data.drawings || 0;
+                gameState.streak = data.streak || 0;
+                gameState.gallery = data.gallery || [];
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('desenhoCriativoProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                drawings: gameState.drawings,
+                streak: gameState.streak,
+                gallery: gameState.gallery
+            }));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

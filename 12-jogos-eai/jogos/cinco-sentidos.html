@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Os Cinco Sentidos - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .senses-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sense-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: rgba(255,255,255,0.1);
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .sense-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .sense-icon.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .sense-icon.vision { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+        .sense-icon.hearing { background: linear-gradient(135deg, #00b894, #55efc4); }
+        .sense-icon.smell { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
+        .sense-icon.taste { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .sense-icon.touch { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .question-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            color: #81ecec;
+            margin-bottom: 20px;
+        }
+
+        .object-display {
+            font-size: 5rem;
+            margin: 20px 0;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .object-name {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .sense-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sense-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .sense-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .sense-btn .emoji {
+            font-size: 2.5rem;
+        }
+
+        .sense-btn .label {
+            font-size: 0.9rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .sense-btn.correct {
+            background: rgba(0, 184, 148, 0.4);
+            border-color: #00b894;
+            animation: pulse 0.5s ease;
+        }
+
+        .sense-btn.wrong {
+            background: rgba(231, 76, 60, 0.4);
+            border-color: #e74c3c;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-card {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .info-card.show {
+            display: block;
+        }
+
+        .info-card h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .object-display {
+                font-size: 4rem;
+            }
+
+            .sense-btn {
+                padding: 15px;
+                min-width: 80px;
+            }
+
+            .sense-btn .emoji {
+                font-size: 2rem;
+            }
+
+            .sense-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👁️ Os Cinco <span>Sentidos</span></h1>
+            <p>Descubra qual sentido usamos!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="round">1/10</div>
+                <div class="stat-label">Rodada</div>
+            </div>
+        </div>
+
+        <div class="senses-bar">
+            <div class="sense-icon vision" title="Visão">👁️</div>
+            <div class="sense-icon hearing" title="Audição">👂</div>
+            <div class="sense-icon smell" title="Olfato">👃</div>
+            <div class="sense-icon taste" title="Paladar">👅</div>
+            <div class="sense-icon touch" title="Tato">✋</div>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Explorador">🥉</span>
+            <span class="medal" id="medal2" title="Observador">🥈</span>
+            <span class="medal" id="medal3" title="Perceptivo">🥇</span>
+            <span class="medal" id="medal4" title="Sensorial">🏆</span>
+            <span class="medal" id="medal5" title="Mestre dos Sentidos">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="question-area">
+                <div class="question" id="question">Qual sentido usamos para perceber isso?</div>
+                <div class="object-display" id="objectDisplay">🌺</div>
+                <div class="object-name" id="objectName">Uma flor perfumada</div>
+            </div>
+
+            <div class="sense-options" id="senseOptions">
+                <button class="sense-btn" data-sense="vision">
+                    <span class="emoji">👁️</span>
+                    <span class="label">Visão</span>
+                </button>
+                <button class="sense-btn" data-sense="hearing">
+                    <span class="emoji">👂</span>
+                    <span class="label">Audição</span>
+                </button>
+                <button class="sense-btn" data-sense="smell">
+                    <span class="emoji">👃</span>
+                    <span class="label">Olfato</span>
+                </button>
+                <button class="sense-btn" data-sense="taste">
+                    <span class="emoji">👅</span>
+                    <span class="label">Paladar</span>
+                </button>
+                <button class="sense-btn" data-sense="touch">
+                    <span class="emoji">✋</span>
+                    <span class="label">Tato</span>
+                </button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="info-card" id="infoCard">
+                <h3>💡 Você sabia?</h3>
+                <p id="infoText"></p>
+            </div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Parabéns!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="startGame()">Jogar Novamente</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Dados do jogo
+        const senseItems = {
+            vision: [
+                { emoji: '🌈', name: 'Um arco-íris colorido', info: 'A visão nos permite ver as cores do arco-íris! São 7 cores: vermelho, laranja, amarelo, verde, azul, anil e violeta.' },
+                { emoji: '📺', name: 'Um programa de TV', info: 'Usamos a visão para assistir TV e ver as imagens na tela.' },
+                { emoji: '📖', name: 'Ler um livro', info: 'A visão é essencial para ler! Nossos olhos captam as letras e nosso cérebro entende as palavras.' },
+                { emoji: '🎨', name: 'Uma pintura colorida', info: 'Artistas usam a visão para criar e apreciar obras de arte!' },
+                { emoji: '⭐', name: 'Estrelas no céu', info: 'À noite, usamos a visão para ver as estrelas brilhando no céu.' },
+                { emoji: '🦋', name: 'Uma borboleta voando', info: 'Vemos as lindas cores das asas da borboleta com nossos olhos.' }
+            ],
+            hearing: [
+                { emoji: '🎵', name: 'Uma música tocando', info: 'Nossos ouvidos captam as ondas sonoras da música! A audição nos permite apreciar sons.' },
+                { emoji: '🔔', name: 'O sino tocando', info: 'O som do sino viaja pelo ar até nossos ouvidos.' },
+                { emoji: '🐦', name: 'O canto de um pássaro', info: 'Cada pássaro tem um canto diferente que podemos ouvir!' },
+                { emoji: '⛈️', name: 'O som do trovão', info: 'O trovão é o som que ouvimos depois do relâmpago!' },
+                { emoji: '🗣️', name: 'Alguém conversando', info: 'Usamos a audição para ouvir o que as pessoas falam.' },
+                { emoji: '🎸', name: 'Uma guitarra tocando', info: 'As cordas da guitarra vibram e produzem sons que ouvimos.' }
+            ],
+            smell: [
+                { emoji: '🌺', name: 'O perfume de uma flor', info: 'Nosso nariz tem milhões de receptores que detectam cheiros! As flores liberam moléculas no ar.' },
+                { emoji: '☕', name: 'Café fresco', info: 'O aroma do café é muito forte e nosso olfato detecta rapidamente!' },
+                { emoji: '🍕', name: 'Pizza quentinha', info: 'O cheiro da pizza nos faz sentir fome! O olfato está conectado ao apetite.' },
+                { emoji: '🌹', name: 'Uma rosa perfumada', info: 'Rosas têm um perfume único que amamos cheirar.' },
+                { emoji: '🍪', name: 'Biscoitos assando', info: 'O cheiro de biscoitos no forno é delicioso!' },
+                { emoji: '🧼', name: 'Sabonete perfumado', info: 'Usamos o olfato para sentir o cheiro agradável do sabonete.' }
+            ],
+            taste: [
+                { emoji: '🍦', name: 'Um sorvete doce', info: 'Nossa língua tem papilas gustativas que detectam sabores doces!' },
+                { emoji: '🍋', name: 'Um limão azedo', info: 'O sabor azedo do limão é detectado pelas papilas da lateral da língua.' },
+                { emoji: '🍫', name: 'Chocolate delicioso', info: 'O chocolate combina sabores doces e amargos!' },
+                { emoji: '🧂', name: 'Comida salgada', info: 'O sal é um dos sabores básicos que nossa língua detecta.' },
+                { emoji: '🍬', name: 'Um doce colorido', info: 'Existem 5 sabores básicos: doce, salgado, azedo, amargo e umami!' },
+                { emoji: '🍊', name: 'Uma laranja suculenta', info: 'Frutas cítricas têm sabor azedo e doce ao mesmo tempo.' }
+            ],
+            touch: [
+                { emoji: '🧊', name: 'Gelo gelado', info: 'Nossa pele tem receptores que detectam temperatura! O gelo está muito frio.' },
+                { emoji: '🔥', name: 'Algo quente', info: 'Sentimos o calor através da pele. Cuidado com coisas muito quentes!' },
+                { emoji: '🧸', name: 'Um ursinho macio', info: 'O tato nos permite sentir texturas macias e fofas.' },
+                { emoji: '🪨', name: 'Uma pedra áspera', info: 'Podemos sentir se algo é áspero ou liso com nosso tato.' },
+                { emoji: '💧', name: 'Água na pele', info: 'Sentimos a água molhada e sua temperatura através do tato.' },
+                { emoji: '🌬️', name: 'Vento no rosto', info: 'O vento faz pressão em nossa pele e podemos senti-lo!' }
+            ]
+        };
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            currentRound: 0,
+            totalRounds: 10,
+            correctAnswer: null,
+            currentItem: null,
+            correctAnswers: 0
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('cincoSentidosProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.correctAnswers = data.correctAnswers || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                correctAnswers: gameState.correctAnswers
+            };
+            localStorage.setItem('cincoSentidosProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('round').textContent = `${gameState.currentRound}/${gameState.totalRounds}`;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 10 },
+                { id: 'medal2', threshold: 25 },
+                { id: 'medal3', threshold: 50 },
+                { id: 'medal4', threshold: 100 },
+                { id: 'medal5', threshold: 200 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.correctAnswers >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Iniciar jogo
+        function startGame() {
+            gameState.currentRound = 0;
+            gameState.streak = 0;
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+            nextRound();
+        }
+
+        // Próxima rodada
+        function nextRound() {
+            gameState.currentRound++;
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('infoCard').classList.remove('show');
+
+            if (gameState.currentRound > gameState.totalRounds) {
+                showResult();
+                return;
+            }
+
+            updateDisplay();
+            updateProgress();
+
+            // Escolher sentido aleatório
+            const senses = Object.keys(senseItems);
+            const randomSense = senses[Math.floor(Math.random() * senses.length)];
+            const items = senseItems[randomSense];
+            const randomItem = items[Math.floor(Math.random() * items.length)];
+
+            gameState.correctAnswer = randomSense;
+            gameState.currentItem = randomItem;
+
+            document.getElementById('objectDisplay').textContent = randomItem.emoji;
+            document.getElementById('objectName').textContent = randomItem.name;
+
+            // Destacar sentido na barra
+            document.querySelectorAll('.sense-icon').forEach(icon => icon.classList.remove('active'));
+
+            // Habilitar botões
+            document.querySelectorAll('.sense-btn').forEach(btn => {
+                btn.classList.remove('correct', 'wrong');
+                btn.onclick = () => checkAnswer(btn.dataset.sense, btn);
+            });
+        }
+
+        // Verificar resposta
+        function checkAnswer(answer, btnElement) {
+            const buttons = document.querySelectorAll('.sense-btn');
+            buttons.forEach(btn => btn.onclick = null);
+
+            if (answer === gameState.correctAnswer) {
+                btnElement.classList.add('correct');
+                handleCorrect();
+            } else {
+                btnElement.classList.add('wrong');
+                buttons.forEach(btn => {
+                    if (btn.dataset.sense === gameState.correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                handleWrong();
+            }
+
+            // Destacar sentido correto na barra
+            document.querySelector(`.sense-icon.${gameState.correctAnswer}`).classList.add('active');
+
+            // Mostrar informação
+            document.getElementById('infoText').textContent = gameState.currentItem.info;
+            document.getElementById('infoCard').classList.add('show');
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = 15;
+            const streakBonus = gameState.streak * 5;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.correctAnswers++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 150) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            showFeedback(`Correto! +${points} pontos`, 'success');
+
+            setTimeout(nextRound, 2500);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            updateDisplay();
+
+            const senseNames = {
+                vision: 'Visão',
+                hearing: 'Audição',
+                smell: 'Olfato',
+                taste: 'Paladar',
+                touch: 'Tato'
+            };
+
+            showFeedback(`Ops! Era ${senseNames[gameState.correctAnswer]}`, 'error');
+
+            setTimeout(nextRound, 2500);
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            const percent = ((gameState.currentRound - 1) / gameState.totalRounds) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 3) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('resultScreen').classList.add('show');
+
+            const accuracy = Math.round((gameState.correctAnswers / gameState.totalRounds) * 100);
+
+            document.getElementById('resultIcon').textContent = accuracy >= 70 ? '🎉' : '💪';
+            document.getElementById('resultTitle').textContent = accuracy >= 70 ? 'Excelente!' : 'Continue Aprendendo!';
+            document.getElementById('resultScore').textContent = `Pontos: ${gameState.score} | Nível: ${gameState.level} | Melhor sequência: ${gameState.maxStreak}`;
+        }
+
+        // Inicializar
+        loadProgress();
+        startGame();
+    </script>
+</body>
+</html>

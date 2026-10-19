@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz de Matemática - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 1rem;
+    }
+    .game-container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+    .stat {
+      background: rgba(255,255,255,0.2);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      flex: 1;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .difficulty {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .diff-btn {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid transparent;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .diff-btn.active {
+      background: rgba(255,255,255,0.4);
+      border-color: white;
+    }
+    .question-area {
+      background: rgba(0,0,0,0.2);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .question {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    .timer-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22C55E, #EAB308, #EF4444);
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    .answer-btn {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 1rem;
+      font-size: 1.5rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .answer-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.02);
+    }
+    .answer-btn.correct {
+      background: #22C55E;
+      border-color: #22C55E;
+    }
+    .answer-btn.wrong {
+      background: #EF4444;
+      border-color: #EF4444;
+    }
+    .answer-btn:disabled {
+      cursor: not-allowed;
+    }
+    .message {
+      min-height: 2rem;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      background: white;
+      color: #0891B2;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .streak {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .streak-fire {
+      font-size: 1.5rem;
+      animation: bounce 0.5s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); }
+    }
+    .end-screen {
+      display: none;
+    }
+    .end-screen.active {
+      display: block;
+    }
+    .game-screen.hidden {
+      display: none;
+    }
+    .final-score {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 1rem 0;
+    }
+    .stars {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Quiz de Matemática</h1>
+
+    <div class="difficulty">
+      <button class="diff-btn active" data-level="easy">Fácil</button>
+      <button class="diff-btn" data-level="medium">Médio</button>
+      <button class="diff-btn" data-level="hard">Difícil</button>
+    </div>
+
+    <div class="game-screen" id="gameScreen">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Pontos</div>
+          <div class="stat-value" id="score">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Questão</div>
+          <div class="stat-value"><span id="current">1</span>/10</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Acertos</div>
+          <div class="stat-value" id="correct">0</div>
+        </div>
+      </div>
+
+      <div class="streak" id="streak" style="display:none">
+        <span class="streak-fire">🔥</span>
+        <span id="streakCount">0</span> acertos seguidos!
+      </div>
+
+      <div class="question-area">
+        <div class="timer-bar">
+          <div class="timer-fill" id="timerBar"></div>
+        </div>
+        <div class="question" id="question">5 + 3 = ?</div>
+      </div>
+
+      <div class="answers" id="answers">
+        <button class="answer-btn" data-value="0">6</button>
+        <button class="answer-btn" data-value="1">8</button>
+        <button class="answer-btn" data-value="2">7</button>
+        <button class="answer-btn" data-value="3">9</button>
+      </div>
+
+      <div class="message" id="message"></div>
+    </div>
+
+    <div class="end-screen" id="endScreen">
+      <h2>Fim do Quiz!</h2>
+      <div class="stars" id="stars"></div>
+      <div class="final-score" id="finalScore">0</div>
+      <p id="finalMessage"></p>
+      <br>
+      <button class="btn" onclick="startGame()">Jogar Novamente</button>
+    </div>
+
+    <button class="btn" id="startBtn" onclick="startGame()">Começar</button>
+  </div>
+
+  <!-- EAI Wallet System -->
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('math-quiz'));</script>
+
+  <script>
+    let level = 'easy';
+    let score = 0;
+    let currentQ = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let correctAnswer = 0;
+    let timer = null;
+    let timeLeft = 10;
+    const totalQuestions = 10;
+
+    const levels = {
+      easy: { maxNum: 10, ops: ['+', '-'], time: 15, points: 10 },
+      medium: { maxNum: 20, ops: ['+', '-', '*'], time: 12, points: 15 },
+      hard: { maxNum: 50, ops: ['+', '-', '*', '/'], time: 10, points: 25 }
+    };
+
+    // Difficulty selection
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        level = btn.dataset.level;
+      });
+    });
+
+    function generateQuestion() {
+      const config = levels[level];
+      const op = config.ops[Math.floor(Math.random() * config.ops.length)];
+      let a, b, answer;
+
+      do {
+        a = Math.floor(Math.random() * config.maxNum) + 1;
+        b = Math.floor(Math.random() * config.maxNum) + 1;
+
+        switch(op) {
+          case '+': answer = a + b; break;
+          case '-':
+            if (a < b) [a, b] = [b, a];
+            answer = a - b;
+            break;
+          case '*':
+            a = Math.floor(Math.random() * 12) + 1;
+            b = Math.floor(Math.random() * 12) + 1;
+            answer = a * b;
+            break;
+          case '/':
+            b = Math.floor(Math.random() * 10) + 1;
+            answer = Math.floor(Math.random() * 10) + 1;
+            a = b * answer;
+            break;
+        }
+      } while (answer < 0 || answer > 200);
+
+      correctAnswer = answer;
+
+      // Generate wrong answers
+      const answers = [answer];
+      while (answers.length < 4) {
+        const offset = Math.floor(Math.random() * 10) - 5;
+        const wrong = answer + (offset === 0 ? 1 : offset);
+        if (wrong > 0 && !answers.includes(wrong)) {
+          answers.push(wrong);
+        }
+      }
+
+      // Shuffle answers
+      for (let i = answers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [answers[i], answers[j]] = [answers[j], answers[i]];
+      }
+
+      document.getElementById('question').textContent = `${a} ${op} ${b} = ?`;
+
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach((btn, i) => {
+        btn.textContent = answers[i];
+        btn.dataset.value = answers[i];
+        btn.className = 'answer-btn';
+        btn.disabled = false;
+      });
+
+      // Start timer
+      timeLeft = levels[level].time;
+      updateTimer();
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft -= 0.1;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          handleAnswer(null);
+        }
+      }, 100);
+    }
+
+    function updateTimer() {
+      const percent = (timeLeft / levels[level].time) * 100;
+      document.getElementById('timerBar').style.width = percent + '%';
+    }
+
+    function handleAnswer(value) {
+      clearInterval(timer);
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (parseInt(btn.dataset.value) === correctAnswer) {
+          btn.classList.add('correct');
+        } else if (parseInt(btn.dataset.value) === value) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (value === correctAnswer) {
+        correctCount++;
+        streak++;
+        const timeBonus = Math.floor(timeLeft * 2);
+        const streakBonus = streak >= 3 ? streak * 5 : 0;
+        score += levels[level].points + timeBonus + streakBonus;
+
+        document.getElementById('message').textContent = `✓ Correto! +${levels[level].points + timeBonus + streakBonus} pontos`;
+        document.getElementById('message').style.color = '#22C55E';
+
+        if (streak >= 3) {
+          document.getElementById('streak').style.display = 'flex';
+          document.getElementById('streakCount').textContent = streak;
+        }
+      } else {
+        streak = 0;
+        document.getElementById('streak').style.display = 'none';
+        document.getElementById('message').textContent = value === null ? `⏱ Tempo esgotado! Resposta: ${correctAnswer}` : `✗ Errado! Resposta: ${correctAnswer}`;
+        document.getElementById('message').style.color = '#EF4444';
+        // Penalidade por erro
+        EAI.applyPenalty(1);
+      }
+
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+
+      currentQ++;
+      document.getElementById('current').textContent = Math.min(currentQ + 1, totalQuestions);
+
+      if (currentQ >= totalQuestions) {
+        setTimeout(endGame, 1500);
+      } else {
+        setTimeout(generateQuestion, 1500);
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      currentQ = 0;
+      correctCount = 0;
+      streak = 0;
+
+      document.getElementById('score').textContent = '0';
+      document.getElementById('current').textContent = '1';
+      document.getElementById('correct').textContent = '0';
+      document.getElementById('message').textContent = '';
+      document.getElementById('streak').style.display = 'none';
+
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('gameScreen').classList.remove('hidden');
+      document.getElementById('endScreen').classList.remove('active');
+
+      generateQuestion();
+    }
+
+    function endGame() {
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('endScreen').classList.add('active');
+      document.getElementById('finalScore').textContent = score + ' pontos';
+
+      const percent = (correctCount / totalQuestions) * 100;
+      let stars = '';
+      let message = '';
+
+      if (percent >= 90) {
+        stars = '⭐⭐⭐';
+        message = 'Excelente! Você é um gênio da matemática!';
+      } else if (percent >= 70) {
+        stars = '⭐⭐';
+        message = 'Muito bom! Continue praticando!';
+      } else if (percent >= 50) {
+        stars = '⭐';
+        message = 'Bom esforço! Tente novamente para melhorar!';
+      } else {
+        stars = '';
+        message = 'Continue praticando, você vai melhorar!';
+      }
+
+      document.getElementById('stars').textContent = stars;
+      document.getElementById('finalMessage').textContent = `${correctCount}/${totalQuestions} acertos - ${message}`;
+
+      // Save high score
+      const key = `mathquiz_high_${level}`;
+      const high = parseInt(localStorage.getItem(key) || '0');
+      const isNewRecord = score > high;
+      if (isNewRecord) {
+        localStorage.setItem(key, score.toString());
+      }
+
+      // Sistema de Recompensas EAI v2.0
+      // Usa as regras do documento: 90%=2x, 100%=3x, penalidade já aplicada nos erros
+      setTimeout(() => {
+        const result = EAI.giveGameReward({
+          correct: correctCount,
+          total: totalQuestions,
+          gameType: 'quiz'  // Quiz = 2 moedas base + 10 bônus conclusão
+        });
+
+        // Bônus extra por dificuldade
+        if (level === 'hard' && correctCount >= 7) {
+          setTimeout(() => EAI.giveReward('diamonds', 1), 800);
+        }
+        if (level === 'hard' && percent === 100) {
+          setTimeout(() => EAI.giveReward('gold', 1), 1600);
+        }
+      }, 500);
+    }
+
+    // Answer buttons
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        handleAnswer(parseInt(btn.dataset.value));
+      });
+    });
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

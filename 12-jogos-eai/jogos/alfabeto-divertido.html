@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alfabeto Divertido - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+      min-height: 100vh;
+      font-family: 'Comic Sans MS', 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+    }
+
+    .modes {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 1rem 2rem;
+      border: 4px solid white;
+      border-radius: 2rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+
+    .mode-btn.active {
+      background: white;
+      color: #FF6B6B;
+      transform: scale(1.05);
+    }
+
+    .mode-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .game-area {
+      background: white;
+      border-radius: 2rem;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    /* Modo Aprender */
+    .letter-display {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .big-letter {
+      font-size: 12rem;
+      font-weight: bold;
+      color: #FF6B6B;
+      text-shadow: 6px 6px 0 #FFE66D;
+      animation: bounce 1s ease infinite;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .letter-info {
+      font-size: 1.5rem;
+      color: #666;
+      margin-top: 1rem;
+    }
+
+    .word-example {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border-radius: 1rem;
+    }
+
+    .word-image {
+      font-size: 4rem;
+    }
+
+    .word-text {
+      font-size: 2rem;
+      color: #0891B2;
+      font-weight: bold;
+    }
+
+    .word-text .highlight {
+      color: #FF6B6B;
+      text-decoration: underline;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .nav-btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.prev {
+      background: #E5E7EB;
+      color: #374151;
+    }
+
+    .nav-btn.next {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .sound-btn {
+      background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem auto;
+    }
+
+    /* Modo Quiz */
+    .quiz-question {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #374151;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-letter {
+      font-size: 8rem;
+      color: #FF6B6B;
+      text-shadow: 4px 4px 0 #FFE66D;
+      margin: 1rem 0;
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      border: 4px solid #E5E7EB;
+      border-radius: 1.5rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1.2rem;
+    }
+
+    .quiz-option:hover {
+      border-color: #8B5CF6;
+      transform: scale(1.02);
+    }
+
+    .quiz-option.correct {
+      border-color: #10B981;
+      background: #D1FAE5;
+    }
+
+    .quiz-option.wrong {
+      border-color: #EF4444;
+      background: #FEE2E2;
+    }
+
+    .quiz-option .emoji {
+      font-size: 3rem;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      padding: 1rem 2rem;
+      border-radius: 1rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #D97706;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #92400E;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: #E5E7EB;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #34D399);
+      transition: width 0.5s ease;
+    }
+
+    .message {
+      text-align: center;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .message.show {
+      display: block;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+
+    .alphabet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .alphabet-letter {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      border-radius: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 3px solid transparent;
+    }
+
+    .alphabet-letter:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+      color: white;
+    }
+
+    .alphabet-letter.current {
+      background: linear-gradient(135deg, #FF6B6B, #F472B6);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .alphabet-letter.learned {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      color: white;
+      border-color: #059669;
+    }
+
+    .end-screen {
+      text-align: center;
+      display: none;
+    }
+
+    .end-screen.active {
+      display: block;
+    }
+
+    .end-stars {
+      font-size: 4rem;
+      margin: 1rem 0;
+    }
+
+    .end-score {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #D97706;
+    }
+
+    .restart-btn {
+      margin-top: 1.5rem;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #FF6B6B, #F472B6);
+      color: white;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .restart-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .big-letter { font-size: 8rem; }
+      .quiz-letter { font-size: 5rem; }
+      .quiz-options { grid-template-columns: 1fr; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔤 Alfabeto Divertido</h1>
+    <p class="subtitle">Aprenda as letras brincando!</p>
+
+    <div class="modes">
+      <button class="mode-btn active" data-mode="learn">📚 Aprender</button>
+      <button class="mode-btn" data-mode="quiz">🎯 Quiz</button>
+    </div>
+
+    <div class="game-area">
+      <!-- Alphabet Grid -->
+      <div class="alphabet-grid" id="alphabetGrid"></div>
+
+      <!-- Learn Mode -->
+      <div id="learnMode">
+        <div class="letter-display">
+          <div class="big-letter" id="bigLetter" onclick="speakLetter()">A</div>
+          <div class="letter-info" id="letterInfo">Letra A - Vogal</div>
+        </div>
+
+        <button class="sound-btn" onclick="speakLetter()">
+          🔊 Ouvir a letra
+        </button>
+
+        <div class="word-example" id="wordExample">
+          <span class="word-image">🍎</span>
+          <span class="word-text"><span class="highlight">A</span>bela - Maçã</span>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="nav-btn prev" onclick="prevLetter()">⬅️ Anterior</button>
+          <button class="nav-btn next" onclick="nextLetter()">Próxima ➡️</button>
+        </div>
+      </div>
+
+      <!-- Quiz Mode -->
+      <div id="quizMode" style="display:none">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="score">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value"><span id="current">1</span>/10</div>
+            <div class="stat-label">Questão</div>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+        </div>
+
+        <div class="quiz-question" id="quizQuestion">Qual é a letra inicial de:</div>
+        <div class="quiz-letter" id="quizImage">🍎</div>
+
+        <div class="quiz-options" id="quizOptions"></div>
+
+        <div class="message" id="message"></div>
+      </div>
+
+      <!-- End Screen -->
+      <div class="end-screen" id="endScreen">
+        <h2>🎉 Parabéns!</h2>
+        <div class="end-stars" id="endStars">⭐⭐⭐</div>
+        <div class="end-score" id="endScore">100 pontos</div>
+        <p id="endMessage">Você é um campeão do alfabeto!</p>
+        <button class="restart-btn" onclick="restartQuiz()">🔄 Jogar Novamente</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('alfabeto-divertido'));</script>
+
+  <script>
+    const alphabet = [
+      { letter: 'A', type: 'vogal', words: [{ word: 'Abacaxi', emoji: '🍍' }, { word: 'Abelha', emoji: '🐝' }, { word: 'Avião', emoji: '✈️' }] },
+      { letter: 'B', type: 'consoante', words: [{ word: 'Bola', emoji: '⚽' }, { word: 'Banana', emoji: '🍌' }, { word: 'Borboleta', emoji: '🦋' }] },
+      { letter: 'C', type: 'consoante', words: [{ word: 'Casa', emoji: '🏠' }, { word: 'Cachorro', emoji: '🐕' }, { word: 'Coelho', emoji: '🐰' }] },
+      { letter: 'D', type: 'consoante', words: [{ word: 'Dado', emoji: '🎲' }, { word: 'Dinossauro', emoji: '🦕' }, { word: 'Dragão', emoji: '🐉' }] },
+      { letter: 'E', type: 'vogal', words: [{ word: 'Elefante', emoji: '🐘' }, { word: 'Estrela', emoji: '⭐' }, { word: 'Escola', emoji: '🏫' }] },
+      { letter: 'F', type: 'consoante', words: [{ word: 'Foca', emoji: '🦭' }, { word: 'Flor', emoji: '🌸' }, { word: 'Foguete', emoji: '🚀' }] },
+      { letter: 'G', type: 'consoante', words: [{ word: 'Gato', emoji: '🐱' }, { word: 'Girafa', emoji: '🦒' }, { word: 'Gorila', emoji: '🦍' }] },
+      { letter: 'H', type: 'consoante', words: [{ word: 'Hipopótamo', emoji: '🦛' }, { word: 'Helicóptero', emoji: '🚁' }] },
+      { letter: 'I', type: 'vogal', words: [{ word: 'Igreja', emoji: '⛪' }, { word: 'Iglu', emoji: '🏔️' }, { word: 'Índio', emoji: '🪶' }] },
+      { letter: 'J', type: 'consoante', words: [{ word: 'Jacaré', emoji: '🐊' }, { word: 'Joaninha', emoji: '🐞' }] },
+      { letter: 'K', type: 'consoante', words: [{ word: 'Kiwi', emoji: '🥝' }, { word: 'Koala', emoji: '🐨' }] },
+      { letter: 'L', type: 'consoante', words: [{ word: 'Leão', emoji: '🦁' }, { word: 'Lua', emoji: '🌙' }, { word: 'Livro', emoji: '📚' }] },
+      { letter: 'M', type: 'consoante', words: [{ word: 'Macaco', emoji: '🐵' }, { word: 'Maçã', emoji: '🍎' }, { word: 'Mar', emoji: '🌊' }] },
+      { letter: 'N', type: 'consoante', words: [{ word: 'Navio', emoji: '🚢' }, { word: 'Nuvem', emoji: '☁️' }] },
+      { letter: 'O', type: 'vogal', words: [{ word: 'Ovo', emoji: '🥚' }, { word: 'Ovelha', emoji: '🐑' }, { word: 'Olho', emoji: '👁️' }] },
+      { letter: 'P', type: 'consoante', words: [{ word: 'Pato', emoji: '🦆' }, { word: 'Pizza', emoji: '🍕' }, { word: 'Peixe', emoji: '🐟' }] },
+      { letter: 'Q', type: 'consoante', words: [{ word: 'Queijo', emoji: '🧀' }, { word: 'Quadrado', emoji: '🟧' }] },
+      { letter: 'R', type: 'consoante', words: [{ word: 'Rato', emoji: '🐭' }, { word: 'Rosa', emoji: '🌹' }, { word: 'Robô', emoji: '🤖' }] },
+      { letter: 'S', type: 'consoante', words: [{ word: 'Sol', emoji: '☀️' }, { word: 'Sapo', emoji: '🐸' }, { word: 'Sorvete', emoji: '🍦' }] },
+      { letter: 'T', type: 'consoante', words: [{ word: 'Tartaruga', emoji: '🐢' }, { word: 'Tigre', emoji: '🐯' }, { word: 'Trem', emoji: '🚂' }] },
+      { letter: 'U', type: 'vogal', words: [{ word: 'Uva', emoji: '🍇' }, { word: 'Urso', emoji: '🐻' }, { word: 'Unicórnio', emoji: '🦄' }] },
+      { letter: 'V', type: 'consoante', words: [{ word: 'Vaca', emoji: '🐄' }, { word: 'Violão', emoji: '🎸' }] },
+      { letter: 'W', type: 'consoante', words: [{ word: 'Waffle', emoji: '🧇' }] },
+      { letter: 'X', type: 'consoante', words: [{ word: 'Xícara', emoji: '☕' }, { word: 'Xadrez', emoji: '♟️' }] },
+      { letter: 'Y', type: 'consoante', words: [{ word: 'Yoga', emoji: '🧘' }] },
+      { letter: 'Z', type: 'consoante', words: [{ word: 'Zebra', emoji: '🦓' }, { word: 'Zangão', emoji: '🐝' }] },
+    ];
+
+    let currentIndex = 0;
+    let mode = 'learn';
+    let learnedLetters = [];
+    let quizScore = 0;
+    let quizQuestion = 0;
+    let correctAnswer = '';
+    let totalQuestions = 10;
+    let correctCount = 0;
+
+    // Create alphabet grid
+    function createAlphabetGrid() {
+      const grid = document.getElementById('alphabetGrid');
+      grid.innerHTML = '';
+      alphabet.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'alphabet-letter' +
+          (index === currentIndex ? ' current' : '') +
+          (learnedLetters.includes(item.letter) ? ' learned' : '');
+        div.textContent = item.letter;
+        div.onclick = () => {
+          currentIndex = index;
+          updateDisplay();
+        };
+        grid.appendChild(div);
+      });
+    }
+
+    function updateDisplay() {
+      const item = alphabet[currentIndex];
+      const wordData = item.words[Math.floor(Math.random() * item.words.length)];
+
+      document.getElementById('bigLetter').textContent = item.letter;
+      document.getElementById('letterInfo').textContent = `Letra ${item.letter} - ${item.type === 'vogal' ? 'Vogal' : 'Consoante'}`;
+
+      document.getElementById('wordExample').innerHTML = `
+        <span class="word-image">${wordData.emoji}</span>
+        <span class="word-text"><span class="highlight">${item.letter}</span>${wordData.word.slice(1)}</span>
+      `;
+
+      createAlphabetGrid();
+    }
+
+    function speakLetter() {
+      const item = alphabet[currentIndex];
+      const utterance = new SpeechSynthesisUtterance(item.letter);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
+
+      // Mark as learned
+      if (!learnedLetters.includes(item.letter)) {
+        learnedLetters.push(item.letter);
+        createAlphabetGrid();
+      }
+    }
+
+    function prevLetter() {
+      currentIndex = (currentIndex - 1 + alphabet.length) % alphabet.length;
+      updateDisplay();
+    }
+
+    function nextLetter() {
+      currentIndex = (currentIndex + 1) % alphabet.length;
+      updateDisplay();
+    }
+
+    // Quiz Mode
+    function generateQuizQuestion() {
+      // Pick a random letter
+      const item = alphabet[Math.floor(Math.random() * alphabet.length)];
+      const wordData = item.words[Math.floor(Math.random() * item.words.length)];
+
+      correctAnswer = item.letter;
+
+      document.getElementById('quizQuestion').textContent = `Qual é a letra inicial de ${wordData.word}?`;
+      document.getElementById('quizImage').textContent = wordData.emoji;
+
+      // Generate options (1 correct + 3 wrong)
+      const options = [item.letter];
+      while (options.length < 4) {
+        const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)].letter;
+        if (!options.includes(randomLetter)) {
+          options.push(randomLetter);
+        }
+      }
+
+      // Shuffle options
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+      options.forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option';
+        btn.innerHTML = `<span class="emoji">${letter}</span>`;
+        btn.onclick = () => checkQuizAnswer(letter, btn);
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('current').textContent = quizQuestion + 1;
+      document.getElementById('progressFill').style.width = ((quizQuestion + 1) / totalQuestions * 100) + '%';
+    }
+
+    function checkQuizAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.quiz-option');
+      buttons.forEach(b => b.style.pointerEvents = 'none');
+
+      const message = document.getElementById('message');
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        quizScore += 10;
+        correctCount++;
+        document.getElementById('score').textContent = quizScore;
+        message.textContent = '✅ Muito bem!';
+        message.className = 'message show success';
+
+        // Speak the letter
+        const utterance = new SpeechSynthesisUtterance(correctAnswer);
+        utterance.lang = 'pt-BR';
+        speechSynthesis.speak(utterance);
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (b.textContent === correctAnswer) b.classList.add('correct');
+        });
+        message.textContent = `❌ Era a letra ${correctAnswer}`;
+        message.className = 'message show error';
+        // Penalidade
+        EAI.applyPenalty(1);
+      }
+
+      quizQuestion++;
+
+      if (quizQuestion >= totalQuestions) {
+        setTimeout(endQuiz, 1500);
+      } else {
+        setTimeout(() => {
+          message.classList.remove('show');
+          buttons.forEach(b => b.style.pointerEvents = 'auto');
+          generateQuizQuestion();
+        }, 1500);
+      }
+    }
+
+    function endQuiz() {
+      document.getElementById('quizMode').style.display = 'none';
+      document.getElementById('endScreen').classList.add('active');
+
+      const percent = (correctCount / totalQuestions) * 100;
+      let stars = '';
+      let msg = '';
+
+      if (percent >= 90) {
+        stars = '⭐⭐⭐';
+        msg = 'Você é um gênio do alfabeto!';
+      } else if (percent >= 70) {
+        stars = '⭐⭐';
+        msg = 'Muito bom! Continue praticando!';
+      } else if (percent >= 50) {
+        stars = '⭐';
+        msg = 'Bom esforço! Tente novamente!';
+      } else {
+        stars = '';
+        msg = 'Continue praticando, você vai melhorar!';
+      }
+
+      document.getElementById('endStars').textContent = stars;
+      document.getElementById('endScore').textContent = quizScore + ' pontos';
+      document.getElementById('endMessage').textContent = `${correctCount}/${totalQuestions} acertos - ${msg}`;
+
+      // Sistema de Recompensas EAI v2.0
+      setTimeout(() => {
+        EAI.giveGameReward({
+          correct: correctCount,
+          total: totalQuestions,
+          gameType: 'quiz'
+        });
+      }, 500);
+    }
+
+    function restartQuiz() {
+      quizScore = 0;
+      quizQuestion = 0;
+      correctCount = 0;
+      document.getElementById('score').textContent = '0';
+      document.getElementById('endScreen').classList.remove('active');
+      document.getElementById('quizMode').style.display = 'block';
+      generateQuizQuestion();
+    }
+
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+
+        if (mode === 'learn') {
+          document.getElementById('learnMode').style.display = 'block';
+          document.getElementById('quizMode').style.display = 'none';
+          document.getElementById('endScreen').classList.remove('active');
+          document.getElementById('alphabetGrid').style.display = 'grid';
+        } else {
+          document.getElementById('learnMode').style.display = 'none';
+          document.getElementById('quizMode').style.display = 'block';
+          document.getElementById('endScreen').classList.remove('active');
+          document.getElementById('alphabetGrid').style.display = 'none';
+          quizScore = 0;
+          quizQuestion = 0;
+          correctCount = 0;
+          document.getElementById('score').textContent = '0';
+          generateQuizQuestion();
+        }
+      });
+    });
+
+    // Initialize
+    createAlphabetGrid();
+    updateDisplay();
+  </script>
+  <script src="eai-header.js"></script>
+</body>
+</html>

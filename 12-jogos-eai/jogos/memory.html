@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Memória - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 25%, #4ECDC4 50%, #45B7D1 75%, #96CEB4 100%);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 1rem;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #FF6B6B, #FFE66D, #4ECDC4, #45B7D1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      animation: rainbow 3s ease infinite;
+      background-size: 300% 100%;
+    }
+    @keyframes rainbow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat {
+      background: rgba(255,255,255,0.9);
+      padding: 0.5rem 1.5rem;
+      border-radius: 2rem;
+      color: #333;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat span {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #FF6B6B;
+    }
+    .difficulty {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .diff-btn {
+      background: rgba(255,255,255,0.9);
+      border: 3px solid transparent;
+      color: #333;
+      padding: 0.5rem 1.5rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .diff-btn.active {
+      border-color: #FF6B6B;
+      background: #FFE66D;
+      transform: scale(1.05);
+    }
+    .diff-btn:hover {
+      transform: scale(1.05);
+      background: #FFE66D;
+    }
+    .game-board {
+      display: grid;
+      gap: 0.75rem;
+      perspective: 1000px;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .card {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+    .card.matched {
+      animation: matchPop 0.5s ease;
+    }
+    .card.matched .card-back {
+      background: linear-gradient(135deg, #96CEB4, #4ECDC4);
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
+    }
+    @keyframes matchPop {
+      0% { transform: rotateY(180deg) scale(1); }
+      50% { transform: rotateY(180deg) scale(1.2); }
+      100% { transform: rotateY(180deg) scale(1); }
+    }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      font-size: 2.5rem;
+    }
+    .card-front {
+      background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      border: 3px solid white;
+    }
+    .card-front::after {
+      content: '?';
+      font-size: 2.5rem;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .card-back {
+      background: linear-gradient(135deg, #45B7D1, #4ECDC4);
+      border: 3px solid white;
+      transform: rotateY(180deg);
+      box-shadow: 0 6px 20px rgba(69, 183, 209, 0.4);
+    }
+    .btn {
+      background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+      color: white;
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 2rem;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+    }
+    .message {
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      color: white;
+      min-height: 2rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      font-weight: bold;
+    }
+    @media (max-width: 500px) {
+      .card { width: 60px; height: 60px; }
+      .card-face { font-size: 1.8rem; }
+      .card-front::after { font-size: 1.8rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo da Memória</h1>
+
+  <div class="difficulty">
+    <button class="diff-btn active" data-size="4">Fácil (4x4)</button>
+    <button class="diff-btn" data-size="6">Médio (6x4)</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">Movimentos: <span id="moves">0</span></div>
+    <div class="stat">Pares: <span id="pairs">0</span>/<span id="total">8</span></div>
+    <div class="stat">Tempo: <span id="time">0:00</span></div>
+  </div>
+
+  <div class="game-board" id="board"></div>
+
+  <div class="message" id="message"></div>
+
+  <button class="btn" onclick="startGame()">Novo Jogo</button>
+
+  <!-- EAI Wallet System -->
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('memory'));</script>
+
+  <script>
+    const emojis = ['🎮', '🎲', '🎯', '🏆', '⭐', '💎', '🚀', '🎨', '🎵', '🎪', '🎭', '🎬'];
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let gameStarted = false;
+    let timer = null;
+    let seconds = 0;
+    let gridCols = 4;
+    let totalPairs = 8;
+
+    // Difficulty selection
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gridCols = parseInt(btn.dataset.size);
+        totalPairs = gridCols === 4 ? 8 : 12;
+        startGame();
+      });
+    });
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      board.style.gridTemplateColumns = `repeat(${gridCols}, 80px)`;
+
+      const gameEmojis = emojis.slice(0, totalPairs);
+      cards = shuffle([...gameEmojis, ...gameEmojis]);
+
+      cards.forEach((emoji, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.index = index;
+        card.dataset.emoji = emoji;
+        card.innerHTML = `
+          <div class="card-face card-front"></div>
+          <div class="card-face card-back">${emoji}</div>
+        `;
+        card.addEventListener('click', () => flipCard(card));
+        board.appendChild(card);
+      });
+    }
+
+    function flipCard(card) {
+      if (!gameStarted) {
+        gameStarted = true;
+        startTimer();
+      }
+
+      if (flippedCards.length >= 2 || card.classList.contains('flipped') || card.classList.contains('matched')) {
+        return;
+      }
+
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        moves++;
+        document.getElementById('moves').textContent = moves;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      const match = card1.dataset.emoji === card2.dataset.emoji;
+
+      if (match) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedPairs++;
+        document.getElementById('pairs').textContent = matchedPairs;
+        flippedCards = [];
+
+        if (matchedPairs === totalPairs) {
+          endGame();
+        }
+      } else {
+        // Penalidade por erro
+        EAI.applyPenalty(1);
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+        }, 1000);
+      }
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        document.getElementById('time').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      const message = document.getElementById('message');
+      const efficiency = Math.round((totalPairs / moves) * 100);
+      message.textContent = `Parabéns! Você completou em ${moves} movimentos (${efficiency}% eficiência)`;
+
+      // Save best score
+      const key = `memory_best_${totalPairs}`;
+      const best = parseInt(localStorage.getItem(key) || '999');
+      const isNewRecord = moves < best;
+      if (isNewRecord) {
+        localStorage.setItem(key, moves.toString());
+        message.textContent += ' - Novo recorde!';
+      }
+
+      // Sistema de Recompensas EAI v2.0
+      // Para memory: considera "acertos" como pares encontrados com menos tentativas
+      // Eficiência perfeita seria totalPairs movimentos
+      setTimeout(() => {
+        const result = EAI.giveGameReward({
+          correct: matchedPairs,
+          total: totalPairs,
+          gameType: 'memory'  // Memory = 2 moedas base + 10 bônus
+        });
+
+        // Bônus por eficiência alta
+        if (efficiency >= 80) {
+          setTimeout(() => EAI.giveReward('diamonds', 1), 800);
+        }
+
+        // Ouro: se bateu recorde no modo difícil
+        if (isNewRecord && totalPairs === 12) {
+          setTimeout(() => EAI.giveReward('gold', 1), 1600);
+        }
+      }, 500);
+    }
+
+    function startGame() {
+      clearInterval(timer);
+      flippedCards = [];
+      matchedPairs = 0;
+      moves = 0;
+      seconds = 0;
+      gameStarted = false;
+
+      document.getElementById('moves').textContent = '0';
+      document.getElementById('pairs').textContent = '0';
+      document.getElementById('total').textContent = totalPairs;
+      document.getElementById('time').textContent = '0:00';
+      document.getElementById('message').textContent = '';
+
+      createBoard();
+    }
+
+    // Start initial game
+    startGame();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

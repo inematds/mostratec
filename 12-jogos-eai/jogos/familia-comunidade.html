@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Família e Comunidade - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .theme-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            background: #4ecdc4;
+            transform: scale(1.05);
+        }
+
+        .question-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .question-image {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .option-btn {
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .option-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .option-btn.wrong {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .option-emoji {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .family-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .tree-level {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .family-member {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            min-width: 100px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .family-member:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .family-member.selected {
+            border-color: #feca57;
+            background: rgba(254, 202, 87, 0.2);
+        }
+
+        .family-member.correct {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.2);
+        }
+
+        .family-member.wrong {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.2);
+        }
+
+        .member-icon {
+            font-size: 2.5em;
+        }
+
+        .member-name {
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        .community-place {
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .community-place:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .community-place.selected {
+            border-color: #feca57;
+        }
+
+        .community-place.correct {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.3);
+        }
+
+        .community-place.wrong {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .place-icon {
+            font-size: 2em;
+        }
+
+        .place-name {
+            margin-top: 5px;
+            font-size: 0.8em;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.correct {
+            background: rgba(39, 174, 96, 0.3);
+        }
+
+        .feedback.wrong {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .fun-fact {
+            background: rgba(155, 89, 182, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .fun-fact.show {
+            display: block;
+        }
+
+        .fun-fact-icon {
+            font-size: 1.5em;
+            margin-right: 5px;
+        }
+
+        .next-btn {
+            display: none;
+            margin: 20px auto;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .next-btn.show {
+            display: block;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .result-score {
+            font-size: 3em;
+            color: #feca57;
+            margin: 20px 0;
+        }
+
+        .result-message {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .play-again-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .play-again-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .level-display {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .level-display span {
+            color: #feca57;
+            font-weight: bold;
+        }
+
+        @media (max-width: 500px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .community-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="streak">0</div>
+            <div class="stat-label">Sequência</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="accuracy">0%</div>
+            <div class="stat-label">Precisão</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Iniciante: 100 pontos">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Dedicado: 500 pontos">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Expert: 1000 pontos">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Mestre: 2000 pontos">💎</div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="game-area">
+        <div class="theme-selector">
+            <button class="theme-btn active" data-theme="family">👨‍👩‍👧‍👦 Família</button>
+            <button class="theme-btn" data-theme="community">🏘️ Comunidade</button>
+            <button class="theme-btn" data-theme="roles">👷 Profissões</button>
+        </div>
+
+        <div class="level-display">Tema: <span id="current-theme">Família</span></div>
+
+        <div id="question-area"></div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="fun-fact" id="fun-fact"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Próxima Pergunta →</button>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <div class="result-title">🎉 Rodada Completa!</div>
+        <div class="result-score" id="result-score">0</div>
+        <div class="result-message" id="result-message"></div>
+        <button class="play-again-btn" onclick="startNewRound()">Jogar Novamente 🔄</button>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            totalCorrect: 0,
+            totalQuestions: 0,
+            currentTheme: 'family',
+            currentQuestion: 0,
+            questionsPerRound: 8,
+            roundCorrect: 0
+        };
+
+        // Audio Context
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialDecayTo && gain.gain.exponentialDecayTo(0.01, audioCtx.currentTime + 0.3);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'levelup') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        // Question Banks
+        const familyQuestions = [
+            {
+                type: 'multiple',
+                question: 'Quem é a mãe do seu pai?',
+                options: ['Avó', 'Tia', 'Prima', 'Irmã'],
+                correct: 0,
+                emoji: '👵',
+                fact: 'A avó paterna é a mãe do seu pai. Ela faz parte da sua família!'
+            },
+            {
+                type: 'multiple',
+                question: 'Como chamamos o irmão da nossa mãe?',
+                options: ['Primo', 'Tio', 'Avô', 'Pai'],
+                correct: 1,
+                emoji: '👨',
+                fact: 'O tio é o irmão dos nossos pais. Podemos ter tios maternos e paternos!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem são os filhos dos seus tios?',
+                options: ['Irmãos', 'Avós', 'Primos', 'Pais'],
+                correct: 2,
+                emoji: '👧👦',
+                fact: 'Os primos são filhos dos nossos tios. São como irmãos, mas de outra casa!'
+            },
+            {
+                type: 'multiple',
+                question: 'O que forma uma família?',
+                options: ['Só adultos', 'Pessoas que se amam', 'Só crianças', 'Vizinhos'],
+                correct: 1,
+                emoji: '❤️',
+                fact: 'Família são pessoas ligadas por amor e cuidado. Existem muitos tipos de família!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem cuida de você quando está doente?',
+                options: ['Desconhecidos', 'Família e médicos', 'Ninguém', 'Vizinhos'],
+                correct: 1,
+                emoji: '🤒',
+                fact: 'A família nos cuida nos momentos difíceis. É importante cuidar uns dos outros!'
+            },
+            {
+                type: 'multiple',
+                question: 'O que faz uma família feliz?',
+                options: ['Muito dinheiro', 'Amor e respeito', 'Casa grande', 'Muitos brinquedos'],
+                correct: 1,
+                emoji: '😊',
+                fact: 'O amor, respeito e cuidado são os ingredientes de uma família feliz!'
+            },
+            {
+                type: 'multiple',
+                question: 'Como devemos tratar nossos irmãos?',
+                options: ['Com brigas', 'Com respeito', 'Ignorando', 'Com gritos'],
+                correct: 1,
+                emoji: '🤝',
+                fact: 'Tratar os irmãos com respeito fortalece os laços familiares!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem é o pai da sua mãe?',
+                options: ['Tio', 'Primo', 'Avô materno', 'Irmão'],
+                correct: 2,
+                emoji: '👴',
+                fact: 'O avô materno é o pai da sua mãe. Avós têm muita sabedoria para compartilhar!'
+            }
+        ];
+
+        const communityQuestions = [
+            {
+                type: 'place',
+                question: 'Onde compramos pão e alimentos?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🏥', name: 'Hospital' },
+                    { emoji: '🏪', name: 'Padaria' },
+                    { emoji: '🏛️', name: 'Biblioteca' },
+                    { emoji: '⛪', name: 'Igreja' },
+                    { emoji: '🏟️', name: 'Praça' }
+                ],
+                correct: 2,
+                fact: 'Na padaria compramos pães fresquinhos! O padeiro acorda bem cedinho para fazer nosso pão!'
+            },
+            {
+                type: 'place',
+                question: 'Onde vamos para aprender e estudar?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🏥', name: 'Hospital' },
+                    { emoji: '🏪', name: 'Mercado' },
+                    { emoji: '🏛️', name: 'Banco' },
+                    { emoji: '⛽', name: 'Posto' },
+                    { emoji: '🏟️', name: 'Estádio' }
+                ],
+                correct: 0,
+                fact: 'A escola é um lugar muito importante onde aprendemos e fazemos amigos!'
+            },
+            {
+                type: 'place',
+                question: 'Onde vamos quando estamos doentes?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🏥', name: 'Hospital' },
+                    { emoji: '🏪', name: 'Loja' },
+                    { emoji: '🏛️', name: 'Museu' },
+                    { emoji: '🎪', name: 'Circo' },
+                    { emoji: '🏟️', name: 'Praça' }
+                ],
+                correct: 1,
+                fact: 'No hospital, médicos e enfermeiros cuidam da nossa saúde!'
+            },
+            {
+                type: 'place',
+                question: 'Onde podemos pegar livros emprestados?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🏥', name: 'Hospital' },
+                    { emoji: '🏪', name: 'Mercado' },
+                    { emoji: '📚', name: 'Biblioteca' },
+                    { emoji: '🏠', name: 'Casa' },
+                    { emoji: '🏟️', name: 'Praça' }
+                ],
+                correct: 3,
+                fact: 'Na biblioteca podemos ler muitos livros gratuitamente! Que lugar mágico!'
+            },
+            {
+                type: 'place',
+                question: 'Onde brincamos ao ar livre na vizinhança?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🏥', name: 'Hospital' },
+                    { emoji: '🏪', name: 'Loja' },
+                    { emoji: '🏛️', name: 'Banco' },
+                    { emoji: '🌳', name: 'Praça' },
+                    { emoji: '🏠', name: 'Casa' }
+                ],
+                correct: 4,
+                fact: 'A praça é um espaço público onde todos podem brincar e se divertir!'
+            },
+            {
+                type: 'place',
+                question: 'Onde os bombeiros trabalham?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🚒', name: 'Quartel' },
+                    { emoji: '🏪', name: 'Mercado' },
+                    { emoji: '🏛️', name: 'Prefeitura' },
+                    { emoji: '🌳', name: 'Parque' },
+                    { emoji: '🏠', name: 'Casa' }
+                ],
+                correct: 1,
+                fact: 'Os bombeiros são heróis que nos protegem de incêndios e acidentes!'
+            },
+            {
+                type: 'place',
+                question: 'Onde os policiais nos ajudam?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '🚔', name: 'Delegacia' },
+                    { emoji: '🏪', name: 'Shopping' },
+                    { emoji: '🏛️', name: 'Teatro' },
+                    { emoji: '🌳', name: 'Floresta' },
+                    { emoji: '🏠', name: 'Fazenda' }
+                ],
+                correct: 1,
+                fact: 'A polícia trabalha para manter nossa comunidade segura!'
+            },
+            {
+                type: 'place',
+                question: 'Onde enviamos cartas e encomendas?',
+                places: [
+                    { emoji: '🏫', name: 'Escola' },
+                    { emoji: '📮', name: 'Correios' },
+                    { emoji: '🏪', name: 'Mercado' },
+                    { emoji: '🏛️', name: 'Igreja' },
+                    { emoji: '🌳', name: 'Praça' },
+                    { emoji: '🏠', name: 'Farmácia' }
+                ],
+                correct: 1,
+                fact: 'Os Correios levam nossas cartas para qualquer lugar do mundo!'
+            }
+        ];
+
+        const rolesQuestions = [
+            {
+                type: 'multiple',
+                question: 'Quem nos ensina na escola?',
+                options: ['Médico', 'Professor', 'Bombeiro', 'Padeiro'],
+                correct: 1,
+                emoji: '👩‍🏫',
+                fact: 'Professores dedicam suas vidas para nos ensinar coisas novas!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem cuida da nossa saúde?',
+                options: ['Carteiro', 'Cozinheiro', 'Médico', 'Motorista'],
+                correct: 2,
+                emoji: '👨‍⚕️',
+                fact: 'Médicos estudam muitos anos para cuidar da nossa saúde!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem apaga incêndios?',
+                options: ['Policial', 'Bombeiro', 'Carteiro', 'Professor'],
+                correct: 1,
+                emoji: '👨‍🚒',
+                fact: 'Bombeiros são muito corajosos e salvam vidas todos os dias!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem entrega nossas cartas?',
+                options: ['Padeiro', 'Médico', 'Carteiro', 'Bombeiro'],
+                correct: 2,
+                emoji: '📬',
+                fact: 'Carteiros caminham quilômetros para entregar nossas correspondências!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem faz nosso pão?',
+                options: ['Padeiro', 'Professor', 'Médico', 'Policial'],
+                correct: 0,
+                emoji: '🥖',
+                fact: 'Padeiros acordam de madrugada para fazer pão fresquinho!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem dirige o ônibus escolar?',
+                options: ['Professor', 'Diretor', 'Motorista', 'Bombeiro'],
+                correct: 2,
+                emoji: '🚌',
+                fact: 'Motoristas nos levam com segurança para a escola e de volta para casa!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem constrói casas e prédios?',
+                options: ['Médico', 'Pedreiro', 'Carteiro', 'Cozinheiro'],
+                correct: 1,
+                emoji: '👷',
+                fact: 'Pedreiros constroem os lugares onde moramos e trabalhamos!'
+            },
+            {
+                type: 'multiple',
+                question: 'Quem cultiva nossos alimentos?',
+                options: ['Bombeiro', 'Agricultor', 'Policial', 'Dentista'],
+                correct: 1,
+                emoji: '👨‍🌾',
+                fact: 'Agricultores trabalham na terra para produzir os alimentos que comemos!'
+            }
+        ];
+
+        let currentQuestions = [];
+
+        // Initialize
+        function init() {
+            loadProgress();
+            updateDisplay();
+            updateMedals();
+            setupThemeButtons();
+            selectTheme('family');
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('familyCommunityProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.totalCorrect = data.totalCorrect || 0;
+                gameState.totalQuestions = data.totalQuestions || 0;
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('familyCommunityProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                totalCorrect: gameState.totalCorrect,
+                totalQuestions: gameState.totalQuestions
+            }));
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+
+            const accuracy = gameState.totalQuestions > 0
+                ? Math.round((gameState.totalCorrect / gameState.totalQuestions) * 100)
+                : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            const progress = (gameState.currentQuestion / gameState.questionsPerRound) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.points >= 100);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.points >= 500);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.points >= 1000);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.points >= 2000);
+        }
+
+        function setupThemeButtons() {
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectTheme(btn.dataset.theme);
+                });
+            });
+        }
+
+        function selectTheme(theme) {
+            gameState.currentTheme = theme;
+            gameState.currentQuestion = 0;
+            gameState.roundCorrect = 0;
+
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+            });
+
+            const themeNames = {
+                family: 'Família',
+                community: 'Comunidade',
+                roles: 'Profissões'
+            };
+            document.getElementById('current-theme').textContent = themeNames[theme];
+
+            // Select questions based on theme
+            if (theme === 'family') {
+                currentQuestions = [...familyQuestions].sort(() => Math.random() - 0.5);
+            } else if (theme === 'community') {
+                currentQuestions = [...communityQuestions].sort(() => Math.random() - 0.5);
+            } else {
+                currentQuestions = [...rolesQuestions].sort(() => Math.random() - 0.5);
+            }
+
+            document.getElementById('result-screen').classList.remove('show');
+            document.querySelector('.game-area').style.display = 'block';
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (gameState.currentQuestion >= gameState.questionsPerRound) {
+                showResults();
+                return;
+            }
+
+            const q = currentQuestions[gameState.currentQuestion % currentQuestions.length];
+            const container = document.getElementById('question-area');
+
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('fun-fact').classList.remove('show');
+            document.getElementById('next-btn').classList.remove('show');
+
+            if (q.type === 'multiple') {
+                container.innerHTML = `
+                    <div class="question-container">
+                        <div class="question-image">${q.emoji}</div>
+                        <div class="question-text">${q.question}</div>
+                        <div class="options-grid">
+                            ${q.options.map((opt, i) => `
+                                <button class="option-btn" onclick="checkAnswer(${i}, ${q.correct}, '${q.fact.replace(/'/g, "\\'")}')">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (q.type === 'place') {
+                container.innerHTML = `
+                    <div class="question-container">
+                        <div class="question-text">${q.question}</div>
+                        <div class="community-grid">
+                            ${q.places.map((place, i) => `
+                                <div class="community-place" onclick="checkPlaceAnswer(${i}, ${q.correct}, '${q.fact.replace(/'/g, "\\'")}')">
+                                    <div class="place-icon">${place.emoji}</div>
+                                    <div class="place-name">${place.name}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateDisplay();
+        }
+
+        function checkAnswer(selected, correct, fact) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correct) {
+                    btn.classList.add('correct');
+                } else if (i === selected) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            processAnswer(selected === correct, fact);
+        }
+
+        function checkPlaceAnswer(selected, correct, fact) {
+            const places = document.querySelectorAll('.community-place');
+            places.forEach((place, i) => {
+                place.style.pointerEvents = 'none';
+                if (i === correct) {
+                    place.classList.add('correct');
+                } else if (i === selected) {
+                    place.classList.add('wrong');
+                }
+            });
+
+            processAnswer(selected === correct, fact);
+        }
+
+        function processAnswer(isCorrect, fact) {
+            const feedback = document.getElementById('feedback');
+            const funFact = document.getElementById('fun-fact');
+
+            gameState.totalQuestions++;
+
+            if (isCorrect) {
+                gameState.streak++;
+                gameState.totalCorrect++;
+                gameState.roundCorrect++;
+
+                const basePoints = 10;
+                const streakBonus = Math.min(gameState.streak, 5) * 2;
+                const levelBonus = gameState.level * 2;
+                const earnedPoints = basePoints + streakBonus + levelBonus;
+
+                gameState.points += earnedPoints;
+
+                if (gameState.streak > gameState.maxStreak) {
+                    gameState.maxStreak = gameState.streak;
+                }
+
+                // Level up
+                const newLevel = Math.floor(gameState.points / 200) + 1;
+                if (newLevel > gameState.level) {
+                    gameState.level = newLevel;
+                    playSound('levelup');
+                }
+
+                feedback.textContent = `✅ Correto! +${earnedPoints} pontos (Sequência: ${gameState.streak})`;
+                feedback.className = 'feedback show correct';
+                playSound('correct');
+            } else {
+                gameState.streak = 0;
+                feedback.textContent = '❌ Não foi dessa vez. Tente de novo!';
+                feedback.className = 'feedback show wrong';
+                playSound('wrong');
+            }
+
+            funFact.innerHTML = `<span class="fun-fact-icon">💡</span>${fact}`;
+            funFact.classList.add('show');
+
+            document.getElementById('next-btn').classList.add('show');
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        function nextQuestion() {
+            gameState.currentQuestion++;
+            showQuestion();
+        }
+
+        function showResults() {
+            document.querySelector('.game-area').style.display = 'none';
+            const resultScreen = document.getElementById('result-screen');
+            resultScreen.classList.add('show');
+
+            const percentage = Math.round((gameState.roundCorrect / gameState.questionsPerRound) * 100);
+            document.getElementById('result-score').textContent = `${gameState.roundCorrect}/${gameState.questionsPerRound}`;
+
+            let message = '';
+            if (percentage === 100) {
+                message = '🌟 Perfeito! Você é um expert em família e comunidade!';
+            } else if (percentage >= 75) {
+                message = '👏 Excelente! Você conhece bem sua comunidade!';
+            } else if (percentage >= 50) {
+                message = '😊 Muito bom! Continue aprendendo!';
+            } else {
+                message = '💪 Continue praticando! Você vai melhorar!';
+            }
+
+            document.getElementById('result-message').textContent = message;
+        }
+
+        function startNewRound() {
+            selectTheme(gameState.currentTheme);
+        }
+
+        // Start game
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corrida da Tabuada - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 50%, #A78BFA 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+      overflow: hidden;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #7C3AED;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .race-track {
+      background: linear-gradient(180deg, #7DD3FC 0%, #38BDF8 100%);
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+    }
+    .track-lines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 20px,
+        rgba(255,255,255,0.3) 20px,
+        rgba(255,255,255,0.3) 22px
+      );
+      animation: scrollTrack 0.5s linear infinite;
+    }
+    @keyframes scrollTrack {
+      from { transform: translateY(0); }
+      to { transform: translateY(22px); }
+    }
+    .finish-line {
+      position: absolute;
+      right: 20px;
+      top: 0;
+      bottom: 0;
+      width: 15px;
+      background: repeating-linear-gradient(
+        0deg,
+        white,
+        white 10px,
+        #1E1B4B 10px,
+        #1E1B4B 20px
+      );
+    }
+    .racer {
+      position: absolute;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      transition: left 0.3s ease-out;
+    }
+    .racer.player {
+      top: 40px;
+    }
+    .racer.cpu {
+      top: 120px;
+    }
+    .car {
+      font-size: 3rem;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+    }
+    .racer-name {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      min-width: 80px;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #7C3AED;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #6D28D9;
+    }
+    .table-selector {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .table-btn {
+      width: 45px;
+      height: 45px;
+      border: 2px solid #E9D5FF;
+      border-radius: 0.75rem;
+      background: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #6D28D9;
+    }
+    .table-btn.active {
+      background: #7C3AED;
+      color: white;
+      border-color: #7C3AED;
+      transform: scale(1.1);
+    }
+    .table-btn.completed {
+      background: #D1FAE5;
+      color: #065F46;
+      border-color: #10B981;
+    }
+    .question-area {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .question {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 1rem;
+    }
+    .answer-input {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .answer-input input {
+      width: 100px;
+      height: 60px;
+      font-size: 2rem;
+      text-align: center;
+      border: 3px solid #A78BFA;
+      border-radius: 1rem;
+      background: white;
+      color: #1E1B4B;
+      font-weight: bold;
+    }
+    .answer-input input:focus {
+      outline: none;
+      border-color: #7C3AED;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+    }
+    .submit-btn {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      border: none;
+      border-radius: 1rem;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .submit-btn:hover {
+      transform: scale(1.1);
+    }
+    .timer-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #EAB308, #EF4444);
+      transition: width 0.1s linear;
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+      animation: bounceIn 0.3s ease;
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+    .message.winner { background: #FEF3C7; color: #92400E; }
+    .btn {
+      display: block;
+      margin: 0 auto;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .streak-display {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      display: none;
+      animation: fireAnim 0.5s ease infinite alternate;
+    }
+    .streak-display.show {
+      display: block;
+    }
+    @keyframes fireAnim {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    .speed-mode {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .speed-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #E9D5FF;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .speed-btn.active {
+      border-color: #7C3AED;
+      background: #EDE9FE;
+      color: #7C3AED;
+    }
+  </style>
+</head>
+<body>
+  <div class="streak-display" id="streakDisplay">🔥 <span id="streakNum">0</span> em sequência!</div>
+
+  <div class="game-container">
+    <h1>🏎️ Corrida da Tabuada</h1>
+    <p class="subtitle">Responda rápido e vença a corrida!</p>
+
+    <div class="speed-mode">
+      <button class="speed-btn active" data-speed="slow">🐢 Tranquilo</button>
+      <button class="speed-btn" data-speed="medium">🐇 Normal</button>
+      <button class="speed-btn" data-speed="fast">🚀 Turbo</button>
+    </div>
+
+    <div class="table-selector" id="tableSelector"></div>
+
+    <div class="race-track">
+      <div class="track-lines" id="trackLines"></div>
+      <div class="finish-line"></div>
+      <div class="racer player" id="playerRacer">
+        <span class="car">🏎️</span>
+        <span class="racer-name">Você</span>
+      </div>
+      <div class="racer cpu" id="cpuRacer">
+        <span class="car">🚗</span>
+        <span class="racer-name">CPU</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="record">0</div>
+        <div class="stat-label">Recorde</div>
+      </div>
+    </div>
+
+    <div class="question-area">
+      <div class="question" id="question">5 × 7 = ?</div>
+      <div class="answer-input">
+        <input type="number" id="answerInput" autofocus>
+        <button class="submit-btn" onclick="checkAnswer()">✓</button>
+      </div>
+      <div class="timer-bar">
+        <div class="timer-fill" id="timerFill"></div>
+      </div>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <button class="btn" onclick="startRace()">🏁 Nova Corrida</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('times-tables'));</script>
+  <script>
+    let selectedTable = 2;
+    let speed = 'slow';
+    let score = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let playerProgress = 0;
+    let cpuProgress = 0;
+    let currentAnswer = 0;
+    let timer = null;
+    let timeLeft = 10;
+    let raceActive = false;
+    let cpuInterval = null;
+    let completedTables = [];
+
+    const speeds = {
+      slow: { time: 12, cpuSpeed: 0.5 },
+      medium: { time: 8, cpuSpeed: 1 },
+      fast: { time: 5, cpuSpeed: 1.5 }
+    };
+
+    const record = parseInt(localStorage.getItem('tabuada_record') || '0');
+    document.getElementById('record').textContent = record;
+
+    function initTableSelector() {
+      const container = document.getElementById('tableSelector');
+      container.innerHTML = '';
+
+      for (let i = 2; i <= 10; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'table-btn' + (i === selectedTable ? ' active' : '') +
+          (completedTables.includes(i) ? ' completed' : '');
+        btn.textContent = i;
+        btn.onclick = () => selectTable(i);
+        container.appendChild(btn);
+      }
+    }
+
+    function selectTable(table) {
+      selectedTable = table;
+      document.querySelectorAll('.table-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.textContent) === table);
+      });
+      if (raceActive) generateQuestion();
+    }
+
+    function generateQuestion() {
+      const multiplier = Math.floor(Math.random() * 10) + 1;
+      currentAnswer = selectedTable * multiplier;
+
+      document.getElementById('question').textContent = `${selectedTable} × ${multiplier} = ?`;
+      document.getElementById('answerInput').value = '';
+      document.getElementById('answerInput').focus();
+
+      // Reset timer
+      timeLeft = speeds[speed].time;
+      updateTimer();
+
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft -= 0.1;
+        updateTimer();
+        if (timeLeft <= 0) {
+          handleTimeout();
+        }
+      }, 100);
+    }
+
+    function updateTimer() {
+      const percent = (timeLeft / speeds[speed].time) * 100;
+      document.getElementById('timerFill').style.width = percent + '%';
+    }
+
+    function checkAnswer() {
+      if (!raceActive) return;
+
+      const input = document.getElementById('answerInput');
+      const answer = parseInt(input.value);
+
+      if (isNaN(answer)) return;
+
+      clearInterval(timer);
+
+      if (answer === currentAnswer) {
+        handleCorrect();
+      } else {
+        handleWrong();
+      }
+    }
+
+    function handleCorrect() {
+      streak++;
+      correctCount++;
+      const timeBonus = Math.floor(timeLeft * 2);
+      const streakBonus = streak >= 3 ? streak * 3 : 0;
+      const points = 10 + timeBonus + streakBonus;
+      score += points;
+
+      playerProgress += 10 + (streak * 2);
+
+      updateStats();
+      updateRacers();
+      showMessage(`✅ Correto! +${points} pontos`, 'success');
+      updateStreakDisplay();
+
+      // Rewards per correct
+      if (streak >= 5 && streak % 5 === 0) {
+        giveReward('coins', streak * 2);
+      }
+
+      if (playerProgress >= 100) {
+        playerWins();
+      } else {
+        setTimeout(generateQuestion, 800);
+      }
+    }
+
+    function handleWrong() {
+      streak = 0;
+      updateStreakDisplay();
+      showMessage(`❌ Errado! Era ${currentAnswer}`, 'error');
+      // Penalidade por erro
+      EAI.applyPenalty(1);
+
+      setTimeout(generateQuestion, 1500);
+    }
+
+    function handleTimeout() {
+      clearInterval(timer);
+      streak = 0;
+      updateStreakDisplay();
+      showMessage(`⏱️ Tempo! Era ${currentAnswer}`, 'error');
+      // Penalidade por timeout
+      EAI.applyPenalty(1);
+
+      setTimeout(generateQuestion, 1500);
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+    }
+
+    function updateRacers() {
+      const maxWidth = 400; // Track width minus margins
+      const playerLeft = 20 + (playerProgress / 100) * maxWidth;
+      const cpuLeft = 20 + (cpuProgress / 100) * maxWidth;
+
+      document.getElementById('playerRacer').style.left = playerLeft + 'px';
+      document.getElementById('cpuRacer').style.left = cpuLeft + 'px';
+    }
+
+    function updateStreakDisplay() {
+      const display = document.getElementById('streakDisplay');
+      if (streak >= 3) {
+        display.classList.add('show');
+        document.getElementById('streakNum').textContent = streak;
+      } else {
+        display.classList.remove('show');
+      }
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+      setTimeout(() => msg.classList.remove('show'), 1500);
+    }
+
+    function moveCPU() {
+      cpuProgress += speeds[speed].cpuSpeed;
+      updateRacers();
+
+      if (cpuProgress >= 100) {
+        cpuWins();
+      }
+    }
+
+    function playerWins() {
+      raceActive = false;
+      clearInterval(timer);
+      clearInterval(cpuInterval);
+
+      // Mark table as completed
+      if (!completedTables.includes(selectedTable)) {
+        completedTables.push(selectedTable);
+        initTableSelector();
+      }
+
+      // Save record
+      if (score > record) {
+        localStorage.setItem('tabuada_record', score.toString());
+        document.getElementById('record').textContent = score;
+        showMessage(`🏆 VOCÊ VENCEU! NOVO RECORDE: ${score}`, 'winner');
+        giveReward('gold', 1);
+      } else {
+        showMessage(`🏆 VOCÊ VENCEU! Pontos: ${score}`, 'winner');
+      }
+
+      // Sistema de Recompensas EAI v2.0
+      setTimeout(() => {
+        EAI.giveGameReward({
+          correct: correctCount,
+          total: Math.max(correctCount, 10),
+          gameType: 'quiz'
+        });
+      }, 500);
+      if (correctCount >= 10) {
+        setTimeout(() => EAI.giveReward('diamonds', 1), 1300);
+      }
+
+      document.getElementById('trackLines').style.animationPlayState = 'paused';
+    }
+
+    function cpuWins() {
+      raceActive = false;
+      clearInterval(timer);
+      clearInterval(cpuInterval);
+
+      showMessage(`😢 CPU venceu! Tente novamente!`, 'error');
+      document.getElementById('trackLines').style.animationPlayState = 'paused';
+
+      // Still give some coins
+      if (correctCount > 0) {
+        giveReward('coins', correctCount * 2);
+      }
+    }
+
+    function startRace() {
+      raceActive = true;
+      score = 0;
+      correctCount = 0;
+      streak = 0;
+      playerProgress = 0;
+      cpuProgress = 0;
+
+      updateStats();
+      updateRacers();
+      updateStreakDisplay();
+      document.getElementById('message').className = 'message';
+      document.getElementById('trackLines').style.animationPlayState = 'running';
+
+      // Start CPU movement
+      clearInterval(cpuInterval);
+      cpuInterval = setInterval(moveCPU, 500);
+
+      generateQuestion();
+    }
+
+    // Event listeners
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        speed = btn.dataset.speed;
+      });
+    });
+
+    document.getElementById('answerInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') checkAnswer();
+    });
+
+    // Initialize
+    initTableSelector();
+    document.getElementById('trackLines').style.animationPlayState = 'paused';
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

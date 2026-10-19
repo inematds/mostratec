@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caça-Palavras Mágico - Jogo Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating bubbles background */
+        .bubbles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+            border-radius: 50%;
+            animation: float-up linear infinite;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s ease infinite;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @keyframes rainbow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .game-subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-item span {
+            font-size: 1.3em;
+        }
+
+        /* Main Menu */
+        .main-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            border-radius: 25px 25px 0 0;
+        }
+
+        .category-card.animals::before { background: linear-gradient(90deg, #ff9a9e, #fecfef); }
+        .category-card.space::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .category-card.food::before { background: linear-gradient(90deg, #f093fb, #f5576c); }
+        .category-card.science::before { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+        .category-card.nature::before { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+
+        .category-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+
+        .category-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+            animation: bounce 2s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .category-name {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .category-progress {
+            background: #eee;
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .category-card.animals .progress-fill { background: linear-gradient(90deg, #ff9a9e, #fecfef); }
+        .category-card.space .progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .category-card.food .progress-fill { background: linear-gradient(90deg, #f093fb, #f5576c); }
+        .category-card.science .progress-fill { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+        .category-card.nature .progress-fill { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+
+        .level-stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .star {
+            font-size: 1.5em;
+            color: #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .star.earned {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Level Selection */
+        .level-select {
+            display: none;
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .level-title {
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .level-btn {
+            aspect-ratio: 1;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+        }
+
+        .level-btn:hover:not(.locked) {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .level-btn.completed {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            border-color: #43e97b;
+            color: white;
+        }
+
+        .level-btn.locked {
+            background: #eee;
+            border-color: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .level-btn .level-stars-mini {
+            font-size: 0.4em;
+            margin-top: 5px;
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px dashed #eee;
+        }
+
+        .game-level-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 20px;
+            border-radius: 15px;
+        }
+
+        .timer.warning {
+            color: #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+            animation: pulse 0.5s ease infinite;
+        }
+
+        .timer.danger {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            animation: pulse 0.3s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .found-counter {
+            font-size: 1.3em;
+            color: #333;
+        }
+
+        /* Word Grid */
+        .game-content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .grid-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+        }
+
+        .word-grid {
+            display: grid;
+            gap: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 10px;
+            border-radius: 15px;
+            user-select: none;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .grid-cell:hover {
+            background: #f0f0ff;
+            transform: scale(1.1);
+            z-index: 1;
+        }
+
+        .grid-cell.selected {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            color: #333;
+            transform: scale(1.1);
+            z-index: 1;
+        }
+
+        .grid-cell.found {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+            color: white;
+            animation: found-pop 0.5s ease;
+        }
+
+        @keyframes found-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Word List */
+        .word-list-container {
+            flex: 0 0 280px;
+        }
+
+        .word-list-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .word-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .word-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .word-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .word-item.found {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+            color: white;
+        }
+
+        .word-item.found .word-text {
+            text-decoration: line-through;
+        }
+
+        .word-hint {
+            font-size: 1.8em;
+            width: 45px;
+            text-align: center;
+        }
+
+        .word-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .word-check {
+            font-size: 1.3em;
+        }
+
+        /* Hint Button */
+        .hint-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .hint-btn:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.5);
+        }
+
+        .hint-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: modal-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modal-pop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .modal-stars {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .modal-stat {
+            text-align: center;
+        }
+
+        .modal-stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .modal-stat-label {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Surprise Modal */
+        .surprise-modal .modal {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .surprise-modal .modal-title,
+        .surprise-modal .modal-text {
+            color: white;
+        }
+
+        .surprise-question {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .surprise-question h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .surprise-options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .surprise-option {
+            padding: 15px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .surprise-option:hover {
+            transform: scale(1.03);
+            background: white;
+        }
+
+        .surprise-option.correct {
+            background: #55efc4;
+            color: white;
+            animation: correct-flash 0.5s ease;
+        }
+
+        .surprise-option.wrong {
+            background: #ff7675;
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correct-flash {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Fun Fact */
+        .fun-fact {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .fun-fact-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Confetti */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 1.8em;
+            }
+
+            .stats-bar {
+                gap: 10px;
+            }
+
+            .stat-item {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            .category-card {
+                padding: 20px;
+            }
+
+            .category-icon {
+                font-size: 3em;
+            }
+
+            .levels-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .level-btn {
+                font-size: 1.5em;
+            }
+
+            .game-content {
+                flex-direction: column;
+            }
+
+            .word-list-container {
+                flex: 1;
+                width: 100%;
+            }
+
+            .grid-cell {
+                font-size: 0.9em;
+            }
+
+            .modal {
+                padding: 25px;
+            }
+
+            .modal-icon {
+                font-size: 3em;
+            }
+        }
+
+        /* Animations for word hints */
+        .hint-flash {
+            animation: hint-glow 1s ease infinite;
+        }
+
+        @keyframes hint-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+        }
+
+        /* Achievement badge */
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 3000;
+            animation: slide-in 0.5s ease, slide-out 0.5s ease 2.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @keyframes slide-in {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slide-out {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Bubbles -->
+    <div class="bubbles" id="bubbles"></div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confetti"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1 class="game-title">🔍 Caça-Palavras Mágico 🌟</h1>
+            <p class="game-subtitle">Encontre as palavras escondidas e aprenda brincando!</p>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span>⭐</span>
+                    <span id="total-stars">0</span> Estrelas
+                </div>
+                <div class="stat-item">
+                    <span>🏆</span>
+                    <span id="total-completed">0</span>/25 Níveis
+                </div>
+                <div class="stat-item">
+                    <span>💎</span>
+                    <span id="total-points">0</span> Pontos
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Menu -->
+        <div class="main-menu" id="main-menu">
+            <div class="category-card animals" onclick="selectCategory('animals')">
+                <span class="category-icon">🐾</span>
+                <h2 class="category-name">Animais</h2>
+                <p>Descubra o mundo animal!</p>
+                <div class="category-progress">
+                    <div class="progress-fill" id="progress-animals" style="width: 0%"></div>
+                </div>
+                <div class="level-stars" id="stars-animals">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+
+            <div class="category-card space" onclick="selectCategory('space')">
+                <span class="category-icon">🚀</span>
+                <h2 class="category-name">Espaço</h2>
+                <p>Explore o universo!</p>
+                <div class="category-progress">
+                    <div class="progress-fill" id="progress-space" style="width: 0%"></div>
+                </div>
+                <div class="level-stars" id="stars-space">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+
+            <div class="category-card food" onclick="selectCategory('food')">
+                <span class="category-icon">🍎</span>
+                <h2 class="category-name">Comida</h2>
+                <p>Delícias para encontrar!</p>
+                <div class="category-progress">
+                    <div class="progress-fill" id="progress-food" style="width: 0%"></div>
+                </div>
+                <div class="level-stars" id="stars-food">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+
+            <div class="category-card science" onclick="selectCategory('science')">
+                <span class="category-icon">🔬</span>
+                <h2 class="category-name">Ciência</h2>
+                <p>Descubra a ciência!</p>
+                <div class="category-progress">
+                    <div class="progress-fill" id="progress-science" style="width: 0%"></div>
+                </div>
+                <div class="level-stars" id="stars-science">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+
+            <div class="category-card nature" onclick="selectCategory('nature')">
+                <span class="category-icon">🌿</span>
+                <h2 class="category-name">Natureza</h2>
+                <p>A beleza da natureza!</p>
+                <div class="category-progress">
+                    <div class="progress-fill" id="progress-nature" style="width: 0%"></div>
+                </div>
+                <div class="level-stars" id="stars-nature">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="level-select" id="level-select">
+            <div class="level-header">
+                <button class="back-btn" onclick="backToMenu()">← Voltar</button>
+                <h2 class="level-title" id="level-title">
+                    <span id="category-emoji">🐾</span>
+                    <span id="category-name-display">Animais</span>
+                </h2>
+                <div></div>
+            </div>
+            <div class="levels-grid" id="levels-grid">
+                <!-- Levels will be generated here -->
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="game-area">
+            <div class="game-info">
+                <div class="game-level-info">
+                    <button class="back-btn" onclick="backToLevels()">← Níveis</button>
+                    <span id="current-level-display" style="font-size: 1.3em; font-weight: bold;">Nível 1</span>
+                </div>
+                <div class="timer" id="timer">⏱️ 00:00</div>
+                <div class="found-counter">
+                    Encontradas: <span id="found-count">0</span>/<span id="total-words">0</span>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="grid-container">
+                    <div class="word-grid" id="word-grid">
+                        <!-- Grid will be generated here -->
+                    </div>
+                </div>
+
+                <div class="word-list-container">
+                    <h3 class="word-list-title">🎯 Palavras para Encontrar</h3>
+                    <div class="word-list" id="word-list">
+                        <!-- Words will be listed here -->
+                    </div>
+                    <button class="hint-btn" id="hint-btn" onclick="useHint()">
+                        💡 Dica (<span id="hints-left">3</span> restantes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div class="modal-overlay" id="victory-modal">
+        <div class="modal">
+            <div class="modal-icon">🎉</div>
+            <h2 class="modal-title">Parabéns!</h2>
+            <div class="modal-stars" id="victory-stars">⭐⭐⭐</div>
+            <p class="modal-text" id="victory-text">Você encontrou todas as palavras!</p>
+            <div class="modal-stats">
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="victory-time">00:00</div>
+                    <div class="modal-stat-label">Tempo</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="victory-points">+100</div>
+                    <div class="modal-stat-label">Pontos</div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="backToLevels()">Níveis</button>
+                <button class="modal-btn primary" onclick="nextLevel()">Próximo Nível →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Surprise Modal -->
+    <div class="modal-overlay surprise-modal" id="surprise-modal">
+        <div class="modal">
+            <div class="modal-icon">🎁</div>
+            <h2 class="modal-title">Surpresa!</h2>
+            <div class="surprise-question" id="surprise-content">
+                <!-- Question content will be inserted here -->
+            </div>
+            <div class="fun-fact" id="fun-fact" style="display: none;">
+                <div class="fun-fact-title">🧠 Você Sabia?</div>
+                <p id="fun-fact-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Data - 5 Categories with 5 Levels each
+        const gameData = {
+            animals: {
+                name: 'Animais',
+                emoji: '🐾',
+                color: '#ff9a9e',
+                levels: [
+                    {
+                        gridSize: 8,
+                        words: [
+                            { word: 'GATO', hint: '🐱' },
+                            { word: 'CÃO', hint: '🐕' },
+                            { word: 'PATO', hint: '🦆' },
+                            { word: 'URSO', hint: '🐻' },
+                            { word: 'LEÃO', hint: '🦁' }
+                        ],
+                        timeLimit: 180,
+                        surprise: {
+                            question: 'Qual animal é conhecido como o rei da selva?',
+                            options: ['Elefante', 'Leão', 'Tigre', 'Urso'],
+                            correct: 1,
+                            fact: 'Os leões vivem em grupos chamados alcateias, e as fêmeas fazem a maior parte da caça!'
+                        }
+                    },
+                    {
+                        gridSize: 10,
+                        words: [
+                            { word: 'GIRAFA', hint: '🦒' },
+                            { word: 'ZEBRA', hint: '🦓' },
+                            { word: 'MACACO', hint: '🐒' },
+                            { word: 'PEIXE', hint: '🐟' },
+                            { word: 'COBRA', hint: '🐍' },
+                            { word: 'TIGRE', hint: '🐅' },
+                            { word: 'COELHO', hint: '🐰' }
+                        ],
+                        timeLimit: 240,
+                        surprise: {
+                            question: 'Qual é o animal terrestre mais alto do mundo?',
+                            options: ['Elefante', 'Girafa', 'Avestruz', 'Camelo'],
+                            correct: 1,
+                            fact: 'As girafas podem ter até 5,5 metros de altura, e suas línguas podem medir 50 centímetros!'
+                        }
+                    },
+                    {
+                        gridSize: 12,
+                        words: [
+                            { word: 'ELEFANTE', hint: '🐘' },
+                            { word: 'TUBARÃO', hint: '🦈' },
+                            { word: 'BALEIA', hint: '🐋' },
+                            { word: 'PAPAGAIO', hint: '🦜' },
+                            { word: 'PINGUIM', hint: '🐧' },
+                            { word: 'GORILA', hint: '🦍' },
+                            { word: 'RAPOSA', hint: '🦊' },
+                            { word: 'CAVALO', hint: '🐴' },
+                            { word: 'PORCO', hint: '🐷' }
+                        ],
+                        timeLimit: 300,
+                        surprise: {
+                            question: 'Qual é o maior animal do planeta?',
+                            options: ['Elefante africano', 'Baleia-azul', 'Tubarão-baleia', 'Girafa'],
+                            correct: 1,
+                            fact: 'A baleia-azul pode pesar até 180 toneladas e ter 30 metros de comprimento - maior que qualquer dinossauro!'
+                        }
+                    },
+                    {
+                        gridSize: 14,
+                        words: [
+                            { word: 'CROCODILO', hint: '🐊' },
+                            { word: 'TARTARUGA', hint: '🐢' },
+                            { word: 'CAMALEÃO', hint: '🦎' },
+                            { word: 'FLAMINGO', hint: '🦩' },
+                            { word: 'ORANGOTANGO', hint: '🦧' },
+                            { word: 'RINOCERONTE', hint: '🦏' },
+                            { word: 'HIPOPOTAMO', hint: '🦛' },
+                            { word: 'LEOPARDO', hint: '🐆' },
+                            { word: 'CANGURU', hint: '🦘' },
+                            { word: 'CORUJA', hint: '🦉' },
+                            { word: 'FOCA', hint: '🦭' }
+                        ],
+                        timeLimit: 360,
+                        surprise: {
+                            question: 'Qual animal pode mudar de cor para se camuflar?',
+                            options: ['Leopardo', 'Camaleão', 'Flamingo', 'Coruja'],
+                            correct: 1,
+                            fact: 'Os camaleões mudam de cor não só para camuflagem, mas também para comunicar emoções e regular temperatura!'
+                        }
+                    },
+                    {
+                        gridSize: 15,
+                        words: [
+                            { word: 'ORNITORRINCO', hint: '🦫' },
+                            { word: 'ESCORPIÃO', hint: '🦂' },
+                            { word: 'PREGUIÇA', hint: '🦥' },
+                            { word: 'JAVALI', hint: '🐗' },
+                            { word: 'ESQUILO', hint: '🐿️' },
+                            { word: 'OURIÇO', hint: '🦔' },
+                            { word: 'MORCEGO', hint: '🦇' },
+                            { word: 'GOLFINHO', hint: '🐬' },
+                            { word: 'POLVO', hint: '🐙' },
+                            { word: 'LONTRA', hint: '🦦' },
+                            { word: 'CASTOR', hint: '🦫' },
+                            { word: 'TEXUGO', hint: '🦡' },
+                            { word: 'ALCE', hint: '🫎' }
+                        ],
+                        timeLimit: 420,
+                        surprise: {
+                            question: 'Qual animal dorme cerca de 20 horas por dia?',
+                            options: ['Gato', 'Coala', 'Preguiça', 'Urso'],
+                            correct: 2,
+                            fact: 'As preguiças são tão lentas que algas crescem em seu pelo, ajudando na camuflagem nas árvores!'
+                        }
+                    }
+                ]
+            },
+            space: {
+                name: 'Espaço',
+                emoji: '🚀',
+                color: '#667eea',
+                levels: [
+                    {
+                        gridSize: 8,
+                        words: [
+                            { word: 'SOL', hint: '☀️' },
+                            { word: 'LUA', hint: '🌙' },
+                            { word: 'MARTE', hint: '🔴' },
+                            { word: 'TERRA', hint: '🌍' },
+                            { word: 'NAVE', hint: '🚀' }
+                        ],
+                        timeLimit: 180,
+                        surprise: {
+                            question: 'Qual é o planeta mais próximo do Sol?',
+                            options: ['Vênus', 'Terra', 'Mercúrio', 'Marte'],
+                            correct: 2,
+                            fact: 'Mercúrio leva apenas 88 dias terrestres para dar uma volta completa ao redor do Sol!'
+                        }
+                    },
+                    {
+                        gridSize: 10,
+                        words: [
+                            { word: 'ESTRELA', hint: '⭐' },
+                            { word: 'PLANETA', hint: '🪐' },
+                            { word: 'COMETA', hint: '☄️' },
+                            { word: 'FOGUETE', hint: '🚀' },
+                            { word: 'ORBITA', hint: '🔄' },
+                            { word: 'VENUS', hint: '🌟' },
+                            { word: 'JUPITER', hint: '🟤' }
+                        ],
+                        timeLimit: 240,
+                        surprise: {
+                            question: 'Qual planeta é conhecido como "Planeta Vermelho"?',
+                            options: ['Júpiter', 'Saturno', 'Marte', 'Vênus'],
+                            correct: 2,
+                            fact: 'Marte tem o maior vulcão do sistema solar, o Monte Olimpo, com 22 km de altura!'
+                        }
+                    },
+                    {
+                        gridSize: 12,
+                        words: [
+                            { word: 'SATURNO', hint: '🪐' },
+                            { word: 'NETUNO', hint: '💙' },
+                            { word: 'GALAXIA', hint: '🌌' },
+                            { word: 'METEORO', hint: '☄️' },
+                            { word: 'SATELITE', hint: '🛰️' },
+                            { word: 'URANO', hint: '🔵' },
+                            { word: 'ECLIPSE', hint: '🌑' },
+                            { word: 'BURACO', hint: '🕳️' },
+                            { word: 'COSMOS', hint: '✨' }
+                        ],
+                        timeLimit: 300,
+                        surprise: {
+                            question: 'Qual planeta tem os famosos anéis visíveis?',
+                            options: ['Júpiter', 'Saturno', 'Urano', 'Netuno'],
+                            correct: 1,
+                            fact: 'Os anéis de Saturno são feitos principalmente de gelo e rocha, e têm milhares de quilômetros de largura!'
+                        }
+                    },
+                    {
+                        gridSize: 14,
+                        words: [
+                            { word: 'ASTRONAUTA', hint: '👨‍🚀' },
+                            { word: 'TELESCOPIO', hint: '🔭' },
+                            { word: 'GRAVITAÇÃO', hint: '⬇️' },
+                            { word: 'CONSTELAÇÃO', hint: '✨' },
+                            { word: 'ATMOSFERA', hint: '🌫️' },
+                            { word: 'MERCURIO', hint: '🟡' },
+                            { word: 'PLUTÃO', hint: '❄️' },
+                            { word: 'NEBULOSA', hint: '🌈' },
+                            { word: 'SUPERNOVA', hint: '💥' },
+                            { word: 'ASTEROIDE', hint: '🪨' },
+                            { word: 'LUNAR', hint: '🌕' }
+                        ],
+                        timeLimit: 360,
+                        surprise: {
+                            question: 'Quanto tempo leva a luz do Sol para chegar à Terra?',
+                            options: ['8 segundos', '8 minutos', '8 horas', '8 dias'],
+                            correct: 1,
+                            fact: 'A luz viaja a 300.000 km por segundo, e mesmo assim leva 8 minutos para percorrer os 150 milhões de km até nós!'
+                        }
+                    },
+                    {
+                        gridSize: 15,
+                        words: [
+                            { word: 'BURACO NEGRO', hint: '🕳️' },
+                            { word: 'VIA LACTEA', hint: '🌌' },
+                            { word: 'ESTAÇÃO', hint: '🛸' },
+                            { word: 'GRAVIDADE', hint: '🍎' },
+                            { word: 'ROTAÇÃO', hint: '🔄' },
+                            { word: 'TRANSLAÇÃO', hint: '🌍' },
+                            { word: 'CRATERAS', hint: '🌑' },
+                            { word: 'QUASAR', hint: '💫' },
+                            { word: 'PULSAR', hint: '📡' },
+                            { word: 'ANEIS', hint: '⭕' },
+                            { word: 'ESPACIAL', hint: '🌠' },
+                            { word: 'SONDA', hint: '🛰️' },
+                            { word: 'ORBITAR', hint: '🔁' }
+                        ],
+                        timeLimit: 420,
+                        surprise: {
+                            question: 'Quantos planetas há em nosso sistema solar?',
+                            options: ['7', '8', '9', '10'],
+                            correct: 1,
+                            fact: 'Em 2006, Plutão foi reclassificado como "planeta anão", deixando nosso sistema solar com 8 planetas oficiais!'
+                        }
+                    }
+                ]
+            },
+            food: {
+                name: 'Comida',
+                emoji: '🍎',
+                color: '#f5576c',
+                levels: [
+                    {
+                        gridSize: 8,
+                        words: [
+                            { word: 'MAÇÃ', hint: '🍎' },
+                            { word: 'BOLO', hint: '🎂' },
+                            { word: 'ARROZ', hint: '🍚' },
+                            { word: 'SUCO', hint: '🧃' },
+                            { word: 'PIZZA', hint: '🍕' }
+                        ],
+                        timeLimit: 180,
+                        surprise: {
+                            question: 'Qual fruta é usada para fazer vinho?',
+                            options: ['Maçã', 'Laranja', 'Uva', 'Banana'],
+                            correct: 2,
+                            fact: 'Existem mais de 10.000 variedades de uvas no mundo, mas apenas algumas são usadas para fazer vinho!'
+                        }
+                    },
+                    {
+                        gridSize: 10,
+                        words: [
+                            { word: 'BANANA', hint: '🍌' },
+                            { word: 'LARANJA', hint: '🍊' },
+                            { word: 'MORANGO', hint: '🍓' },
+                            { word: 'QUEIJO', hint: '🧀' },
+                            { word: 'SORVETE', hint: '🍦' },
+                            { word: 'MILHO', hint: '🌽' },
+                            { word: 'CENOURA', hint: '🥕' }
+                        ],
+                        timeLimit: 240,
+                        surprise: {
+                            question: 'Qual destes alimentos é uma fruta botanicamente?',
+                            options: ['Cenoura', 'Batata', 'Tomate', 'Alface'],
+                            correct: 2,
+                            fact: 'O tomate é cientificamente uma fruta porque contém sementes, mas é usado como legume na culinária!'
+                        }
+                    },
+                    {
+                        gridSize: 12,
+                        words: [
+                            { word: 'CHOCOLATE', hint: '🍫' },
+                            { word: 'HAMBURGUER', hint: '🍔' },
+                            { word: 'ESPAGUETE', hint: '🍝' },
+                            { word: 'SANDUICHE', hint: '🥪' },
+                            { word: 'ABACAXI', hint: '🍍' },
+                            { word: 'MELANCIA', hint: '🍉' },
+                            { word: 'BATATA', hint: '🥔' },
+                            { word: 'FEIJÃO', hint: '🫘' },
+                            { word: 'MANTEIGA', hint: '🧈' }
+                        ],
+                        timeLimit: 300,
+                        surprise: {
+                            question: 'De onde vem o chocolate?',
+                            options: ['Das vacas', 'Das árvores de cacau', 'Das abelhas', 'Das montanhas'],
+                            correct: 1,
+                            fact: 'O cacau era tão valioso para os Astecas que eles usavam as sementes como dinheiro!'
+                        }
+                    },
+                    {
+                        gridSize: 14,
+                        words: [
+                            { word: 'MACARRÃO', hint: '🍝' },
+                            { word: 'BRIGADEIRO', hint: '🍫' },
+                            { word: 'PIPOCA', hint: '🍿' },
+                            { word: 'PIMENTÃO', hint: '🫑' },
+                            { word: 'COGUMELO', hint: '🍄' },
+                            { word: 'PEPINO', hint: '🥒' },
+                            { word: 'ALFACE', hint: '🥬' },
+                            { word: 'TOMATE', hint: '🍅' },
+                            { word: 'ABOBORA', hint: '🎃' },
+                            { word: 'PESSEGO', hint: '🍑' },
+                            { word: 'CEREJA', hint: '🍒' }
+                        ],
+                        timeLimit: 360,
+                        surprise: {
+                            question: 'Qual país inventou a pizza?',
+                            options: ['Estados Unidos', 'França', 'Itália', 'Espanha'],
+                            correct: 2,
+                            fact: 'A pizza Margherita foi criada em 1889 em homenagem à Rainha Margherita da Itália!'
+                        }
+                    },
+                    {
+                        gridSize: 15,
+                        words: [
+                            { word: 'CHURRASCO', hint: '🥩' },
+                            { word: 'JABUTICABA', hint: '🫐' },
+                            { word: 'MARACUJÁ', hint: '💛' },
+                            { word: 'BERINJELA', hint: '🍆' },
+                            { word: 'AZEITONA', hint: '🫒' },
+                            { word: 'CROISSANT', hint: '🥐' },
+                            { word: 'PANQUECA', hint: '🥞' },
+                            { word: 'PRETZEL', hint: '🥨' },
+                            { word: 'BACON', hint: '🥓' },
+                            { word: 'ROSQUINHA', hint: '🍩' },
+                            { word: 'CUPCAKE', hint: '🧁' },
+                            { word: 'BROCOLIS', hint: '🥦' },
+                            { word: 'CAMARÃO', hint: '🦐' }
+                        ],
+                        timeLimit: 420,
+                        surprise: {
+                            question: 'Qual é a fruta mais consumida no mundo?',
+                            options: ['Maçã', 'Laranja', 'Banana', 'Uva'],
+                            correct: 2,
+                            fact: 'Mais de 100 bilhões de bananas são consumidas anualmente no mundo!'
+                        }
+                    }
+                ]
+            },
+            science: {
+                name: 'Ciência',
+                emoji: '🔬',
+                color: '#4facfe',
+                levels: [
+                    {
+                        gridSize: 8,
+                        words: [
+                            { word: 'ÁGUA', hint: '💧' },
+                            { word: 'FOGO', hint: '🔥' },
+                            { word: 'AR', hint: '💨' },
+                            { word: 'OSSO', hint: '🦴' },
+                            { word: 'DNA', hint: '🧬' }
+                        ],
+                        timeLimit: 180,
+                        surprise: {
+                            question: 'Qual é a fórmula química da água?',
+                            options: ['CO2', 'O2', 'H2O', 'NaCl'],
+                            correct: 2,
+                            fact: 'Nosso corpo é composto por cerca de 60% de água!'
+                        }
+                    },
+                    {
+                        gridSize: 10,
+                        words: [
+                            { word: 'ÁTOMO', hint: '⚛️' },
+                            { word: 'CÉLULA', hint: '🔬' },
+                            { word: 'ENERGIA', hint: '⚡' },
+                            { word: 'CÉREBRO', hint: '🧠' },
+                            { word: 'SANGUE', hint: '🩸' },
+                            { word: 'MÚSCULO', hint: '💪' },
+                            { word: 'VÍRUS', hint: '🦠' }
+                        ],
+                        timeLimit: 240,
+                        surprise: {
+                            question: 'O que o cérebro humano usa como principal fonte de energia?',
+                            options: ['Proteína', 'Gordura', 'Glicose', 'Vitaminas'],
+                            correct: 2,
+                            fact: 'O cérebro usa 20% de toda a energia do corpo, mesmo pesando apenas 2% do peso total!'
+                        }
+                    },
+                    {
+                        gridSize: 12,
+                        words: [
+                            { word: 'MOLÉCULA', hint: '🔗' },
+                            { word: 'BACTÉRIA', hint: '🦠' },
+                            { word: 'OXIGÊNIO', hint: '💨' },
+                            { word: 'CARBONO', hint: '⬛' },
+                            { word: 'NITROGÊNIO', hint: '🌫️' },
+                            { word: 'GRAVIDADE', hint: '🍎' },
+                            { word: 'ELETRON', hint: '⚡' },
+                            { word: 'PROTON', hint: '➕' },
+                            { word: 'NEUTRON', hint: '⚪' }
+                        ],
+                        timeLimit: 300,
+                        surprise: {
+                            question: 'Quem descobriu a gravidade ao ver uma maçã cair?',
+                            options: ['Einstein', 'Newton', 'Galileu', 'Darwin'],
+                            correct: 1,
+                            fact: 'Isaac Newton desenvolveu suas teorias sobre gravidade em 1666, durante uma pandemia que o manteve em casa!'
+                        }
+                    },
+                    {
+                        gridSize: 14,
+                        words: [
+                            { word: 'FOTOSSÍNTESE', hint: '🌱' },
+                            { word: 'EVAPORAÇÃO', hint: '♨️' },
+                            { word: 'CONDENSAÇÃO', hint: '💧' },
+                            { word: 'MAGNETISMO', hint: '🧲' },
+                            { word: 'ELETRICIDADE', hint: '⚡' },
+                            { word: 'MICROSCÓPIO', hint: '🔬' },
+                            { word: 'TEMPERATURA', hint: '🌡️' },
+                            { word: 'QUÍMICA', hint: '🧪' },
+                            { word: 'FÍSICA', hint: '📐' },
+                            { word: 'BIOLOGIA', hint: '🧬' },
+                            { word: 'GENÉTICA', hint: '🧬' }
+                        ],
+                        timeLimit: 360,
+                        surprise: {
+                            question: 'O que as plantas produzem durante a fotossíntese?',
+                            options: ['Água', 'Dióxido de carbono', 'Oxigênio', 'Nitrogênio'],
+                            correct: 2,
+                            fact: 'Uma única árvore grande pode produzir oxigênio suficiente para 4 pessoas respirarem por um dia!'
+                        }
+                    },
+                    {
+                        gridSize: 15,
+                        words: [
+                            { word: 'LABORATÓRIO', hint: '🔬' },
+                            { word: 'EXPERIMENTO', hint: '🧪' },
+                            { word: 'HIPÓTESE', hint: '💭' },
+                            { word: 'REAÇÃO', hint: '💥' },
+                            { word: 'ELEMENTO', hint: '📊' },
+                            { word: 'COMPOSTO', hint: '🔗' },
+                            { word: 'SOLUÇÃO', hint: '🧴' },
+                            { word: 'MATÉRIA', hint: '🔲' },
+                            { word: 'FORÇA', hint: '💪' },
+                            { word: 'VELOCIDADE', hint: '🏃' },
+                            { word: 'ACELERAÇÃO', hint: '📈' },
+                            { word: 'DENSIDADE', hint: '📦' },
+                            { word: 'PRESSÃO', hint: '🔽' }
+                        ],
+                        timeLimit: 420,
+                        surprise: {
+                            question: 'Qual cientista desenvolveu a teoria da relatividade?',
+                            options: ['Newton', 'Einstein', 'Hawking', 'Curie'],
+                            correct: 1,
+                            fact: 'Einstein tinha dificuldades na escola quando criança, mas revolucionou a física com E=mc²!'
+                        }
+                    }
+                ]
+            },
+            nature: {
+                name: 'Natureza',
+                emoji: '🌿',
+                color: '#43e97b',
+                levels: [
+                    {
+                        gridSize: 8,
+                        words: [
+                            { word: 'FLOR', hint: '🌸' },
+                            { word: 'SOL', hint: '☀️' },
+                            { word: 'MAR', hint: '🌊' },
+                            { word: 'RIO', hint: '🏞️' },
+                            { word: 'NEVE', hint: '❄️' }
+                        ],
+                        timeLimit: 180,
+                        surprise: {
+                            question: 'Qual é a maior floresta tropical do mundo?',
+                            options: ['Floresta do Congo', 'Floresta Amazônica', 'Floresta de Bornéu', 'Floresta Daintree'],
+                            correct: 1,
+                            fact: 'A Amazônia produz cerca de 20% do oxigênio do mundo e abriga 10% de todas as espécies da Terra!'
+                        }
+                    },
+                    {
+                        gridSize: 10,
+                        words: [
+                            { word: 'ÁRVORE', hint: '🌳' },
+                            { word: 'NUVEM', hint: '☁️' },
+                            { word: 'CHUVA', hint: '🌧️' },
+                            { word: 'VENTO', hint: '💨' },
+                            { word: 'LAGO', hint: '🏞️' },
+                            { word: 'FOLHA', hint: '🍃' },
+                            { word: 'RAIZ', hint: '🌱' }
+                        ],
+                        timeLimit: 240,
+                        surprise: {
+                            question: 'De que são feitas as nuvens?',
+                            options: ['Algodão', 'Fumaça', 'Gotículas de água', 'Poeira'],
+                            correct: 2,
+                            fact: 'Uma nuvem média pesa cerca de 500.000 kg - o mesmo que 100 elefantes!'
+                        }
+                    },
+                    {
+                        gridSize: 12,
+                        words: [
+                            { word: 'MONTANHA', hint: '⛰️' },
+                            { word: 'VULCÃO', hint: '🌋' },
+                            { word: 'FLORESTA', hint: '🌲' },
+                            { word: 'CACHOEIRA', hint: '💦' },
+                            { word: 'DESERTO', hint: '🏜️' },
+                            { word: 'OCEANO', hint: '🌊' },
+                            { word: 'TORNADO', hint: '🌪️' },
+                            { word: 'RELÂMPAGO', hint: '⚡' },
+                            { word: 'ARCO ÍRIS', hint: '🌈' }
+                        ],
+                        timeLimit: 300,
+                        surprise: {
+                            question: 'Qual é a montanha mais alta do mundo?',
+                            options: ['K2', 'Monte Everest', 'Kilimanjaro', 'Monte Fuji'],
+                            correct: 1,
+                            fact: 'O Monte Everest tem 8.849 metros de altura e ainda está crescendo cerca de 4mm por ano!'
+                        }
+                    },
+                    {
+                        gridSize: 14,
+                        words: [
+                            { word: 'TERREMOTO', hint: '🫨' },
+                            { word: 'MAREMOTO', hint: '🌊' },
+                            { word: 'FURACÃO', hint: '🌀' },
+                            { word: 'GELEIRA', hint: '🧊' },
+                            { word: 'CAVERNA', hint: '🕳️' },
+                            { word: 'PÂNTANO', hint: '🐸' },
+                            { word: 'SAVANA', hint: '🦁' },
+                            { word: 'RECIFE', hint: '🐠' },
+                            { word: 'MANGUE', hint: '🌴' },
+                            { word: 'TUNDRA', hint: '🐻‍❄️' },
+                            { word: 'PRADARIA', hint: '🌾' }
+                        ],
+                        timeLimit: 360,
+                        surprise: {
+                            question: 'Qual ecossistema é conhecido como "pulmão do mundo"?',
+                            options: ['Oceano', 'Floresta Amazônica', 'Tundra', 'Deserto'],
+                            correct: 1,
+                            fact: 'A Floresta Amazônica abriga mais de 400 bilhões de árvores de 16.000 espécies diferentes!'
+                        }
+                    },
+                    {
+                        gridSize: 15,
+                        words: [
+                            { word: 'BIODIVERSIDADE', hint: '🌍' },
+                            { word: 'ECOSSISTEMA', hint: '🏞️' },
+                            { word: 'SUSTENTÁVEL', hint: '♻️' },
+                            { word: 'RECICLAGEM', hint: '♻️' },
+                            { word: 'POLUIÇÃO', hint: '🏭' },
+                            { word: 'AQUECIMENTO', hint: '🌡️' },
+                            { word: 'EXTINÇÃO', hint: '🦤' },
+                            { word: 'PRESERVAÇÃO', hint: '🌱' },
+                            { word: 'EROSÃO', hint: '🏜️' },
+                            { word: 'NASCENTE', hint: '💧' },
+                            { word: 'ATMOSFERA', hint: '🌫️' },
+                            { word: 'CAMADA', hint: '🌎' },
+                            { word: 'OZÔNIO', hint: '☀️' }
+                        ],
+                        timeLimit: 420,
+                        surprise: {
+                            question: 'Quanto tempo leva para uma garrafa plástica se decompor?',
+                            options: ['10 anos', '50 anos', '450 anos', '1000 anos'],
+                            correct: 2,
+                            fact: 'Cada minuto, 1 milhão de garrafas plásticas são compradas no mundo. Reciclar é muito importante!'
+                        }
+                    }
+                ]
+            }
+        };
+
+        // Game State
+        let gameState = {
+            currentCategory: null,
+            currentLevel: 0,
+            grid: [],
+            words: [],
+            foundWords: [],
+            selectedCells: [],
+            isSelecting: false,
+            startTime: null,
+            timerInterval: null,
+            hintsLeft: 3,
+            points: 0,
+            progress: {
+                animals: { completed: [], stars: [] },
+                space: { completed: [], stars: [] },
+                food: { completed: [], stars: [] },
+                science: { completed: [], stars: [] },
+                nature: { completed: [], stars: [] }
+            }
+        };
+
+        // Load saved progress
+        function loadProgress() {
+            const saved = localStorage.getItem('cacaPalavrasProgress');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                gameState.progress = parsed.progress || gameState.progress;
+                gameState.points = parsed.points || 0;
+            }
+            updateGlobalStats();
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('cacaPalavrasProgress', JSON.stringify({
+                progress: gameState.progress,
+                points: gameState.points
+            }));
+        }
+
+        // Update global stats display
+        function updateGlobalStats() {
+            let totalStars = 0;
+            let totalCompleted = 0;
+
+            Object.keys(gameState.progress).forEach(cat => {
+                totalStars += gameState.progress[cat].stars.reduce((a, b) => a + b, 0);
+                totalCompleted += gameState.progress[cat].completed.length;
+            });
+
+            document.getElementById('total-stars').textContent = totalStars;
+            document.getElementById('total-completed').textContent = totalCompleted;
+            document.getElementById('total-points').textContent = gameState.points;
+
+            // Update category progress
+            Object.keys(gameState.progress).forEach(cat => {
+                const progress = (gameState.progress[cat].completed.length / 5) * 100;
+                document.getElementById(`progress-${cat}`).style.width = `${progress}%`;
+
+                const starsContainer = document.getElementById(`stars-${cat}`);
+                const stars = starsContainer.querySelectorAll('.star');
+                gameState.progress[cat].completed.forEach((_, i) => {
+                    if (stars[i]) stars[i].classList.add('earned');
+                });
+            });
+        }
+
+        // Create floating bubbles
+        function createBubbles() {
+            const container = document.getElementById('bubbles');
+            for (let i = 0; i < 20; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.width = `${20 + Math.random() * 40}px`;
+                bubble.style.height = bubble.style.width;
+                bubble.style.animationDuration = `${10 + Math.random() * 20}s`;
+                bubble.style.animationDelay = `${Math.random() * 10}s`;
+                container.appendChild(bubble);
+            }
+        }
+
+        // Select category
+        function selectCategory(category) {
+            gameState.currentCategory = category;
+            const data = gameData[category];
+
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('level-select').style.display = 'block';
+            document.getElementById('category-emoji').textContent = data.emoji;
+            document.getElementById('category-name-display').textContent = data.name;
+
+            renderLevelButtons();
+            playSound('click');
+        }
+
+        // Render level buttons
+        function renderLevelButtons() {
+            const container = document.getElementById('levels-grid');
+            container.innerHTML = '';
+            const progress = gameState.progress[gameState.currentCategory];
+
+            for (let i = 0; i < 5; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+
+                const isCompleted = progress.completed.includes(i);
+                const isLocked = i > 0 && !progress.completed.includes(i - 1);
+
+                if (isCompleted) btn.classList.add('completed');
+                if (isLocked) btn.classList.add('locked');
+
+                const stars = progress.stars[i] || 0;
+                const starsDisplay = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+                btn.innerHTML = `
+                    ${isLocked ? '🔒' : i + 1}
+                    <div class="level-stars-mini">${isCompleted ? starsDisplay : ''}</div>
+                `;
+
+                if (!isLocked) {
+                    btn.onclick = () => startLevel(i);
+                }
+
+                container.appendChild(btn);
+            }
+        }
+
+        // Start level
+        function startLevel(level) {
+            gameState.currentLevel = level;
+            gameState.foundWords = [];
+            gameState.hintsLeft = 3;
+
+            document.getElementById('level-select').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+
+            const levelData = gameData[gameState.currentCategory].levels[level];
+            document.getElementById('current-level-display').textContent = `Nível ${level + 1}`;
+            document.getElementById('hints-left').textContent = gameState.hintsLeft;
+
+            generateGrid(levelData);
+            renderWordList(levelData.words);
+            startTimer(levelData.timeLimit);
+
+            playSound('start');
+        }
+
+        // Generate word search grid
+        function generateGrid(levelData) {
+            const size = levelData.gridSize;
+            const words = levelData.words.map(w => ({ ...w, word: w.word.replace(/\s/g, '').toUpperCase() }));
+            gameState.words = words;
+
+            // Initialize empty grid
+            let grid = Array(size).fill(null).map(() => Array(size).fill(''));
+
+            // Place words
+            const directions = [
+                [0, 1],   // horizontal
+                [1, 0],   // vertical
+                [1, 1],   // diagonal down-right
+                [1, -1],  // diagonal down-left
+            ];
+
+            words.forEach(wordObj => {
+                let placed = false;
+                let attempts = 0;
+
+                while (!placed && attempts < 100) {
+                    const dir = directions[Math.floor(Math.random() * directions.length)];
+                    const word = wordObj.word;
+
+                    let startRow, startCol;
+
+                    if (dir[0] === 0) {
+                        startRow = Math.floor(Math.random() * size);
+                        startCol = Math.floor(Math.random() * (size - word.length + 1));
+                    } else if (dir[1] === 0) {
+                        startRow = Math.floor(Math.random() * (size - word.length + 1));
+                        startCol = Math.floor(Math.random() * size);
+                    } else if (dir[1] === 1) {
+                        startRow = Math.floor(Math.random() * (size - word.length + 1));
+                        startCol = Math.floor(Math.random() * (size - word.length + 1));
+                    } else {
+                        startRow = Math.floor(Math.random() * (size - word.length + 1));
+                        startCol = word.length - 1 + Math.floor(Math.random() * (size - word.length + 1));
+                    }
+
+                    // Check if word fits
+                    let canPlace = true;
+                    for (let i = 0; i < word.length; i++) {
+                        const row = startRow + i * dir[0];
+                        const col = startCol + i * dir[1];
+                        if (row < 0 || row >= size || col < 0 || col >= size) {
+                            canPlace = false;
+                            break;
+                        }
+                        if (grid[row][col] !== '' && grid[row][col] !== word[i]) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+
+                    if (canPlace) {
+                        for (let i = 0; i < word.length; i++) {
+                            const row = startRow + i * dir[0];
+                            const col = startCol + i * dir[1];
+                            grid[row][col] = word[i];
+                        }
+                        wordObj.positions = [];
+                        for (let i = 0; i < word.length; i++) {
+                            wordObj.positions.push({
+                                row: startRow + i * dir[0],
+                                col: startCol + i * dir[1]
+                            });
+                        }
+                        placed = true;
+                    }
+                    attempts++;
+                }
+            });
+
+            // Fill empty cells with random letters
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (grid[i][j] === '') {
+                        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+
+            gameState.grid = grid;
+            renderGrid(size);
+        }
+
+        // Render grid
+        function renderGrid(size) {
+            const container = document.getElementById('word-grid');
+            container.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            container.innerHTML = '';
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.textContent = gameState.grid[i][j];
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    cell.addEventListener('mousedown', () => startSelection(i, j));
+                    cell.addEventListener('mouseenter', () => continueSelection(i, j));
+                    cell.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        startSelection(i, j);
+                    });
+                    cell.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (element && element.classList.contains('grid-cell')) {
+                            continueSelection(parseInt(element.dataset.row), parseInt(element.dataset.col));
+                        }
+                    });
+
+                    container.appendChild(cell);
+                }
+            }
+
+            document.addEventListener('mouseup', endSelection);
+            document.addEventListener('touchend', endSelection);
+        }
+
+        // Selection handlers
+        function startSelection(row, col) {
+            gameState.isSelecting = true;
+            gameState.selectedCells = [{ row, col }];
+            updateSelectionDisplay();
+        }
+
+        function continueSelection(row, col) {
+            if (!gameState.isSelecting) return;
+
+            const last = gameState.selectedCells[gameState.selectedCells.length - 1];
+            if (last.row === row && last.col === col) return;
+
+            // Check if valid continuation (adjacent and in line)
+            if (gameState.selectedCells.length === 1 || isValidContinuation(row, col)) {
+                gameState.selectedCells.push({ row, col });
+                updateSelectionDisplay();
+            }
+        }
+
+        function isValidContinuation(row, col) {
+            const first = gameState.selectedCells[0];
+            const last = gameState.selectedCells[gameState.selectedCells.length - 1];
+
+            // Must be adjacent to last
+            const rowDiff = Math.abs(row - last.row);
+            const colDiff = Math.abs(col - last.col);
+            if (rowDiff > 1 || colDiff > 1) return false;
+
+            // Must be in same direction as selection
+            if (gameState.selectedCells.length > 1) {
+                const dirRow = Math.sign(last.row - first.row);
+                const dirCol = Math.sign(last.col - first.col);
+                const newDirRow = Math.sign(row - last.row);
+                const newDirCol = Math.sign(col - last.col);
+                if (newDirRow !== dirRow || newDirCol !== dirCol) return false;
+            }
+
+            return true;
+        }
+
+        function endSelection() {
+            if (!gameState.isSelecting) return;
+            gameState.isSelecting = false;
+
+            const selectedWord = gameState.selectedCells
+                .map(c => gameState.grid[c.row][c.col])
+                .join('');
+
+            checkWord(selectedWord);
+            gameState.selectedCells = [];
+            updateSelectionDisplay();
+        }
+
+        function updateSelectionDisplay() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+
+            gameState.selectedCells.forEach(({ row, col }) => {
+                const cell = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+                if (cell) cell.classList.add('selected');
+            });
+        }
+
+        // Check if word is correct
+        function checkWord(selectedWord) {
+            const word = gameState.words.find(w =>
+                w.word === selectedWord && !gameState.foundWords.includes(w.word)
+            );
+
+            if (word) {
+                gameState.foundWords.push(word.word);
+                markWordFound(word);
+                updateFoundCounter();
+                playSound('correct');
+
+                // Check for surprise (after finding half the words)
+                if (gameState.foundWords.length === Math.ceil(gameState.words.length / 2)) {
+                    showSurprise();
+                }
+
+                // Check for level completion
+                if (gameState.foundWords.length === gameState.words.length) {
+                    setTimeout(levelComplete, 500);
+                }
+            } else {
+                playSound('wrong');
+            }
+        }
+
+        // Mark word as found
+        function markWordFound(word) {
+            word.positions.forEach(({ row, col }) => {
+                const cell = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+                if (cell) cell.classList.add('found');
+            });
+
+            const wordItem = document.querySelector(`.word-item[data-word="${word.word}"]`);
+            if (wordItem) {
+                wordItem.classList.add('found');
+                wordItem.querySelector('.word-check').textContent = '✓';
+            }
+        }
+
+        // Render word list
+        function renderWordList(words) {
+            const container = document.getElementById('word-list');
+            container.innerHTML = '';
+
+            document.getElementById('found-count').textContent = '0';
+            document.getElementById('total-words').textContent = words.length;
+
+            words.forEach(wordObj => {
+                const item = document.createElement('div');
+                item.className = 'word-item';
+                item.dataset.word = wordObj.word.replace(/\s/g, '').toUpperCase();
+                item.innerHTML = `
+                    <span class="word-hint">${wordObj.hint}</span>
+                    <span class="word-text">${wordObj.word}</span>
+                    <span class="word-check">○</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Update found counter
+        function updateFoundCounter() {
+            document.getElementById('found-count').textContent = gameState.foundWords.length;
+        }
+
+        // Timer
+        function startTimer(timeLimit) {
+            gameState.startTime = Date.now();
+            const timerEl = document.getElementById('timer');
+
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const remaining = Math.max(0, timeLimit - elapsed);
+
+                const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+                const secs = (remaining % 60).toString().padStart(2, '0');
+                timerEl.textContent = `⏱️ ${mins}:${secs}`;
+
+                timerEl.classList.remove('warning', 'danger');
+                if (remaining <= 30) timerEl.classList.add('danger');
+                else if (remaining <= 60) timerEl.classList.add('warning');
+
+                if (remaining === 0) {
+                    clearInterval(gameState.timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        // Time up
+        function timeUp() {
+            playSound('lose');
+            showModal('time-up');
+        }
+
+        // Use hint
+        function useHint() {
+            if (gameState.hintsLeft <= 0) return;
+
+            const notFound = gameState.words.filter(w => !gameState.foundWords.includes(w.word));
+            if (notFound.length === 0) return;
+
+            const word = notFound[Math.floor(Math.random() * notFound.length)];
+            const firstPos = word.positions[0];
+
+            const cell = document.querySelector(`.grid-cell[data-row="${firstPos.row}"][data-col="${firstPos.col}"]`);
+            if (cell) {
+                cell.classList.add('hint-flash');
+                setTimeout(() => cell.classList.remove('hint-flash'), 3000);
+            }
+
+            gameState.hintsLeft--;
+            document.getElementById('hints-left').textContent = gameState.hintsLeft;
+
+            if (gameState.hintsLeft <= 0) {
+                document.getElementById('hint-btn').disabled = true;
+            }
+
+            playSound('hint');
+        }
+
+        // Show surprise
+        function showSurprise() {
+            const levelData = gameData[gameState.currentCategory].levels[gameState.currentLevel];
+            const surprise = levelData.surprise;
+
+            const content = document.getElementById('surprise-content');
+            content.innerHTML = `
+                <h3>${surprise.question}</h3>
+                <div class="surprise-options">
+                    ${surprise.options.map((opt, i) => `
+                        <button class="surprise-option" onclick="answerSurprise(${i}, ${surprise.correct})">${opt}</button>
+                    `).join('')}
+                </div>
+            `;
+
+            document.getElementById('fun-fact').style.display = 'none';
+            document.getElementById('surprise-modal').classList.add('active');
+            playSound('surprise');
+        }
+
+        // Answer surprise question
+        function answerSurprise(selected, correct) {
+            const buttons = document.querySelectorAll('.surprise-option');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correct) btn.classList.add('correct');
+                else if (i === selected) btn.classList.add('wrong');
+            });
+
+            const levelData = gameData[gameState.currentCategory].levels[gameState.currentLevel];
+
+            if (selected === correct) {
+                gameState.points += 50;
+                playSound('correct');
+                showAchievement('🎉 +50 Pontos!');
+            } else {
+                playSound('wrong');
+            }
+
+            // Show fun fact
+            document.getElementById('fun-fact-text').textContent = levelData.surprise.fact;
+            document.getElementById('fun-fact').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('surprise-modal').classList.remove('active');
+            }, 4000);
+        }
+
+        // Level complete
+        function levelComplete() {
+            clearInterval(gameState.timerInterval);
+
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const levelData = gameData[gameState.currentCategory].levels[gameState.currentLevel];
+            const timeLimit = levelData.timeLimit;
+
+            // Calculate stars
+            let stars = 1;
+            if (elapsed < timeLimit * 0.5) stars = 3;
+            else if (elapsed < timeLimit * 0.75) stars = 2;
+
+            // Calculate points
+            const basePoints = 100 + (gameState.currentLevel * 50);
+            const timeBonus = Math.max(0, Math.floor((timeLimit - elapsed) / 10) * 10);
+            const hintPenalty = (3 - gameState.hintsLeft) * 20;
+            const totalPoints = basePoints + timeBonus - hintPenalty;
+
+            gameState.points += totalPoints;
+
+            // Save progress
+            const progress = gameState.progress[gameState.currentCategory];
+            if (!progress.completed.includes(gameState.currentLevel)) {
+                progress.completed.push(gameState.currentLevel);
+            }
+            progress.stars[gameState.currentLevel] = Math.max(progress.stars[gameState.currentLevel] || 0, stars);
+
+            saveProgress();
+            updateGlobalStats();
+
+            // Show victory modal
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+
+            document.getElementById('victory-time').textContent = `${mins}:${secs}`;
+            document.getElementById('victory-points').textContent = `+${totalPoints}`;
+            document.getElementById('victory-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+            document.getElementById('victory-modal').classList.add('active');
+            createConfetti();
+            playSound('victory');
+        }
+
+        // Next level
+        function nextLevel() {
+            document.getElementById('victory-modal').classList.remove('active');
+
+            if (gameState.currentLevel < 4) {
+                startLevel(gameState.currentLevel + 1);
+            } else {
+                backToLevels();
+                showAchievement(`🏆 Categoria ${gameData[gameState.currentCategory].name} Completa!`);
+            }
+        }
+
+        // Back to levels
+        function backToLevels() {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('victory-modal').classList.remove('active');
+            document.getElementById('level-select').style.display = 'block';
+            renderLevelButtons();
+        }
+
+        // Back to menu
+        function backToMenu() {
+            document.getElementById('level-select').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'grid';
+            updateGlobalStats();
+        }
+
+        // Show achievement popup
+        function showAchievement(text) {
+            const popup = document.createElement('div');
+            popup.className = 'achievement-popup';
+            popup.innerHTML = `<span>🌟</span><span>${text}</span>`;
+            document.body.appendChild(popup);
+
+            setTimeout(() => popup.remove(), 3000);
+        }
+
+        // Create confetti
+        function createConfetti() {
+            const container = document.getElementById('confetti');
+            container.innerHTML = '';
+
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animationDuration = `${2 + Math.random() * 3}s`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                container.appendChild(confetti);
+            }
+
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        // Sound effects (simple beeps)
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                const sounds = {
+                    click: { freq: 800, duration: 0.1, type: 'sine' },
+                    correct: { freq: 880, duration: 0.15, type: 'sine' },
+                    wrong: { freq: 200, duration: 0.3, type: 'sawtooth' },
+                    victory: { freq: 523.25, duration: 0.5, type: 'sine' },
+                    hint: { freq: 600, duration: 0.2, type: 'triangle' },
+                    start: { freq: 440, duration: 0.2, type: 'sine' },
+                    surprise: { freq: 700, duration: 0.3, type: 'sine' },
+                    lose: { freq: 150, duration: 0.5, type: 'sawtooth' }
+                };
+
+                const sound = sounds[type] || sounds.click;
+                oscillator.frequency.value = sound.freq;
+                oscillator.type = sound.type;
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + sound.duration);
+            } catch (e) {
+                // Audio not supported
+            }
+        }
+
+        // Initialize game
+        function init() {
+            createBubbles();
+            loadProgress();
+        }
+
+        init();
+    </script>
+</body>
+</html>

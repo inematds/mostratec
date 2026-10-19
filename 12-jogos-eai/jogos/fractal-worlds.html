@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRACTAL WORLDS - EAI Games</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+      overflow: hidden;
+      color: white;
+    }
+
+    /* Animated Fractal Background */
+    .fractal-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 100%);
+    }
+
+    .fractal-bg canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Floating Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: floatParticle 20s infinite linear;
+    }
+
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Game Container */
+    .game-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 15px 25px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .top-bar-left, .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 25px;
+      font-size: 0.9rem;
+    }
+
+    .stat-box.coins {
+      background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,170,0,0.1));
+      border-color: rgba(255,215,0,0.3);
+    }
+
+    .stat-box.coins span { color: #ffd700; font-weight: 700; }
+
+    .level-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .level-badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .xp-bar-mini {
+      width: 100px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .xp-bar-mini .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.5s ease;
+    }
+
+    /* Logo */
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 5s ease infinite;
+      margin-bottom: 10px;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    /* Menu Buttons */
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 16px 35px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      box-shadow: 0 10px 40px rgba(240, 147, 251, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 50px rgba(240, 147, 251, 0.5);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .btn-outline:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    /* World Selection */
+    .worlds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px;
+    }
+
+    .world-card {
+      position: relative;
+      border-radius: 25px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      aspect-ratio: 16/10;
+    }
+
+    .world-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--world-gradient);
+      opacity: 0.9;
+      transition: opacity 0.3s;
+    }
+
+    .world-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 25px 60px var(--world-shadow);
+    }
+
+    .world-card:hover::before {
+      opacity: 1;
+    }
+
+    .world-card.locked {
+      filter: grayscale(0.8);
+      cursor: not-allowed;
+    }
+
+    .world-card.locked:hover {
+      transform: none;
+    }
+
+    .world-content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .world-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+    }
+
+    .world-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .world-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .world-progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .world-progress-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .world-progress-fill {
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      border-radius: 4px;
+      transition: width 0.5s;
+    }
+
+    .world-progress-text {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .world-lock {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      z-index: 2;
+    }
+
+    /* World Themes */
+    .world-time {
+      --world-gradient: linear-gradient(135deg, #667eea, #764ba2);
+      --world-shadow: rgba(102, 126, 234, 0.4);
+    }
+
+    .world-energy {
+      --world-gradient: linear-gradient(135deg, #f093fb, #f5576c);
+      --world-shadow: rgba(240, 147, 251, 0.4);
+    }
+
+    .world-logic {
+      --world-gradient: linear-gradient(135deg, #4facfe, #00f2fe);
+      --world-shadow: rgba(79, 172, 254, 0.4);
+    }
+
+    .world-creation {
+      --world-gradient: linear-gradient(135deg, #43e97b, #38f9d7);
+      --world-shadow: rgba(67, 233, 123, 0.4);
+    }
+
+    .world-chaos {
+      --world-gradient: linear-gradient(135deg, #fa709a, #fee140);
+      --world-shadow: rgba(250, 112, 154, 0.4);
+    }
+
+    /* Level Selection */
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 15px;
+      max-width: 600px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .level-node {
+      aspect-ratio: 1;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+
+    .level-node:hover:not(.locked) {
+      transform: scale(1.1);
+      border-color: var(--world-color);
+      box-shadow: 0 10px 30px var(--world-shadow);
+    }
+
+    .level-node.completed {
+      background: var(--world-gradient);
+      border-color: transparent;
+    }
+
+    .level-node.current {
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255,215,0,0.5);
+      animation: currentPulse 2s infinite;
+    }
+
+    @keyframes currentPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+      50% { box-shadow: 0 0 40px rgba(255,215,0,0.6); }
+    }
+
+    .level-node.locked {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .level-stars {
+      font-size: 0.6rem;
+      margin-top: 5px;
+    }
+
+    /* Game Arena */
+    .game-arena {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 80px 20px 20px;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+
+    .game-timer {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #4facfe;
+    }
+
+    .game-timer.warning { color: #fee140; }
+    .game-timer.danger { color: #f5576c; animation: timerPulse 0.5s infinite; }
+
+    @keyframes timerPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .game-score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+    }
+
+    .score-value { color: #ffd700; margin-left: 8px; }
+
+    .game-multiplier {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      border-radius: 25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+
+    /* Game Canvas Area */
+    .game-canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 0;
+    }
+
+    .game-canvas {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16/9;
+      background: rgba(0,0,0,0.5);
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Player */
+    .player {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      box-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+      transition: all 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      z-index: 10;
+    }
+
+    .player.powered {
+      box-shadow: 0 0 50px rgba(255,215,0,0.8);
+      animation: powerGlow 0.3s infinite;
+    }
+
+    @keyframes powerGlow {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Game Objects */
+    .game-object {
+      position: absolute;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .collectible {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      animation: collectibleFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes collectibleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .obstacle {
+      background: linear-gradient(135deg, #f5576c, #fa709a);
+      box-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+    }
+
+    .portal {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #4facfe, transparent);
+      border: 3px solid #4facfe;
+      animation: portalSpin 3s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    @keyframes portalSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .pattern-zone {
+      border: 2px dashed rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 10px;
+    }
+
+    .pattern-item {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .pattern-item:hover {
+      transform: scale(1.1);
+      background: rgba(255,255,255,0.2);
+    }
+
+    .pattern-item.selected {
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      box-shadow: 0 0 20px rgba(67, 233, 123, 0.5);
+    }
+
+    .pattern-item.correct {
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      animation: correctFlash 0.5s;
+    }
+
+    .pattern-item.wrong {
+      background: linear-gradient(135deg, #f5576c, #fa709a);
+      animation: wrongShake 0.5s;
+    }
+
+    @keyframes correctFlash {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Energy Bar */
+    .energy-display {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 25px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 30px;
+    }
+
+    .energy-bar {
+      width: 200px;
+      height: 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .energy-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      border-radius: 6px;
+      transition: width 0.3s ease;
+    }
+
+    .energy-fill.low {
+      background: linear-gradient(90deg, #f5576c, #fa709a);
+    }
+
+    /* Skills Display */
+    .skills-bar {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skill-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .skill-btn:hover:not(.locked):not(.cooldown) {
+      border-color: #667eea;
+      transform: scale(1.1);
+    }
+
+    .skill-btn.ready {
+      border-color: #43e97b;
+      animation: skillReady 1s infinite;
+    }
+
+    @keyframes skillReady {
+      0%, 100% { box-shadow: 0 0 10px rgba(67, 233, 123, 0.3); }
+      50% { box-shadow: 0 0 25px rgba(67, 233, 123, 0.6); }
+    }
+
+    .skill-btn.locked {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .skill-btn.cooldown {
+      opacity: 0.6;
+    }
+
+    .skill-cooldown {
+      position: absolute;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    /* Rule Change Notification */
+    .rule-change {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 30px 60px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+      border-radius: 20px;
+      text-align: center;
+      z-index: 1000;
+      animation: ruleAppear 0.5s ease;
+      display: none;
+    }
+
+    .rule-change.active {
+      display: block;
+    }
+
+    @keyframes ruleAppear {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .rule-change-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .rule-change-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    /* Skill Tree */
+    .skill-tree-container {
+      max-width: 800px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .skill-tree-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .skill-tree-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .skill-points {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 25px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 25px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .skill-tree-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+    }
+
+    .skill-tree-node {
+      aspect-ratio: 1;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .skill-tree-node:hover:not(.locked) {
+      border-color: #667eea;
+      transform: scale(1.05);
+    }
+
+    .skill-tree-node.unlocked {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+      border-color: #667eea;
+    }
+
+    .skill-tree-node.maxed {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+    }
+
+    .skill-tree-node.locked {
+      opacity: 0.4;
+    }
+
+    .skill-tree-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .skill-tree-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .skill-tree-level {
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    /* Results Screen */
+    .results-container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .results-stars {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .results-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    .results-title.victory {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .results-title.defeat {
+      color: #f5576c;
+    }
+
+    .results-stats {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .results-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .results-stat:last-child {
+      border-bottom: none;
+    }
+
+    .results-stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      color: #4facfe;
+    }
+
+    .results-rewards {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .reward-item {
+      text-align: center;
+    }
+
+    .reward-icon {
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+    }
+
+    .reward-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .reward-value.coins { color: #ffd700; }
+    .reward-value.xp { color: #4facfe; }
+
+    /* Chest Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 25px;
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .chest {
+      font-size: 5rem;
+      cursor: pointer;
+      animation: chestFloat 2s ease-in-out infinite;
+      position: relative;
+      display: inline-block;
+    }
+
+    @keyframes chestFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .chest:hover {
+      animation: chestShake 0.3s ease-in-out;
+    }
+
+    @keyframes chestShake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+
+    .chest.opening {
+      animation: chestOpen 0.5s ease forwards;
+    }
+
+    @keyframes chestOpen {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3) rotate(10deg); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .chest-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(255,215,0,0.4), transparent);
+      border-radius: 50%;
+      animation: glowPulse 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    .chest-reward {
+      display: none;
+    }
+
+    .chest-reward.active {
+      display: block;
+      animation: rewardAppear 0.5s ease;
+    }
+
+    @keyframes rewardAppear {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .reward-reveal-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      animation: rewardBounce 0.5s ease infinite;
+    }
+
+    @keyframes rewardBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .reward-reveal-amount {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.5);
+      margin-bottom: 10px;
+    }
+
+    /* Daily Challenge */
+    .daily-challenge {
+      background: linear-gradient(135deg, rgba(250, 112, 154, 0.2), rgba(254, 225, 64, 0.2));
+      border: 2px solid rgba(250, 112, 154, 0.3);
+      border-radius: 20px;
+      padding: 25px;
+      max-width: 400px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .daily-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .daily-icon {
+      font-size: 2rem;
+    }
+
+    .daily-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+    }
+
+    .daily-timer {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .daily-desc {
+      margin-bottom: 15px;
+      opacity: 0.9;
+    }
+
+    .daily-rewards {
+      display: flex;
+      gap: 20px;
+    }
+
+    .daily-reward {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .worlds-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .skill-tree-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .top-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .skills-bar {
+        right: 10px;
+        flex-direction: row;
+        top: auto;
+        bottom: 80px;
+        transform: none;
+      }
+
+      .skill-btn {
+        width: 50px;
+        height: 50px;
+      }
+
+      .game-canvas {
+        aspect-ratio: 4/3;
+      }
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      padding: 15px 25px;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      border-radius: 15px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.coins {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+    }
+
+    .notification.xp {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+    }
+
+    .notification.level-up {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+    }
+
+    .notification.rule {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+  </style>
+</head>
+<body>
+  <div class="fractal-bg">
+    <canvas id="fractalCanvas"></canvas>
+  </div>
+  <div class="particles" id="particles"></div>
+
+  <div class="game-container">
+    <!-- Top Bar -->
+    <div class="top-bar" id="topBar" style="display: none;">
+      <div class="top-bar-left">
+        <div class="level-display">
+          <div class="level-badge" id="playerLevel">Nivel 1</div>
+          <div class="xp-bar-mini">
+            <div class="fill" id="xpFill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="top-bar-right">
+        <div class="stat-box coins">
+          <span>🪙</span>
+          <span id="totalCoins">0</span>
+        </div>
+        <div class="stat-box">
+          <span>⭐</span>
+          <span id="totalStars">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div class="screen active" id="menuScreen">
+      <h1 class="logo">FRACTAL WORLDS</h1>
+      <p class="tagline">Explore. Evolua. Adapte-se.</p>
+
+      <!-- Daily Challenge -->
+      <div class="daily-challenge" id="dailyChallenge">
+        <div class="daily-header">
+          <span class="daily-icon">🎯</span>
+          <div>
+            <div class="daily-title">Desafio Diario</div>
+            <div class="daily-timer" id="dailyTimer">Renova em: 12:34:56</div>
+          </div>
+        </div>
+        <div class="daily-desc" id="dailyDesc">Complete 3 fases no Mundo do Tempo sem perder energia!</div>
+        <div class="daily-rewards">
+          <div class="daily-reward"><span>🪙</span> <span>+200</span></div>
+          <div class="daily-reward"><span>⭐</span> <span>+50 XP</span></div>
+        </div>
+      </div>
+
+      <div class="menu-buttons">
+        <button class="btn btn-primary" onclick="showScreen('worldSelect')">Explorar Mundos</button>
+        <button class="btn btn-secondary" onclick="showScreen('skillTree')">Arvore de Habilidades</button>
+        <button class="btn btn-outline" onclick="showScreen('tutorial')">Como Jogar</button>
+      </div>
+    </div>
+
+    <!-- World Selection -->
+    <div class="screen" id="worldSelect">
+      <h2 style="font-family: 'Orbitron'; font-size: 2rem; margin-bottom: 30px;">Escolha um Mundo</h2>
+      <div class="worlds-grid">
+        <div class="world-card world-time" onclick="selectWorld('time')">
+          <div class="world-content">
+            <div>
+              <div class="world-icon">⏱️</div>
+              <div class="world-name">Mundo do Tempo</div>
+              <div class="world-subtitle">Velocidade, Sequencia, Antecipacao</div>
+            </div>
+            <div class="world-progress">
+              <div class="world-progress-bar">
+                <div class="world-progress-fill" id="timeProgress" style="width: 0%"></div>
+              </div>
+              <div class="world-progress-text"><span id="timePhases">0</span>/20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="world-card world-energy" onclick="selectWorld('energy')">
+          <div class="world-content">
+            <div>
+              <div class="world-icon">⚡</div>
+              <div class="world-name">Mundo da Energia</div>
+              <div class="world-subtitle">Gestao de Recursos, Equilibrio</div>
+            </div>
+            <div class="world-progress">
+              <div class="world-progress-bar">
+                <div class="world-progress-fill" id="energyProgress" style="width: 0%"></div>
+              </div>
+              <div class="world-progress-text"><span id="energyPhases">0</span>/20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="world-card world-logic" onclick="selectWorld('logic')">
+          <div class="world-content">
+            <div>
+              <div class="world-icon">🧩</div>
+              <div class="world-name">Mundo da Logica</div>
+              <div class="world-subtitle">Padroes, Conexoes, Deducao</div>
+            </div>
+            <div class="world-progress">
+              <div class="world-progress-bar">
+                <div class="world-progress-fill" id="logicProgress" style="width: 0%"></div>
+              </div>
+              <div class="world-progress-text"><span id="logicPhases">0</span>/20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="world-card world-creation" onclick="selectWorld('creation')" id="creationCard">
+          <div class="world-content">
+            <div>
+              <div class="world-icon">✨</div>
+              <div class="world-name">Mundo da Criacao</div>
+              <div class="world-subtitle">Modificacao de Regras, Inovacao</div>
+            </div>
+            <div class="world-progress">
+              <div class="world-progress-bar">
+                <div class="world-progress-fill" id="creationProgress" style="width: 0%"></div>
+              </div>
+              <div class="world-progress-text"><span id="creationPhases">0</span>/20</div>
+            </div>
+          </div>
+          <div class="world-lock" id="creationLock">🔒</div>
+        </div>
+
+        <div class="world-card world-chaos" onclick="selectWorld('chaos')" id="chaosCard">
+          <div class="world-content">
+            <div>
+              <div class="world-icon">🌀</div>
+              <div class="world-name">Mundo do Caos</div>
+              <div class="world-subtitle">Imprevisibilidade Controlada</div>
+            </div>
+            <div class="world-progress">
+              <div class="world-progress-bar">
+                <div class="world-progress-fill" id="chaosProgress" style="width: 0%"></div>
+              </div>
+              <div class="world-progress-text"><span id="chaosPhases">0</span>/20</div>
+            </div>
+          </div>
+          <div class="world-lock" id="chaosLock">🔒</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" style="margin-top: 30px;" onclick="showScreen('menuScreen')">Voltar</button>
+    </div>
+
+    <!-- Level Selection -->
+    <div class="screen" id="levelSelect">
+      <h2 style="font-family: 'Orbitron'; font-size: 1.8rem; margin-bottom: 10px;" id="worldTitle">Mundo do Tempo</h2>
+      <p style="opacity: 0.7; margin-bottom: 30px;" id="worldDesc">Domine a velocidade e antecipe os padroes</p>
+      <div class="level-grid" id="levelGrid">
+        <!-- Levels loaded dynamically -->
+      </div>
+      <button class="btn btn-outline" style="margin-top: 30px;" onclick="showScreen('worldSelect')">Voltar</button>
+    </div>
+
+    <!-- Game Arena -->
+    <div class="screen" id="gameArena">
+      <div class="game-arena">
+        <div class="game-header">
+          <div class="game-timer" id="gameTimer">1:30</div>
+          <div class="game-score">Pontos:<span class="score-value" id="currentScore">0</span></div>
+          <div class="game-multiplier" id="multiplier">x1</div>
+        </div>
+
+        <div class="game-canvas-container">
+          <div class="game-canvas" id="gameCanvas">
+            <div class="player" id="player">🚀</div>
+            <!-- Game objects loaded dynamically -->
+          </div>
+
+          <div class="skills-bar" id="skillsBar">
+            <button class="skill-btn ready" onclick="useSkill(0)" title="Dash">💨</button>
+            <button class="skill-btn locked" onclick="useSkill(1)" title="Escudo">🛡️</button>
+            <button class="skill-btn locked" onclick="useSkill(2)" title="Slow Motion">⏳</button>
+            <button class="skill-btn locked" onclick="useSkill(3)" title="Super">⭐</button>
+          </div>
+
+          <div class="energy-display">
+            <span>⚡</span>
+            <div class="energy-bar">
+              <div class="energy-fill" id="energyFill" style="width: 100%"></div>
+            </div>
+            <span id="energyText">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule Change Notification -->
+      <div class="rule-change" id="ruleChange">
+        <div class="rule-change-icon" id="ruleIcon">🔄</div>
+        <div class="rule-change-text" id="ruleText">Nova Regra!</div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="screen" id="resultsScreen">
+      <div class="results-container">
+        <div class="results-stars" id="resultStars">⭐⭐⭐</div>
+        <h2 class="results-title victory" id="resultsTitle">Fase Completa!</h2>
+
+        <div class="results-stats">
+          <div class="results-stat">
+            <span>Pontuacao</span>
+            <span class="results-stat-value" id="finalScore">0</span>
+          </div>
+          <div class="results-stat">
+            <span>Tempo</span>
+            <span class="results-stat-value" id="finalTime">0:00</span>
+          </div>
+          <div class="results-stat">
+            <span>Coletaveis</span>
+            <span class="results-stat-value" id="finalCollectibles">0/0</span>
+          </div>
+          <div class="results-stat">
+            <span>Multiplicador Max</span>
+            <span class="results-stat-value" id="finalMultiplier">x1</span>
+          </div>
+        </div>
+
+        <div class="results-rewards">
+          <div class="reward-item">
+            <div class="reward-icon">🪙</div>
+            <div class="reward-value coins" id="coinsEarned">+50</div>
+          </div>
+          <div class="reward-item">
+            <div class="reward-icon">⭐</div>
+            <div class="reward-value xp" id="xpEarned">+25 XP</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+          <button class="btn btn-primary" onclick="nextLevel()">Proxima Fase</button>
+          <button class="btn btn-outline" onclick="showScreen('levelSelect')">Selecionar Fase</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skill Tree -->
+    <div class="screen" id="skillTree">
+      <div class="skill-tree-container">
+        <div class="skill-tree-header">
+          <h2 class="skill-tree-title">Arvore de Habilidades</h2>
+          <div class="skill-points">
+            <span>🔮</span>
+            <span>Pontos: <strong id="skillPoints">0</strong></span>
+          </div>
+        </div>
+
+        <div class="skill-tree-grid" id="skillTreeGrid">
+          <!-- Skills loaded dynamically -->
+        </div>
+      </div>
+      <button class="btn btn-outline" style="margin-top: 30px;" onclick="showScreen('menuScreen')">Voltar</button>
+    </div>
+
+    <!-- Tutorial -->
+    <div class="screen" id="tutorial">
+      <div style="max-width: 600px; text-align: center;">
+        <h2 style="font-family: 'Orbitron'; font-size: 2rem; margin-bottom: 30px;">Como Jogar</h2>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 20px; padding: 25px; text-align: left; margin-bottom: 20px;">
+          <h3 style="color: #667eea; margin-bottom: 15px;">🎮 Controles</h3>
+          <p style="opacity: 0.8; margin-bottom: 20px;">Use as setas ou WASD para mover. Clique nos elementos para interagir.</p>
+
+          <h3 style="color: #f093fb; margin-bottom: 15px;">🌍 Mundos</h3>
+          <p style="opacity: 0.8; margin-bottom: 20px;">Cada mundo tem mecanicas unicas. Desbloqueie novos mundos completando fases.</p>
+
+          <h3 style="color: #4facfe; margin-bottom: 15px;">🔄 Regras Dinamicas</h3>
+          <p style="opacity: 0.8; margin-bottom: 20px;">As regras podem mudar durante a fase! Adapte-se rapidamente.</p>
+
+          <h3 style="color: #43e97b; margin-bottom: 15px;">⭐ Progressao</h3>
+          <p style="opacity: 0.8;">Ganhe XP, desbloqueie habilidades e colete moedas para evoluir!</p>
+        </div>
+        <button class="btn btn-primary" onclick="showScreen('menuScreen')">Entendi!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chest Modal -->
+  <div class="modal-overlay" id="chestModal">
+    <div class="modal">
+      <div id="chestContainer">
+        <div class="chest" id="chest" onclick="openChest()">
+          📦
+          <div class="chest-glow"></div>
+        </div>
+        <p style="margin-top: 20px; opacity: 0.7;">Toque no bau para abrir!</p>
+      </div>
+      <div class="chest-reward" id="chestReward">
+        <div class="reward-reveal-icon" id="chestRewardIcon">🪙</div>
+        <div class="reward-reveal-amount" id="chestRewardAmount">+100</div>
+        <p id="chestRewardText" style="opacity: 0.8;">Moedas!</p>
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="closeChest()">Coletar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification"></div>
+
+  <script>
+    // Game State
+    const gameState = {
+      level: 1,
+      xp: 0,
+      xpToNext: 100,
+      coins: 0,
+      totalStars: 0,
+      skillPoints: 3,
+      currentWorld: null,
+      currentPhase: 1,
+      score: 0,
+      multiplier: 1,
+      maxMultiplier: 1,
+      energy: 100,
+      timeRemaining: 90,
+      collectibles: 0,
+      totalCollectibles: 0,
+      gameActive: false,
+      skills: {
+        dash: { level: 1, maxLevel: 5, cooldown: 0, baseCooldown: 5 },
+        shield: { level: 0, maxLevel: 5, cooldown: 0, baseCooldown: 10 },
+        slowmo: { level: 0, maxLevel: 5, cooldown: 0, baseCooldown: 15 },
+        super: { level: 0, maxLevel: 3, cooldown: 0, baseCooldown: 30 }
+      },
+      worldProgress: {
+        time: { completed: [], unlocked: true },
+        energy: { completed: [], unlocked: true },
+        logic: { completed: [], unlocked: true },
+        creation: { completed: [], unlocked: false },
+        chaos: { completed: [], unlocked: false }
+      },
+      player: { x: 50, y: 50 },
+      currentRule: null,
+      ruleTimer: 0
+    };
+
+    // World Data
+    const worldData = {
+      time: {
+        name: 'Mundo do Tempo',
+        desc: 'Domine a velocidade e antecipe os padroes',
+        icon: '⏱️',
+        color: '#667eea',
+        gradient: 'linear-gradient(135deg, #667eea, #764ba2)',
+        rules: ['Velocidade 2x', 'Tempo Reverso', 'Pulso Temporal', 'Congelamento'],
+        challenges: ['sequence', 'speed', 'rhythm']
+      },
+      energy: {
+        name: 'Mundo da Energia',
+        desc: 'Gerencie recursos e mantenha o equilibrio',
+        icon: '⚡',
+        color: '#f093fb',
+        gradient: 'linear-gradient(135deg, #f093fb, #f5576c)',
+        rules: ['Dreno de Energia', 'Sobrecarga', 'Equilibrio', 'Transferencia'],
+        challenges: ['balance', 'collect', 'avoid']
+      },
+      logic: {
+        name: 'Mundo da Logica',
+        desc: 'Identifique padroes e faca conexoes',
+        icon: '🧩',
+        color: '#4facfe',
+        gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)',
+        rules: ['Inversao Logica', 'Sequencia Oculta', 'Conexoes', 'Deducao'],
+        challenges: ['pattern', 'connect', 'deduce']
+      },
+      creation: {
+        name: 'Mundo da Criacao',
+        desc: 'Modifique as regras ao seu favor',
+        icon: '✨',
+        color: '#43e97b',
+        gradient: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+        rules: ['Regra Customizada', 'Criacao Livre', 'Transformacao', 'Fusao'],
+        challenges: ['create', 'modify', 'combine']
+      },
+      chaos: {
+        name: 'Mundo do Caos',
+        desc: 'Sobreviva a imprevisibilidade',
+        icon: '🌀',
+        color: '#fa709a',
+        gradient: 'linear-gradient(135deg, #fa709a, #fee140)',
+        rules: ['Aleatorio Total', 'Mutacao', 'Distorcao', 'Caos Controlado'],
+        challenges: ['survive', 'adapt', 'chaos']
+      }
+    };
+
+    // Skill Tree Data
+    const skillTreeData = [
+      { id: 'dash', name: 'Dash', icon: '💨', desc: 'Avance rapidamente', row: 0 },
+      { id: 'speed', name: 'Velocidade', icon: '🏃', desc: '+10% velocidade', row: 0 },
+      { id: 'energy_max', name: 'Energia Max', icon: '🔋', desc: '+20 energia max', row: 0 },
+      { id: 'collector', name: 'Coletor', icon: '🧲', desc: 'Atracao de itens', row: 0 },
+      { id: 'lucky', name: 'Sorte', icon: '🍀', desc: '+10% moedas', row: 0 },
+      { id: 'shield', name: 'Escudo', icon: '🛡️', desc: 'Protecao temporaria', row: 1 },
+      { id: 'regen', name: 'Regeneracao', icon: '💚', desc: 'Recupera energia', row: 1 },
+      { id: 'focus', name: 'Foco', icon: '🎯', desc: '+20% pontos', row: 1 },
+      { id: 'combo', name: 'Combo Master', icon: '🔥', desc: 'Combos maiores', row: 1 },
+      { id: 'time_ext', name: 'Tempo Extra', icon: '⏰', desc: '+15s por fase', row: 1 },
+      { id: 'slowmo', name: 'Slow Motion', icon: '⏳', desc: 'Desacelera o tempo', row: 2 },
+      { id: 'double_jump', name: 'Salto Duplo', icon: '🦘', desc: 'Pule duas vezes', row: 2 },
+      { id: 'magnet', name: 'Magnetismo', icon: '🧲', desc: 'Atracao ampliada', row: 2 },
+      { id: 'insight', name: 'Insight', icon: '👁️', desc: 'Ve padroes ocultos', row: 2 },
+      { id: 'super', name: 'Super Poder', icon: '⭐', desc: 'Habilidade suprema', row: 2 }
+    ];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      initFractalCanvas();
+      loadSavedData();
+      loadSkillTree();
+      updateUI();
+      startDailyTimer();
+
+      // Keyboard controls
+      document.addEventListener('keydown', handleKeyDown);
+    });
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+
+      for (let i = 0; i < 40; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 15) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    function initFractalCanvas() {
+      const canvas = document.getElementById('fractalCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let time = 0;
+
+      function drawFractal() {
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        for (let i = 0; i < 6; i++) {
+          const angle = (time * 0.001) + (i * Math.PI / 3);
+          const radius = 150 + Math.sin(time * 0.002 + i) * 50;
+
+          ctx.beginPath();
+          ctx.strokeStyle = `hsla(${(time * 0.1 + i * 60) % 360}, 70%, 60%, 0.3)`;
+          ctx.lineWidth = 2;
+
+          for (let j = 0; j < 6; j++) {
+            const a = angle + j * Math.PI / 3;
+            const x = centerX + Math.cos(a) * radius;
+            const y = centerY + Math.sin(a) * radius;
+            if (j === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+
+        time++;
+        requestAnimationFrame(drawFractal);
+      }
+
+      drawFractal();
+
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      const showTopBar = !['menuScreen', 'tutorial'].includes(screenId);
+      document.getElementById('topBar').style.display = showTopBar ? 'flex' : 'none';
+
+      if (screenId === 'worldSelect') updateWorldProgress();
+      if (screenId === 'skillTree') loadSkillTree();
+    }
+
+    function updateUI() {
+      document.getElementById('playerLevel').textContent = 'Nivel ' + gameState.level;
+      document.getElementById('xpFill').style.width = (gameState.xp / gameState.xpToNext * 100) + '%';
+      document.getElementById('totalCoins').textContent = gameState.coins.toLocaleString();
+      document.getElementById('totalStars').textContent = gameState.totalStars;
+      document.getElementById('skillPoints').textContent = gameState.skillPoints;
+    }
+
+    function updateWorldProgress() {
+      for (const [world, data] of Object.entries(gameState.worldProgress)) {
+        const progress = data.completed.length;
+        const percent = (progress / 20) * 100;
+
+        const progressEl = document.getElementById(world + 'Progress');
+        const phasesEl = document.getElementById(world + 'Phases');
+        const cardEl = document.getElementById(world + 'Card');
+        const lockEl = document.getElementById(world + 'Lock');
+
+        if (progressEl) progressEl.style.width = percent + '%';
+        if (phasesEl) phasesEl.textContent = progress;
+
+        if (cardEl) {
+          if (data.unlocked) {
+            cardEl.classList.remove('locked');
+            if (lockEl) lockEl.style.display = 'none';
+          } else {
+            cardEl.classList.add('locked');
+            if (lockEl) lockEl.style.display = 'block';
+          }
+        }
+      }
+    }
+
+    function selectWorld(world) {
+      if (!gameState.worldProgress[world].unlocked) {
+        showNotification('Mundo bloqueado! Complete mais fases.', 'rule');
+        return;
+      }
+
+      gameState.currentWorld = world;
+      const data = worldData[world];
+
+      document.getElementById('worldTitle').textContent = data.name;
+      document.getElementById('worldDesc').textContent = data.desc;
+
+      // Set world colors
+      document.documentElement.style.setProperty('--world-color', data.color);
+      document.documentElement.style.setProperty('--world-gradient', data.gradient);
+      document.documentElement.style.setProperty('--world-shadow', data.color + '40');
+
+      loadLevelGrid();
+      showScreen('levelSelect');
+    }
+
+    function loadLevelGrid() {
+      const grid = document.getElementById('levelGrid');
+      const completed = gameState.worldProgress[gameState.currentWorld].completed;
+
+      grid.innerHTML = '';
+
+      for (let i = 1; i <= 20; i++) {
+        const node = document.createElement('div');
+        node.className = 'level-node';
+
+        const isCompleted = completed.includes(i);
+        const isLocked = i > completed.length + 1;
+        const isCurrent = i === completed.length + 1;
+        const stars = isCompleted ? Math.floor(Math.random() * 3) + 1 : 0;
+
+        if (isCompleted) node.classList.add('completed');
+        if (isLocked) node.classList.add('locked');
+        if (isCurrent) node.classList.add('current');
+
+        node.innerHTML = `
+          <span>${i}</span>
+          <span class="level-stars">${isCompleted ? '⭐'.repeat(stars) : ''}</span>
+        `;
+
+        if (!isLocked) {
+          node.onclick = () => startPhase(i);
+        }
+
+        grid.appendChild(node);
+      }
+    }
+
+    function startPhase(phase) {
+      gameState.currentPhase = phase;
+      gameState.score = 0;
+      gameState.multiplier = 1;
+      gameState.maxMultiplier = 1;
+      gameState.energy = 100;
+      gameState.timeRemaining = 90;
+      gameState.collectibles = 0;
+      gameState.totalCollectibles = 10;
+      gameState.gameActive = true;
+      gameState.currentRule = null;
+      gameState.player = { x: 50, y: 50 };
+
+      // Reset skill cooldowns
+      for (const skill of Object.values(gameState.skills)) {
+        skill.cooldown = 0;
+      }
+
+      showScreen('gameArena');
+      setupGame();
+      startGameLoop();
+    }
+
+    function setupGame() {
+      const canvas = document.getElementById('gameCanvas');
+      canvas.innerHTML = '<div class="player" id="player">🚀</div>';
+
+      // Add collectibles
+      for (let i = 0; i < gameState.totalCollectibles; i++) {
+        const collectible = document.createElement('div');
+        collectible.className = 'game-object collectible';
+        collectible.id = 'collectible-' + i;
+        collectible.textContent = ['💎', '⭐', '🔮', '💫'][Math.floor(Math.random() * 4)];
+        collectible.style.left = (10 + Math.random() * 80) + '%';
+        collectible.style.top = (10 + Math.random() * 80) + '%';
+        canvas.appendChild(collectible);
+      }
+
+      // Add obstacles for some worlds
+      if (['energy', 'chaos'].includes(gameState.currentWorld)) {
+        for (let i = 0; i < 5; i++) {
+          const obstacle = document.createElement('div');
+          obstacle.className = 'game-object obstacle';
+          obstacle.style.width = (30 + Math.random() * 50) + 'px';
+          obstacle.style.height = (30 + Math.random() * 50) + 'px';
+          obstacle.style.left = (10 + Math.random() * 80) + '%';
+          obstacle.style.top = (10 + Math.random() * 80) + '%';
+          canvas.appendChild(obstacle);
+        }
+      }
+
+      // Add pattern zone for logic world
+      if (gameState.currentWorld === 'logic') {
+        createPatternChallenge();
+      }
+
+      updatePlayer();
+      updateSkillsUI();
+    }
+
+    function createPatternChallenge() {
+      const canvas = document.getElementById('gameCanvas');
+      const zone = document.createElement('div');
+      zone.className = 'game-object pattern-zone';
+      zone.id = 'patternZone';
+      zone.style.width = '200px';
+      zone.style.height = '150px';
+      zone.style.left = '50%';
+      zone.style.top = '50%';
+      zone.style.transform = 'translate(-50%, -50%)';
+
+      const symbols = ['🔴', '🟢', '🔵', '🟡'];
+      const pattern = [];
+      for (let i = 0; i < 4; i++) {
+        pattern.push(symbols[Math.floor(Math.random() * symbols.length)]);
+      }
+
+      gameState.pattern = pattern;
+      gameState.patternInput = [];
+
+      zone.innerHTML = `
+        <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+          <span style="font-size: 0.8rem;">Complete o padrao: ${pattern.slice(0, 2).join(' ')} ? ?</span>
+        </div>
+        ${symbols.map(s => `<div class="pattern-item" onclick="selectPattern('${s}')">${s}</div>`).join('')}
+      `;
+
+      canvas.appendChild(zone);
+    }
+
+    function selectPattern(symbol) {
+      gameState.patternInput.push(symbol);
+
+      if (gameState.patternInput.length === 2) {
+        const correct = gameState.patternInput[0] === gameState.pattern[2] &&
+                       gameState.patternInput[1] === gameState.pattern[3];
+
+        if (correct) {
+          gameState.score += 200 * gameState.multiplier;
+          gameState.multiplier = Math.min(10, gameState.multiplier + 1);
+          showNotification('+200 Padrao Correto!', 'xp');
+
+          // Create new pattern
+          setTimeout(() => {
+            const zone = document.getElementById('patternZone');
+            if (zone) zone.remove();
+            createPatternChallenge();
+          }, 500);
+        } else {
+          gameState.multiplier = 1;
+          showNotification('Padrao incorreto!', 'rule');
+        }
+
+        gameState.patternInput = [];
+      }
+    }
+
+    let gameLoopId = null;
+    let lastTime = 0;
+
+    function startGameLoop() {
+      lastTime = performance.now();
+
+      function loop(currentTime) {
+        if (!gameState.gameActive) return;
+
+        const deltaTime = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+
+        updateGame(deltaTime);
+        gameLoopId = requestAnimationFrame(loop);
+      }
+
+      gameLoopId = requestAnimationFrame(loop);
+
+      // Timer
+      const timerInterval = setInterval(() => {
+        if (!gameState.gameActive) {
+          clearInterval(timerInterval);
+          return;
+        }
+
+        gameState.timeRemaining--;
+        updateTimerDisplay();
+
+        // Rule change every 30 seconds
+        if (gameState.timeRemaining % 30 === 0 && gameState.timeRemaining > 0) {
+          triggerRuleChange();
+        }
+
+        if (gameState.timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          endPhase(true);
+        }
+      }, 1000);
+    }
+
+    function updateGame(deltaTime) {
+      // Update skill cooldowns
+      for (const skill of Object.values(gameState.skills)) {
+        if (skill.cooldown > 0) {
+          skill.cooldown -= deltaTime;
+        }
+      }
+
+      // Energy drain in energy world
+      if (gameState.currentWorld === 'energy') {
+        gameState.energy -= deltaTime * 5;
+        if (gameState.energy <= 0) {
+          gameState.energy = 0;
+          endPhase(false);
+          return;
+        }
+      }
+
+      updateEnergyDisplay();
+      updateSkillsUI();
+      checkCollisions();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(gameState.timeRemaining / 60);
+      const secs = gameState.timeRemaining % 60;
+      const display = document.getElementById('gameTimer');
+      display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      display.classList.remove('warning', 'danger');
+      if (gameState.timeRemaining <= 10) display.classList.add('danger');
+      else if (gameState.timeRemaining <= 30) display.classList.add('warning');
+    }
+
+    function updateEnergyDisplay() {
+      const fill = document.getElementById('energyFill');
+      const text = document.getElementById('energyText');
+      fill.style.width = gameState.energy + '%';
+      text.textContent = Math.round(gameState.energy) + '%';
+
+      fill.classList.toggle('low', gameState.energy < 30);
+    }
+
+    function updateSkillsUI() {
+      const skillBtns = document.querySelectorAll('.skill-btn');
+      const skillKeys = ['dash', 'shield', 'slowmo', 'super'];
+
+      skillBtns.forEach((btn, i) => {
+        const skill = gameState.skills[skillKeys[i]];
+        btn.classList.remove('ready', 'locked', 'cooldown');
+
+        if (skill.level === 0) {
+          btn.classList.add('locked');
+        } else if (skill.cooldown > 0) {
+          btn.classList.add('cooldown');
+          btn.innerHTML = skillKeys[i] === 'dash' ? '💨' :
+                         skillKeys[i] === 'shield' ? '🛡️' :
+                         skillKeys[i] === 'slowmo' ? '⏳' : '⭐';
+        } else {
+          btn.classList.add('ready');
+        }
+      });
+    }
+
+    function handleKeyDown(e) {
+      if (!gameState.gameActive) return;
+
+      const speed = 5;
+      switch(e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          gameState.player.y = Math.max(0, gameState.player.y - speed);
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          gameState.player.y = Math.min(100, gameState.player.y + speed);
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          gameState.player.x = Math.max(0, gameState.player.x - speed);
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          gameState.player.x = Math.min(100, gameState.player.x + speed);
+          break;
+        case ' ':
+          useSkill(0); // Dash
+          break;
+      }
+
+      updatePlayer();
+    }
+
+    function updatePlayer() {
+      const player = document.getElementById('player');
+      if (player) {
+        player.style.left = gameState.player.x + '%';
+        player.style.top = gameState.player.y + '%';
+        player.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+
+    function checkCollisions() {
+      const playerEl = document.getElementById('player');
+      if (!playerEl) return;
+
+      const playerRect = playerEl.getBoundingClientRect();
+
+      // Check collectibles
+      document.querySelectorAll('.collectible').forEach(collectible => {
+        const rect = collectible.getBoundingClientRect();
+        if (isColliding(playerRect, rect)) {
+          collectItem(collectible);
+        }
+      });
+
+      // Check obstacles
+      document.querySelectorAll('.obstacle').forEach(obstacle => {
+        const rect = obstacle.getBoundingClientRect();
+        if (isColliding(playerRect, rect)) {
+          hitObstacle();
+        }
+      });
+    }
+
+    function isColliding(rect1, rect2) {
+      return !(rect1.right < rect2.left ||
+               rect1.left > rect2.right ||
+               rect1.bottom < rect2.top ||
+               rect1.top > rect2.bottom);
+    }
+
+    function collectItem(element) {
+      element.remove();
+      gameState.collectibles++;
+      gameState.score += 50 * gameState.multiplier;
+      gameState.multiplier = Math.min(10, gameState.multiplier + 0.5);
+      if (gameState.multiplier > gameState.maxMultiplier) {
+        gameState.maxMultiplier = gameState.multiplier;
+      }
+
+      // Restore energy
+      gameState.energy = Math.min(100, gameState.energy + 10);
+
+      document.getElementById('currentScore').textContent = Math.round(gameState.score);
+      document.getElementById('multiplier').textContent = 'x' + gameState.multiplier.toFixed(1);
+
+      showNotification('+' + Math.round(50 * gameState.multiplier), 'coins');
+
+      // Check win condition
+      if (gameState.collectibles >= gameState.totalCollectibles) {
+        endPhase(true);
+      }
+    }
+
+    function hitObstacle() {
+      gameState.multiplier = 1;
+      gameState.energy -= 20;
+
+      document.getElementById('player').classList.add('powered');
+      setTimeout(() => {
+        document.getElementById('player').classList.remove('powered');
+      }, 500);
+
+      if (gameState.energy <= 0) {
+        endPhase(false);
+      }
+    }
+
+    function useSkill(index) {
+      const skillKeys = ['dash', 'shield', 'slowmo', 'super'];
+      const skill = gameState.skills[skillKeys[index]];
+
+      if (skill.level === 0 || skill.cooldown > 0) return;
+
+      skill.cooldown = skill.baseCooldown - (skill.level * 0.5);
+
+      switch(index) {
+        case 0: // Dash
+          const dashDistance = 15 + skill.level * 3;
+          gameState.player.x = Math.min(100, gameState.player.x + dashDistance);
+          updatePlayer();
+          break;
+        case 1: // Shield
+          document.getElementById('player').classList.add('powered');
+          setTimeout(() => {
+            document.getElementById('player').classList.remove('powered');
+          }, 2000 + skill.level * 500);
+          break;
+        case 2: // Slow motion
+          // Would affect game speed
+          showNotification('Tempo Desacelerado!', 'rule');
+          break;
+        case 3: // Super
+          gameState.score += 500;
+          gameState.energy = 100;
+          showNotification('SUPER PODER!', 'level-up');
+          break;
+      }
+
+      updateSkillsUI();
+    }
+
+    function triggerRuleChange() {
+      const world = worldData[gameState.currentWorld];
+      const rule = world.rules[Math.floor(Math.random() * world.rules.length)];
+
+      gameState.currentRule = rule;
+
+      const ruleEl = document.getElementById('ruleChange');
+      document.getElementById('ruleIcon').textContent = '🔄';
+      document.getElementById('ruleText').textContent = rule;
+      ruleEl.classList.add('active');
+
+      showNotification('Nova Regra: ' + rule, 'rule');
+
+      setTimeout(() => {
+        ruleEl.classList.remove('active');
+      }, 2000);
+
+      // Apply rule effects
+      applyRule(rule);
+    }
+
+    function applyRule(rule) {
+      switch(rule) {
+        case 'Velocidade 2x':
+          // Speed up spawns
+          break;
+        case 'Dreno de Energia':
+          // Increase energy drain
+          break;
+        case 'Inversao Logica':
+          // Invert controls briefly
+          break;
+        // Add more rule effects
+      }
+    }
+
+    function endPhase(victory) {
+      gameState.gameActive = false;
+      if (gameLoopId) cancelAnimationFrame(gameLoopId);
+
+      // Calculate rewards
+      const baseCoins = victory ? 50 : 20;
+      const bonusCoins = Math.round(gameState.score / 10);
+      const totalCoinsEarned = baseCoins + bonusCoins;
+
+      const baseXP = victory ? 30 : 10;
+      const bonusXP = Math.round(gameState.maxMultiplier * 5);
+      const totalXP = baseXP + bonusXP;
+
+      gameState.coins += totalCoinsEarned;
+      gameState.xp += totalXP;
+
+      // Check level up
+      while (gameState.xp >= gameState.xpToNext) {
+        gameState.xp -= gameState.xpToNext;
+        gameState.level++;
+        gameState.skillPoints++;
+        gameState.xpToNext = Math.floor(gameState.xpToNext * 1.5);
+        showNotification('NIVEL ' + gameState.level + '!', 'level-up');
+      }
+
+      // Mark phase completed
+      if (victory && !gameState.worldProgress[gameState.currentWorld].completed.includes(gameState.currentPhase)) {
+        gameState.worldProgress[gameState.currentWorld].completed.push(gameState.currentPhase);
+        gameState.totalStars += Math.floor(Math.random() * 3) + 1;
+
+        // Unlock new worlds
+        const totalCompleted = Object.values(gameState.worldProgress).reduce((sum, w) => sum + w.completed.length, 0);
+        if (totalCompleted >= 10 && !gameState.worldProgress.creation.unlocked) {
+          gameState.worldProgress.creation.unlocked = true;
+          showNotification('Mundo da Criacao Desbloqueado!', 'level-up');
+        }
+        if (totalCompleted >= 25 && !gameState.worldProgress.chaos.unlocked) {
+          gameState.worldProgress.chaos.unlocked = true;
+          showNotification('Mundo do Caos Desbloqueado!', 'level-up');
+        }
+      }
+
+      // Update results screen
+      const stars = victory ? (gameState.maxMultiplier >= 5 ? 3 : gameState.maxMultiplier >= 3 ? 2 : 1) : 0;
+      document.getElementById('resultStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+      document.getElementById('resultsTitle').textContent = victory ? 'Fase Completa!' : 'Tente Novamente';
+      document.getElementById('resultsTitle').className = 'results-title ' + (victory ? 'victory' : 'defeat');
+
+      document.getElementById('finalScore').textContent = Math.round(gameState.score);
+      document.getElementById('finalTime').textContent = formatTime(90 - gameState.timeRemaining);
+      document.getElementById('finalCollectibles').textContent = gameState.collectibles + '/' + gameState.totalCollectibles;
+      document.getElementById('finalMultiplier').textContent = 'x' + gameState.maxMultiplier.toFixed(1);
+
+      document.getElementById('coinsEarned').textContent = '+' + totalCoinsEarned;
+      document.getElementById('xpEarned').textContent = '+' + totalXP + ' XP';
+
+      saveData();
+      updateUI();
+      showScreen('resultsScreen');
+
+      // Show chest for good performance
+      if (victory && gameState.maxMultiplier >= 3) {
+        setTimeout(showChest, 1000);
+      }
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function nextLevel() {
+      const nextPhase = gameState.currentPhase + 1;
+      if (nextPhase <= 20) {
+        startPhase(nextPhase);
+      } else {
+        showScreen('worldSelect');
+      }
+    }
+
+    function loadSkillTree() {
+      const grid = document.getElementById('skillTreeGrid');
+      grid.innerHTML = '';
+
+      skillTreeData.forEach(skill => {
+        const currentLevel = gameState.skills[skill.id]?.level || 0;
+        const maxLevel = gameState.skills[skill.id]?.maxLevel || 5;
+        const isUnlocked = currentLevel > 0;
+        const isMaxed = currentLevel >= maxLevel;
+        const canUnlock = gameState.skillPoints > 0;
+
+        const node = document.createElement('div');
+        node.className = 'skill-tree-node';
+        if (isMaxed) node.classList.add('maxed');
+        else if (isUnlocked) node.classList.add('unlocked');
+        else if (!canUnlock) node.classList.add('locked');
+
+        node.innerHTML = `
+          <div class="skill-tree-icon">${skill.icon}</div>
+          <div class="skill-tree-name">${skill.name}</div>
+          <div class="skill-tree-level">${currentLevel}/${maxLevel}</div>
+        `;
+
+        node.onclick = () => upgradeSkill(skill.id);
+        grid.appendChild(node);
+      });
+    }
+
+    function upgradeSkill(skillId) {
+      if (gameState.skillPoints <= 0) {
+        showNotification('Sem pontos de habilidade!', 'rule');
+        return;
+      }
+
+      if (!gameState.skills[skillId]) {
+        gameState.skills[skillId] = { level: 0, maxLevel: 5, cooldown: 0, baseCooldown: 10 };
+      }
+
+      const skill = gameState.skills[skillId];
+      if (skill.level >= skill.maxLevel) {
+        showNotification('Habilidade no nivel maximo!', 'rule');
+        return;
+      }
+
+      skill.level++;
+      gameState.skillPoints--;
+
+      showNotification(skillId.toUpperCase() + ' nivel ' + skill.level + '!', 'xp');
+      loadSkillTree();
+      updateUI();
+      saveData();
+    }
+
+    function showChest() {
+      document.getElementById('chestModal').classList.add('active');
+      document.getElementById('chestContainer').style.display = 'block';
+      document.getElementById('chestReward').classList.remove('active');
+      document.getElementById('chest').classList.remove('opening');
+    }
+
+    function openChest() {
+      document.getElementById('chest').classList.add('opening');
+
+      const rewards = [
+        { icon: '🪙', amount: 100, text: 'Moedas!' },
+        { icon: '🪙', amount: 200, text: 'Muitas Moedas!' },
+        { icon: '💎', amount: 300, text: 'Tesouro!' },
+        { icon: '🔮', amount: 1, text: 'Ponto de Habilidade!', isSkillPoint: true },
+        { icon: '⭐', amount: 100, text: 'XP Bonus!', isXP: true }
+      ];
+
+      const reward = rewards[Math.floor(Math.random() * rewards.length)];
+
+      setTimeout(() => {
+        document.getElementById('chestContainer').style.display = 'none';
+        document.getElementById('chestReward').classList.add('active');
+        document.getElementById('chestRewardIcon').textContent = reward.icon;
+        document.getElementById('chestRewardAmount').textContent = '+' + reward.amount;
+        document.getElementById('chestRewardText').textContent = reward.text;
+
+        if (reward.isSkillPoint) {
+          gameState.skillPoints += reward.amount;
+        } else if (reward.isXP) {
+          gameState.xp += reward.amount;
+        } else {
+          gameState.coins += reward.amount;
+        }
+
+        saveData();
+        updateUI();
+      }, 500);
+    }
+
+    function closeChest() {
+      document.getElementById('chestModal').classList.remove('active');
+    }
+
+    function showNotification(text, type = '') {
+      const notification = document.getElementById('notification');
+      notification.textContent = text;
+      notification.className = 'notification ' + type + ' show';
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+
+    function startDailyTimer() {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+
+      function updateTimer() {
+        const diff = tomorrow - new Date();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('dailyTimer').textContent =
+          `Renova em: ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      updateTimer();
+      setInterval(updateTimer, 1000);
+    }
+
+    function saveData() {
+      const data = {
+        level: gameState.level,
+        xp: gameState.xp,
+        xpToNext: gameState.xpToNext,
+        coins: gameState.coins,
+        totalStars: gameState.totalStars,
+        skillPoints: gameState.skillPoints,
+        skills: gameState.skills,
+        worldProgress: gameState.worldProgress
+      };
+      localStorage.setItem('fractalWorldsData', JSON.stringify(data));
+    }
+
+    function loadSavedData() {
+      const saved = localStorage.getItem('fractalWorldsData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        Object.assign(gameState, data);
+      }
+    }
+  </script>
+</body>
+</html>

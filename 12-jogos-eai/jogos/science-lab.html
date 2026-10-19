@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratório de Ciências - EAI Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #00ff87, #60efff, #ff6b6b, #feca57);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s ease infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 135, 0.3);
+        }
+
+        @keyframes rainbow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 1.3rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #60efff;
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .experiment-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .experiment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .experiment-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(96, 239, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(96, 239, 255, 0.2);
+        }
+
+        .experiment-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Lab Container */
+        .lab-container {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .lab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .experiment-title {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .lab-workspace {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 500px;
+        }
+
+        /* Experiment: Mistura de Cores */
+        .color-lab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .color-beakers {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .beaker {
+            width: 80px;
+            height: 120px;
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0 0 20px 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .beaker::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -5px;
+            right: -5px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .beaker:hover {
+            transform: scale(1.1);
+        }
+
+        .beaker.selected {
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .beaker-liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            border-radius: 0 0 17px 17px;
+            transition: all 0.5s;
+        }
+
+        .beaker-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .mixing-bowl {
+            width: 150px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0 0 75px 75px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .mixing-liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-radius: 0 0 71px 71px;
+            transition: all 0.5s;
+        }
+
+        .color-result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 40px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            min-height: 60px;
+        }
+
+        .mix-btn {
+            background: linear-gradient(135deg, #00ff87, #60efff);
+            border: none;
+            color: #1a1a2e;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mix-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 255, 135, 0.4);
+        }
+
+        .reset-btn {
+            background: rgba(255, 107, 107, 0.3);
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 107, 107, 0.5);
+        }
+
+        /* Experiment: Estados da Água */
+        .water-lab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .temperature-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .thermometer {
+            width: 40px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+        }
+
+        .thermometer-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #ff6b6b 0%, #feca57 50%, #60efff 100%);
+            transition: height 0.5s;
+            border-radius: 0 0 17px 17px;
+        }
+
+        .thermometer-bulb {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .temp-display {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .temp-slider {
+            width: 300px;
+            height: 10px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #60efff 0%, #feca57 50%, #ff6b6b 100%);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .temp-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .water-container {
+            width: 200px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .water-state {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            transition: all 0.5s;
+        }
+
+        .water-state.solid {
+            background: linear-gradient(180deg, #a8e6cf 0%, #88d8c0 100%);
+            border-radius: 5px;
+        }
+
+        .water-state.liquid {
+            background: linear-gradient(180deg, #60efff 0%, #4da8da 100%);
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        .water-state.gas {
+            background: transparent;
+        }
+
+        @keyframes wave {
+            0%, 100% { border-radius: 0 0 10px 10px; }
+            50% { border-radius: 30% 70% 10px 10px; }
+        }
+
+        .steam {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding-top: 20px;
+        }
+
+        .steam-particle {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: steam-rise 2s ease-in-out infinite;
+        }
+
+        .steam-particle:nth-child(2) { animation-delay: 0.3s; }
+        .steam-particle:nth-child(3) { animation-delay: 0.6s; }
+        .steam-particle:nth-child(4) { animation-delay: 0.9s; }
+
+        @keyframes steam-rise {
+            0% { transform: translateY(100px) scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        .state-label {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .state-info {
+            max-width: 400px;
+            color: #a0a0a0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* Experiment: Sistema Solar */
+        .solar-lab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .solar-system {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sun {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #feca57 0%, #ff9f43 50%, #ff6b6b 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #feca57;
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .sun:hover, .sun.selected {
+            transform: scale(1.2);
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s;
+            z-index: 5;
+        }
+
+        .planet:hover, .planet.selected {
+            transform: scale(1.5);
+            z-index: 20;
+        }
+
+        .planet-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .planet-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #60efff;
+        }
+
+        .planet-info p {
+            color: #a0a0a0;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .planet-facts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .fact-tag {
+            background: rgba(96, 239, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: #60efff;
+        }
+
+        /* Experiment: Corpo Humano */
+        .body-lab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .body-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .body-figure {
+            position: relative;
+            width: 200px;
+            height: 400px;
+        }
+
+        .body-outline {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 2;
+        }
+
+        .organ {
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+
+        .organ:hover, .organ.selected {
+            opacity: 1;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .organ-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .organ-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .organ-btn:hover, .organ-btn.active {
+            background: rgba(96, 239, 255, 0.2);
+            border-color: #60efff;
+        }
+
+        .organ-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 350px;
+            color: white;
+        }
+
+        .organ-info h3 {
+            color: #60efff;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .organ-info p {
+            color: #a0a0a0;
+            line-height: 1.7;
+        }
+
+        .organ-info .fun-fact {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(254, 202, 87, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid #feca57;
+        }
+
+        .organ-info .fun-fact strong {
+            color: #feca57;
+        }
+
+        /* Quiz Mode */
+        .quiz-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .quiz-question {
+            color: white;
+            font-size: 1.3rem;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 500px;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #60efff;
+        }
+
+        .quiz-option.correct {
+            background: rgba(0, 255, 135, 0.3);
+            border-color: #00ff87;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: #ff6b6b;
+        }
+
+        .quiz-feedback {
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 60px;
+        }
+
+        .quiz-score {
+            color: #60efff;
+            font-size: 1.2rem;
+        }
+
+        /* Animations */
+        @keyframes bubbles {
+            0% { transform: translateY(0) scale(1); opacity: 0.7; }
+            100% { transform: translateY(-100px) scale(0); opacity: 0; }
+        }
+
+        .bubble {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: bubbles 2s ease-in-out infinite;
+        }
+
+        /* Success animation */
+        @keyframes success-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success {
+            animation: success-pulse 0.5s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .solar-system { width: 300px; height: 300px; }
+            .body-container { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Principal -->
+    <div id="main-menu">
+        <div class="header">
+            <h1>🔬 Laboratório de Ciências</h1>
+            <p class="subtitle">Explore e descubra o mundo através de experimentos!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-icon">🧪</span>
+                <span>Experimentos:</span>
+                <span class="stat-value" id="experiments-done">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">⭐</span>
+                <span>Pontos:</span>
+                <span class="stat-value" id="total-points">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">🏆</span>
+                <span>Nível:</span>
+                <span class="stat-value" id="scientist-level">Iniciante</span>
+            </div>
+        </div>
+
+        <div class="menu-container">
+            <div class="experiment-card" onclick="startExperiment('colors')">
+                <span class="card-badge">Química</span>
+                <span class="card-icon">🎨</span>
+                <h3 class="card-title">Mistura de Cores</h3>
+                <p class="card-desc">Descubra como as cores primárias se combinam para criar novas cores!</p>
+            </div>
+
+            <div class="experiment-card" onclick="startExperiment('water')">
+                <span class="card-badge">Física</span>
+                <span class="card-icon">💧</span>
+                <h3 class="card-title">Estados da Água</h3>
+                <p class="card-desc">Observe como a temperatura muda o estado físico da água!</p>
+            </div>
+
+            <div class="experiment-card" onclick="startExperiment('solar')">
+                <span class="card-badge">Astronomia</span>
+                <span class="card-icon">🌍</span>
+                <h3 class="card-title">Sistema Solar</h3>
+                <p class="card-desc">Explore os planetas e aprenda sobre nosso sistema solar!</p>
+            </div>
+
+            <div class="experiment-card" onclick="startExperiment('body')">
+                <span class="card-badge">Biologia</span>
+                <span class="card-icon">❤️</span>
+                <h3 class="card-title">Corpo Humano</h3>
+                <p class="card-desc">Descubra os órgãos e como nosso corpo funciona!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lab Container -->
+    <div class="lab-container" id="lab-container">
+        <div class="lab-header">
+            <button class="back-btn" onclick="backToMenu()">
+                ← Voltar
+            </button>
+            <h2 class="experiment-title" id="experiment-title"></h2>
+            <button class="mix-btn" id="quiz-btn" onclick="startQuiz()" style="display: none;">
+                📝 Quiz
+            </button>
+        </div>
+
+        <div class="lab-workspace" id="lab-workspace">
+            <!-- Dynamic content here -->
+        </div>
+    </div>
+
+    <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('science-lab'));</script>
+    <script>
+        // Game state
+        let state = {
+            experimentsDone: 0,
+            totalPoints: 0,
+            currentExperiment: null,
+            discoveredColors: [],
+            learnedPlanets: [],
+            learnedOrgans: [],
+            quizScore: 0
+        };
+
+        // Load saved state
+        function loadState() {
+            const saved = localStorage.getItem('science_lab_state');
+            if (saved) {
+                state = { ...state, ...JSON.parse(saved) };
+                updateStats();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('science_lab_state', JSON.stringify(state));
+        }
+
+        function updateStats() {
+            document.getElementById('experiments-done').textContent = state.experimentsDone;
+            document.getElementById('total-points').textContent = state.totalPoints;
+
+            let level = 'Iniciante';
+            if (state.totalPoints >= 500) level = 'Mestre Cientista';
+            else if (state.totalPoints >= 300) level = 'Cientista';
+            else if (state.totalPoints >= 150) level = 'Pesquisador';
+            else if (state.totalPoints >= 50) level = 'Estudante';
+
+            document.getElementById('scientist-level').textContent = level;
+        }
+
+        function addPoints(points) {
+            state.totalPoints += points;
+            updateStats();
+            saveState();
+
+            // Wallet rewards
+            if (typeof giveReward === 'function') {
+                giveReward('coin', points);
+                if (points >= 20) giveReward('diamond', 1);
+            }
+        }
+
+        function startExperiment(type) {
+            state.currentExperiment = type;
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('lab-container').style.display = 'block';
+            document.getElementById('quiz-btn').style.display = 'block';
+
+            const titles = {
+                colors: '🎨 Mistura de Cores',
+                water: '💧 Estados da Água',
+                solar: '🌍 Sistema Solar',
+                body: '❤️ Corpo Humano'
+            };
+
+            document.getElementById('experiment-title').textContent = titles[type];
+
+            const workspace = document.getElementById('lab-workspace');
+
+            switch(type) {
+                case 'colors': setupColorLab(workspace); break;
+                case 'water': setupWaterLab(workspace); break;
+                case 'solar': setupSolarLab(workspace); break;
+                case 'body': setupBodyLab(workspace); break;
+            }
+        }
+
+        function backToMenu() {
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('lab-container').style.display = 'none';
+            document.getElementById('lab-workspace').innerHTML = '';
+            state.currentExperiment = null;
+        }
+
+        // ===== COLOR LAB =====
+        const colorMixes = {
+            'vermelho+amarelo': { result: 'Laranja', color: '#ff9f43', emoji: '🟠' },
+            'amarelo+vermelho': { result: 'Laranja', color: '#ff9f43', emoji: '🟠' },
+            'azul+amarelo': { result: 'Verde', color: '#00ff87', emoji: '🟢' },
+            'amarelo+azul': { result: 'Verde', color: '#00ff87', emoji: '🟢' },
+            'vermelho+azul': { result: 'Roxo', color: '#a55eea', emoji: '🟣' },
+            'azul+vermelho': { result: 'Roxo', color: '#a55eea', emoji: '🟣' },
+            'vermelho+amarelo+azul': { result: 'Marrom', color: '#8B4513', emoji: '🟤' }
+        };
+
+        let selectedColors = [];
+
+        function setupColorLab(container) {
+            selectedColors = [];
+            container.innerHTML = `
+                <div class="color-lab">
+                    <p style="color: #a0a0a0; text-align: center; max-width: 400px;">
+                        Clique em dois tubos de cores primárias para misturá-las e descobrir que cor elas formam!
+                    </p>
+
+                    <div class="color-beakers">
+                        <div class="beaker" onclick="selectColor('vermelho', this)" style="color: #ff6b6b;">
+                            <div class="beaker-liquid" style="background: linear-gradient(180deg, #ff6b6b 0%, #ee5a5a 100%);"></div>
+                            <span class="beaker-label">🔴 Vermelho</span>
+                        </div>
+                        <div class="beaker" onclick="selectColor('amarelo', this)" style="color: #feca57;">
+                            <div class="beaker-liquid" style="background: linear-gradient(180deg, #feca57 0%, #f0b429 100%);"></div>
+                            <span class="beaker-label">🟡 Amarelo</span>
+                        </div>
+                        <div class="beaker" onclick="selectColor('azul', this)" style="color: #60efff;">
+                            <div class="beaker-liquid" style="background: linear-gradient(180deg, #60efff 0%, #4da8da 100%);"></div>
+                            <span class="beaker-label">🔵 Azul</span>
+                        </div>
+                    </div>
+
+                    <div class="mixing-bowl">
+                        <div class="mixing-liquid" id="mixing-liquid"></div>
+                    </div>
+
+                    <div class="color-result" id="color-result">
+                        Selecione duas cores para misturar!
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button class="mix-btn" onclick="mixColors()">🧪 Misturar!</button>
+                        <button class="reset-btn" onclick="resetColors()">🔄 Limpar</button>
+                    </div>
+
+                    <div id="discovered-colors" style="margin-top: 20px;">
+                        <p style="color: white; margin-bottom: 10px;">Cores descobertas:</p>
+                        <div id="discovered-list" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                    </div>
+                </div>
+            `;
+            updateDiscoveredColors();
+        }
+
+        function selectColor(color, element) {
+            if (selectedColors.length >= 3) return;
+            if (selectedColors.includes(color)) return;
+
+            selectedColors.push(color);
+            element.classList.add('selected');
+
+            // Update mixing bowl
+            const mixLiquid = document.getElementById('mixing-liquid');
+            const colors = {
+                vermelho: '#ff6b6b',
+                amarelo: '#feca57',
+                azul: '#60efff'
+            };
+
+            if (selectedColors.length === 1) {
+                mixLiquid.style.height = '30%';
+                mixLiquid.style.background = colors[color];
+            } else if (selectedColors.length === 2) {
+                mixLiquid.style.height = '50%';
+                const key = selectedColors.join('+');
+                if (colorMixes[key]) {
+                    mixLiquid.style.background = `linear-gradient(90deg, ${colors[selectedColors[0]]} 0%, ${colors[selectedColors[1]]} 100%)`;
+                }
+            } else if (selectedColors.length === 3) {
+                mixLiquid.style.height = '70%';
+            }
+
+            document.getElementById('color-result').textContent =
+                `Cores selecionadas: ${selectedColors.join(' + ')}`;
+        }
+
+        function mixColors() {
+            if (selectedColors.length < 2) {
+                document.getElementById('color-result').textContent = 'Selecione pelo menos 2 cores!';
+                return;
+            }
+
+            const key = selectedColors.sort().join('+');
+            const mix = colorMixes[key];
+
+            const mixLiquid = document.getElementById('mixing-liquid');
+            const resultDiv = document.getElementById('color-result');
+
+            if (mix) {
+                mixLiquid.style.background = mix.color;
+                mixLiquid.style.height = '70%';
+                resultDiv.innerHTML = `${mix.emoji} <strong>${mix.result}</strong>! ${selectedColors.join(' + ')} = ${mix.result}`;
+                resultDiv.classList.add('success');
+
+                if (!state.discoveredColors.includes(mix.result)) {
+                    state.discoveredColors.push(mix.result);
+                    state.experimentsDone++;
+                    addPoints(15);
+                    saveState();
+                    updateDiscoveredColors();
+                }
+
+                setTimeout(() => resultDiv.classList.remove('success'), 500);
+            } else {
+                resultDiv.textContent = 'Essa mistura não funciona! Tente outras cores.';
+            }
+        }
+
+        function resetColors() {
+            selectedColors = [];
+            document.querySelectorAll('.beaker').forEach(b => b.classList.remove('selected'));
+            document.getElementById('mixing-liquid').style.height = '0';
+            document.getElementById('color-result').textContent = 'Selecione duas cores para misturar!';
+        }
+
+        function updateDiscoveredColors() {
+            const list = document.getElementById('discovered-list');
+            if (!list) return;
+
+            const colorEmojis = {
+                'Laranja': '🟠',
+                'Verde': '🟢',
+                'Roxo': '🟣',
+                'Marrom': '🟤'
+            };
+
+            list.innerHTML = state.discoveredColors.map(c =>
+                `<span style="background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; color: white;">
+                    ${colorEmojis[c] || '⚪'} ${c}
+                </span>`
+            ).join('') || '<span style="color: #666;">Nenhuma ainda...</span>';
+        }
+
+        // ===== WATER LAB =====
+        function setupWaterLab(container) {
+            container.innerHTML = `
+                <div class="water-lab">
+                    <p style="color: #a0a0a0; text-align: center; max-width: 450px;">
+                        Use o controle de temperatura para ver como a água muda de estado físico!
+                    </p>
+
+                    <div class="temperature-control">
+                        <div class="temp-display"><span id="temp-value">25</span>°C</div>
+                        <input type="range" class="temp-slider" id="temp-slider"
+                               min="-20" max="120" value="25" oninput="updateTemperature(this.value)">
+                        <div style="display: flex; justify-content: space-between; width: 300px; color: #666; font-size: 0.9rem;">
+                            <span>-20°C</span>
+                            <span>0°C</span>
+                            <span>100°C</span>
+                            <span>120°C</span>
+                        </div>
+                    </div>
+
+                    <div class="water-container" id="water-container">
+                        <div class="water-state liquid" id="water-state"></div>
+                        <div class="steam" id="steam" style="display: none;">
+                            <div class="steam-particle"></div>
+                            <div class="steam-particle"></div>
+                            <div class="steam-particle"></div>
+                            <div class="steam-particle"></div>
+                        </div>
+                    </div>
+
+                    <div class="state-label" id="state-label">💧 Líquido</div>
+
+                    <div class="state-info" id="state-info">
+                        A água no estado líquido tem as moléculas unidas, mas com liberdade para se mover. É assim que a água sai da torneira!
+                    </div>
+                </div>
+            `;
+            updateTemperature(25);
+        }
+
+        let lastWaterState = 'liquid';
+
+        function updateTemperature(temp) {
+            temp = parseInt(temp);
+            document.getElementById('temp-value').textContent = temp;
+
+            const waterState = document.getElementById('water-state');
+            const steam = document.getElementById('steam');
+            const stateLabel = document.getElementById('state-label');
+            const stateInfo = document.getElementById('state-info');
+
+            waterState.className = 'water-state';
+            steam.style.display = 'none';
+
+            let currentState;
+
+            if (temp <= 0) {
+                currentState = 'solid';
+                waterState.classList.add('solid');
+                waterState.style.height = '70%';
+                stateLabel.textContent = '🧊 Sólido (Gelo)';
+                stateInfo.innerHTML = `
+                    <strong>Temperatura: ${temp}°C</strong><br><br>
+                    Abaixo de 0°C, as moléculas de água se organizam em uma estrutura fixa, formando o gelo!
+                    As moléculas vibram mas não se movem de lugar.
+                `;
+            } else if (temp >= 100) {
+                currentState = 'gas';
+                waterState.classList.add('gas');
+                waterState.style.height = '0';
+                steam.style.display = 'flex';
+                stateLabel.textContent = '💨 Gasoso (Vapor)';
+                stateInfo.innerHTML = `
+                    <strong>Temperatura: ${temp}°C</strong><br><br>
+                    Acima de 100°C, a água ferve e vira vapor! As moléculas ganham tanta energia que se
+                    separam completamente e voam pelo ar.
+                `;
+            } else {
+                currentState = 'liquid';
+                waterState.classList.add('liquid');
+                waterState.style.height = '70%';
+                stateLabel.textContent = '💧 Líquido';
+                stateInfo.innerHTML = `
+                    <strong>Temperatura: ${temp}°C</strong><br><br>
+                    Entre 0°C e 100°C, a água está no estado líquido. As moléculas estão unidas
+                    mas podem se mover livremente.
+                `;
+            }
+
+            // Award points for discovering states
+            if (currentState !== lastWaterState) {
+                lastWaterState = currentState;
+                addPoints(5);
+            }
+        }
+
+        // ===== SOLAR LAB =====
+        const planets = [
+            { name: 'Sol', size: 60, orbit: 0, color: '#feca57', info: 'O Sol é uma estrela que ilumina e aquece todos os planetas!', facts: ['É uma estrela', '1.000.000x maior que a Terra', '5500°C na superfície'] },
+            { name: 'Mercúrio', size: 12, orbit: 60, color: '#bdc3c7', info: 'O planeta mais próximo do Sol e o menor do sistema solar.', facts: ['Menor planeta', 'Sem atmosfera', '88 dias = 1 ano'] },
+            { name: 'Vênus', size: 18, orbit: 90, color: '#f39c12', info: 'O planeta mais quente! Suas nuvens prendem o calor.', facts: ['Mais quente', 'Gira ao contrário', 'Mesma estrela da manhã e da tarde'] },
+            { name: 'Terra', size: 20, orbit: 120, color: '#3498db', info: 'Nosso lar! O único planeta com vida conhecida.', facts: ['Único com vida', '70% água', '1 lua'] },
+            { name: 'Marte', size: 16, orbit: 150, color: '#e74c3c', info: 'O planeta vermelho! Cientistas estudam se já teve vida.', facts: ['Planeta vermelho', '2 luas', 'Vulcão mais alto'] },
+            { name: 'Júpiter', size: 35, orbit: 200, color: '#f4a460', info: 'O maior planeta! Cabem 1300 Terras dentro dele.', facts: ['Maior planeta', 'Grande Mancha Vermelha', '79 luas'] },
+            { name: 'Saturno', size: 30, orbit: 250, color: '#daa520', info: 'Famoso por seus lindos anéis feitos de gelo e rocha.', facts: ['Anéis de gelo', 'Menos denso que água', '82 luas'] },
+            { name: 'Urano', size: 22, orbit: 300, color: '#48dbfb', info: 'O planeta que gira deitado! Muito gelado e distante.', facts: ['Gira deitado', '-224°C', 'Azul esverdeado'] },
+            { name: 'Netuno', size: 21, orbit: 340, color: '#0984e3', info: 'O planeta mais distante! Ventos de 2000 km/h.', facts: ['Mais distante', 'Ventos mais fortes', 'Azul intenso'] }
+        ];
+
+        function setupSolarLab(container) {
+            container.innerHTML = `
+                <div class="solar-lab">
+                    <p style="color: #a0a0a0; text-align: center; max-width: 450px;">
+                        Clique nos planetas para aprender sobre cada um deles!
+                    </p>
+
+                    <div class="solar-system" id="solar-system">
+                        <!-- Sun and planets will be added here -->
+                    </div>
+
+                    <div class="planet-info" id="planet-info">
+                        <h3>🌟 Sistema Solar</h3>
+                        <p>Clique em um planeta para aprender sobre ele!</p>
+                    </div>
+                </div>
+            `;
+
+            const solarSystem = document.getElementById('solar-system');
+
+            planets.forEach((planet, index) => {
+                if (index === 0) {
+                    // Sun
+                    const sun = document.createElement('div');
+                    sun.className = 'sun';
+                    sun.onclick = () => showPlanetInfo(planet);
+                    solarSystem.appendChild(sun);
+                } else {
+                    // Orbit
+                    const orbit = document.createElement('div');
+                    orbit.className = 'orbit';
+                    orbit.style.width = `${planet.orbit * 2}px`;
+                    orbit.style.height = `${planet.orbit * 2}px`;
+                    solarSystem.appendChild(orbit);
+
+                    // Planet
+                    const planetEl = document.createElement('div');
+                    planetEl.className = 'planet';
+                    planetEl.style.width = `${planet.size}px`;
+                    planetEl.style.height = `${planet.size}px`;
+                    planetEl.style.background = `radial-gradient(circle at 30% 30%, ${planet.color}, ${adjustColor(planet.color, -30)})`;
+
+                    // Position on orbit
+                    const angle = (index - 1) * (360 / 8) * (Math.PI / 180);
+                    const x = Math.cos(angle) * planet.orbit;
+                    const y = Math.sin(angle) * planet.orbit;
+                    planetEl.style.left = `calc(50% + ${x}px - ${planet.size/2}px)`;
+                    planetEl.style.top = `calc(50% + ${y}px - ${planet.size/2}px)`;
+
+                    planetEl.onclick = () => showPlanetInfo(planet);
+                    planetEl.title = planet.name;
+                    solarSystem.appendChild(planetEl);
+                }
+            });
+        }
+
+        function adjustColor(color, amount) {
+            const hex = color.replace('#', '');
+            const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+            const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+            const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function showPlanetInfo(planet) {
+            const infoDiv = document.getElementById('planet-info');
+
+            const emoji = planet.name === 'Sol' ? '☀️' :
+                         planet.name === 'Terra' ? '🌍' :
+                         planet.name === 'Marte' ? '🔴' :
+                         planet.name === 'Saturno' ? '🪐' : '🌑';
+
+            infoDiv.innerHTML = `
+                <h3>${emoji} ${planet.name}</h3>
+                <p>${planet.info}</p>
+                <div class="planet-facts">
+                    ${planet.facts.map(f => `<span class="fact-tag">${f}</span>`).join('')}
+                </div>
+            `;
+            infoDiv.classList.add('success');
+            setTimeout(() => infoDiv.classList.remove('success'), 500);
+
+            if (!state.learnedPlanets.includes(planet.name)) {
+                state.learnedPlanets.push(planet.name);
+                state.experimentsDone++;
+                addPoints(10);
+                saveState();
+            }
+        }
+
+        // ===== BODY LAB =====
+        const organs = [
+            { id: 'brain', name: 'Cérebro', emoji: '🧠', color: '#ff9ff3',
+              info: 'O cérebro controla tudo no seu corpo! Pensamentos, movimentos, memórias...',
+              funFact: 'Seu cérebro tem 86 bilhões de neurônios!' },
+            { id: 'heart', name: 'Coração', emoji: '❤️', color: '#ff6b6b',
+              info: 'O coração bombeia sangue para todo o corpo, levando oxigênio e nutrientes.',
+              funFact: 'Seu coração bate cerca de 100.000 vezes por dia!' },
+            { id: 'lungs', name: 'Pulmões', emoji: '🫁', color: '#ff9f43',
+              info: 'Os pulmões captam o oxigênio do ar e eliminam o gás carbônico.',
+              funFact: 'Você respira cerca de 20.000 vezes por dia!' },
+            { id: 'stomach', name: 'Estômago', emoji: '🫃', color: '#feca57',
+              info: 'O estômago tritura e digere a comida com ácidos e enzimas.',
+              funFact: 'Seu estômago produz um novo revestimento a cada 3-4 dias!' },
+            { id: 'liver', name: 'Fígado', emoji: '🫀', color: '#8b0000',
+              info: 'O fígado filtra o sangue e ajuda na digestão produzindo a bile.',
+              funFact: 'O fígado realiza mais de 500 funções diferentes!' },
+            { id: 'kidneys', name: 'Rins', emoji: '🫘', color: '#cd853f',
+              info: 'Os rins filtram o sangue e produzem a urina para eliminar toxinas.',
+              funFact: 'Seus rins filtram todo o seu sangue cerca de 40 vezes por dia!' }
+        ];
+
+        function setupBodyLab(container) {
+            container.innerHTML = `
+                <div class="body-lab">
+                    <p style="color: #a0a0a0; text-align: center; max-width: 450px;">
+                        Clique nos botões para aprender sobre os órgãos do corpo humano!
+                    </p>
+
+                    <div class="body-container">
+                        <div class="body-figure">
+                            <svg viewBox="0 0 200 400" class="body-outline">
+                                <!-- Body outline -->
+                                <ellipse cx="100" cy="40" rx="35" ry="40" stroke="white" fill="rgba(255,255,255,0.1)"/>
+                                <rect x="60" y="80" width="80" height="120" rx="20" stroke="white" fill="rgba(255,255,255,0.1)"/>
+                                <rect x="20" y="85" width="40" height="100" rx="10" stroke="white" fill="rgba(255,255,255,0.1)"/>
+                                <rect x="140" y="85" width="40" height="100" rx="10" stroke="white" fill="rgba(255,255,255,0.1)"/>
+                                <rect x="65" y="200" width="30" height="120" rx="10" stroke="white" fill="rgba(255,255,255,0.1)"/>
+                                <rect x="105" y="200" width="30" height="120" rx="10" stroke="white" fill="rgba(255,255,255,0.1)"/>
+
+                                <!-- Organs -->
+                                <ellipse id="organ-brain" cx="100" cy="35" rx="25" ry="20" class="organ" fill="#ff9ff3" onclick="showOrganInfo('brain')"/>
+                                <path id="organ-heart" d="M100 120 C80 100, 70 115, 70 130 C70 150, 100 165, 100 165 C100 165, 130 150, 130 130 C130 115, 120 100, 100 120" class="organ" fill="#ff6b6b" onclick="showOrganInfo('heart')"/>
+                                <ellipse id="organ-lungs" cx="80" cy="130" rx="15" ry="25" class="organ" fill="#ff9f43" onclick="showOrganInfo('lungs')"/>
+                                <ellipse cx="120" cy="130" rx="15" ry="25" class="organ" fill="#ff9f43" onclick="showOrganInfo('lungs')"/>
+                                <ellipse id="organ-stomach" cx="100" cy="165" rx="20" ry="15" class="organ" fill="#feca57" onclick="showOrganInfo('stomach')"/>
+                                <ellipse id="organ-liver" cx="115" cy="150" rx="18" ry="12" class="organ" fill="#8b0000" onclick="showOrganInfo('liver')"/>
+                                <ellipse id="organ-kidneys" cx="85" cy="175" rx="10" ry="12" class="organ" fill="#cd853f" onclick="showOrganInfo('kidneys')"/>
+                                <ellipse cx="115" cy="175" rx="10" ry="12" class="organ" fill="#cd853f" onclick="showOrganInfo('kidneys')"/>
+                            </svg>
+                        </div>
+
+                        <div class="organ-buttons">
+                            ${organs.map(o => `
+                                <button class="organ-btn" onclick="showOrganInfo('${o.id}')">
+                                    <span>${o.emoji}</span>
+                                    <span>${o.name}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div class="organ-info" id="organ-info">
+                            <h3>👆 Selecione um órgão</h3>
+                            <p>Clique em um dos órgãos ou botões para aprender sobre ele!</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showOrganInfo(organId) {
+            const organ = organs.find(o => o.id === organId);
+            if (!organ) return;
+
+            const infoDiv = document.getElementById('organ-info');
+            infoDiv.innerHTML = `
+                <h3>${organ.emoji} ${organ.name}</h3>
+                <p>${organ.info}</p>
+                <div class="fun-fact">
+                    <strong>🤓 Curiosidade:</strong> ${organ.funFact}
+                </div>
+            `;
+            infoDiv.classList.add('success');
+            setTimeout(() => infoDiv.classList.remove('success'), 500);
+
+            // Highlight selected organ
+            document.querySelectorAll('.organ').forEach(o => o.classList.remove('selected'));
+            document.querySelectorAll('.organ-btn').forEach(b => b.classList.remove('active'));
+
+            const organEl = document.getElementById(`organ-${organId}`);
+            if (organEl) organEl.classList.add('selected');
+
+            if (!state.learnedOrgans.includes(organ.name)) {
+                state.learnedOrgans.push(organ.name);
+                state.experimentsDone++;
+                addPoints(10);
+                saveState();
+            }
+        }
+
+        // ===== QUIZ =====
+        const quizQuestions = {
+            colors: [
+                { q: 'Vermelho + Amarelo = ?', options: ['Verde', 'Laranja', 'Roxo', 'Marrom'], answer: 1 },
+                { q: 'Azul + Amarelo = ?', options: ['Laranja', 'Roxo', 'Verde', 'Rosa'], answer: 2 },
+                { q: 'Vermelho + Azul = ?', options: ['Verde', 'Laranja', 'Marrom', 'Roxo'], answer: 3 },
+                { q: 'Quais são as cores primárias?', options: ['Verde, Laranja, Roxo', 'Vermelho, Amarelo, Azul', 'Preto, Branco, Cinza', 'Rosa, Roxo, Verde'], answer: 1 }
+            ],
+            water: [
+                { q: 'A que temperatura a água congela?', options: ['10°C', '0°C', '-10°C', '100°C'], answer: 1 },
+                { q: 'A que temperatura a água ferve?', options: ['50°C', '80°C', '100°C', '200°C'], answer: 2 },
+                { q: 'Como se chama a água no estado sólido?', options: ['Vapor', 'Líquido', 'Gelo', 'Nuvem'], answer: 2 },
+                { q: 'O vapor é a água em qual estado?', options: ['Sólido', 'Líquido', 'Gasoso', 'Plasma'], answer: 2 }
+            ],
+            solar: [
+                { q: 'Qual é o maior planeta do Sistema Solar?', options: ['Terra', 'Marte', 'Saturno', 'Júpiter'], answer: 3 },
+                { q: 'Qual planeta é conhecido como planeta vermelho?', options: ['Vênus', 'Marte', 'Júpiter', 'Mercúrio'], answer: 1 },
+                { q: 'Qual planeta tem anéis famosos?', options: ['Júpiter', 'Urano', 'Saturno', 'Netuno'], answer: 2 },
+                { q: 'Qual é o planeta mais próximo do Sol?', options: ['Vênus', 'Terra', 'Mercúrio', 'Marte'], answer: 2 }
+            ],
+            body: [
+                { q: 'Qual órgão bombeia sangue para o corpo?', options: ['Cérebro', 'Pulmão', 'Coração', 'Fígado'], answer: 2 },
+                { q: 'Qual órgão você usa para respirar?', options: ['Estômago', 'Pulmões', 'Rins', 'Fígado'], answer: 1 },
+                { q: 'Onde a comida é digerida?', options: ['Cérebro', 'Coração', 'Pulmões', 'Estômago'], answer: 3 },
+                { q: 'Qual órgão controla todo o corpo?', options: ['Coração', 'Cérebro', 'Fígado', 'Rins'], answer: 1 }
+            ]
+        };
+
+        let currentQuiz = [];
+        let quizIndex = 0;
+        let quizCorrect = 0;
+
+        function startQuiz() {
+            currentQuiz = [...quizQuestions[state.currentExperiment]];
+            // Shuffle
+            currentQuiz.sort(() => Math.random() - 0.5);
+            quizIndex = 0;
+            quizCorrect = 0;
+
+            const workspace = document.getElementById('lab-workspace');
+            workspace.innerHTML = `
+                <div class="quiz-container" style="display: flex;">
+                    <div class="quiz-score">Pergunta <span id="quiz-num">1</span>/${currentQuiz.length}</div>
+                    <div class="quiz-question" id="quiz-question"></div>
+                    <div class="quiz-options" id="quiz-options"></div>
+                    <div class="quiz-feedback" id="quiz-feedback"></div>
+                </div>
+            `;
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (quizIndex >= currentQuiz.length) {
+                endQuiz();
+                return;
+            }
+
+            const q = currentQuiz[quizIndex];
+            document.getElementById('quiz-num').textContent = quizIndex + 1;
+            document.getElementById('quiz-question').textContent = q.q;
+            document.getElementById('quiz-feedback').textContent = '';
+
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = q.options.map((opt, i) =>
+                `<button class="quiz-option" onclick="checkAnswer(${i})">${opt}</button>`
+            ).join('');
+        }
+
+        function checkAnswer(selected) {
+            const q = currentQuiz[quizIndex];
+            const buttons = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quiz-feedback');
+
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === q.answer) {
+                    btn.classList.add('correct');
+                } else if (i === selected) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            if (selected === q.answer) {
+                quizCorrect++;
+                feedback.textContent = '✅ Correto! Muito bem!';
+                feedback.style.background = 'rgba(0, 255, 135, 0.2)';
+                addPoints(10);
+            } else {
+                feedback.textContent = `❌ Resposta: ${q.options[q.answer]}`;
+                feedback.style.background = 'rgba(255, 107, 107, 0.2)';
+            }
+
+            setTimeout(() => {
+                quizIndex++;
+                showQuestion();
+            }, 1500);
+        }
+
+        function endQuiz() {
+            const percentage = Math.round((quizCorrect / currentQuiz.length) * 100);
+            const workspace = document.getElementById('lab-workspace');
+
+            let message, emoji;
+            if (percentage === 100) {
+                message = 'Perfeito! Você é um verdadeiro cientista!';
+                emoji = '🏆';
+                if (typeof giveReward === 'function') giveReward('gold', 1);
+            } else if (percentage >= 75) {
+                message = 'Excelente! Você aprendeu muito!';
+                emoji = '🌟';
+                if (typeof giveReward === 'function') giveReward('diamond', 2);
+            } else if (percentage >= 50) {
+                message = 'Bom trabalho! Continue praticando!';
+                emoji = '👍';
+            } else {
+                message = 'Continue explorando para aprender mais!';
+                emoji = '📚';
+            }
+
+            workspace.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 40px;">
+                    <div style="font-size: 4rem;">${emoji}</div>
+                    <h2 style="color: white; font-size: 2rem;">Quiz Completo!</h2>
+                    <div style="color: #60efff; font-size: 1.5rem;">
+                        ${quizCorrect}/${currentQuiz.length} corretas (${percentage}%)
+                    </div>
+                    <p style="color: #a0a0a0; font-size: 1.1rem; text-align: center;">${message}</p>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="mix-btn" onclick="startQuiz()">🔄 Tentar Novamente</button>
+                        <button class="reset-btn" onclick="startExperiment('${state.currentExperiment}')">🔬 Voltar ao Experimento</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        loadState();
+    </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

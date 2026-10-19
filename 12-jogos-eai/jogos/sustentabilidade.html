@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Sustentabilidade - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        /* Stats */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .start-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        /* Planet Display */
+        .planet-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .planet {
+            font-size: 6rem;
+            transition: all 0.5s;
+        }
+
+        .planet.happy {
+            animation: spin 2s ease-in-out;
+        }
+
+        .planet.sad {
+            filter: grayscale(50%);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .planet-health {
+            margin-top: 10px;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f44336, #ff9800, #4caf50);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .health-text {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Scenario */
+        .scenario {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-title {
+            text-align: center;
+            color: #4caf50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .scenario-image {
+            text-align: center;
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .scenario-text {
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Choices */
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .choice:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+
+        .choice.selected {
+            border-color: #4caf50;
+        }
+
+        .choice.good {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .choice.bad {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .choice-icon {
+            font-size: 2rem;
+        }
+
+        .choice-text {
+            flex: 1;
+        }
+
+        /* Feedback */
+        .feedback {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback h4 {
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .feedback.negative h4 {
+            color: #f44336;
+        }
+
+        .feedback p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .feedback-impact {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .feedback-impact.positive {
+            color: #4caf50;
+        }
+
+        .feedback-impact.negative {
+            color: #f44336;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-planet {
+            font-size: 8rem;
+            margin-bottom: 20px;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Medals */
+        .medals-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .planet {
+                font-size: 4rem;
+            }
+
+            .scenario-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Jogo da Sustentabilidade</h1>
+            <p>Tome decisões para salvar o planeta!</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="decisions">0</div>
+                <div class="stat-label">Decisões</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="goodChoices">0</div>
+                <div class="stat-label">Boas Escolhas</div>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <div style="font-size: 6rem; margin-bottom: 20px;">🌍</div>
+            <h2 style="margin-bottom: 15px;">Bem-vindo ao Jogo da Sustentabilidade!</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 30px;">
+                Você vai tomar decisões que afetam o meio ambiente.<br>
+                Cada escolha tem consequências para o nosso planeta!
+            </p>
+
+            <button class="start-btn" onclick="startGame()">
+                🌱 Começar a Jogar
+            </button>
+
+            <div class="medals-container" style="margin-top: 30px;">
+                <span class="medal" id="medal1">🥉</span>
+                <span class="medal" id="medal2">🥈</span>
+                <span class="medal" id="medal3">🥇</span>
+                <span class="medal" id="medal4">🏆</span>
+                <span class="medal" id="medal5">👑</span>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <!-- Planet Display -->
+            <div class="planet-display">
+                <div class="planet" id="planet">🌍</div>
+                <div class="planet-health">
+                    <div class="health-bar">
+                        <div class="health-fill" id="healthFill" style="width: 70%"></div>
+                    </div>
+                    <div class="health-text">Saúde do Planeta: <span id="healthPercent">70</span>%</div>
+                </div>
+            </div>
+
+            <!-- Scenario -->
+            <div class="scenario">
+                <div class="scenario-title" id="scenarioTitle">Cenário 1</div>
+                <div class="scenario-image" id="scenarioImage">🏭</div>
+                <div class="scenario-text" id="scenarioText">Carregando cenário...</div>
+
+                <div class="choices" id="choicesContainer">
+                    <!-- Choices will be generated -->
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback" id="feedback">
+                <h4 id="feedbackTitle">💡 Você sabia?</h4>
+                <p id="feedbackText">Texto educativo aparecerá aqui.</p>
+                <div class="feedback-impact" id="feedbackImpact">+10 saúde do planeta</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Sair
+                </button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextScenario()" disabled>
+                    Próximo →
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="results-title" id="resultsTitle">🎉 Parabéns!</div>
+            <div class="results-planet" id="resultsPlanet">🌍</div>
+            <p id="resultsDesc" style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">
+                Você completou todos os cenários!
+            </p>
+
+            <div class="results-stats">
+                <div class="result-item">
+                    <div class="result-value" id="finalScore">0</div>
+                    <div class="result-label">Pontos</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalHealth">70%</div>
+                    <div class="result-label">Saúde Final</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalGood">0</div>
+                    <div class="result-label">Boas Escolhas</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalTotal">0</div>
+                    <div class="result-label">Total Decisões</div>
+                </div>
+            </div>
+
+            <div class="medals-container">
+                <span class="medal" id="resultMedal1">🥉</span>
+                <span class="medal" id="resultMedal2">🥈</span>
+                <span class="medal" id="resultMedal3">🥇</span>
+                <span class="medal" id="resultMedal4">🏆</span>
+                <span class="medal" id="resultMedal5">👑</span>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="startGame()">
+                    🔄 Jogar Novamente
+                </button>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Scenarios database
+        const scenarios = [
+            {
+                title: "No caminho para a escola",
+                image: "🚗",
+                text: "Você precisa ir para a escola. Como você vai?",
+                choices: [
+                    { icon: "🚶", text: "Vou a pé ou de bicicleta", good: true, impact: 10, feedback: "Caminhar ou andar de bicicleta não emite gases poluentes e ainda faz bem para a saúde!" },
+                    { icon: "🚗", text: "Peço para meus pais me levarem de carro sozinho", good: false, impact: -10, feedback: "Carros emitem CO2, um gás que contribui para o aquecimento global. Tente usar transporte público ou compartilhar caronas!" },
+                    { icon: "🚌", text: "Vou de transporte público", good: true, impact: 5, feedback: "O transporte público é melhor que carros individuais porque leva muitas pessoas de uma vez!" }
+                ]
+            },
+            {
+                title: "Na hora do lanche",
+                image: "🍎",
+                text: "Você terminou de comer seu lanche e sobrou a embalagem. O que você faz?",
+                choices: [
+                    { icon: "🗑️", text: "Jogo no chão mesmo", good: false, impact: -15, feedback: "Lixo no chão pode ir parar nos rios e oceanos, prejudicando os animais marinhos!" },
+                    { icon: "♻️", text: "Procuro a lixeira de reciclagem correta", good: true, impact: 15, feedback: "Reciclar ajuda a transformar lixo em novos produtos e reduz a poluição!" },
+                    { icon: "🗑️", text: "Jogo em qualquer lixeira", good: false, impact: -5, feedback: "É importante separar o lixo reciclável do orgânico para facilitar a reciclagem!" }
+                ]
+            },
+            {
+                title: "Escovando os dentes",
+                image: "🪥",
+                text: "Você está escovando os dentes. O que faz com a torneira?",
+                choices: [
+                    { icon: "💧", text: "Deixo a água correndo o tempo todo", good: false, impact: -10, feedback: "Água é um recurso precioso! Uma torneira aberta gasta cerca de 12 litros por minuto!" },
+                    { icon: "🚿", text: "Fecho a torneira enquanto escovo", good: true, impact: 10, feedback: "Economizar água ajuda o meio ambiente e garante água para todos no futuro!" }
+                ]
+            },
+            {
+                title: "Na sala de aula",
+                image: "💡",
+                text: "A aula terminou e vocês vão para o recreio. A luz da sala está acesa.",
+                choices: [
+                    { icon: "💡", text: "Saio e deixo a luz acesa", good: false, impact: -10, feedback: "Energia elétrica muitas vezes vem de fontes que poluem. Economizar energia ajuda o planeta!" },
+                    { icon: "🔌", text: "Apago a luz antes de sair", good: true, impact: 10, feedback: "Apagar luzes quando não está usando economiza energia e reduz a poluição!" }
+                ]
+            },
+            {
+                title: "Comprando material escolar",
+                image: "📚",
+                text: "Você precisa de um caderno novo. Qual você escolhe?",
+                choices: [
+                    { icon: "📓", text: "Um caderno de papel reciclado", good: true, impact: 10, feedback: "Papel reciclado usa menos árvores e água para ser produzido!" },
+                    { icon: "📔", text: "O caderno mais bonito, mesmo com plástico", good: false, impact: -5, feedback: "Capas de plástico demoram centenas de anos para se decompor na natureza!" }
+                ]
+            },
+            {
+                title: "Plantando uma árvore",
+                image: "🌳",
+                text: "A escola está fazendo uma campanha de plantio de árvores. Você participa?",
+                choices: [
+                    { icon: "🌱", text: "Sim! Planto uma árvore", good: true, impact: 15, feedback: "Árvores produzem oxigênio, absorvem CO2 e são casa para muitos animais!" },
+                    { icon: "😴", text: "Não, prefiro ficar descansando", good: false, impact: -5, feedback: "Cada árvore plantada faz diferença para o planeta. Uma árvore pode absorver até 22kg de CO2 por ano!" }
+                ]
+            },
+            {
+                title: "No banho",
+                image: "🚿",
+                text: "Quanto tempo você fica no banho?",
+                choices: [
+                    { icon: "⏱️", text: "Banho rápido de 5 minutos", good: true, impact: 10, feedback: "Banhos rápidos economizam água e energia (para aquecer a água)!" },
+                    { icon: "🛁", text: "Banho demorado de 30 minutos", good: false, impact: -15, feedback: "Banhos longos gastam muita água. Em 30 minutos, podem ser gastos mais de 100 litros!" }
+                ]
+            },
+            {
+                title: "Descartando pilhas",
+                image: "🔋",
+                text: "Suas pilhas acabaram. O que você faz com elas?",
+                choices: [
+                    { icon: "🗑️", text: "Jogo no lixo comum", good: false, impact: -15, feedback: "Pilhas têm metais pesados que contaminam o solo e a água. Precisam de descarte especial!" },
+                    { icon: "♻️", text: "Levo a um ponto de coleta especial", good: true, impact: 15, feedback: "Pilhas descartadas corretamente podem ser recicladas e não poluem o meio ambiente!" }
+                ]
+            }
+        ];
+
+        // Game state
+        let currentScenarioIndex = 0;
+        let score = 0;
+        let planetHealth = 70;
+        let decisions = 0;
+        let goodChoices = 0;
+        let shuffledScenarios = [];
+        let answered = false;
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'good':
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'bad':
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'complete':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.15);
+                    });
+                    break;
+            }
+        }
+
+        // Shuffle
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Load progress
+        function loadProgress() {
+            const saved = localStorage.getItem('sustentabilidadeProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                score = data.score || 0;
+                updateMedals();
+            }
+            updateDisplay();
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('sustentabilidadeProgress', JSON.stringify({ score }));
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('decisions').textContent = decisions;
+            document.getElementById('goodChoices').textContent = goodChoices;
+
+            // Update planet health
+            planetHealth = Math.max(0, Math.min(100, planetHealth));
+            document.getElementById('healthFill').style.width = `${planetHealth}%`;
+            document.getElementById('healthPercent').textContent = planetHealth;
+
+            // Update planet appearance
+            const planet = document.getElementById('planet');
+            if (planetHealth >= 70) {
+                planet.textContent = '🌍';
+                planet.classList.remove('sad');
+            } else if (planetHealth >= 40) {
+                planet.textContent = '🌎';
+            } else {
+                planet.textContent = '🌏';
+                planet.classList.add('sad');
+            }
+        }
+
+        // Update medals
+        function updateMedals() {
+            const thresholds = [50, 150, 300, 500, 1000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`medal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Start game
+        function startGame() {
+            currentScenarioIndex = 0;
+            planetHealth = 70;
+            decisions = 0;
+            goodChoices = 0;
+
+            shuffledScenarios = shuffle(scenarios).slice(0, 6);
+
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            loadScenario();
+            updateDisplay();
+        }
+
+        // Load scenario
+        function loadScenario() {
+            const scenario = shuffledScenarios[currentScenarioIndex];
+            answered = false;
+
+            document.getElementById('scenarioTitle').textContent = `Cenário ${currentScenarioIndex + 1}`;
+            document.getElementById('scenarioImage').textContent = scenario.image;
+            document.getElementById('scenarioText').textContent = scenario.text;
+
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+
+            scenario.choices.forEach((choice, index) => {
+                const div = document.createElement('div');
+                div.className = 'choice';
+                div.innerHTML = `
+                    <span class="choice-icon">${choice.icon}</span>
+                    <span class="choice-text">${choice.text}</span>
+                `;
+                div.onclick = () => selectChoice(index);
+                container.appendChild(div);
+            });
+
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('feedback').classList.remove('negative');
+            document.getElementById('btnNext').disabled = true;
+        }
+
+        // Select choice
+        function selectChoice(index) {
+            if (answered) return;
+            answered = true;
+            decisions++;
+
+            const scenario = shuffledScenarios[currentScenarioIndex];
+            const choice = scenario.choices[index];
+
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach((c, i) => {
+                const choiceData = scenario.choices[i];
+                if (choiceData.good) {
+                    c.classList.add('good');
+                } else {
+                    c.classList.add('bad');
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+            const feedbackImpact = document.getElementById('feedbackImpact');
+
+            if (choice.good) {
+                playSound('good');
+                goodChoices++;
+                score += 20;
+                planetHealth += choice.impact;
+
+                feedbackTitle.textContent = '✅ Ótima escolha!';
+                feedbackImpact.textContent = `+${choice.impact} saúde do planeta`;
+                feedbackImpact.className = 'feedback-impact positive';
+                feedback.classList.remove('negative');
+            } else {
+                playSound('bad');
+                planetHealth += choice.impact;
+
+                feedbackTitle.textContent = '⚠️ Poderia ser melhor...';
+                feedbackImpact.textContent = `${choice.impact} saúde do planeta`;
+                feedbackImpact.className = 'feedback-impact negative';
+                feedback.classList.add('negative');
+            }
+
+            feedbackText.textContent = choice.feedback;
+            feedback.classList.add('show');
+
+            // Animate planet
+            const planet = document.getElementById('planet');
+            if (choice.good) {
+                planet.classList.add('happy');
+                setTimeout(() => planet.classList.remove('happy'), 2000);
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+
+            document.getElementById('btnNext').disabled = false;
+        }
+
+        // Next scenario
+        function nextScenario() {
+            currentScenarioIndex++;
+
+            if (currentScenarioIndex >= shuffledScenarios.length) {
+                showResults();
+            } else {
+                loadScenario();
+            }
+        }
+
+        // Show results
+        function showResults() {
+            playSound('complete');
+
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+
+            // Set results based on planet health
+            let title, planet, desc;
+            if (planetHealth >= 80) {
+                title = '🌟 Herói do Planeta!';
+                planet = '🌍';
+                desc = 'Você fez escolhas incríveis! O planeta está saudável graças a você!';
+            } else if (planetHealth >= 60) {
+                title = '👍 Bom trabalho!';
+                planet = '🌎';
+                desc = 'Você está no caminho certo, mas ainda pode melhorar suas escolhas!';
+            } else {
+                title = '⚠️ O planeta precisa de ajuda!';
+                planet = '🌏';
+                desc = 'Vamos aprender mais sobre sustentabilidade e fazer escolhas melhores!';
+            }
+
+            document.getElementById('resultsTitle').textContent = title;
+            document.getElementById('resultsPlanet').textContent = planet;
+            document.getElementById('resultsDesc').textContent = desc;
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalHealth').textContent = `${planetHealth}%`;
+            document.getElementById('finalGood').textContent = goodChoices;
+            document.getElementById('finalTotal').textContent = decisions;
+
+            const thresholds = [50, 150, 300, 500, 1000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`resultMedal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Back to menu
+        function backToMenu() {
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+        }
+
+        // Initialize
+        loadProgress();
+    </script>
+</body>
+</html>

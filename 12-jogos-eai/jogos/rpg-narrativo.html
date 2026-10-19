@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Narrativo Educativo - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .story-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .story-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .story-btn:hover {
+            background: #4ecdc4;
+            transform: scale(1.05);
+        }
+
+        .character-sheet {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .character-avatar {
+            font-size: 4em;
+            text-align: center;
+        }
+
+        .character-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .character-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .character-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .char-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .char-stat-icon {
+            font-size: 1.5em;
+        }
+
+        .char-stat-value {
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .char-stat-label {
+            font-size: 0.7em;
+            opacity: 0.8;
+        }
+
+        .story-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scene-image {
+            font-size: 5em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .scene-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #feca57;
+        }
+
+        .story-text {
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            padding: 15px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .choice-btn:hover {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+            transform: translateX(10px);
+        }
+
+        .choice-icon {
+            font-size: 1.5em;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .choice-text {
+            flex: 1;
+        }
+
+        .choice-effect {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .result-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 3px solid #4ecdc4;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            z-index: 100;
+            max-width: 90%;
+            display: none;
+        }
+
+        .result-popup.show {
+            display: block;
+            animation: popIn 0.3s;
+        }
+
+        @keyframes popIn {
+            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-stat {
+            text-align: center;
+        }
+
+        .result-stat-change {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .result-stat-change.positive { color: #27ae60; }
+        .result-stat-change.negative { color: #e74c3c; }
+
+        .continue-btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .continue-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        .inventory {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+
+        .inventory-title {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .inventory-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .inventory-item {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .progress-dot.completed {
+            background: #27ae60;
+        }
+
+        .progress-dot.current {
+            background: #feca57;
+            animation: pulse 1s infinite;
+        }
+
+        .ending-screen {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .ending-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .ending-title {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #feca57;
+        }
+
+        .ending-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 500px) {
+            .character-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
+            }
+
+            .char-stat {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="stories">0</div>
+            <div class="stat-label">Histórias</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="endings">0</div>
+            <div class="stat-label">Finais</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Contador: 1 história">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Narrador: 3 histórias">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Escritor: 5 histórias">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Lendário: 10 histórias">💎</div>
+    </div>
+
+    <div class="game-area">
+        <div class="story-selector" id="story-selector">
+            <button class="story-btn" data-story="forest">🌲 Floresta Encantada</button>
+            <button class="story-btn" data-story="school">🏫 Aventura na Escola</button>
+            <button class="story-btn" data-story="space">🚀 Viagem Espacial</button>
+        </div>
+
+        <div id="game-content"></div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="result-popup" id="result-popup">
+        <div class="result-icon" id="result-icon">✨</div>
+        <div class="result-title" id="result-title">Resultado</div>
+        <div class="result-text" id="result-text"></div>
+        <div class="result-stats" id="result-stats"></div>
+        <button class="continue-btn" onclick="continueStory()">Continuar →</button>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            storiesCompleted: 0,
+            endingsFound: 0,
+            currentStory: null,
+            currentScene: 0,
+            character: {
+                name: 'Herói',
+                avatar: '🧙',
+                courage: 5,
+                wisdom: 5,
+                kindness: 5,
+                inventory: []
+            }
+        };
+
+        // Audio
+        let audioCtx = null;
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+            if (type === 'choice') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(550, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'success') {
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
+                osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.3);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'ending') {
+                osc.frequency.setValueAtTime(392, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.4);
+                osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.6);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.8);
+            }
+        }
+
+        // Stories data
+        const stories = {
+            forest: {
+                name: 'Floresta Encantada',
+                avatar: '🧝',
+                scenes: [
+                    {
+                        image: '🌲',
+                        title: 'A Entrada da Floresta',
+                        text: 'Você está na entrada de uma floresta misteriosa. O sol está se pondo e você ouve sons estranhos entre as árvores. À sua frente, há dois caminhos: um iluminado e outro escuro.',
+                        choices: [
+                            { text: 'Seguir pelo caminho iluminado', icon: '☀️', effect: { wisdom: 1 }, next: 1, result: 'Você escolheu ser prudente!' },
+                            { text: 'Explorar o caminho escuro', icon: '🌙', effect: { courage: 1 }, next: 2, result: 'Você é muito corajoso!' },
+                            { text: 'Chamar por ajuda', icon: '📢', effect: { kindness: 1 }, next: 3, result: 'Você não tem medo de pedir ajuda!' }
+                        ]
+                    },
+                    {
+                        image: '🦊',
+                        title: 'O Caminho Iluminado',
+                        text: 'No caminho iluminado, você encontra uma raposa amigável. Ela parece querer lhe mostrar algo. A raposa olha para você com olhos inteligentes.',
+                        choices: [
+                            { text: 'Seguir a raposa', icon: '🐾', effect: { courage: 1, item: 'Mapa Mágico' }, next: 4, result: 'A raposa lhe deu um mapa mágico!' },
+                            { text: 'Oferecer comida à raposa', icon: '🍎', effect: { kindness: 2 }, next: 4, result: 'A raposa ficou muito feliz!' }
+                        ]
+                    },
+                    {
+                        image: '🕸️',
+                        title: 'O Caminho Escuro',
+                        text: 'O caminho escuro está cheio de teias de aranha. De repente, você ouve um choro. É um filhote de coelho preso em uma armadilha!',
+                        choices: [
+                            { text: 'Libertar o coelho', icon: '🐰', effect: { kindness: 2, item: 'Amuleto de Proteção' }, next: 4, result: 'O coelho lhe deu um amuleto em agradecimento!' },
+                            { text: 'Continuar com cuidado', icon: '👀', effect: { wisdom: 1 }, next: 4, result: 'Você seguiu em frente cautelosamente.' }
+                        ]
+                    },
+                    {
+                        image: '👴',
+                        title: 'O Sábio Ermitão',
+                        text: 'Seus chamados atraem um velho ermitão que mora na floresta. Ele conhece todos os segredos deste lugar e oferece ajuda.',
+                        choices: [
+                            { text: 'Pedir conselhos ao ermitão', icon: '📜', effect: { wisdom: 2 }, next: 4, result: 'O ermitão compartilhou sabedoria valiosa!' },
+                            { text: 'Perguntar sobre tesouros', icon: '💎', effect: { courage: 1 }, next: 4, result: 'O ermitão falou sobre uma caverna secreta!' }
+                        ]
+                    },
+                    {
+                        image: '🏰',
+                        title: 'O Castelo Abandonado',
+                        text: 'Todos os caminhos levam a um castelo abandonado no coração da floresta. Há uma porta principal e uma janela lateral aberta.',
+                        choices: [
+                            { text: 'Entrar pela porta principal', icon: '🚪', effect: { courage: 1 }, next: 5, result: 'Você entrou com confiança!' },
+                            { text: 'Escalar pela janela', icon: '🧗', effect: { courage: 2 }, next: 6, result: 'Você escalou habilmente!' },
+                            { text: 'Procurar outra entrada', icon: '🔍', effect: { wisdom: 1 }, next: 7, result: 'Você encontrou um passage secreta!' }
+                        ]
+                    },
+                    {
+                        image: '👑',
+                        title: 'Final: O Tesouro Real',
+                        text: 'Na sala principal do castelo, você encontra um baú cheio de livros antigos - o verdadeiro tesouro do conhecimento! Você aprendeu que a maior riqueza está em aprender coisas novas.',
+                        ending: true,
+                        endingType: 'knowledge'
+                    },
+                    {
+                        image: '🐉',
+                        title: 'Final: O Dragão Amigo',
+                        text: 'Pela janela, você encontra um dragão bebê perdido! Ao ajudá-lo a encontrar sua família, você ganha a amizade eterna dos dragões da floresta.',
+                        ending: true,
+                        endingType: 'friendship'
+                    },
+                    {
+                        image: '🌟',
+                        title: 'Final: A Passagem Secreta',
+                        text: 'A passagem secreta leva a um jardim mágico onde flores brilham à noite. Você descobriu o maior segredo da floresta e se tornou seu guardião!',
+                        ending: true,
+                        endingType: 'guardian'
+                    }
+                ]
+            },
+            school: {
+                name: 'Aventura na Escola',
+                avatar: '🎒',
+                scenes: [
+                    {
+                        image: '🏫',
+                        title: 'Primeiro Dia',
+                        text: 'É seu primeiro dia na escola nova! Você está nervoso, mas animado. Na entrada, você vê alguns alunos conversando.',
+                        choices: [
+                            { text: 'Se apresentar aos alunos', icon: '👋', effect: { kindness: 1, courage: 1 }, next: 1, result: 'Você fez novos amigos!' },
+                            { text: 'Ir direto para a sala', icon: '📚', effect: { wisdom: 1 }, next: 2, result: 'Você foi organizado!' },
+                            { text: 'Explorar a escola', icon: '🔍', effect: { courage: 1 }, next: 3, result: 'Você conheceu bem o lugar!' }
+                        ]
+                    },
+                    {
+                        image: '👫',
+                        title: 'Novos Amigos',
+                        text: 'Os alunos são muito simpáticos! Eles te convidam para sentar junto no recreio. Um deles parece triste.',
+                        choices: [
+                            { text: 'Perguntar o que houve', icon: '💬', effect: { kindness: 2 }, next: 4, result: 'Você mostrou empatia!' },
+                            { text: 'Contar uma piada', icon: '😄', effect: { kindness: 1, courage: 1 }, next: 4, result: 'Você alegrou o grupo!' }
+                        ]
+                    },
+                    {
+                        image: '📖',
+                        title: 'Na Sala de Aula',
+                        text: 'A professora está explicando uma matéria difícil. Alguns colegas parecem confusos.',
+                        choices: [
+                            { text: 'Prestar muita atenção', icon: '👀', effect: { wisdom: 2 }, next: 4, result: 'Você aprendeu muito!' },
+                            { text: 'Ajudar quem tem dúvidas', icon: '🤝', effect: { kindness: 2, wisdom: 1 }, next: 4, result: 'Você ajudou os colegas!' }
+                        ]
+                    },
+                    {
+                        image: '🗺️',
+                        title: 'Explorando',
+                        text: 'Você encontra uma porta misteriosa. Parece ser a entrada para o porão da escola.',
+                        choices: [
+                            { text: 'Investigar com cuidado', icon: '🔦', effect: { courage: 2 }, next: 4, result: 'Você descobriu a biblioteca antiga!' },
+                            { text: 'Procurar um professor', icon: '👨‍🏫', effect: { wisdom: 1 }, next: 4, result: 'O professor explicou a história!' }
+                        ]
+                    },
+                    {
+                        image: '🎭',
+                        title: 'O Projeto da Escola',
+                        text: 'A escola está organizando uma feira cultural! Você pode participar de diferentes formas.',
+                        choices: [
+                            { text: 'Apresentar uma peça', icon: '🎬', effect: { courage: 2 }, next: 5, result: 'Você brilhou no palco!' },
+                            { text: 'Fazer um experimento', icon: '🔬', effect: { wisdom: 2 }, next: 6, result: 'Seu experimento foi incrível!' },
+                            { text: 'Organizar uma exposição', icon: '🖼️', effect: { kindness: 1, wisdom: 1 }, next: 7, result: 'A exposição ficou linda!' }
+                        ]
+                    },
+                    {
+                        image: '🌟',
+                        title: 'Final: Estrela do Teatro',
+                        text: 'Sua apresentação foi um sucesso! Você descobriu um talento especial e inspirou outros a também tentarem coisas novas.',
+                        ending: true,
+                        endingType: 'artist'
+                    },
+                    {
+                        image: '🔬',
+                        title: 'Final: Jovem Cientista',
+                        text: 'Seu experimento ganhou o primeiro lugar! A professora de ciências quer que você participe da olimpíada de ciências.',
+                        ending: true,
+                        endingType: 'scientist'
+                    },
+                    {
+                        image: '🤝',
+                        title: 'Final: Líder Natural',
+                        text: 'Você organizou a melhor exposição da feira! Todos querem trabalhar com você em projetos futuros.',
+                        ending: true,
+                        endingType: 'leader'
+                    }
+                ]
+            },
+            space: {
+                name: 'Viagem Espacial',
+                avatar: '👨‍🚀',
+                scenes: [
+                    {
+                        image: '🚀',
+                        title: 'Decolagem',
+                        text: 'Você é um jovem astronauta! Sua nave está prestes a decolar para uma missão importante no espaço. O controle de missão pergunta se está pronto.',
+                        choices: [
+                            { text: '"Estou pronto!"', icon: '✨', effect: { courage: 2 }, next: 1, result: 'Você decolou com confiança!' },
+                            { text: 'Revisar os sistemas', icon: '🔧', effect: { wisdom: 2 }, next: 1, result: 'Tudo verificado e funcionando!' },
+                            { text: 'Enviar mensagem para casa', icon: '💌', effect: { kindness: 1 }, next: 1, result: 'Sua família ficou feliz!' }
+                        ]
+                    },
+                    {
+                        image: '🌍',
+                        title: 'No Espaço',
+                        text: 'Você está flutuando no espaço! A visão da Terra é incrível. O radar detecta algo interessante próximo.',
+                        choices: [
+                            { text: 'Investigar o sinal', icon: '📡', effect: { courage: 1, wisdom: 1 }, next: 2, result: 'Você encontrou algo!' },
+                            { text: 'Fotografar a Terra', icon: '📸', effect: { wisdom: 1 }, next: 3, result: 'Fotos lindas capturadas!' },
+                            { text: 'Fazer experimentos', icon: '🧪', effect: { wisdom: 2 }, next: 4, result: 'Descobertas incríveis!' }
+                        ]
+                    },
+                    {
+                        image: '🛸',
+                        title: 'Encontro Alienígena',
+                        text: 'O sinal vem de uma nave alienígena! Seres amigáveis tentam se comunicar com você.',
+                        choices: [
+                            { text: 'Tentar comunicação', icon: '👽', effect: { kindness: 2, courage: 1 }, next: 5, result: 'Você fez amigos extraterrestres!' },
+                            { text: 'Observar de longe', icon: '🔭', effect: { wisdom: 2 }, next: 6, result: 'Você aprendeu sobre eles!' }
+                        ]
+                    },
+                    {
+                        image: '🌙',
+                        title: 'Pouso Lunar',
+                        text: 'Você decide pousar na Lua para tirar fotos. No solo lunar, encontra algo brilhante.',
+                        choices: [
+                            { text: 'Pegar o objeto', icon: '💎', effect: { courage: 1, item: 'Cristal Lunar' }, next: 5, result: 'Você encontrou um cristal raro!' },
+                            { text: 'Analisar primeiro', icon: '🔬', effect: { wisdom: 2 }, next: 6, result: 'É um mineral desconhecido!' }
+                        ]
+                    },
+                    {
+                        image: '⭐',
+                        title: 'Descoberta Científica',
+                        text: 'Seus experimentos revelaram algo incrível! Você descobriu uma nova forma de energia limpa.',
+                        choices: [
+                            { text: 'Compartilhar com todos', icon: '🌍', effect: { kindness: 2 }, next: 7, result: 'O mundo vai se beneficiar!' },
+                            { text: 'Estudar mais', icon: '📚', effect: { wisdom: 2 }, next: 6, result: 'Você se tornou um expert!' }
+                        ]
+                    },
+                    {
+                        image: '🤝',
+                        title: 'Final: Embaixador Espacial',
+                        text: 'Você se tornou o primeiro embaixador da Terra para outras civilizações! Sua bondade e coragem uniram galáxias.',
+                        ending: true,
+                        endingType: 'ambassador'
+                    },
+                    {
+                        image: '🔬',
+                        title: 'Final: Grande Descobridor',
+                        text: 'Suas descobertas científicas mudaram o mundo! Você ganhou o Prêmio Nobel e inspirou milhões de jovens cientistas.',
+                        ending: true,
+                        endingType: 'discoverer'
+                    },
+                    {
+                        image: '🌟',
+                        title: 'Final: Herói da Humanidade',
+                        text: 'A energia limpa que você descobriu salvou o planeta! Você é celebrado como herói em todo o mundo.',
+                        ending: true,
+                        endingType: 'hero'
+                    }
+                ]
+            }
+        };
+
+        // Initialize
+        function init() {
+            loadProgress();
+            updateDisplay();
+            updateMedals();
+            setupStoryButtons();
+        }
+
+        function setupStoryButtons() {
+            document.querySelectorAll('.story-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    startStory(btn.dataset.story);
+                });
+            });
+        }
+
+        function startStory(storyId) {
+            const story = stories[storyId];
+            gameState.currentStory = storyId;
+            gameState.currentScene = 0;
+            gameState.character = {
+                name: 'Herói',
+                avatar: story.avatar,
+                courage: 5,
+                wisdom: 5,
+                kindness: 5,
+                inventory: []
+            };
+
+            document.getElementById('story-selector').style.display = 'none';
+            showScene();
+        }
+
+        function showScene() {
+            const story = stories[gameState.currentStory];
+            const scene = story.scenes[gameState.currentScene];
+
+            if (scene.ending) {
+                showEnding(scene);
+                return;
+            }
+
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div class="character-sheet">
+                    <div class="character-avatar">${gameState.character.avatar}</div>
+                    <div class="character-info">
+                        <div class="character-name">${gameState.character.name}</div>
+                        <div class="character-stats">
+                            <div class="char-stat">
+                                <div class="char-stat-icon">⚔️</div>
+                                <div class="char-stat-value">${gameState.character.courage}</div>
+                                <div class="char-stat-label">Coragem</div>
+                            </div>
+                            <div class="char-stat">
+                                <div class="char-stat-icon">📖</div>
+                                <div class="char-stat-value">${gameState.character.wisdom}</div>
+                                <div class="char-stat-label">Sabedoria</div>
+                            </div>
+                            <div class="char-stat">
+                                <div class="char-stat-icon">❤️</div>
+                                <div class="char-stat-value">${gameState.character.kindness}</div>
+                                <div class="char-stat-label">Bondade</div>
+                            </div>
+                        </div>
+                        ${gameState.character.inventory.length > 0 ? `
+                            <div class="inventory">
+                                <div class="inventory-title">🎒 Inventário:</div>
+                                <div class="inventory-items">
+                                    ${gameState.character.inventory.map(item => `
+                                        <span class="inventory-item">${item}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="progress-indicator">
+                    ${story.scenes.map((s, i) => `
+                        <div class="progress-dot ${i < gameState.currentScene ? 'completed' : ''} ${i === gameState.currentScene ? 'current' : ''}"></div>
+                    `).join('')}
+                </div>
+
+                <div class="story-container">
+                    <div class="scene-image">${scene.image}</div>
+                    <div class="scene-title">${scene.title}</div>
+                    <div class="story-text">${scene.text}</div>
+                    <div class="choices-container">
+                        ${scene.choices.map((choice, i) => `
+                            <button class="choice-btn" onclick="makeChoice(${i})">
+                                <span class="choice-icon">${choice.icon}</span>
+                                <span class="choice-text">
+                                    ${choice.text}
+                                    ${choice.effect ? `<div class="choice-effect">${formatEffect(choice.effect)}</div>` : ''}
+                                </span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatEffect(effect) {
+            let parts = [];
+            if (effect.courage) parts.push(`+${effect.courage} Coragem`);
+            if (effect.wisdom) parts.push(`+${effect.wisdom} Sabedoria`);
+            if (effect.kindness) parts.push(`+${effect.kindness} Bondade`);
+            if (effect.item) parts.push(`🎁 ${effect.item}`);
+            return parts.join(', ');
+        }
+
+        function makeChoice(choiceIndex) {
+            const story = stories[gameState.currentStory];
+            const scene = story.scenes[gameState.currentScene];
+            const choice = scene.choices[choiceIndex];
+
+            playSound('choice');
+
+            // Apply effects
+            if (choice.effect) {
+                if (choice.effect.courage) gameState.character.courage += choice.effect.courage;
+                if (choice.effect.wisdom) gameState.character.wisdom += choice.effect.wisdom;
+                if (choice.effect.kindness) gameState.character.kindness += choice.effect.kindness;
+                if (choice.effect.item) gameState.character.inventory.push(choice.effect.item);
+            }
+
+            // Add points
+            gameState.points += 15;
+            checkLevelUp();
+
+            // Show result popup
+            showResult(choice);
+        }
+
+        function showResult(choice) {
+            const popup = document.getElementById('result-popup');
+            document.getElementById('result-icon').textContent = choice.icon;
+            document.getElementById('result-title').textContent = 'Sua Escolha';
+            document.getElementById('result-text').textContent = choice.result;
+
+            let statsHtml = '';
+            if (choice.effect) {
+                if (choice.effect.courage) {
+                    statsHtml += `<div class="result-stat"><div class="result-stat-change positive">+${choice.effect.courage}</div><div>Coragem</div></div>`;
+                }
+                if (choice.effect.wisdom) {
+                    statsHtml += `<div class="result-stat"><div class="result-stat-change positive">+${choice.effect.wisdom}</div><div>Sabedoria</div></div>`;
+                }
+                if (choice.effect.kindness) {
+                    statsHtml += `<div class="result-stat"><div class="result-stat-change positive">+${choice.effect.kindness}</div><div>Bondade</div></div>`;
+                }
+            }
+            document.getElementById('result-stats').innerHTML = statsHtml;
+
+            gameState.currentScene = choice.next;
+
+            document.getElementById('overlay').classList.add('show');
+            popup.classList.add('show');
+
+            updateDisplay();
+            saveProgress();
+        }
+
+        function continueStory() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('result-popup').classList.remove('show');
+            showScene();
+        }
+
+        function showEnding(scene) {
+            playSound('ending');
+
+            gameState.storiesCompleted++;
+            gameState.endingsFound++;
+            gameState.points += 100;
+            checkLevelUp();
+
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div class="ending-screen">
+                    <div class="ending-icon">${scene.image}</div>
+                    <div class="ending-title">${scene.title}</div>
+                    <div class="ending-text">${scene.text}</div>
+                    <div class="character-sheet" style="max-width: 400px; margin: 0 auto 20px;">
+                        <div class="character-info" style="width: 100%;">
+                            <div class="character-stats">
+                                <div class="char-stat">
+                                    <div class="char-stat-icon">⚔️</div>
+                                    <div class="char-stat-value">${gameState.character.courage}</div>
+                                    <div class="char-stat-label">Coragem</div>
+                                </div>
+                                <div class="char-stat">
+                                    <div class="char-stat-icon">📖</div>
+                                    <div class="char-stat-value">${gameState.character.wisdom}</div>
+                                    <div class="char-stat-label">Sabedoria</div>
+                                </div>
+                                <div class="char-stat">
+                                    <div class="char-stat-icon">❤️</div>
+                                    <div class="char-stat-value">${gameState.character.kindness}</div>
+                                    <div class="char-stat-label">Bondade</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="restart-btn" onclick="restartStory()">🔄 Jogar Novamente</button>
+                    <button class="restart-btn" onclick="chooseNewStory()">📖 Outra História</button>
+                </div>
+            `;
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        function restartStory() {
+            startStory(gameState.currentStory);
+        }
+
+        function chooseNewStory() {
+            document.getElementById('story-selector').style.display = 'flex';
+            document.getElementById('game-content').innerHTML = '';
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.points / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('success');
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('stories').textContent = gameState.storiesCompleted;
+            document.getElementById('endings').textContent = gameState.endingsFound;
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.storiesCompleted >= 1);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.storiesCompleted >= 3);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.storiesCompleted >= 5);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.storiesCompleted >= 10);
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('rpgNarrativoProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+                gameState.storiesCompleted = data.storiesCompleted || 0;
+                gameState.endingsFound = data.endingsFound || 0;
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('rpgNarrativoProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                storiesCompleted: gameState.storiesCompleted,
+                endingsFound: gameState.endingsFound
+            }));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

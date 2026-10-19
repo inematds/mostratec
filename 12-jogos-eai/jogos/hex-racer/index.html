@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hex Racer 3D - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a1a;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #0a0a2a 0%, #1a1a3a 50%, #0a0a1a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .loader-track {
+      width: 300px;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loader-car {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      animation: drive 2s ease-in-out infinite;
+    }
+
+    @keyframes drive {
+      0% { left: -30px; }
+      100% { left: 300px; }
+    }
+
+    .loader-track::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 20px,
+        rgba(78, 205, 196, 0.3) 20px,
+        rgba(78, 205, 196, 0.3) 40px
+      );
+      animation: trackMove 0.5s linear infinite;
+    }
+
+    @keyframes trackMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-40px); }
+    }
+
+    #loading h1 {
+      color: #fff;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 42px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+      letter-spacing: 5px;
+    }
+
+    #loading .subtitle {
+      color: #4ECDC4;
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+
+    #loading p {
+      color: #888;
+      font-family: Arial, sans-serif;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    .speed-lines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      opacity: 0.1;
+    }
+
+    .speed-line {
+      position: absolute;
+      width: 2px;
+      height: 100px;
+      background: linear-gradient(180deg, transparent, #4ECDC4, transparent);
+      animation: speedLine 1s linear infinite;
+    }
+
+    @keyframes speedLine {
+      0% { transform: translateY(-100px); }
+      100% { transform: translateY(100vh); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="speed-lines">
+      <div class="speed-line" style="left: 10%; animation-delay: 0s;"></div>
+      <div class="speed-line" style="left: 25%; animation-delay: 0.3s;"></div>
+      <div class="speed-line" style="left: 40%; animation-delay: 0.1s;"></div>
+      <div class="speed-line" style="left: 55%; animation-delay: 0.5s;"></div>
+      <div class="speed-line" style="left: 70%; animation-delay: 0.2s;"></div>
+      <div class="speed-line" style="left: 85%; animation-delay: 0.4s;"></div>
+    </div>
+    <h1>HEX RACER</h1>
+    <p class="subtitle">3D RACING</p>
+    <div class="loader-track">
+      <div class="loader-car">🏎️</div>
+    </div>
+    <p>Preparando os motores...</p>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

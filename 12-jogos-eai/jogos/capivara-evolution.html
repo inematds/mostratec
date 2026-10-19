@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capivara Evolution - EAI Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #1a472a 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* ===== TELA DE TÍTULO ===== */
+        #title-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0d2818 0%, #1a472a 50%, #2d5a3d 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .title-capivara {
+            font-size: 120px;
+            animation: bounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .game-title {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .game-subtitle {
+            color: #8fbc8f;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .title-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .title-btn {
+            padding: 15px 60px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .btn-play:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.7);
+        }
+
+        .btn-instructions {
+            background: linear-gradient(135deg, #2196F3, #03A9F4);
+            color: white;
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.5);
+        }
+
+        .btn-instructions:hover {
+            transform: scale(1.05);
+        }
+
+        .version-info {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+        }
+
+        /* ===== MODAL DE INSTRUÇÕES ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a472a, #2d5a3d);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 50px rgba(76, 175, 80, 0.5);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h3 {
+            color: #8BC34A;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-section p, .modal-section li {
+            color: #c8e6c9;
+            line-height: 1.6;
+        }
+
+        .modal-section ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+
+        .modal-section li::before {
+            content: "🍃 ";
+        }
+
+        .close-modal {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .close-modal:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== SELEÇÃO DE MUNDO ===== */
+        #world-select {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 900;
+            padding: 20px;
+        }
+
+        .world-title {
+            font-size: 36px;
+            color: #ffd700;
+            margin-bottom: 30px;
+        }
+
+        .worlds-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 800px;
+        }
+
+        .world-portal {
+            width: 150px;
+            height: 180px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .world-portal.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .world-portal.locked::after {
+            content: "🔒";
+            position: absolute;
+            font-size: 40px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .world-portal:not(.locked):hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .world-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .world-name {
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .world-level {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .world-1 { background: linear-gradient(135deg, #228B22, #32CD32); }
+        .world-2 { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .world-3 { background: linear-gradient(135deg, #4169E1, #1E90FF); }
+        .world-4 { background: linear-gradient(135deg, #8B4513, #D2691E); }
+        .world-5 { background: linear-gradient(135deg, #9400D3, #FF1493); }
+
+        .back-btn {
+            margin-top: 30px;
+            padding: 12px 40px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* ===== LOJA ===== */
+        #shop-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #2c1810 0%, #4a2c17 50%, #2c1810 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 850;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .shop-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 20px;
+        }
+
+        .shop-title {
+            font-size: 32px;
+            color: #ffd700;
+        }
+
+        .shop-coins {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .skins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .skin-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .skin-card:hover {
+            border-color: #ffd700;
+            transform: translateY(-5px);
+        }
+
+        .skin-card.owned {
+            border-color: #4CAF50;
+        }
+
+        .skin-card.equipped {
+            border-color: #2196F3;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+        }
+
+        .skin-preview {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .skin-name {
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .skin-price {
+            color: #ffd700;
+            font-size: 12px;
+        }
+
+        .skin-status {
+            font-size: 11px;
+            margin-top: 5px;
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        .status-owned { background: #4CAF50; color: white; }
+        .status-equipped { background: #2196F3; color: white; }
+
+        /* ===== JOGO PRINCIPAL ===== */
+        #game-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* HUD */
+        .game-hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+        }
+
+        .hud-left, .hud-right {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .hud-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            padding: 8px 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .level-display {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .xp-bar-container {
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .xp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .xp-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+        }
+
+        .xp-text {
+            color: white;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .hud-btn {
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hud-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #ffd700;
+        }
+
+        /* Barra de poderes */
+        .power-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .power-slot {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+
+        .power-slot.active {
+            border-color: #4CAF50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        .power-cooldown {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Controles móveis */
+        .mobile-controls {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mobile-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 15px;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .mobile-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .action-buttons {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.5);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .btn-attack {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        }
+
+        .btn-special {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls, .action-buttons {
+                display: flex;
+            }
+        }
+
+        /* ===== BATALHA ===== */
+        #battle-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+        }
+
+        .battle-arena {
+            width: 90%;
+            max-width: 800px;
+            background: linear-gradient(135deg, #2d1f1f, #4a2828);
+            border-radius: 20px;
+            padding: 30px;
+            border: 3px solid #8B0000;
+        }
+
+        .battle-title {
+            text-align: center;
+            font-size: 28px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .fighters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .fighter {
+            text-align: center;
+        }
+
+        .fighter-sprite {
+            font-size: 80px;
+            animation: fighterIdle 1s ease-in-out infinite;
+        }
+
+        @keyframes fighterIdle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .fighter-name {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .fighter-hp-bar {
+            width: 150px;
+            height: 15px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .fighter-hp {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff6b6b);
+            transition: width 0.3s;
+        }
+
+        .vs-text {
+            font-size: 40px;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .battle-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .battle-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .battle-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .battle-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-atk { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+        .btn-def { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .btn-special { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+        .btn-run { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; }
+
+        .battle-log {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .battle-log p {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .battle-log p:last-child {
+            color: white;
+        }
+
+        /* ===== CAPIVARA FAMÍLIA ===== */
+        #family-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 800;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .family-title {
+            font-size: 32px;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .family-subtitle {
+            color: #8fbc8f;
+            margin-bottom: 30px;
+        }
+
+        .capivaras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .capivara-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .capivara-card.hidden-cap {
+            opacity: 0.4;
+            border-style: dashed;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .capivara-card:not(.hidden-cap):hover {
+            border-color: #ffd700;
+            transform: translateY(-5px);
+        }
+
+        .cap-sprite {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .cap-name {
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .cap-type {
+            color: rgba(255,255,255,0.5);
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        /* ===== EVOLUÇÃO POPUP ===== */
+        .evolution-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .evolution-content {
+            text-align: center;
+            animation: evolutionPulse 0.5s ease-out;
+        }
+
+        @keyframes evolutionPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .evolution-title {
+            font-size: 36px;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            animation: glow 1s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            50% { text-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+
+        .evolution-sprites {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .evo-sprite {
+            font-size: 80px;
+            animation: floatSprite 2s ease-in-out infinite;
+        }
+
+        .evo-arrow {
+            font-size: 40px;
+            color: #ffd700;
+            animation: arrowPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes floatSprite {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .evolution-info {
+            color: #8BC34A;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .evolution-close {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .evolution-close:hover {
+            transform: scale(1.1);
+        }
+
+        /* ===== NOTIFICAÇÕES ===== */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            z-index: 3000;
+            animation: slideDown 0.3s ease, fadeOut 0.3s ease 2.7s;
+            pointer-events: none;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        .notification.xp { border: 2px solid #4CAF50; }
+        .notification.coins { border: 2px solid #ffd700; }
+        .notification.power { border: 2px solid #9b59b6; }
+        .notification.damage { border: 2px solid #e74c3c; }
+
+        /* Portal animation */
+        .portal-glow {
+            animation: portalGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes portalGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px currentColor); }
+            50% { filter: drop-shadow(0 0 30px currentColor); }
+        }
+    </style>
+</head>
+<body>
+    <!-- TELA DE TÍTULO -->
+    <div id="title-screen">
+        <div class="title-capivara"><img src="capivara-evolution.svg" alt="Capivara" style="width: 120px; height: 120px;"></div>
+        <h1 class="game-title">Capivara Evolution</h1>
+        <p class="game-subtitle">Evolua, explore mundos e conquiste tudo!</p>
+        <div class="title-buttons">
+            <button class="title-btn btn-play" onclick="startGame()">▶ Jogar</button>
+            <button class="title-btn btn-instructions" onclick="showInstructions()">📖 Como Jogar</button>
+        </div>
+        <p class="version-info">v1.0 - EAI Games</p>
+    </div>
+
+    <!-- MODAL DE INSTRUÇÕES -->
+    <div class="modal-overlay" id="instructions-modal">
+        <div class="modal-content">
+            <h2 class="modal-title">📖 Como Jogar</h2>
+
+            <div class="modal-section">
+                <h3>🎮 Controles</h3>
+                <ul>
+                    <li><strong>WASD ou Setas:</strong> Mover a capivara</li>
+                    <li><strong>Espaço:</strong> Atacar / Interagir</li>
+                    <li><strong>E:</strong> Usar poder especial</li>
+                    <li><strong>Q:</strong> Alternar poderes</li>
+                    <li><strong>ESC:</strong> Pausar / Menu</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>🍎 Coletando Frutas</h3>
+                <p>Colete frutas pelo mapa para ganhar XP e encher sua barra de evolução. Cada fruta dá poderes diferentes!</p>
+                <ul>
+                    <li><strong>🍎 Maçã:</strong> +10 XP, velocidade temporária</li>
+                    <li><strong>🍊 Laranja:</strong> +15 XP, regenera vida</li>
+                    <li><strong>🍇 Uva:</strong> +20 XP, poder de área</li>
+                    <li><strong>🍓 Morango:</strong> +25 XP, ataque forte</li>
+                    <li><strong>🥝 Kiwi:</strong> +30 XP, defesa aumentada</li>
+                    <li><strong>🌟 Fruta Dourada:</strong> +100 XP, todos os poderes!</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>📈 Sistema de Evolução</h3>
+                <p>A cada nível, sua capivara fica mais forte! No <strong>nível 9</strong>, você desbloqueia o acesso aos <strong>5 Portais Místicos</strong>!</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>🌍 Os 5 Mundos</h3>
+                <ul>
+                    <li><strong>🌲 Floresta Inicial:</strong> Mundo tutorial, inimigos fáceis</li>
+                    <li><strong>🏜️ Deserto Dourado:</strong> Calor intenso, tesouros escondidos</li>
+                    <li><strong>🌊 Oceano Profundo:</strong> Aventuras aquáticas, pérolas raras</li>
+                    <li><strong>🌋 Montanhas de Fogo:</strong> Desafios extremos, recompensas épicas</li>
+                    <li><strong>✨ Reino Místico:</strong> Mundo secreto, capivaras lendárias!</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>⚔️ Batalhas</h3>
+                <p>Enfrente outros animais em batalhas por turnos! Vença para ganhar XP, moedas e às vezes descobrir novas capivaras!</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>👨‍👩‍👧‍👦 Família Capivara</h3>
+                <p>Encontre ninhos escondidos e ganhe filhotes! Descubra capivaras raras em locais secretos. Cada uma tem habilidades únicas!</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>✨ Dicas Mágicas</h3>
+                <ul>
+                    <li>Coma TODAS as frutas de uma área para ganhar um bônus especial!</li>
+                    <li>Capivaras escondidas aparecem em lugares improváveis...</li>
+                    <li>Combine poderes de frutas diferentes para ataques devastadores!</li>
+                    <li>Volte aos mundos anteriores com poderes novos para descobrir segredos!</li>
+                </ul>
+            </div>
+
+            <button class="close-modal" onclick="hideInstructions()">Entendi!</button>
+        </div>
+    </div>
+
+    <!-- SELEÇÃO DE MUNDO -->
+    <div id="world-select">
+        <h1 class="world-title">🌍 Escolha seu Destino</h1>
+        <div class="worlds-grid" id="worlds-container">
+            <!-- Gerado por JS -->
+        </div>
+        <button class="back-btn" onclick="showTitleScreen()">← Voltar</button>
+    </div>
+
+    <!-- LOJA -->
+    <div id="shop-screen">
+        <div class="shop-header">
+            <h1 class="shop-title">🛒 Loja de Skins</h1>
+            <div class="shop-coins">
+                <span>🪙</span>
+                <span id="shop-coins-display">0</span>
+            </div>
+        </div>
+        <div class="skins-grid" id="skins-container">
+            <!-- Gerado por JS -->
+        </div>
+        <button class="back-btn" onclick="hideShop()" style="margin-top: 20px;">← Voltar ao Jogo</button>
+    </div>
+
+    <!-- FAMÍLIA CAPIVARA -->
+    <div id="family-screen">
+        <h1 class="family-title">👨‍👩‍👧‍👦 Família Capivara</h1>
+        <p class="family-subtitle">Suas capivaras descobertas e filhotes</p>
+        <div class="capivaras-grid" id="family-container">
+            <!-- Gerado por JS -->
+        </div>
+        <button class="back-btn" onclick="hideFamily()">← Voltar ao Jogo</button>
+    </div>
+
+    <!-- OVERLAY DE BATALHA -->
+    <div id="battle-overlay">
+        <div class="battle-arena">
+            <h2 class="battle-title">⚔️ Batalha!</h2>
+            <div class="fighters">
+                <div class="fighter" id="player-fighter">
+                    <div class="fighter-sprite" id="player-battle-sprite">🦫</div>
+                    <div class="fighter-name" id="player-battle-name">Capivara</div>
+                    <div class="fighter-hp-bar">
+                        <div class="fighter-hp" id="player-hp-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="vs-text">VS</div>
+                <div class="fighter" id="enemy-fighter">
+                    <div class="fighter-sprite" id="enemy-sprite">🐊</div>
+                    <div class="fighter-name" id="enemy-name">Jacaré</div>
+                    <div class="fighter-hp-bar">
+                        <div class="fighter-hp" id="enemy-hp-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="battle-actions">
+                <button class="battle-btn btn-atk" onclick="battleAction('attack')">
+                    <span>⚔️</span>
+                    <span>Atacar</span>
+                </button>
+                <button class="battle-btn btn-def" onclick="battleAction('defend')">
+                    <span>🛡️</span>
+                    <span>Defender</span>
+                </button>
+                <button class="battle-btn btn-special" onclick="battleAction('special')">
+                    <span>✨</span>
+                    <span>Especial</span>
+                </button>
+                <button class="battle-btn btn-run" onclick="battleAction('run')">
+                    <span>🏃</span>
+                    <span>Fugir</span>
+                </button>
+            </div>
+            <div class="battle-log" id="battle-log">
+                <p>A batalha começou!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP DE EVOLUÇÃO -->
+    <div class="evolution-popup" id="evolution-popup">
+        <div class="evolution-content">
+            <h2 class="evolution-title">✨ Evolução! ✨</h2>
+            <div class="evolution-sprites">
+                <span class="evo-sprite" id="evo-before">🦫</span>
+                <span class="evo-arrow">➡️</span>
+                <span class="evo-sprite" id="evo-after">🦫</span>
+            </div>
+            <p class="evolution-info" id="evo-info">Nível 2 - Força +5, Defesa +3</p>
+            <button class="evolution-close" onclick="closeEvolution()">Incrível!</button>
+        </div>
+    </div>
+
+    <!-- CONTAINER DO JOGO -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD -->
+        <div class="game-hud">
+            <div class="hud-left">
+                <div class="stat-box">
+                    <span>🪙</span>
+                    <span id="coins-display">0</span>
+                </div>
+                <div class="stat-box">
+                    <span>❤️</span>
+                    <span id="health-display">100/100</span>
+                </div>
+                <div class="stat-box">
+                    <span>⚔️</span>
+                    <span id="power-display">10</span>
+                </div>
+            </div>
+
+            <div class="hud-center">
+                <div class="level-display">
+                    <span>⭐ Nível </span>
+                    <span id="level-display">1</span>
+                </div>
+                <div class="xp-bar-container">
+                    <div class="xp-bar" id="xp-bar" style="width: 0%"></div>
+                </div>
+                <span class="xp-text"><span id="xp-display">0</span> / <span id="xp-max">100</span> XP</span>
+            </div>
+
+            <div class="hud-right">
+                <button class="hud-btn" onclick="showWorldSelect()">🌍 Mundos</button>
+                <button class="hud-btn" onclick="showShop()">🛒 Loja</button>
+                <button class="hud-btn" onclick="showFamily()">👨‍👩‍👧‍👦 Família</button>
+                <button class="hud-btn" onclick="pauseGame()">⏸️ Pausa</button>
+            </div>
+        </div>
+
+        <!-- Barra de Poderes -->
+        <div class="power-bar">
+            <div class="power-slot" id="power-1" title="Velocidade">🏃</div>
+            <div class="power-slot" id="power-2" title="Cura">💚</div>
+            <div class="power-slot" id="power-3" title="Força">💪</div>
+            <div class="power-slot" id="power-4" title="Escudo">🛡️</div>
+            <div class="power-slot" id="power-5" title="Especial">⭐</div>
+        </div>
+
+        <!-- Controles móveis -->
+        <div class="mobile-controls">
+            <div class="mobile-row">
+                <div class="mobile-btn" data-key="w">↑</div>
+            </div>
+            <div class="mobile-row">
+                <div class="mobile-btn" data-key="a">←</div>
+                <div class="mobile-btn" data-key="s">↓</div>
+                <div class="mobile-btn" data-key="d">→</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <div class="action-btn btn-attack" onclick="attack()">⚔️</div>
+            <div class="action-btn btn-special" onclick="useSpecial()">✨</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURAÇÃO DO JOGO =====
+        const GAME_CONFIG = {
+            fps: 60,
+            tileSize: 40,
+            playerSpeed: 5,
+            fruitSpawnRate: 3000,
+            enemySpawnRate: 8000
+        };
+
+        // ===== DADOS DO JOGO =====
+        const gameState = {
+            screen: 'title',
+            paused: false,
+            level: 1,
+            xp: 0,
+            xpToLevel: 100,
+            coins: 0,
+            health: 100,
+            maxHealth: 100,
+            power: 10,
+            defense: 5,
+            currentWorld: 0,
+            unlockedWorlds: [true, false, false, false, false],
+            equippedSkin: 'default',
+            ownedSkins: ['default'],
+            discoveredCapivaras: ['default'],
+            powers: {
+                speed: { active: false, cooldown: 0 },
+                heal: { active: false, cooldown: 0 },
+                strength: { active: false, cooldown: 0 },
+                shield: { active: false, cooldown: 0 },
+                special: { active: false, cooldown: 0 }
+            },
+            player: { x: 400, y: 300, direction: 'right', moving: false },
+            fruits: [],
+            enemies: [],
+            nests: [],
+            portals: []
+        };
+
+        // Mundos
+        const WORLDS = [
+            { id: 0, name: 'Floresta Inicial', icon: '🌲', color: '#228B22', unlockLevel: 1, enemies: ['🐍', '🦎', '🐸'], fruits: ['🍎', '🍊', '🍋'] },
+            { id: 1, name: 'Deserto Dourado', icon: '🏜️', color: '#FFD700', unlockLevel: 3, enemies: ['🦂', '🐪', '🦅'], fruits: ['🌵', '🥭', '🍊'] },
+            { id: 2, name: 'Oceano Profundo', icon: '🌊', color: '#1E90FF', unlockLevel: 5, enemies: ['🦈', '🐙', '🦀'], fruits: ['🐚', '🦪', '🍇'] },
+            { id: 3, name: 'Montanhas de Fogo', icon: '🌋', color: '#FF4500', unlockLevel: 7, enemies: ['🐉', '🦇', '🦅'], fruits: ['🌶️', '🍒', '🔥'] },
+            { id: 4, name: 'Reino Místico', icon: '✨', color: '#9400D3', unlockLevel: 9, enemies: ['👻', '🧙', '🦄'], fruits: ['🌟', '💎', '🌈'] }
+        ];
+
+        // Skins
+        const SKINS = [
+            { id: 'default', name: 'Capivara Clássica', sprite: '🦫', price: 0 },
+            { id: 'gold', name: 'Capivara Dourada', sprite: '🏆', price: 500 },
+            { id: 'ninja', name: 'Capivara Ninja', sprite: '🥷', price: 300 },
+            { id: 'king', name: 'Capivara Rei', sprite: '👑', price: 800 },
+            { id: 'robot', name: 'Capivara Robô', sprite: '🤖', price: 600 },
+            { id: 'ghost', name: 'Capivara Fantasma', sprite: '👻', price: 400 },
+            { id: 'fire', name: 'Capivara de Fogo', sprite: '🔥', price: 700 },
+            { id: 'ice', name: 'Capivara de Gelo', sprite: '❄️', price: 700 },
+            { id: 'rainbow', name: 'Capivara Arco-íris', sprite: '🌈', price: 1000 },
+            { id: 'alien', name: 'Capivara Alien', sprite: '👽', price: 900 }
+        ];
+
+        // Capivaras descobríveis
+        const CAPIVARAS = [
+            { id: 'default', name: 'Capivara Comum', sprite: '🦫', type: 'Inicial', found: true },
+            { id: 'baby1', name: 'Filhote Curioso', sprite: '🐹', type: 'Filhote', found: false },
+            { id: 'baby2', name: 'Filhote Dorminhoco', sprite: '😴', type: 'Filhote', found: false },
+            { id: 'baby3', name: 'Filhote Brincalhão', sprite: '🎮', type: 'Filhote', found: false },
+            { id: 'forest', name: 'Capivara da Floresta', sprite: '🌿', type: 'Rara', found: false },
+            { id: 'desert', name: 'Capivara do Deserto', sprite: '🏜️', type: 'Rara', found: false },
+            { id: 'ocean', name: 'Capivara Marinha', sprite: '🐠', type: 'Rara', found: false },
+            { id: 'fire', name: 'Capivara de Lava', sprite: '🌋', type: 'Épica', found: false },
+            { id: 'mystic', name: 'Capivara Mística', sprite: '✨', type: 'Lendária', found: false },
+            { id: 'cosmic', name: 'Capivara Cósmica', sprite: '🌌', type: 'Lendária', found: false }
+        ];
+
+        // Frutas
+        const FRUITS = [
+            { emoji: '🍎', name: 'Maçã', xp: 10, power: 'speed', color: '#ff0000' },
+            { emoji: '🍊', name: 'Laranja', xp: 15, power: 'heal', color: '#ffa500' },
+            { emoji: '🍇', name: 'Uva', xp: 20, power: 'area', color: '#8b008b' },
+            { emoji: '🍓', name: 'Morango', xp: 25, power: 'strength', color: '#ff1493' },
+            { emoji: '🥝', name: 'Kiwi', xp: 30, power: 'shield', color: '#32cd32' },
+            { emoji: '🌟', name: 'Fruta Dourada', xp: 100, power: 'all', color: '#ffd700' }
+        ];
+
+        // Inimigos
+        const ENEMIES = [
+            { emoji: '🐍', name: 'Cobra', hp: 30, power: 5, xpReward: 20, coinReward: 10 },
+            { emoji: '🦎', name: 'Lagarto', hp: 25, power: 4, xpReward: 15, coinReward: 8 },
+            { emoji: '🐸', name: 'Sapo Gigante', hp: 40, power: 6, xpReward: 25, coinReward: 12 },
+            { emoji: '🐊', name: 'Jacaré', hp: 60, power: 10, xpReward: 40, coinReward: 25 },
+            { emoji: '🦅', name: 'Águia', hp: 45, power: 8, xpReward: 30, coinReward: 18 },
+            { emoji: '🐺', name: 'Lobo', hp: 55, power: 9, xpReward: 35, coinReward: 20 }
+        ];
+
+        // Canvas e contexto
+        let canvas, ctx;
+        let lastTime = 0;
+        let keys = {};
+        let animationId;
+        let capivaraImg = null;
+
+        // Carregar imagem da capivara
+        function loadCapivaraImage() {
+            capivaraImg = new Image();
+            capivaraImg.src = 'capivara-evolution.svg';
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        function init() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            loadCapivaraImage();
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Eventos de teclado
+            document.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+                handleKeyPress(e.key.toLowerCase());
+            });
+            document.addEventListener('keyup', (e) => {
+                keys[e.key.toLowerCase()] = false;
+            });
+
+            // Controles móveis
+            document.querySelectorAll('.mobile-btn').forEach(btn => {
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    keys[btn.dataset.key] = true;
+                });
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    keys[btn.dataset.key] = false;
+                });
+            });
+
+            loadGame();
+            renderWorlds();
+            renderSkins();
+            renderFamily();
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function handleKeyPress(key) {
+            if (gameState.screen !== 'game') return;
+
+            if (key === 'escape') pauseGame();
+            if (key === ' ') attack();
+            if (key === 'e') useSpecial();
+            if (key === 'q') cyclePower();
+        }
+
+        // ===== NAVEGAÇÃO DE TELAS =====
+        function showTitleScreen() {
+            gameState.screen = 'title';
+            document.getElementById('title-screen').style.display = 'flex';
+            document.getElementById('world-select').style.display = 'none';
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('shop-screen').style.display = 'none';
+            document.getElementById('family-screen').style.display = 'none';
+            cancelAnimationFrame(animationId);
+        }
+
+        function showInstructions() {
+            document.getElementById('instructions-modal').style.display = 'flex';
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructions-modal').style.display = 'none';
+        }
+
+        function startGame() {
+            if (gameState.level >= 9) {
+                showWorldSelect();
+            } else {
+                enterWorld(0);
+            }
+        }
+
+        function showWorldSelect() {
+            gameState.screen = 'worldSelect';
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('world-select').style.display = 'flex';
+            document.getElementById('game-container').style.display = 'none';
+            renderWorlds();
+        }
+
+        function enterWorld(worldId) {
+            if (!gameState.unlockedWorlds[worldId]) {
+                showNotification(`Desbloqueie no nível ${WORLDS[worldId].unlockLevel}!`, 'damage');
+                return;
+            }
+
+            gameState.currentWorld = worldId;
+            gameState.screen = 'game';
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('world-select').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+
+            initWorld(worldId);
+            gameLoop();
+        }
+
+        function showShop() {
+            document.getElementById('shop-screen').style.display = 'flex';
+            document.getElementById('shop-coins-display').textContent = gameState.coins;
+            renderSkins();
+        }
+
+        function hideShop() {
+            document.getElementById('shop-screen').style.display = 'none';
+        }
+
+        function showFamily() {
+            document.getElementById('family-screen').style.display = 'flex';
+            renderFamily();
+        }
+
+        function hideFamily() {
+            document.getElementById('family-screen').style.display = 'none';
+        }
+
+        function pauseGame() {
+            gameState.paused = !gameState.paused;
+            if (gameState.paused) {
+                showNotification('⏸️ Jogo Pausado', 'xp');
+            }
+        }
+
+        // ===== RENDERIZAÇÃO DE MUNDOS =====
+        function renderWorlds() {
+            const container = document.getElementById('worlds-container');
+            container.innerHTML = '';
+
+            WORLDS.forEach((world, index) => {
+                const unlocked = gameState.level >= world.unlockLevel;
+                gameState.unlockedWorlds[index] = unlocked;
+
+                const portal = document.createElement('div');
+                portal.className = `world-portal world-${index + 1} ${unlocked ? '' : 'locked'}`;
+                portal.innerHTML = `
+                    <span class="world-icon ${unlocked ? 'portal-glow' : ''}" style="color: ${world.color}">${world.icon}</span>
+                    <span class="world-name">${world.name}</span>
+                    <span class="world-level">Nível ${world.unlockLevel}+</span>
+                `;
+                portal.onclick = () => enterWorld(index);
+                container.appendChild(portal);
+            });
+        }
+
+        // ===== RENDERIZAÇÃO DE SKINS =====
+        function renderSkins() {
+            const container = document.getElementById('skins-container');
+            container.innerHTML = '';
+
+            SKINS.forEach(skin => {
+                const owned = gameState.ownedSkins.includes(skin.id);
+                const equipped = gameState.equippedSkin === skin.id;
+
+                const card = document.createElement('div');
+                card.className = `skin-card ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+                card.innerHTML = `
+                    <div class="skin-preview">${skin.sprite}</div>
+                    <div class="skin-name">${skin.name}</div>
+                    ${owned
+                        ? `<span class="skin-status ${equipped ? 'status-equipped' : 'status-owned'}">${equipped ? '✓ Equipada' : 'Possuída'}</span>`
+                        : `<div class="skin-price">🪙 ${skin.price}</div>`
+                    }
+                `;
+                card.onclick = () => handleSkinClick(skin);
+                container.appendChild(card);
+            });
+        }
+
+        function handleSkinClick(skin) {
+            if (gameState.ownedSkins.includes(skin.id)) {
+                gameState.equippedSkin = skin.id;
+                showNotification(`Skin ${skin.name} equipada!`, 'xp');
+            } else if (gameState.coins >= skin.price) {
+                gameState.coins -= skin.price;
+                gameState.ownedSkins.push(skin.id);
+                gameState.equippedSkin = skin.id;
+                showNotification(`Comprou ${skin.name}!`, 'coins');
+                document.getElementById('shop-coins-display').textContent = gameState.coins;
+            } else {
+                showNotification(`Moedas insuficientes!`, 'damage');
+            }
+            renderSkins();
+            saveGame();
+        }
+
+        // ===== RENDERIZAÇÃO DA FAMÍLIA =====
+        function renderFamily() {
+            const container = document.getElementById('family-container');
+            container.innerHTML = '';
+
+            CAPIVARAS.forEach(cap => {
+                const found = gameState.discoveredCapivaras.includes(cap.id);
+
+                const card = document.createElement('div');
+                card.className = `capivara-card ${found ? '' : 'hidden-cap'}`;
+                card.innerHTML = `
+                    <div class="cap-sprite">${found ? cap.sprite : '❓'}</div>
+                    <div class="cap-name">${found ? cap.name : '???'}</div>
+                    <div class="cap-type">${found ? cap.type : 'Não descoberta'}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ===== INICIALIZAÇÃO DO MUNDO =====
+        function initWorld(worldId) {
+            const world = WORLDS[worldId];
+
+            gameState.player.x = canvas.width / 2;
+            gameState.player.y = canvas.height / 2;
+            gameState.fruits = [];
+            gameState.enemies = [];
+            gameState.nests = [];
+            gameState.portals = [];
+
+            // Spawn frutas iniciais
+            for (let i = 0; i < 5; i++) {
+                spawnFruit();
+            }
+
+            // Spawn ninhos
+            for (let i = 0; i < 2; i++) {
+                spawnNest();
+            }
+
+            // Portal para seleção de mundos (só aparece no nível 9+)
+            if (gameState.level >= 9) {
+                gameState.portals.push({
+                    x: canvas.width - 100,
+                    y: canvas.height / 2,
+                    size: 60
+                });
+            }
+
+            // Timer para spawn de frutas
+            setInterval(() => {
+                if (gameState.screen === 'game' && !gameState.paused && gameState.fruits.length < 10) {
+                    spawnFruit();
+                }
+            }, GAME_CONFIG.fruitSpawnRate);
+
+            // Timer para spawn de inimigos
+            setInterval(() => {
+                if (gameState.screen === 'game' && !gameState.paused && gameState.enemies.length < 3) {
+                    spawnEnemy();
+                }
+            }, GAME_CONFIG.enemySpawnRate);
+        }
+
+        function spawnFruit() {
+            const fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+            gameState.fruits.push({
+                ...fruit,
+                x: Math.random() * (canvas.width - 100) + 50,
+                y: Math.random() * (canvas.height - 200) + 100,
+                size: 30,
+                collected: false
+            });
+        }
+
+        function spawnEnemy() {
+            const enemy = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            switch(side) {
+                case 0: x = Math.random() * canvas.width; y = -50; break;
+                case 1: x = canvas.width + 50; y = Math.random() * canvas.height; break;
+                case 2: x = Math.random() * canvas.width; y = canvas.height + 50; break;
+                case 3: x = -50; y = Math.random() * canvas.height; break;
+            }
+
+            gameState.enemies.push({
+                ...enemy,
+                x, y,
+                currentHp: enemy.hp,
+                size: 40,
+                speed: 1 + Math.random()
+            });
+        }
+
+        function spawnNest() {
+            gameState.nests.push({
+                x: Math.random() * (canvas.width - 150) + 75,
+                y: Math.random() * (canvas.height - 250) + 150,
+                size: 50,
+                discovered: false
+            });
+        }
+
+        // ===== GAME LOOP =====
+        function gameLoop(currentTime = 0) {
+            if (gameState.screen !== 'game') return;
+
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            if (!gameState.paused) {
+                update(deltaTime);
+            }
+
+            render();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function update(deltaTime) {
+            updatePlayer();
+            updateEnemies();
+            checkCollisions();
+            updatePowers();
+            updateHUD();
+        }
+
+        function updatePlayer() {
+            const speed = gameState.powers.speed.active ? GAME_CONFIG.playerSpeed * 1.5 : GAME_CONFIG.playerSpeed;
+
+            if (keys['w'] || keys['arrowup']) {
+                gameState.player.y -= speed;
+                gameState.player.moving = true;
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                gameState.player.y += speed;
+                gameState.player.moving = true;
+            }
+            if (keys['a'] || keys['arrowleft']) {
+                gameState.player.x -= speed;
+                gameState.player.direction = 'left';
+                gameState.player.moving = true;
+            }
+            if (keys['d'] || keys['arrowright']) {
+                gameState.player.x += speed;
+                gameState.player.direction = 'right';
+                gameState.player.moving = true;
+            }
+
+            // Limites da tela
+            gameState.player.x = Math.max(30, Math.min(canvas.width - 30, gameState.player.x));
+            gameState.player.y = Math.max(80, Math.min(canvas.height - 100, gameState.player.y));
+
+            if (!keys['w'] && !keys['s'] && !keys['a'] && !keys['d'] &&
+                !keys['arrowup'] && !keys['arrowdown'] && !keys['arrowleft'] && !keys['arrowright']) {
+                gameState.player.moving = false;
+            }
+        }
+
+        function updateEnemies() {
+            gameState.enemies.forEach(enemy => {
+                const dx = gameState.player.x - enemy.x;
+                const dy = gameState.player.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 0) {
+                    enemy.x += (dx / dist) * enemy.speed;
+                    enemy.y += (dy / dist) * enemy.speed;
+                }
+            });
+        }
+
+        function checkCollisions() {
+            const playerSize = 40;
+
+            // Coleta de frutas
+            gameState.fruits = gameState.fruits.filter(fruit => {
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - fruit.x, 2) +
+                    Math.pow(gameState.player.y - fruit.y, 2)
+                );
+
+                if (dist < (playerSize + fruit.size) / 2) {
+                    collectFruit(fruit);
+                    return false;
+                }
+                return true;
+            });
+
+            // Colisão com inimigos
+            gameState.enemies.forEach(enemy => {
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - enemy.x, 2) +
+                    Math.pow(gameState.player.y - enemy.y, 2)
+                );
+
+                if (dist < (playerSize + enemy.size) / 2) {
+                    startBattle(enemy);
+                }
+            });
+
+            // Descoberta de ninhos
+            gameState.nests.forEach(nest => {
+                if (nest.discovered) return;
+
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - nest.x, 2) +
+                    Math.pow(gameState.player.y - nest.y, 2)
+                );
+
+                if (dist < (playerSize + nest.size) / 2) {
+                    discoverNest(nest);
+                }
+            });
+
+            // Portal para mundos
+            gameState.portals.forEach(portal => {
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - portal.x, 2) +
+                    Math.pow(gameState.player.y - portal.y, 2)
+                );
+
+                if (dist < (playerSize + portal.size) / 2) {
+                    showWorldSelect();
+                }
+            });
+        }
+
+        function collectFruit(fruit) {
+            addXP(fruit.xp);
+
+            // Ativar poder da fruta
+            if (fruit.power === 'speed') {
+                activatePower('speed', 5000);
+                showNotification(`🏃 Velocidade ativada!`, 'power');
+            } else if (fruit.power === 'heal') {
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + 20);
+                showNotification(`💚 +20 Vida!`, 'xp');
+            } else if (fruit.power === 'strength') {
+                activatePower('strength', 8000);
+                showNotification(`💪 Força ativada!`, 'power');
+            } else if (fruit.power === 'shield') {
+                activatePower('shield', 6000);
+                showNotification(`🛡️ Escudo ativado!`, 'power');
+            } else if (fruit.power === 'all') {
+                activatePower('speed', 10000);
+                activatePower('strength', 10000);
+                activatePower('shield', 10000);
+                gameState.health = gameState.maxHealth;
+                showNotification(`🌟 TODOS OS PODERES!`, 'power');
+            }
+
+            gameState.coins += Math.floor(fruit.xp / 2);
+            showNotification(`+${fruit.xp} XP | +${Math.floor(fruit.xp / 2)} 🪙`, 'xp');
+        }
+
+        function discoverNest(nest) {
+            nest.discovered = true;
+
+            // Chance de descobrir nova capivara
+            const undiscovered = CAPIVARAS.filter(c => !gameState.discoveredCapivaras.includes(c.id));
+            if (undiscovered.length > 0 && Math.random() < 0.5) {
+                const newCap = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+                gameState.discoveredCapivaras.push(newCap.id);
+                showNotification(`🎉 Descobriu ${newCap.name}!`, 'power');
+            } else {
+                gameState.coins += 50;
+                showNotification(`🥚 Ninho encontrado! +50 🪙`, 'coins');
+            }
+
+            saveGame();
+        }
+
+        function activatePower(powerName, duration) {
+            gameState.powers[powerName].active = true;
+            setTimeout(() => {
+                gameState.powers[powerName].active = false;
+            }, duration);
+        }
+
+        function updatePowers() {
+            // Atualizar visual dos slots de poder
+            document.getElementById('power-1').classList.toggle('active', gameState.powers.speed.active);
+            document.getElementById('power-2').classList.toggle('active', gameState.powers.heal.active);
+            document.getElementById('power-3').classList.toggle('active', gameState.powers.strength.active);
+            document.getElementById('power-4').classList.toggle('active', gameState.powers.shield.active);
+            document.getElementById('power-5').classList.toggle('active', gameState.powers.special.active);
+        }
+
+        function addXP(amount) {
+            gameState.xp += amount;
+
+            while (gameState.xp >= gameState.xpToLevel) {
+                levelUp();
+            }
+        }
+
+        function levelUp() {
+            gameState.xp -= gameState.xpToLevel;
+            gameState.level++;
+            gameState.xpToLevel = Math.floor(gameState.xpToLevel * 1.5);
+            gameState.power += 5;
+            gameState.defense += 3;
+            gameState.maxHealth += 10;
+            gameState.health = gameState.maxHealth;
+
+            // Desbloquear mundos
+            WORLDS.forEach((world, index) => {
+                if (gameState.level >= world.unlockLevel) {
+                    gameState.unlockedWorlds[index] = true;
+                }
+            });
+
+            showEvolution();
+            saveGame();
+        }
+
+        function showEvolution() {
+            const popup = document.getElementById('evolution-popup');
+            const skin = SKINS.find(s => s.id === gameState.equippedSkin);
+
+            document.getElementById('evo-before').textContent = skin ? skin.sprite : '🦫';
+            document.getElementById('evo-after').textContent = skin ? skin.sprite : '🦫';
+            document.getElementById('evo-info').textContent = `Nível ${gameState.level} - Força +5, Defesa +3, Vida +10`;
+
+            popup.style.display = 'flex';
+            gameState.paused = true;
+        }
+
+        function closeEvolution() {
+            document.getElementById('evolution-popup').style.display = 'none';
+            gameState.paused = false;
+
+            if (gameState.level >= 9) {
+                showNotification('🌍 Portais dos Mundos desbloqueados!', 'power');
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('level-display').textContent = gameState.level;
+            document.getElementById('xp-display').textContent = gameState.xp;
+            document.getElementById('xp-max').textContent = gameState.xpToLevel;
+            document.getElementById('xp-bar').style.width = `${(gameState.xp / gameState.xpToLevel) * 100}%`;
+            document.getElementById('coins-display').textContent = gameState.coins;
+            document.getElementById('health-display').textContent = `${gameState.health}/${gameState.maxHealth}`;
+            document.getElementById('power-display').textContent = gameState.power;
+        }
+
+        // ===== RENDERIZAÇÃO =====
+        function render() {
+            const world = WORLDS[gameState.currentWorld];
+
+            // Fundo do mundo
+            ctx.fillStyle = world.color + '33';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grade sutil
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Decoração do mundo
+            ctx.font = '30px Arial';
+            for (let i = 0; i < 5; i++) {
+                ctx.globalAlpha = 0.3;
+                ctx.fillText(world.icon, 50 + i * 200, 50 + (i % 3) * 100);
+            }
+            ctx.globalAlpha = 1;
+
+            // Ninhos
+            gameState.nests.forEach(nest => {
+                if (!nest.discovered) {
+                    ctx.font = `${nest.size}px Arial`;
+                    ctx.fillText('🥚', nest.x - nest.size/2, nest.y + nest.size/3);
+                }
+            });
+
+            // Frutas
+            gameState.fruits.forEach(fruit => {
+                ctx.font = `${fruit.size}px Arial`;
+                ctx.fillText(fruit.emoji, fruit.x - fruit.size/2, fruit.y + fruit.size/3);
+
+                // Brilho
+                ctx.beginPath();
+                ctx.arc(fruit.x, fruit.y, fruit.size/2 + 5, 0, Math.PI * 2);
+                ctx.fillStyle = fruit.color + '33';
+                ctx.fill();
+            });
+
+            // Inimigos
+            gameState.enemies.forEach(enemy => {
+                ctx.font = `${enemy.size}px Arial`;
+                ctx.fillText(enemy.emoji, enemy.x - enemy.size/2, enemy.y + enemy.size/3);
+
+                // Barra de vida do inimigo
+                const barWidth = 40;
+                const barHeight = 5;
+                const hpPercent = enemy.currentHp / enemy.hp;
+
+                ctx.fillStyle = '#333';
+                ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.size/2 - 10, barWidth, barHeight);
+                ctx.fillStyle = hpPercent > 0.5 ? '#4CAF50' : hpPercent > 0.25 ? '#FFA500' : '#FF0000';
+                ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.size/2 - 10, barWidth * hpPercent, barHeight);
+            });
+
+            // Portais
+            gameState.portals.forEach(portal => {
+                // Efeito de portal
+                const gradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, portal.size);
+                gradient.addColorStop(0, 'rgba(148, 0, 211, 0.8)');
+                gradient.addColorStop(0.5, 'rgba(148, 0, 211, 0.3)');
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(portal.x, portal.y, portal.size, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                ctx.font = '40px Arial';
+                ctx.fillText('🌀', portal.x - 20, portal.y + 15);
+            });
+
+            // Jogador
+            const skin = SKINS.find(s => s.id === gameState.equippedSkin);
+            const playerSprite = skin ? skin.sprite : '🦫';
+            const isDefaultSkin = !skin || skin.id === 'default';
+
+            ctx.save();
+            if (isDefaultSkin && capivaraImg && capivaraImg.complete) {
+                // Usar imagem SVG da capivara realista
+                const imgSize = 60;
+                if (gameState.player.direction === 'left') {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(capivaraImg, -gameState.player.x - imgSize/2, gameState.player.y - imgSize/2, imgSize, imgSize);
+                } else {
+                    ctx.drawImage(capivaraImg, gameState.player.x - imgSize/2, gameState.player.y - imgSize/2, imgSize, imgSize);
+                }
+            } else {
+                // Usar emoji para outras skins
+                if (gameState.player.direction === 'left') {
+                    ctx.scale(-1, 1);
+                    ctx.font = '50px Arial';
+                    ctx.fillText(playerSprite, -gameState.player.x - 25, gameState.player.y + 15);
+                } else {
+                    ctx.font = '50px Arial';
+                    ctx.fillText(playerSprite, gameState.player.x - 25, gameState.player.y + 15);
+                }
+            }
+            ctx.restore();
+
+            // Efeitos de poder ativo
+            if (gameState.powers.shield.active) {
+                ctx.beginPath();
+                ctx.arc(gameState.player.x, gameState.player.y, 35, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(33, 150, 243, 0.7)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            if (gameState.powers.speed.active) {
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
+                ctx.beginPath();
+                ctx.arc(gameState.player.x - 20, gameState.player.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ===== SISTEMA DE BATALHA =====
+        let currentBattle = null;
+
+        function startBattle(enemy) {
+            currentBattle = {
+                enemy: { ...enemy },
+                playerHp: gameState.health,
+                enemyHp: enemy.hp,
+                turn: 'player',
+                defending: false
+            };
+
+            document.getElementById('battle-overlay').style.display = 'flex';
+            document.getElementById('enemy-sprite').textContent = enemy.emoji;
+            document.getElementById('enemy-name').textContent = enemy.name;
+            document.getElementById('player-hp-bar').style.width = '100%';
+            document.getElementById('enemy-hp-bar').style.width = '100%';
+            document.getElementById('battle-log').innerHTML = '<p>A batalha começou!</p>';
+
+            const skin = SKINS.find(s => s.id === gameState.equippedSkin);
+            document.getElementById('player-battle-sprite').textContent = skin ? skin.sprite : '🦫';
+
+            gameState.paused = true;
+
+            // Remover inimigo do mapa
+            gameState.enemies = gameState.enemies.filter(e => e !== enemy);
+        }
+
+        function battleAction(action) {
+            if (currentBattle.turn !== 'player') return;
+
+            const log = document.getElementById('battle-log');
+            let damage = 0;
+
+            switch(action) {
+                case 'attack':
+                    damage = gameState.power + Math.floor(Math.random() * 10);
+                    if (gameState.powers.strength.active) damage *= 1.5;
+                    currentBattle.enemyHp -= damage;
+                    log.innerHTML += `<p>⚔️ Você atacou! -${Math.floor(damage)} HP</p>`;
+                    break;
+
+                case 'defend':
+                    currentBattle.defending = true;
+                    log.innerHTML += `<p>🛡️ Você se preparou para defender!</p>`;
+                    break;
+
+                case 'special':
+                    damage = gameState.power * 2 + Math.floor(Math.random() * 20);
+                    currentBattle.enemyHp -= damage;
+                    log.innerHTML += `<p>✨ Ataque especial! -${Math.floor(damage)} HP</p>`;
+                    break;
+
+                case 'run':
+                    if (Math.random() < 0.5) {
+                        endBattle(false, true);
+                        return;
+                    } else {
+                        log.innerHTML += `<p>🏃 Tentou fugir mas falhou!</p>`;
+                    }
+                    break;
+            }
+
+            updateBattleUI();
+
+            if (currentBattle.enemyHp <= 0) {
+                endBattle(true);
+                return;
+            }
+
+            // Turno do inimigo
+            currentBattle.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+        }
+
+        function enemyTurn() {
+            let damage = currentBattle.enemy.power + Math.floor(Math.random() * 5);
+
+            if (currentBattle.defending) {
+                damage = Math.floor(damage / 2);
+                currentBattle.defending = false;
+            }
+
+            if (gameState.powers.shield.active) {
+                damage = Math.floor(damage * 0.7);
+            }
+
+            currentBattle.playerHp -= damage;
+            gameState.health = currentBattle.playerHp;
+
+            const log = document.getElementById('battle-log');
+            log.innerHTML += `<p>😈 ${currentBattle.enemy.name} atacou! -${damage} HP</p>`;
+            log.scrollTop = log.scrollHeight;
+
+            updateBattleUI();
+
+            if (currentBattle.playerHp <= 0) {
+                endBattle(false);
+                return;
+            }
+
+            currentBattle.turn = 'player';
+        }
+
+        function updateBattleUI() {
+            const playerPercent = (currentBattle.playerHp / gameState.maxHealth) * 100;
+            const enemyPercent = (currentBattle.enemyHp / currentBattle.enemy.hp) * 100;
+
+            document.getElementById('player-hp-bar').style.width = `${Math.max(0, playerPercent)}%`;
+            document.getElementById('enemy-hp-bar').style.width = `${Math.max(0, enemyPercent)}%`;
+        }
+
+        function endBattle(won, ran = false) {
+            document.getElementById('battle-overlay').style.display = 'none';
+            gameState.paused = false;
+            currentBattle = null;
+
+            if (won) {
+                const enemy = gameState.enemies.find(e => e.emoji === currentBattle?.enemy?.emoji) || ENEMIES[0];
+                addXP(enemy.xpReward || 20);
+                gameState.coins += enemy.coinReward || 10;
+                showNotification(`🎉 Vitória! +${enemy.xpReward || 20} XP, +${enemy.coinReward || 10} 🪙`, 'xp');
+
+                // Chance de descobrir capivara
+                if (Math.random() < 0.1) {
+                    const undiscovered = CAPIVARAS.filter(c => !gameState.discoveredCapivaras.includes(c.id));
+                    if (undiscovered.length > 0) {
+                        const newCap = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+                        gameState.discoveredCapivaras.push(newCap.id);
+                        showNotification(`🎉 Nova capivara: ${newCap.name}!`, 'power');
+                    }
+                }
+            } else if (ran) {
+                showNotification(`🏃 Você fugiu da batalha!`, 'xp');
+            } else {
+                gameState.health = gameState.maxHealth;
+                gameState.coins = Math.floor(gameState.coins * 0.9);
+                showNotification(`💀 Derrotado! Perdeu 10% das moedas`, 'damage');
+            }
+
+            saveGame();
+        }
+
+        // ===== AÇÕES =====
+        function attack() {
+            // Atacar inimigos próximos
+            const attackRange = 80;
+            gameState.enemies.forEach(enemy => {
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - enemy.x, 2) +
+                    Math.pow(gameState.player.y - enemy.y, 2)
+                );
+
+                if (dist < attackRange) {
+                    const damage = gameState.power + Math.floor(Math.random() * 5);
+                    enemy.currentHp -= damage;
+                    showNotification(`⚔️ -${damage}`, 'damage');
+
+                    if (enemy.currentHp <= 0) {
+                        gameState.enemies = gameState.enemies.filter(e => e !== enemy);
+                        addXP(enemy.xpReward);
+                        gameState.coins += enemy.coinReward;
+                        showNotification(`+${enemy.xpReward} XP | +${enemy.coinReward} 🪙`, 'xp');
+                    }
+                }
+            });
+        }
+
+        function useSpecial() {
+            if (gameState.powers.special.active) return;
+
+            activatePower('special', 1000);
+
+            // Ataque em área
+            const attackRange = 150;
+            gameState.enemies.forEach(enemy => {
+                const dist = Math.sqrt(
+                    Math.pow(gameState.player.x - enemy.x, 2) +
+                    Math.pow(gameState.player.y - enemy.y, 2)
+                );
+
+                if (dist < attackRange) {
+                    const damage = gameState.power * 2;
+                    enemy.currentHp -= damage;
+
+                    if (enemy.currentHp <= 0) {
+                        gameState.enemies = gameState.enemies.filter(e => e !== enemy);
+                        addXP(enemy.xpReward);
+                        gameState.coins += enemy.coinReward;
+                    }
+                }
+            });
+
+            showNotification(`✨ Ataque Especial!`, 'power');
+        }
+
+        function cyclePower() {
+            // Alternar entre poderes (futuro)
+        }
+
+        // ===== NOTIFICAÇÕES =====
+        function showNotification(message, type = 'xp') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // ===== SAVE/LOAD =====
+        function saveGame() {
+            const saveData = {
+                level: gameState.level,
+                xp: gameState.xp,
+                xpToLevel: gameState.xpToLevel,
+                coins: gameState.coins,
+                health: gameState.health,
+                maxHealth: gameState.maxHealth,
+                power: gameState.power,
+                defense: gameState.defense,
+                unlockedWorlds: gameState.unlockedWorlds,
+                equippedSkin: gameState.equippedSkin,
+                ownedSkins: gameState.ownedSkins,
+                discoveredCapivaras: gameState.discoveredCapivaras
+            };
+            localStorage.setItem('capivaraEvolution', JSON.stringify(saveData));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('capivaraEvolution');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.assign(gameState, data);
+            }
+        }
+
+        // Inicializar
+        window.onload = init;
+    </script>
+</body>
+</html>

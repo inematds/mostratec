@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rhythm Battle - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a1a;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .loader {
+      display: flex;
+      gap: 10px;
+    }
+
+    .loader span {
+      font-size: 48px;
+      animation: bounce 0.5s ease infinite;
+    }
+
+    .loader span:nth-child(1) { animation-delay: 0s; color: #FF6B6B; }
+    .loader span:nth-child(2) { animation-delay: 0.1s; color: #4ECDC4; }
+    .loader span:nth-child(3) { animation-delay: 0.2s; color: #45B7D1; }
+    .loader span:nth-child(4) { animation-delay: 0.3s; color: #96CEB4; }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    #loading h1 {
+      color: #fff;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 32px;
+      margin-top: 30px;
+      text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+    }
+
+    #loading p {
+      color: #aaa;
+      font-family: Arial, sans-serif;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .pulse-bars {
+      display: flex;
+      gap: 5px;
+      margin-top: 30px;
+    }
+
+    .pulse-bars span {
+      width: 8px;
+      height: 40px;
+      background: linear-gradient(180deg, #FF6B6B, #4ECDC4);
+      border-radius: 4px;
+      animation: pulse 0.8s ease infinite;
+    }
+
+    .pulse-bars span:nth-child(1) { animation-delay: 0s; }
+    .pulse-bars span:nth-child(2) { animation-delay: 0.1s; }
+    .pulse-bars span:nth-child(3) { animation-delay: 0.2s; }
+    .pulse-bars span:nth-child(4) { animation-delay: 0.3s; }
+    .pulse-bars span:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scaleY(0.5); }
+      50% { transform: scaleY(1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="loader">
+      <span>←</span>
+      <span>↓</span>
+      <span>↑</span>
+      <span>→</span>
+    </div>
+    <h1>RHYTHM BATTLE</h1>
+    <p>Preparando a batalha musical...</p>
+    <div class="pulse-bars">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

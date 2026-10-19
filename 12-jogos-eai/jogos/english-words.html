@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inglês Divertido - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0EA5E9 0%, #38BDF8 50%, #7DD3FC 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 550px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #0EA5E9;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #0EA5E9;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #0369A1;
+    }
+    .category-select {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .cat-btn {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #E0F2FE;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .cat-btn.active {
+      border-color: #0EA5E9;
+      background: #E0F2FE;
+      color: #0369A1;
+    }
+    .word-card {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .word-image {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+    .word-english {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #60A5FA;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+    .word-phonetic {
+      color: #A5B4FC;
+      font-size: 1.1rem;
+      font-style: italic;
+      margin-bottom: 1rem;
+    }
+    .audio-btn {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    .audio-btn:hover {
+      transform: scale(1.1);
+    }
+    .question {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #374151;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .answer-btn {
+      padding: 1rem;
+      background: linear-gradient(135deg, #F1F5F9, #E2E8F0);
+      border: 3px solid transparent;
+      border-radius: 1rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #1E1B4B;
+    }
+    .answer-btn:hover {
+      background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+      transform: scale(1.02);
+    }
+    .answer-btn.correct {
+      background: #D1FAE5;
+      border-color: #10B981;
+      animation: pop 0.3s ease;
+    }
+    .answer-btn.wrong {
+      background: #FEE2E2;
+      border-color: #EF4444;
+      animation: shake 0.3s ease;
+    }
+    @keyframes pop {
+      50% { transform: scale(1.1); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+    }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+    .btn {
+      display: block;
+      margin: 0 auto;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #0EA5E9, #0284C7);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .progress-bar {
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0EA5E9, #38BDF8);
+      transition: width 0.3s ease;
+    }
+    .flag {
+      display: inline-block;
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1><span class="flag">🇺🇸</span> Inglês Divertido</h1>
+    <p class="subtitle">Aprenda palavras em inglês!</p>
+
+    <div class="category-select">
+      <button class="cat-btn active" data-cat="animals">🐾 Animais</button>
+      <button class="cat-btn" data-cat="colors">🎨 Cores</button>
+      <button class="cat-btn" data-cat="numbers">🔢 Números</button>
+      <button class="cat-btn" data-cat="food">🍎 Comidas</button>
+      <button class="cat-btn" data-cat="family">👨‍👩‍👧 Família</button>
+      <button class="cat-btn" data-cat="body">🦶 Corpo</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-label">Sequência</div>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress" style="width: 0%"></div>
+    </div>
+
+    <div class="word-card">
+      <div class="word-image" id="wordImage">🐕</div>
+      <div class="word-english" id="wordEnglish">DOG</div>
+      <div class="word-phonetic" id="wordPhonetic">/dɔːɡ/</div>
+      <button class="audio-btn" id="audioBtn">🔊</button>
+    </div>
+
+    <p class="question" id="question">Como se diz em português?</p>
+
+    <div class="answers" id="answers"></div>
+
+    <div class="message" id="message"></div>
+
+    <button class="btn" onclick="resetGame()">🔄 Novo Jogo</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('english-words'));</script>
+  <script>
+    const vocabulary = {
+      animals: [
+        { en: 'dog', pt: 'cachorro', phonetic: '/dɔːɡ/', image: '🐕' },
+        { en: 'cat', pt: 'gato', phonetic: '/kæt/', image: '🐱' },
+        { en: 'bird', pt: 'pássaro', phonetic: '/bɜːrd/', image: '🐦' },
+        { en: 'fish', pt: 'peixe', phonetic: '/fɪʃ/', image: '🐟' },
+        { en: 'horse', pt: 'cavalo', phonetic: '/hɔːrs/', image: '🐴' },
+        { en: 'cow', pt: 'vaca', phonetic: '/kaʊ/', image: '🐄' },
+        { en: 'pig', pt: 'porco', phonetic: '/pɪɡ/', image: '🐷' },
+        { en: 'sheep', pt: 'ovelha', phonetic: '/ʃiːp/', image: '🐑' },
+        { en: 'lion', pt: 'leão', phonetic: '/ˈlaɪən/', image: '🦁' },
+        { en: 'elephant', pt: 'elefante', phonetic: '/ˈelɪfənt/', image: '🐘' },
+        { en: 'monkey', pt: 'macaco', phonetic: '/ˈmʌŋki/', image: '🐵' },
+        { en: 'bear', pt: 'urso', phonetic: '/ber/', image: '🐻' },
+      ],
+      colors: [
+        { en: 'red', pt: 'vermelho', phonetic: '/red/', image: '🔴' },
+        { en: 'blue', pt: 'azul', phonetic: '/bluː/', image: '🔵' },
+        { en: 'green', pt: 'verde', phonetic: '/ɡriːn/', image: '🟢' },
+        { en: 'yellow', pt: 'amarelo', phonetic: '/ˈjeloʊ/', image: '🟡' },
+        { en: 'orange', pt: 'laranja', phonetic: '/ˈɔːrɪndʒ/', image: '🟠' },
+        { en: 'purple', pt: 'roxo', phonetic: '/ˈpɜːrpl/', image: '🟣' },
+        { en: 'pink', pt: 'rosa', phonetic: '/pɪŋk/', image: '💗' },
+        { en: 'black', pt: 'preto', phonetic: '/blæk/', image: '⚫' },
+        { en: 'white', pt: 'branco', phonetic: '/waɪt/', image: '⚪' },
+        { en: 'brown', pt: 'marrom', phonetic: '/braʊn/', image: '🟤' },
+      ],
+      numbers: [
+        { en: 'one', pt: 'um', phonetic: '/wʌn/', image: '1️⃣' },
+        { en: 'two', pt: 'dois', phonetic: '/tuː/', image: '2️⃣' },
+        { en: 'three', pt: 'três', phonetic: '/θriː/', image: '3️⃣' },
+        { en: 'four', pt: 'quatro', phonetic: '/fɔːr/', image: '4️⃣' },
+        { en: 'five', pt: 'cinco', phonetic: '/faɪv/', image: '5️⃣' },
+        { en: 'six', pt: 'seis', phonetic: '/sɪks/', image: '6️⃣' },
+        { en: 'seven', pt: 'sete', phonetic: '/ˈsevn/', image: '7️⃣' },
+        { en: 'eight', pt: 'oito', phonetic: '/eɪt/', image: '8️⃣' },
+        { en: 'nine', pt: 'nove', phonetic: '/naɪn/', image: '9️⃣' },
+        { en: 'ten', pt: 'dez', phonetic: '/ten/', image: '🔟' },
+      ],
+      food: [
+        { en: 'apple', pt: 'maçã', phonetic: '/ˈæpl/', image: '🍎' },
+        { en: 'banana', pt: 'banana', phonetic: '/bəˈnænə/', image: '🍌' },
+        { en: 'orange', pt: 'laranja', phonetic: '/ˈɔːrɪndʒ/', image: '🍊' },
+        { en: 'bread', pt: 'pão', phonetic: '/bred/', image: '🍞' },
+        { en: 'cheese', pt: 'queijo', phonetic: '/tʃiːz/', image: '🧀' },
+        { en: 'milk', pt: 'leite', phonetic: '/mɪlk/', image: '🥛' },
+        { en: 'water', pt: 'água', phonetic: '/ˈwɔːtər/', image: '💧' },
+        { en: 'rice', pt: 'arroz', phonetic: '/raɪs/', image: '🍚' },
+        { en: 'egg', pt: 'ovo', phonetic: '/eɡ/', image: '🥚' },
+        { en: 'pizza', pt: 'pizza', phonetic: '/ˈpiːtsə/', image: '🍕' },
+      ],
+      family: [
+        { en: 'mother', pt: 'mãe', phonetic: '/ˈmʌðər/', image: '👩' },
+        { en: 'father', pt: 'pai', phonetic: '/ˈfɑːðər/', image: '👨' },
+        { en: 'sister', pt: 'irmã', phonetic: '/ˈsɪstər/', image: '👧' },
+        { en: 'brother', pt: 'irmão', phonetic: '/ˈbrʌðər/', image: '👦' },
+        { en: 'grandmother', pt: 'avó', phonetic: '/ˈɡrænmʌðər/', image: '👵' },
+        { en: 'grandfather', pt: 'avô', phonetic: '/ˈɡrænfɑːðər/', image: '👴' },
+        { en: 'baby', pt: 'bebê', phonetic: '/ˈbeɪbi/', image: '👶' },
+        { en: 'family', pt: 'família', phonetic: '/ˈfæməli/', image: '👨‍👩‍👧‍👦' },
+      ],
+      body: [
+        { en: 'head', pt: 'cabeça', phonetic: '/hed/', image: '🗣️' },
+        { en: 'eye', pt: 'olho', phonetic: '/aɪ/', image: '👁️' },
+        { en: 'ear', pt: 'orelha', phonetic: '/ɪr/', image: '👂' },
+        { en: 'nose', pt: 'nariz', phonetic: '/noʊz/', image: '👃' },
+        { en: 'mouth', pt: 'boca', phonetic: '/maʊθ/', image: '👄' },
+        { en: 'hand', pt: 'mão', phonetic: '/hænd/', image: '✋' },
+        { en: 'foot', pt: 'pé', phonetic: '/fʊt/', image: '🦶' },
+        { en: 'arm', pt: 'braço', phonetic: '/ɑːrm/', image: '💪' },
+        { en: 'leg', pt: 'perna', phonetic: '/leɡ/', image: '🦵' },
+        { en: 'heart', pt: 'coração', phonetic: '/hɑːrt/', image: '❤️' },
+      ]
+    };
+
+    let category = 'animals';
+    let score = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let currentWord = null;
+    let questionNumber = 0;
+    let totalQuestions = 10;
+    let usedWords = [];
+
+    const synth = window.speechSynthesis;
+
+    function speak(text) {
+      if (synth.speaking) synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
+      synth.speak(utterance);
+    }
+
+    function selectWord() {
+      const wordList = vocabulary[category];
+      const available = wordList.filter(w => !usedWords.includes(w.en));
+
+      if (available.length === 0) {
+        usedWords = [];
+        return selectWord();
+      }
+
+      const word = available[Math.floor(Math.random() * available.length)];
+      usedWords.push(word.en);
+      return word;
+    }
+
+    function generateOptions() {
+      const allWords = vocabulary[category];
+      const options = [currentWord.pt];
+
+      while (options.length < 4) {
+        const randomWord = allWords[Math.floor(Math.random() * allWords.length)];
+        if (!options.includes(randomWord.pt)) {
+          options.push(randomWord.pt);
+        }
+      }
+
+      // Shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      return options;
+    }
+
+    function startRound() {
+      if (questionNumber >= totalQuestions) {
+        endGame();
+        return;
+      }
+
+      currentWord = selectWord();
+      questionNumber++;
+
+      document.getElementById('wordImage').textContent = currentWord.image;
+      document.getElementById('wordEnglish').textContent = currentWord.en.toUpperCase();
+      document.getElementById('wordPhonetic').textContent = currentWord.phonetic;
+      document.getElementById('progress').style.width = ((questionNumber - 1) / totalQuestions * 100) + '%';
+      document.getElementById('message').className = 'message';
+
+      // Speak the word
+      setTimeout(() => speak(currentWord.en), 300);
+
+      const options = generateOptions();
+      const container = document.getElementById('answers');
+      container.innerHTML = '';
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      if (answer === currentWord.pt) {
+        btn.classList.add('correct');
+        handleCorrect();
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (b.textContent === currentWord.pt) b.classList.add('correct');
+        });
+        handleWrong();
+      }
+    }
+
+    function handleCorrect() {
+      streak++;
+      correctCount++;
+      const points = 10 + (streak >= 3 ? streak * 2 : 0);
+      score += points;
+
+      updateStats();
+      showMessage(`🎉 Correct! "${currentWord.en}" = "${currentWord.pt}"`, 'success');
+
+      giveReward('coins', points);
+
+      setTimeout(startRound, 1500);
+    }
+
+    function handleWrong() {
+      streak = 0;
+      updateStats();
+      showMessage(`❌ "${currentWord.en}" = "${currentWord.pt}"`, 'error');
+
+      setTimeout(startRound, 2000);
+    }
+
+    function endGame() {
+      const percentage = Math.round((correctCount / totalQuestions) * 100);
+      showMessage(`🏆 Fim! ${correctCount}/${totalQuestions} (${percentage}%)`, 'success');
+
+      document.getElementById('progress').style.width = '100%';
+      document.getElementById('answers').innerHTML = '';
+
+      // Final rewards
+      if (correctCount >= 7) {
+        setTimeout(() => giveReward('diamonds', 1), 500);
+      }
+      if (correctCount === 10) {
+        setTimeout(() => giveReward('gold', 1), 1500);
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+      document.getElementById('streak').textContent = streak;
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+    }
+
+    function resetGame() {
+      score = 0;
+      correctCount = 0;
+      streak = 0;
+      questionNumber = 0;
+      usedWords = [];
+
+      updateStats();
+      document.getElementById('progress').style.width = '0%';
+      document.getElementById('message').className = 'message';
+
+      startRound();
+    }
+
+    // Category selection
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        category = btn.dataset.cat;
+        resetGame();
+      });
+    });
+
+    // Audio button
+    document.getElementById('audioBtn').onclick = () => speak(currentWord.en);
+
+    // Initialize
+    startRound();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

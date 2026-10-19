@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memória dos Estados - EAI Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* ===== TELA DE TÍTULO ===== */
+        #title-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #009c3b 0%, #002776 50%, #ffdf00 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .brazil-map {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .game-title {
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        .game-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .title-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .title-btn {
+            padding: 18px 60px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #009c3b, #006400);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 156, 59, 0.5);
+        }
+
+        .btn-play:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(0, 156, 59, 0.7);
+        }
+
+        .btn-how {
+            background: linear-gradient(135deg, #002776, #001a4d);
+            color: white;
+        }
+
+        .btn-how:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 3px solid #009c3b;
+            box-shadow: 0 0 50px rgba(0, 156, 59, 0.3);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            color: #ffdf00;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h3 {
+            color: #009c3b;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-section p, .modal-section li {
+            color: #c8d6e5;
+            line-height: 1.7;
+        }
+
+        .modal-section ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+
+        .modal-section li::before {
+            content: "🇧🇷 ";
+        }
+
+        .close-modal {
+            display: block;
+            margin: 25px auto 0;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .close-modal:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== SELEÇÃO DE FASE ===== */
+        #phase-select {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 900;
+            padding: 20px;
+        }
+
+        .phase-title {
+            font-size: 32px;
+            color: #ffdf00;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .phases-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 700px;
+        }
+
+        .phase-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .phase-card.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .phase-card:not(.locked):hover {
+            transform: translateY(-5px);
+            border-color: #009c3b;
+            box-shadow: 0 10px 30px rgba(0, 156, 59, 0.3);
+        }
+
+        .phase-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffdf00;
+            margin-bottom: 10px;
+        }
+
+        .phase-name {
+            font-size: 14px;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .phase-desc {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .phase-stars {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        /* ===== JOGO ===== */
+        #game-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .info-box.time {
+            border-color: #e74c3c;
+        }
+
+        .info-box.score {
+            border-color: #f1c40f;
+        }
+
+        .info-box.phase {
+            border-color: #009c3b;
+        }
+
+        .info-box.combo {
+            border-color: #9b59b6;
+        }
+
+        .game-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .game-btn {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .game-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Grid de cartas */
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .cards-grid {
+            display: grid;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .card {
+            width: 100px;
+            height: 100px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #009c3b, #006400);
+            border: 3px solid #00b341;
+            font-size: 30px;
+            box-shadow: 0 5px 15px rgba(0, 156, 59, 0.3);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #002776, #001a4d);
+            border: 3px solid #0044cc;
+            transform: rotateY(180deg);
+            font-size: 24px;
+            text-align: center;
+            padding: 5px;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .card-back .sigla {
+            font-size: 28px;
+            color: #ffdf00;
+        }
+
+        .card-back .nome {
+            font-size: 10px;
+            color: #87ceeb;
+        }
+
+        .card.matched {
+            animation: matchPulse 0.5s ease;
+        }
+
+        @keyframes matchPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .card.wrong {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Painel de informação do estado */
+        .state-info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(0,39,118,0.95), rgba(0,26,77,0.95));
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 3px solid #ffdf00;
+            display: none;
+            max-width: 500px;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            z-index: 100;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .state-info-panel.show {
+            display: block;
+        }
+
+        .state-name {
+            font-size: 24px;
+            color: #ffdf00;
+            margin-bottom: 10px;
+        }
+
+        .state-capital {
+            font-size: 16px;
+            color: #87ceeb;
+            margin-bottom: 10px;
+        }
+
+        .state-map {
+            font-size: 50px;
+            margin: 10px 0;
+        }
+
+        .state-facts {
+            font-size: 13px;
+            color: #c8d6e5;
+            line-height: 1.6;
+        }
+
+        /* ===== TELA DE RESULTADO ===== */
+        #result-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+        }
+
+        .result-content {
+            text-align: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 40px;
+            border-radius: 30px;
+            border: 3px solid #ffdf00;
+            max-width: 500px;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .result-title.victory {
+            color: #2ecc71;
+        }
+
+        .result-title.defeat {
+            color: #e74c3c;
+        }
+
+        .result-stars {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .result-score {
+            font-size: 48px;
+            color: #ffdf00;
+            margin-bottom: 10px;
+        }
+
+        .result-bonus {
+            font-size: 18px;
+            color: #9b59b6;
+            margin-bottom: 20px;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #87ceeb;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .result-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .result-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #009c3b, #006400);
+            color: white;
+        }
+
+        .btn-retry {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-menu {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .result-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== NOTIFICAÇÕES ===== */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            z-index: 3000;
+            animation: slideDown 0.3s ease, fadeOut 0.3s ease 2.7s;
+            pointer-events: none;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        .notification.success { border: 2px solid #2ecc71; }
+        .notification.error { border: 2px solid #e74c3c; }
+        .notification.bonus { border: 2px solid #9b59b6; }
+
+        /* ===== RESPONSIVO ===== */
+        @media (max-width: 768px) {
+            .card {
+                width: 70px;
+                height: 70px;
+            }
+
+            .card-front {
+                font-size: 20px;
+            }
+
+            .card-back .sigla {
+                font-size: 18px;
+            }
+
+            .card-back .nome {
+                font-size: 8px;
+            }
+
+            .phases-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .game-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .game-info {
+                justify-content: center;
+            }
+
+            .game-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- TELA DE TÍTULO -->
+    <div id="title-screen">
+        <div class="brazil-map">🇧🇷</div>
+        <h1 class="game-title">Memória dos Estados</h1>
+        <p class="game-subtitle">Aprenda os 27 estados do Brasil brincando!</p>
+        <div class="title-buttons">
+            <button class="title-btn btn-play" onclick="showPhaseSelect()">▶ Jogar</button>
+            <button class="title-btn btn-how" onclick="showInstructions()">📖 Como Jogar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE INSTRUÇÕES -->
+    <div class="modal-overlay" id="instructions-modal">
+        <div class="modal-content">
+            <h2 class="modal-title">📖 Como Jogar</h2>
+
+            <div class="modal-section">
+                <h3>🎯 Objetivo</h3>
+                <p>Encontre os pares de cartas correspondentes! Cada fase traz um novo desafio sobre os estados brasileiros.</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>📊 As 9 Fases</h3>
+                <ul>
+                    <li><strong>Fase 1:</strong> Siglas iguais (SP ↔ SP)</li>
+                    <li><strong>Fase 2:</strong> Sigla ↔ Nome do Estado</li>
+                    <li><strong>Fase 3:</strong> Sigla ↔ Forma do Mapa</li>
+                    <li><strong>Fase 4:</strong> Sigla ↔ Capital</li>
+                    <li><strong>Fase 5:</strong> Estado ↔ Região</li>
+                    <li><strong>Fase 6:</strong> Estado ↔ População</li>
+                    <li><strong>Fase 7:</strong> Estado ↔ Culinária Típica</li>
+                    <li><strong>Fase 8:</strong> Estado ↔ Ponto Turístico</li>
+                    <li><strong>Fase 9:</strong> Desafio Final - Tudo misturado!</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>⏱️ Tempo e Pontos</h3>
+                <p>Você tem tempo limitado! Cada acerto dá pontos, mas erros e tempo consumido diminuem sua pontuação.</p>
+                <ul>
+                    <li><strong>Acerto:</strong> +100 pontos</li>
+                    <li><strong>Erro:</strong> -25 pontos</li>
+                    <li><strong>Tempo:</strong> Penalidade a cada 10 segundos</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>🌟 Bônus de Perfeição</h3>
+                <ul>
+                    <li><strong>100% de acertos:</strong> Pontuação x5!</li>
+                    <li><strong>90%+ de acertos:</strong> Pontuação x2!</li>
+                    <li><strong>Combo:</strong> Acertos seguidos dão bônus extra!</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>✨ Dicas</h3>
+                <ul>
+                    <li>Memorize a posição das cartas!</li>
+                    <li>Quando acertar, veja as informações do estado</li>
+                    <li>Complete fases para desbloquear as próximas</li>
+                    <li>Tente conseguir 3 estrelas em todas as fases!</li>
+                </ul>
+            </div>
+
+            <button class="close-modal" onclick="hideInstructions()">Entendi!</button>
+        </div>
+    </div>
+
+    <!-- SELEÇÃO DE FASE -->
+    <div id="phase-select">
+        <h1 class="phase-title">🗺️ Escolha a Fase</h1>
+        <div class="phases-grid" id="phases-container"></div>
+        <button class="game-btn" onclick="showTitle()" style="margin-top: 30px;">← Voltar</button>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="game-screen">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="info-box phase">
+                    <span>📍</span>
+                    <span>Fase <span id="current-phase">1</span></span>
+                </div>
+                <div class="info-box time">
+                    <span>⏱️</span>
+                    <span id="time-display">02:00</span>
+                </div>
+                <div class="info-box score">
+                    <span>🏆</span>
+                    <span id="score-display">0</span>
+                </div>
+                <div class="info-box combo">
+                    <span>🔥</span>
+                    <span id="combo-display">x1</span>
+                </div>
+            </div>
+            <div class="game-buttons">
+                <button class="game-btn" onclick="pauseGame()">⏸️ Pausa</button>
+                <button class="game-btn" onclick="showPhaseSelect()">🏠 Menu</button>
+            </div>
+        </div>
+
+        <div class="cards-container">
+            <div class="cards-grid" id="cards-grid"></div>
+        </div>
+
+        <div class="state-info-panel" id="state-info-panel">
+            <div class="state-name" id="state-name">São Paulo</div>
+            <div class="state-capital" id="state-capital">Capital: São Paulo</div>
+            <div class="state-map" id="state-map">🗺️</div>
+            <div class="state-facts" id="state-facts">Informações do estado...</div>
+        </div>
+    </div>
+
+    <!-- TELA DE RESULTADO -->
+    <div id="result-screen">
+        <div class="result-content">
+            <h2 class="result-title" id="result-title">🎉 Vitória!</h2>
+            <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+            <div class="result-score" id="result-score">0</div>
+            <div class="result-bonus" id="result-bonus"></div>
+            <div class="result-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-correct">0</div>
+                    <div class="stat-label">Acertos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-wrong">0</div>
+                    <div class="stat-label">Erros</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-time">00:00</div>
+                    <div class="stat-label">Tempo</div>
+                </div>
+            </div>
+            <div class="result-buttons">
+                <button class="result-btn btn-retry" onclick="retryPhase()">🔄 Tentar Novamente</button>
+                <button class="result-btn btn-next" id="btn-next" onclick="nextPhase()">➡️ Próxima Fase</button>
+                <button class="result-btn btn-menu" onclick="showPhaseSelect()">🏠 Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DADOS DOS ESTADOS =====
+        const ESTADOS = [
+            { sigla: 'AC', nome: 'Acre', capital: 'Rio Branco', regiao: 'Norte', mapa: '🌳', populacao: '0.9 mi', culinaria: 'Tacacá', turismo: 'Parque Nacional da Serra do Divisor', cor: '#1E90FF' },
+            { sigla: 'AL', nome: 'Alagoas', capital: 'Maceió', regiao: 'Nordeste', mapa: '🏖️', populacao: '3.4 mi', culinaria: 'Sururu', turismo: 'Praia de Maragogi', cor: '#FF6347' },
+            { sigla: 'AP', nome: 'Amapá', capital: 'Macapá', regiao: 'Norte', mapa: '🌿', populacao: '0.9 mi', culinaria: 'Camarão Regional', turismo: 'Fortaleza de São José', cor: '#32CD32' },
+            { sigla: 'AM', nome: 'Amazonas', capital: 'Manaus', regiao: 'Norte', mapa: '🌲', populacao: '4.2 mi', culinaria: 'Pirarucu', turismo: 'Teatro Amazonas', cor: '#228B22' },
+            { sigla: 'BA', nome: 'Bahia', capital: 'Salvador', regiao: 'Nordeste', mapa: '🥁', populacao: '14.9 mi', culinaria: 'Acarajé', turismo: 'Pelourinho', cor: '#FF4500' },
+            { sigla: 'CE', nome: 'Ceará', capital: 'Fortaleza', regiao: 'Nordeste', mapa: '☀️', populacao: '9.2 mi', culinaria: 'Baião de Dois', turismo: 'Beach Park', cor: '#FFD700' },
+            { sigla: 'DF', nome: 'Distrito Federal', capital: 'Brasília', regiao: 'Centro-Oeste', mapa: '🏛️', populacao: '3.1 mi', culinaria: 'Galinhada', turismo: 'Congresso Nacional', cor: '#4169E1' },
+            { sigla: 'ES', nome: 'Espírito Santo', capital: 'Vitória', regiao: 'Sudeste', mapa: '⛰️', populacao: '4.1 mi', culinaria: 'Moqueca Capixaba', turismo: 'Convento da Penha', cor: '#20B2AA' },
+            { sigla: 'GO', nome: 'Goiás', capital: 'Goiânia', regiao: 'Centro-Oeste', mapa: '🌾', populacao: '7.1 mi', culinaria: 'Empadão Goiano', turismo: 'Chapada dos Veadeiros', cor: '#DAA520' },
+            { sigla: 'MA', nome: 'Maranhão', capital: 'São Luís', regiao: 'Nordeste', mapa: '🏝️', populacao: '7.1 mi', culinaria: 'Arroz de Cuxá', turismo: 'Lençóis Maranhenses', cor: '#DC143C' },
+            { sigla: 'MT', nome: 'Mato Grosso', capital: 'Cuiabá', regiao: 'Centro-Oeste', mapa: '🐆', populacao: '3.5 mi', culinaria: 'Maria Isabel', turismo: 'Pantanal', cor: '#FF8C00' },
+            { sigla: 'MS', nome: 'Mato Grosso do Sul', capital: 'Campo Grande', regiao: 'Centro-Oeste', mapa: '🌊', populacao: '2.8 mi', culinaria: 'Sobá', turismo: 'Bonito', cor: '#00CED1' },
+            { sigla: 'MG', nome: 'Minas Gerais', capital: 'Belo Horizonte', regiao: 'Sudeste', mapa: '⛏️', populacao: '21.3 mi', culinaria: 'Pão de Queijo', turismo: 'Ouro Preto', cor: '#CD853F' },
+            { sigla: 'PA', nome: 'Pará', capital: 'Belém', regiao: 'Norte', mapa: '🌴', populacao: '8.7 mi', culinaria: 'Pato no Tucupi', turismo: 'Mercado Ver-o-Peso', cor: '#2E8B57' },
+            { sigla: 'PB', nome: 'Paraíba', capital: 'João Pessoa', regiao: 'Nordeste', mapa: '🌅', populacao: '4.1 mi', culinaria: 'Rubacão', turismo: 'Ponta do Seixas', cor: '#FF69B4' },
+            { sigla: 'PR', nome: 'Paraná', capital: 'Curitiba', regiao: 'Sul', mapa: '🌲', populacao: '11.5 mi', culinaria: 'Barreado', turismo: 'Cataratas do Iguaçu', cor: '#4682B4' },
+            { sigla: 'PE', nome: 'Pernambuco', capital: 'Recife', regiao: 'Nordeste', mapa: '🎭', populacao: '9.6 mi', culinaria: 'Bolo de Rolo', turismo: 'Fernando de Noronha', cor: '#8B0000' },
+            { sigla: 'PI', nome: 'Piauí', capital: 'Teresina', regiao: 'Nordeste', mapa: '🏜️', populacao: '3.3 mi', culinaria: 'Capote', turismo: 'Serra da Capivara', cor: '#B8860B' },
+            { sigla: 'RJ', nome: 'Rio de Janeiro', capital: 'Rio de Janeiro', regiao: 'Sudeste', mapa: '🗽', populacao: '17.4 mi', culinaria: 'Feijoada', turismo: 'Cristo Redentor', cor: '#00BFFF' },
+            { sigla: 'RN', nome: 'Rio Grande do Norte', capital: 'Natal', regiao: 'Nordeste', mapa: '🐚', populacao: '3.5 mi', culinaria: 'Ginga com Tapioca', turismo: 'Dunas de Genipabu', cor: '#FF1493' },
+            { sigla: 'RS', nome: 'Rio Grande do Sul', capital: 'Porto Alegre', regiao: 'Sul', mapa: '🧉', populacao: '11.4 mi', culinaria: 'Churrasco', turismo: 'Gramado', cor: '#006400' },
+            { sigla: 'RO', nome: 'Rondônia', capital: 'Porto Velho', regiao: 'Norte', mapa: '🌳', populacao: '1.8 mi', culinaria: 'Peixe na Telha', turismo: 'Forte Príncipe da Beira', cor: '#8B4513' },
+            { sigla: 'RR', nome: 'Roraima', capital: 'Boa Vista', regiao: 'Norte', mapa: '🏔️', populacao: '0.6 mi', culinaria: 'Damurida', turismo: 'Monte Roraima', cor: '#9932CC' },
+            { sigla: 'SC', nome: 'Santa Catarina', capital: 'Florianópolis', regiao: 'Sul', mapa: '🏄', populacao: '7.3 mi', culinaria: 'Ostra', turismo: 'Praia de Balneário Camboriú', cor: '#1E90FF' },
+            { sigla: 'SP', nome: 'São Paulo', capital: 'São Paulo', regiao: 'Sudeste', mapa: '🏙️', populacao: '46.3 mi', culinaria: 'Virado à Paulista', turismo: 'Avenida Paulista', cor: '#FF0000' },
+            { sigla: 'SE', nome: 'Sergipe', capital: 'Aracaju', regiao: 'Nordeste', mapa: '🌺', populacao: '2.3 mi', culinaria: 'Caranguejo', turismo: 'Orla de Atalaia', cor: '#FF6347' },
+            { sigla: 'TO', nome: 'Tocantins', capital: 'Palmas', regiao: 'Norte', mapa: '🌿', populacao: '1.6 mi', culinaria: 'Peixe Assado', turismo: 'Jalapão', cor: '#3CB371' }
+        ];
+
+        // Estado do jogo
+        const gameState = {
+            currentPhase: 1,
+            unlockedPhases: [true, false, false, false, false, false, false, false, false],
+            phaseStars: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            totalScore: 0,
+            currentScore: 0,
+            timeLeft: 120,
+            timerInterval: null,
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            totalPairs: 0,
+            correctMatches: 0,
+            wrongMatches: 0,
+            combo: 1,
+            paused: false
+        };
+
+        // ===== CONFIGURAÇÃO DAS FASES =====
+        const PHASES = [
+            { id: 1, name: 'Siglas', desc: 'Encontre pares de siglas iguais', pairs: 8, time: 90 },
+            { id: 2, name: 'Sigla ↔ Nome', desc: 'Combine sigla com nome do estado', pairs: 8, time: 120 },
+            { id: 3, name: 'Sigla ↔ Mapa', desc: 'Combine sigla com forma do mapa', pairs: 8, time: 120 },
+            { id: 4, name: 'Sigla ↔ Capital', desc: 'Combine sigla com a capital', pairs: 8, time: 120 },
+            { id: 5, name: 'Estado ↔ Região', desc: 'Combine estado com sua região', pairs: 10, time: 150 },
+            { id: 6, name: 'Estado ↔ População', desc: 'Combine estado com população', pairs: 10, time: 150 },
+            { id: 7, name: 'Estado ↔ Culinária', desc: 'Combine estado com prato típico', pairs: 10, time: 150 },
+            { id: 8, name: 'Estado ↔ Turismo', desc: 'Combine estado com ponto turístico', pairs: 10, time: 180 },
+            { id: 9, name: 'Desafio Final', desc: 'Tudo misturado! Boa sorte!', pairs: 12, time: 240 }
+        ];
+
+        // ===== INICIALIZAÇÃO =====
+        function init() {
+            loadProgress();
+            renderPhases();
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('memoriaEstados');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.unlockedPhases = data.unlockedPhases || gameState.unlockedPhases;
+                gameState.phaseStars = data.phaseStars || gameState.phaseStars;
+                gameState.totalScore = data.totalScore || 0;
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('memoriaEstados', JSON.stringify({
+                unlockedPhases: gameState.unlockedPhases,
+                phaseStars: gameState.phaseStars,
+                totalScore: gameState.totalScore
+            }));
+        }
+
+        // ===== NAVEGAÇÃO =====
+        function showTitle() {
+            document.getElementById('title-screen').style.display = 'flex';
+            document.getElementById('phase-select').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+        }
+
+        function showPhaseSelect() {
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('phase-select').style.display = 'flex';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+            clearInterval(gameState.timerInterval);
+            renderPhases();
+        }
+
+        function showInstructions() {
+            document.getElementById('instructions-modal').style.display = 'flex';
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructions-modal').style.display = 'none';
+        }
+
+        function renderPhases() {
+            const container = document.getElementById('phases-container');
+            container.innerHTML = '';
+
+            PHASES.forEach((phase, index) => {
+                const unlocked = gameState.unlockedPhases[index];
+                const stars = gameState.phaseStars[index];
+
+                const card = document.createElement('div');
+                card.className = `phase-card ${unlocked ? '' : 'locked'}`;
+                card.innerHTML = `
+                    <div class="phase-number">${unlocked ? phase.id : '🔒'}</div>
+                    <div class="phase-name">${phase.name}</div>
+                    <div class="phase-desc">${phase.desc}</div>
+                    <div class="phase-stars">${unlocked ? getStarsDisplay(stars) : '⭐⭐⭐'}</div>
+                `;
+
+                if (unlocked) {
+                    card.onclick = () => startPhase(phase.id);
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function getStarsDisplay(stars) {
+            return '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+        }
+
+        // ===== INÍCIO DA FASE =====
+        function startPhase(phaseId) {
+            gameState.currentPhase = phaseId;
+            const phase = PHASES[phaseId - 1];
+
+            gameState.currentScore = 0;
+            gameState.timeLeft = phase.time;
+            gameState.matchedPairs = 0;
+            gameState.totalPairs = phase.pairs;
+            gameState.correctMatches = 0;
+            gameState.wrongMatches = 0;
+            gameState.combo = 1;
+            gameState.flippedCards = [];
+            gameState.paused = false;
+
+            document.getElementById('phase-select').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('current-phase').textContent = phaseId;
+
+            generateCards(phaseId, phase.pairs);
+            startTimer();
+            updateHUD();
+        }
+
+        function generateCards(phaseId, pairCount) {
+            const shuffledStates = [...ESTADOS].sort(() => Math.random() - 0.5).slice(0, pairCount);
+            let cards = [];
+
+            shuffledStates.forEach((estado, index) => {
+                const pair = createCardPair(phaseId, estado, index);
+                cards.push(pair.card1, pair.card2);
+            });
+
+            // Embaralhar as cartas
+            cards = cards.sort(() => Math.random() - 0.5);
+            gameState.cards = cards;
+
+            renderCards(cards);
+        }
+
+        function createCardPair(phaseId, estado, pairId) {
+            let card1Content, card2Content;
+
+            switch(phaseId) {
+                case 1: // Siglas iguais
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'sigla', text: estado.sigla, estado };
+                    break;
+                case 2: // Sigla ↔ Nome
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'nome', text: estado.nome, estado };
+                    break;
+                case 3: // Sigla ↔ Mapa
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'mapa', text: estado.mapa, estado };
+                    break;
+                case 4: // Sigla ↔ Capital
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'capital', text: estado.capital, estado };
+                    break;
+                case 5: // Estado ↔ Região
+                    card1Content = { type: 'nome', text: estado.nome, estado };
+                    card2Content = { type: 'regiao', text: estado.regiao, estado };
+                    break;
+                case 6: // Estado ↔ População
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'populacao', text: estado.populacao, estado };
+                    break;
+                case 7: // Estado ↔ Culinária
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'culinaria', text: estado.culinaria, estado };
+                    break;
+                case 8: // Estado ↔ Turismo
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: 'turismo', text: estado.turismo, estado };
+                    break;
+                case 9: // Desafio Final - misturado
+                    const types = ['nome', 'capital', 'culinaria', 'turismo'];
+                    const randomType = types[Math.floor(Math.random() * types.length)];
+                    card1Content = { type: 'sigla', text: estado.sigla, estado };
+                    card2Content = { type: randomType, text: estado[randomType], estado };
+                    break;
+            }
+
+            return {
+                card1: { id: pairId * 2, pairId, ...card1Content },
+                card2: { id: pairId * 2 + 1, pairId, ...card2Content }
+            };
+        }
+
+        function renderCards(cards) {
+            const grid = document.getElementById('cards-grid');
+            const cols = cards.length <= 12 ? 4 : cards.length <= 20 ? 5 : 6;
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.innerHTML = '';
+
+            cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.dataset.index = index;
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">🇧🇷</div>
+                        <div class="card-back">
+                            <span class="${card.type === 'sigla' ? 'sigla' : ''}">${card.text}</span>
+                            ${card.type !== 'sigla' ? `<span class="nome">${card.type.toUpperCase()}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                cardEl.onclick = () => flipCard(index);
+                grid.appendChild(cardEl);
+            });
+        }
+
+        // ===== LÓGICA DO JOGO =====
+        function flipCard(index) {
+            if (gameState.paused) return;
+            if (gameState.flippedCards.length >= 2) return;
+
+            const cardEl = document.querySelectorAll('.card')[index];
+            const card = gameState.cards[index];
+
+            if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+            cardEl.classList.add('flipped');
+            gameState.flippedCards.push({ index, card, element: cardEl });
+
+            if (gameState.flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = gameState.flippedCards;
+            const isMatch = first.card.pairId === second.card.pairId && first.index !== second.index;
+
+            if (isMatch) {
+                // Acerto!
+                first.element.classList.add('matched');
+                second.element.classList.add('matched');
+                gameState.matchedPairs++;
+                gameState.correctMatches++;
+
+                const points = 100 * gameState.combo;
+                gameState.currentScore += points;
+                gameState.combo = Math.min(gameState.combo + 1, 5);
+
+                showNotification(`+${points} pontos! 🎉`, 'success');
+                showStateInfo(first.card.estado);
+
+                gameState.flippedCards = [];
+
+                if (gameState.matchedPairs === gameState.totalPairs) {
+                    endGame(true);
+                }
+            } else {
+                // Erro!
+                first.element.classList.add('wrong');
+                second.element.classList.add('wrong');
+                gameState.wrongMatches++;
+                gameState.combo = 1;
+                gameState.currentScore = Math.max(0, gameState.currentScore - 25);
+
+                showNotification('-25 pontos! ❌', 'error');
+
+                setTimeout(() => {
+                    first.element.classList.remove('flipped', 'wrong');
+                    second.element.classList.remove('flipped', 'wrong');
+                    gameState.flippedCards = [];
+                }, 1000);
+            }
+
+            updateHUD();
+        }
+
+        function showStateInfo(estado) {
+            const panel = document.getElementById('state-info-panel');
+            document.getElementById('state-name').textContent = `${estado.nome} (${estado.sigla})`;
+            document.getElementById('state-capital').textContent = `Capital: ${estado.capital}`;
+            document.getElementById('state-map').textContent = estado.mapa;
+            document.getElementById('state-facts').textContent = `Região: ${estado.regiao} | População: ${estado.populacao} | Prato típico: ${estado.culinaria}`;
+
+            panel.classList.add('show');
+            setTimeout(() => panel.classList.remove('show'), 4000);
+        }
+
+        // ===== TIMER =====
+        function startTimer() {
+            updateTimerDisplay();
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.paused) return;
+
+                gameState.timeLeft--;
+                updateTimerDisplay();
+
+                // Penalidade de tempo a cada 10 segundos
+                if (gameState.timeLeft > 0 && gameState.timeLeft % 10 === 0) {
+                    gameState.currentScore = Math.max(0, gameState.currentScore - 5);
+                    updateHUD();
+                }
+
+                if (gameState.timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameState.timeLeft / 60);
+            const seconds = gameState.timeLeft % 60;
+            document.getElementById('time-display').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function pauseGame() {
+            gameState.paused = !gameState.paused;
+            showNotification(gameState.paused ? '⏸️ Pausado' : '▶️ Continuando', 'success');
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = gameState.currentScore;
+            document.getElementById('combo-display').textContent = `x${gameState.combo}`;
+        }
+
+        // ===== FIM DO JOGO =====
+        function endGame(won) {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('state-info-panel').classList.remove('show');
+
+            // Calcular bônus
+            let finalScore = gameState.currentScore;
+            let bonusText = '';
+            const accuracy = gameState.correctMatches / (gameState.correctMatches + gameState.wrongMatches);
+
+            if (won) {
+                if (accuracy === 1) {
+                    finalScore *= 5;
+                    bonusText = '🌟 PERFEITO! Pontuação x5!';
+                } else if (accuracy >= 0.9) {
+                    finalScore *= 2;
+                    bonusText = '✨ Excelente! Pontuação x2!';
+                }
+            }
+
+            // Calcular estrelas
+            let stars = 0;
+            if (won) {
+                stars = 1;
+                if (accuracy >= 0.8) stars = 2;
+                if (accuracy >= 0.95) stars = 3;
+            }
+
+            // Atualizar progresso
+            if (won) {
+                gameState.totalScore += finalScore;
+                const phaseIndex = gameState.currentPhase - 1;
+
+                if (stars > gameState.phaseStars[phaseIndex]) {
+                    gameState.phaseStars[phaseIndex] = stars;
+                }
+
+                // Desbloquear próxima fase
+                if (phaseIndex < 8) {
+                    gameState.unlockedPhases[phaseIndex + 1] = true;
+                }
+
+                saveProgress();
+            }
+
+            // Mostrar tela de resultado
+            const timeUsed = PHASES[gameState.currentPhase - 1].time - gameState.timeLeft;
+            const minutes = Math.floor(timeUsed / 60);
+            const seconds = timeUsed % 60;
+
+            document.getElementById('result-title').textContent = won ? '🎉 Vitória!' : '😢 Tempo Esgotado!';
+            document.getElementById('result-title').className = `result-title ${won ? 'victory' : 'defeat'}`;
+            document.getElementById('result-stars').textContent = getStarsDisplay(stars);
+            document.getElementById('result-score').textContent = finalScore;
+            document.getElementById('result-bonus').textContent = bonusText;
+            document.getElementById('stat-correct').textContent = gameState.correctMatches;
+            document.getElementById('stat-wrong').textContent = gameState.wrongMatches;
+            document.getElementById('stat-time').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Esconder botão "Próxima Fase" se for a última ou perdeu
+            const btnNext = document.getElementById('btn-next');
+            btnNext.style.display = (won && gameState.currentPhase < 9) ? 'block' : 'none';
+
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'flex';
+        }
+
+        function retryPhase() {
+            document.getElementById('result-screen').style.display = 'none';
+            startPhase(gameState.currentPhase);
+        }
+
+        function nextPhase() {
+            if (gameState.currentPhase < 9) {
+                document.getElementById('result-screen').style.display = 'none';
+                startPhase(gameState.currentPhase + 1);
+            }
+        }
+
+        // ===== NOTIFICAÇÕES =====
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Inicializar
+        window.onload = init;
+    </script>
+</body>
+</html>

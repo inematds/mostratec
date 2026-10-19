@@ -1,0 +1,867 @@
+{
+ "snake-eai": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:45"
+ },
+ "pong-eai": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:45"
+ },
+ "jogo-da-memoria": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (397px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:45"
+ },
+ "hextris-eai": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (445px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:45"
+ },
+ "capivara-evolution": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:45"
+ },
+ "dragon-world": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (502px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "horse-academy": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "horse-farm": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "nexus-arena": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "fractal-worlds": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "tower-defense": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "rhythm-battle": {
+  "teste": "atencao",
+  "problemas": [
+   "1 erro(s)"
+  ],
+  "erros": [
+   "Cannot read properties of undefined (reading 'forEach')"
+  ],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "hex-racer": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "battle-royale": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "slither-eai": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "plinko-tycoon": {
+  "teste": "atencao",
+  "problemas": [
+   "1 erro(s)"
+  ],
+  "erros": [
+   "Cannot read properties of undefined (reading 'luckySlots')"
+  ],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "ball-fusion": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "survivors-eai": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "merge-kingdom": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "fashion-battle": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "animal-farm": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "anime-hero": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "battle-clicker": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "block-blast": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:46"
+ },
+ "bubble-pop": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "candy-land": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "cookie-bakery": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "crypto-miner": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "dino-adventure": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "dragon-quest-legends": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "fruit-ninja-master": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "galaxy-conquest": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "infinity-runner": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "music-maker": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "ninja-shadow": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "ocean-quest": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "pet-world": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "racing-thunder": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "space-explorer": {
+  "teste": "atencao",
+  "problemas": [
+   "1 erro(s)"
+  ],
+  "erros": [
+   "Cannot set properties of undefined (setting 'x')"
+  ],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "zombie-survival": {
+  "teste": "atencao",
+  "problemas": [
+   "1 erro(s)"
+  ],
+  "erros": [
+   "Cannot set properties of undefined (setting 'x')"
+  ],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "quiz-matematica": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "corrida-tabuada": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "aprendendo-horas": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:47"
+ },
+ "pizza-fracoes": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "numeros-100": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (494px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "soma-subtracao": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "soletrando": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (583px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "palavras-embaralhadas": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "heroi-digitacao": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (458px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "alfabeto-divertido": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "caca-palavras-magico": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "laboratorio-ciencias": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (635px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "mapa-brasil-interativo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "memoria-estados": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "ingles-vocabulario": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "vocabulario-mundial": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "profissoes-idiomas": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "quebra-cabecas-logica": {
+  "teste": "atencao",
+  "problemas": [
+   "rola de lado no celular (635px)"
+  ],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "bingo-letras": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "bingo-silabas": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "monta-palavras": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "jogo-das-frases": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:48"
+ },
+ "historias-cartas": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "quiz-leitura": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "rpg-narrativo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "jogo-contagem": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "trilha-matematica": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "jogo-dado": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "domino-matematico": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "mercadinho-educativo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "desafio-fracoes": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "jogo-logica": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "estatistica-simples": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "cinco-sentidos": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "corpo-humano": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "experimentos-guiados": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "cadeia-alimentar": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "sustentabilidade": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "linha-do-tempo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "familia-comunidade": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "mapa-escola": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:49"
+ },
+ "simulacao-cidade": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "desenho-criativo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "musica-ritmo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "teatro-personagens": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "stop-motion": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "missoes-semanais": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "quiz-gamificado": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "escape-room": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "math-quest-rpg": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "chemistry-lab-pro": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "physics-lab": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "history-conquest": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "language-master": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "biology-explorer": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "geography-empire": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "code-academy": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "economics-tycoon": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "literature-quest": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "astronomy-voyager": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "music-theory-hero": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:50"
+ },
+ "art-history-museum": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "eco-simulator": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "philosophy-arena": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "psychology-lab": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "statistics-detective": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "engineering-lab": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "medical-academy": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "finance-master": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "equacoes-aventura": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "geometria-aventura": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "historia-brasil-mundo": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "quimica-elementos": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "geopolitica-quiz": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "logica-sequencias": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "logica-programacao": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "arte-digital": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "educacao-financeira": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ },
+ "english-kids": {
+  "teste": "ok",
+  "problemas": [],
+  "erros": [],
+  "faltando": [],
+  "testadoEm": "2026-10-19T04:51"
+ }
+}

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo de Letras - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .called-letter {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .called-letter h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #81ecec;
+        }
+
+        .letter-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .big-letter {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ffd700, #f39c12);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #1a1a2e;
+            animation: pop 0.5s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .word-hint {
+            font-size: 1.2rem;
+            color: #a29bfe;
+        }
+
+        .word-hint .emoji {
+            font-size: 2rem;
+        }
+
+        .bingo-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .bingo-cell {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .bingo-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .bingo-cell.marked {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            border-color: #ffd700;
+        }
+
+        .bingo-cell.wrong {
+            animation: shake 0.5s ease;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .bingo-cell.free {
+            background: linear-gradient(135deg, #ffd700, #f39c12);
+            color: #1a1a2e;
+            font-size: 1rem;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .call-btn {
+            display: block;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .call-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .call-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .called-letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .called-letters h4 {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #81ecec;
+        }
+
+        .called-small {
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .bingo-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 3px 3px 0 #e74c3c, 6px 6px 0 rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            animation: bingoAnim 1.5s ease forwards;
+        }
+
+        .bingo-animation.show {
+            display: block;
+        }
+
+        @keyframes bingoAnim {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.5) rotate(10deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .bingo-cell {
+                font-size: 1.3rem;
+            }
+
+            .big-letter {
+                width: 80px;
+                height: 80px;
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Bingo de <span>Letras</span></h1>
+            <p>Encontre a letra sorteada na sua cartela!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="bingos">0</div>
+                <div class="stat-label">Bingos</div>
+            </div>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Primeiro Bingo">🥉</span>
+            <span class="medal" id="medal2" title="5 Bingos">🥈</span>
+            <span class="medal" id="medal3" title="10 Bingos">🥇</span>
+            <span class="medal" id="medal4" title="20 Bingos">🏆</span>
+            <span class="medal" id="medal5" title="Mestre do Bingo">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="called-letter">
+                <h3>Letra sorteada:</h3>
+                <div class="letter-display">
+                    <div class="big-letter" id="currentLetter">?</div>
+                    <div class="word-hint" id="wordHint">
+                        <div class="emoji">🎲</div>
+                        <div>Clique em Sortear!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bingo-card" id="bingoCard"></div>
+
+            <button class="call-btn" id="callBtn" onclick="callLetter()">🎲 Sortear Letra</button>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="called-letters" id="calledLetters">
+                <h4>Letras sorteadas:</h4>
+            </div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon">🎉</div>
+            <div class="result-title">BINGO!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="newGame()">Nova Cartela</button>
+            </div>
+        </div>
+
+        <div class="bingo-animation" id="bingoAnimation">BINGO!</div>
+    </div>
+
+    <script>
+        // Letras com palavras de exemplo
+        const letterWords = {
+            'A': { word: 'Abelha', emoji: '🐝' },
+            'B': { word: 'Bola', emoji: '⚽' },
+            'C': { word: 'Casa', emoji: '🏠' },
+            'D': { word: 'Dado', emoji: '🎲' },
+            'E': { word: 'Elefante', emoji: '🐘' },
+            'F': { word: 'Flor', emoji: '🌸' },
+            'G': { word: 'Gato', emoji: '🐱' },
+            'H': { word: 'Helicóptero', emoji: '🚁' },
+            'I': { word: 'Iglu', emoji: '🏔️' },
+            'J': { word: 'Jacaré', emoji: '🐊' },
+            'K': { word: 'Kiwi', emoji: '🥝' },
+            'L': { word: 'Lua', emoji: '🌙' },
+            'M': { word: 'Macaco', emoji: '🐵' },
+            'N': { word: 'Navio', emoji: '🚢' },
+            'O': { word: 'Ovo', emoji: '🥚' },
+            'P': { word: 'Pato', emoji: '🦆' },
+            'Q': { word: 'Queijo', emoji: '🧀' },
+            'R': { word: 'Rato', emoji: '🐭' },
+            'S': { word: 'Sol', emoji: '☀️' },
+            'T': { word: 'Tartaruga', emoji: '🐢' },
+            'U': { word: 'Uva', emoji: '🍇' },
+            'V': { word: 'Vaca', emoji: '🐄' },
+            'W': { word: 'Waffle', emoji: '🧇' },
+            'X': { word: 'Xícara', emoji: '☕' },
+            'Y': { word: 'Yoga', emoji: '🧘' },
+            'Z': { word: 'Zebra', emoji: '🦓' }
+        };
+
+        const allLetters = Object.keys(letterWords);
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            bingos: 0,
+            cardLetters: [],
+            calledLetters: [],
+            markedCells: [],
+            currentLetter: null
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'call':
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'mark':
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'bingo':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
+                        osc.start(audioContext.currentTime + i * 0.15);
+                        osc.stop(audioContext.currentTime + i * 0.15 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('bingoLetrasProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.bingos = data.bingos || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                bingos: gameState.bingos
+            };
+            localStorage.setItem('bingoLetrasProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('bingos').textContent = gameState.bingos;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 1 },
+                { id: 'medal2', threshold: 5 },
+                { id: 'medal3', threshold: 10 },
+                { id: 'medal4', threshold: 20 },
+                { id: 'medal5', threshold: 50 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.bingos >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Embaralhar array
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Gerar cartela
+        function generateCard() {
+            const shuffled = shuffle(allLetters);
+            gameState.cardLetters = shuffled.slice(0, 25);
+            gameState.cardLetters[12] = 'FREE'; // Centro é livre
+            gameState.markedCells = [12]; // Centro já marcado
+            gameState.calledLetters = [];
+            gameState.currentLetter = null;
+
+            renderCard();
+            renderCalledLetters();
+
+            document.getElementById('currentLetter').textContent = '?';
+            document.getElementById('wordHint').innerHTML = '<div class="emoji">🎲</div><div>Clique em Sortear!</div>';
+            document.getElementById('callBtn').disabled = false;
+        }
+
+        // Renderizar cartela
+        function renderCard() {
+            const card = document.getElementById('bingoCard');
+            card.innerHTML = '';
+
+            gameState.cardLetters.forEach((letter, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                if (letter === 'FREE') {
+                    cell.classList.add('free', 'marked');
+                    cell.textContent = '⭐';
+                } else {
+                    cell.textContent = letter;
+                    if (gameState.markedCells.includes(index)) {
+                        cell.classList.add('marked');
+                    }
+                    cell.onclick = () => markCell(index);
+                }
+                card.appendChild(cell);
+            });
+        }
+
+        // Sortear letra
+        function callLetter() {
+            // Letras disponíveis (não sorteadas ainda)
+            const available = allLetters.filter(l => !gameState.calledLetters.includes(l));
+
+            if (available.length === 0) {
+                showFeedback('Todas as letras foram sorteadas!', 'error');
+                return;
+            }
+
+            const letter = available[Math.floor(Math.random() * available.length)];
+            gameState.calledLetters.push(letter);
+            gameState.currentLetter = letter;
+
+            playSound('call');
+
+            // Atualizar display
+            document.getElementById('currentLetter').textContent = letter;
+            const wordData = letterWords[letter];
+            document.getElementById('wordHint').innerHTML = `
+                <div class="emoji">${wordData.emoji}</div>
+                <div>${letter} de ${wordData.word}</div>
+            `;
+
+            renderCalledLetters();
+        }
+
+        // Renderizar letras sorteadas
+        function renderCalledLetters() {
+            const container = document.getElementById('calledLetters');
+            container.innerHTML = '<h4>Letras sorteadas:</h4>';
+
+            gameState.calledLetters.forEach(letter => {
+                const span = document.createElement('span');
+                span.className = 'called-small';
+                span.textContent = letter;
+                container.appendChild(span);
+            });
+        }
+
+        // Marcar célula
+        function markCell(index) {
+            const letter = gameState.cardLetters[index];
+
+            if (gameState.markedCells.includes(index)) {
+                return;
+            }
+
+            if (!gameState.calledLetters.includes(letter)) {
+                // Letra não foi sorteada ainda
+                playSound('wrong');
+                const cells = document.querySelectorAll('.bingo-cell');
+                cells[index].classList.add('wrong');
+                setTimeout(() => cells[index].classList.remove('wrong'), 500);
+                showFeedback('Essa letra ainda não foi sorteada!', 'error');
+                return;
+            }
+
+            // Marcar célula
+            playSound('mark');
+            gameState.markedCells.push(index);
+            gameState.score += 10;
+            updateDisplay();
+            saveProgress();
+
+            renderCard();
+            showFeedback('+10 pontos!', 'success');
+
+            // Verificar bingo
+            checkBingo();
+        }
+
+        // Verificar bingo
+        function checkBingo() {
+            const lines = [
+                // Linhas horizontais
+                [0, 1, 2, 3, 4],
+                [5, 6, 7, 8, 9],
+                [10, 11, 12, 13, 14],
+                [15, 16, 17, 18, 19],
+                [20, 21, 22, 23, 24],
+                // Colunas verticais
+                [0, 5, 10, 15, 20],
+                [1, 6, 11, 16, 21],
+                [2, 7, 12, 17, 22],
+                [3, 8, 13, 18, 23],
+                [4, 9, 14, 19, 24],
+                // Diagonais
+                [0, 6, 12, 18, 24],
+                [4, 8, 12, 16, 20]
+            ];
+
+            for (const line of lines) {
+                if (line.every(index => gameState.markedCells.includes(index))) {
+                    celebrateBingo();
+                    return;
+                }
+            }
+        }
+
+        // Celebrar bingo
+        function celebrateBingo() {
+            playSound('bingo');
+            gameState.bingos++;
+            gameState.score += 100;
+
+            // Level up
+            gameState.level = Math.floor(gameState.bingos / 3) + 1;
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+
+            // Animação
+            const animation = document.getElementById('bingoAnimation');
+            animation.classList.add('show');
+
+            setTimeout(() => {
+                animation.classList.remove('show');
+                document.getElementById('gameArea').style.display = 'none';
+                document.getElementById('resultScreen').classList.add('show');
+                document.getElementById('resultScore').textContent = `Pontos: ${gameState.score} | Bingos: ${gameState.bingos}`;
+            }, 2000);
+
+            document.getElementById('callBtn').disabled = true;
+        }
+
+        // Novo jogo
+        function newGame() {
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('feedback').classList.remove('show');
+            generateCard();
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+            setTimeout(() => feedback.classList.remove('show'), 2000);
+        }
+
+        // Inicializar
+        loadProgress();
+        generateCard();
+    </script>
+</body>
+</html>

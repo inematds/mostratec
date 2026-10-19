@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação de Cidade - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .city-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .resources {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .resource {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .resource-icon {
+            font-size: 1.2em;
+        }
+
+        .city-indicators {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .indicator {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .indicator-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .indicator-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .indicator-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        .indicator-happiness .indicator-fill { background: #f1c40f; }
+        .indicator-environment .indicator-fill { background: #27ae60; }
+        .indicator-economy .indicator-fill { background: #3498db; }
+        .indicator-education .indicator-fill { background: #9b59b6; }
+
+        .indicator-label {
+            font-size: 0.7em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin-bottom: 15px;
+            background: rgba(0,100,0,0.3);
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .city-cell {
+            aspect-ratio: 1;
+            background: rgba(34,139,34,0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .city-cell:hover {
+            background: rgba(34,139,34,0.8);
+            transform: scale(1.05);
+        }
+
+        .city-cell.selected {
+            border-color: #feca57;
+            box-shadow: 0 0 10px rgba(254, 202, 87, 0.5);
+        }
+
+        .city-cell.water {
+            background: rgba(52, 152, 219, 0.7);
+        }
+
+        .city-cell.road {
+            background: rgba(100, 100, 100, 0.8);
+        }
+
+        .building-palette {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .building-option {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .building-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .building-option.selected {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+
+        .building-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .building-icon {
+            font-size: 2em;
+        }
+
+        .building-name {
+            font-size: 0.7em;
+            margin-top: 3px;
+        }
+
+        .building-cost {
+            font-size: 0.65em;
+            color: #feca57;
+        }
+
+        .actions-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-build {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-demolish {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-next-turn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .message-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .message-box.success {
+            background: rgba(39, 174, 96, 0.3);
+        }
+
+        .message-box.warning {
+            background: rgba(241, 196, 15, 0.3);
+        }
+
+        .message-box.danger {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .event-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 3px solid #4ecdc4;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            z-index: 100;
+            max-width: 90%;
+            display: none;
+        }
+
+        .event-popup.show {
+            display: block;
+            animation: popIn 0.3s;
+        }
+
+        @keyframes popIn {
+            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .event-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .event-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .event-description {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .event-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .event-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .event-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .event-btn-good {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .event-btn-bad {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .event-btn-neutral {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        .turn-display {
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .turn-display span {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .tip-box {
+            background: rgba(155, 89, 182, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            text-align: center;
+        }
+
+        .tip-icon {
+            margin-right: 5px;
+        }
+
+        @media (max-width: 500px) {
+            .city-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .city-indicators {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .building-option {
+                padding: 8px 10px;
+            }
+
+            .building-icon {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="population">0</div>
+            <div class="stat-label">População</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="turn">1</div>
+            <div class="stat-label">Turno</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Povoado: 50 população">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Vila: 200 população">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Cidade: 500 população">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Metrópole: 1000 população">💎</div>
+    </div>
+
+    <div class="game-area">
+        <div class="city-header">
+            <div class="city-name">🏙️ Minha Cidade</div>
+            <div class="resources">
+                <div class="resource">
+                    <span class="resource-icon">💰</span>
+                    <span id="money">1000</span>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">⚡</span>
+                    <span id="energy">100</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="turn-display">Turno: <span id="current-turn">1</span> / 20</div>
+
+        <div class="city-indicators">
+            <div class="indicator indicator-happiness">
+                <div class="indicator-icon">😊</div>
+                <div class="indicator-bar">
+                    <div class="indicator-fill" id="happiness-fill" style="width: 50%"></div>
+                </div>
+                <div class="indicator-label">Felicidade</div>
+            </div>
+            <div class="indicator indicator-environment">
+                <div class="indicator-icon">🌳</div>
+                <div class="indicator-bar">
+                    <div class="indicator-fill" id="environment-fill" style="width: 80%"></div>
+                </div>
+                <div class="indicator-label">Ambiente</div>
+            </div>
+            <div class="indicator indicator-economy">
+                <div class="indicator-icon">📈</div>
+                <div class="indicator-bar">
+                    <div class="indicator-fill" id="economy-fill" style="width: 50%"></div>
+                </div>
+                <div class="indicator-label">Economia</div>
+            </div>
+            <div class="indicator indicator-education">
+                <div class="indicator-icon">📚</div>
+                <div class="indicator-bar">
+                    <div class="indicator-fill" id="education-fill" style="width: 30%"></div>
+                </div>
+                <div class="indicator-label">Educação</div>
+            </div>
+        </div>
+
+        <div class="city-grid" id="city-grid"></div>
+
+        <div class="building-palette" id="building-palette"></div>
+
+        <div class="actions-panel">
+            <button class="action-btn btn-demolish" onclick="toggleDemolish()">🔨 Demolir</button>
+            <button class="action-btn btn-next-turn" onclick="nextTurn()">⏭️ Próximo Turno</button>
+            <button class="action-btn btn-reset" onclick="resetCity()">🔄 Reiniciar</button>
+        </div>
+
+        <div class="message-box" id="message-box">
+            👋 Bem-vindo! Construa uma cidade sustentável e feliz!
+        </div>
+
+        <div class="tip-box" id="tip-box">
+            <span class="tip-icon">💡</span>
+            <span id="tip-text">Dica: Equilibre construções com áreas verdes para manter o ambiente saudável!</span>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="event-popup" id="event-popup">
+        <div class="event-icon" id="event-icon">🎉</div>
+        <div class="event-title" id="event-title">Evento!</div>
+        <div class="event-description" id="event-description">Algo aconteceu na cidade.</div>
+        <div class="event-options" id="event-options"></div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            turn: 1,
+            maxTurns: 20,
+            money: 1000,
+            energy: 100,
+            population: 0,
+            happiness: 50,
+            environment: 80,
+            economy: 50,
+            education: 30,
+            selectedBuilding: null,
+            demolishMode: false,
+            grid: []
+        };
+
+        // Audio
+        let audioCtx = null;
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+            if (type === 'build') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(550, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'demolish') {
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'turn') {
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'event') {
+                osc.frequency.setValueAtTime(392, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // Buildings data
+        const buildings = [
+            { id: 'house', emoji: '🏠', name: 'Casa', cost: 100, energy: -5, population: 10, happiness: 5, environment: -2, economy: 2, education: 0 },
+            { id: 'apartment', emoji: '🏢', name: 'Prédio', cost: 300, energy: -15, population: 50, happiness: 3, environment: -5, economy: 5, education: 0 },
+            { id: 'school', emoji: '🏫', name: 'Escola', cost: 250, energy: -10, population: 0, happiness: 10, environment: 0, economy: -5, education: 20 },
+            { id: 'hospital', emoji: '🏥', name: 'Hospital', cost: 400, energy: -15, population: 0, happiness: 15, environment: 0, economy: -10, education: 5 },
+            { id: 'factory', emoji: '🏭', name: 'Fábrica', cost: 350, energy: -20, population: 0, happiness: -10, environment: -15, economy: 30, education: 0 },
+            { id: 'park', emoji: '🌳', name: 'Parque', cost: 150, energy: 0, population: 0, happiness: 15, environment: 15, economy: -2, education: 5 },
+            { id: 'solar', emoji: '☀️', name: 'Solar', cost: 400, energy: 30, population: 0, happiness: 5, environment: 10, economy: 5, education: 5 },
+            { id: 'market', emoji: '🏪', name: 'Mercado', cost: 200, energy: -5, population: 0, happiness: 10, environment: -2, economy: 15, education: 0 },
+            { id: 'library', emoji: '📚', name: 'Biblioteca', cost: 200, energy: -5, population: 0, happiness: 10, environment: 0, economy: -3, education: 15 },
+            { id: 'wind', emoji: '🌬️', name: 'Eólica', cost: 350, energy: 25, population: 0, happiness: 3, environment: 8, economy: 3, education: 3 }
+        ];
+
+        // Events
+        const events = [
+            {
+                icon: '🌧️',
+                title: 'Chuva Forte!',
+                description: 'Uma tempestade atingiu a cidade. O que fazer?',
+                options: [
+                    { text: '🏗️ Melhorar drenagem (-200💰)', effect: { money: -200, happiness: 5, environment: 5 } },
+                    { text: '🙈 Ignorar', effect: { happiness: -10, environment: -5 } }
+                ]
+            },
+            {
+                icon: '🎉',
+                title: 'Festival da Cidade!',
+                description: 'Os moradores querem celebrar!',
+                options: [
+                    { text: '🎊 Organizar festa (-100💰)', effect: { money: -100, happiness: 20 } },
+                    { text: '❌ Não realizar', effect: { happiness: -5 } }
+                ]
+            },
+            {
+                icon: '🏆',
+                title: 'Prêmio Cidade Verde!',
+                description: 'Sua cidade foi reconhecida pelo cuidado ambiental!',
+                options: [
+                    { text: '🎉 Celebrar!', effect: { money: 200, happiness: 10, environment: 5 } }
+                ]
+            },
+            {
+                icon: '📚',
+                title: 'Campanha de Educação',
+                description: 'Uma ONG quer ajudar com educação. Aceitar?',
+                options: [
+                    { text: '✅ Aceitar', effect: { education: 15, happiness: 5 } },
+                    { text: '❌ Recusar', effect: {} }
+                ]
+            },
+            {
+                icon: '💡',
+                title: 'Apagão!',
+                description: 'Falta energia na cidade!',
+                options: [
+                    { text: '⚡ Comprar energia (-150💰)', effect: { money: -150, energy: 30 } },
+                    { text: '🕯️ Esperar', effect: { happiness: -15, economy: -10 } }
+                ]
+            },
+            {
+                icon: '🏭',
+                title: 'Empresa quer se Instalar',
+                description: 'Uma grande empresa quer abrir uma fábrica. O que fazer?',
+                options: [
+                    { text: '✅ Permitir', effect: { money: 300, economy: 20, environment: -15, happiness: -5 } },
+                    { text: '🚫 Proibir', effect: { environment: 5, happiness: 5 } }
+                ]
+            },
+            {
+                icon: '🌳',
+                title: 'Plantio Comunitário',
+                description: 'Moradores querem plantar árvores!',
+                options: [
+                    { text: '🌱 Apoiar (-50💰)', effect: { money: -50, environment: 15, happiness: 10 } },
+                    { text: '🙅 Não participar', effect: {} }
+                ]
+            }
+        ];
+
+        const tips = [
+            'Equilibre construções com áreas verdes!',
+            'Escolas e hospitais deixam os moradores felizes!',
+            'Fábricas geram dinheiro mas poluem.',
+            'Energia solar e eólica são sustentáveis!',
+            'Parques melhoram o ambiente e a felicidade!',
+            'Bibliotecas aumentam a educação!',
+            'Cuidado com o consumo de energia!',
+            'Uma cidade equilibrada é uma cidade feliz!'
+        ];
+
+        // Initialize game
+        function init() {
+            loadProgress();
+            createGrid();
+            createBuildingPalette();
+            updateDisplay();
+            updateMedals();
+            showRandomTip();
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('city-grid');
+            grid.innerHTML = '';
+
+            // Initialize grid if empty
+            if (gameState.grid.length === 0) {
+                for (let i = 0; i < 30; i++) {
+                    gameState.grid.push(null);
+                }
+                // Add some initial features (water)
+                gameState.grid[5] = 'water';
+                gameState.grid[11] = 'water';
+            }
+
+            gameState.grid.forEach((cell, index) => {
+                const div = document.createElement('div');
+                div.className = 'city-cell';
+                div.dataset.index = index;
+
+                if (cell === 'water') {
+                    div.className += ' water';
+                    div.textContent = '🌊';
+                } else if (cell) {
+                    const building = buildings.find(b => b.id === cell);
+                    if (building) {
+                        div.textContent = building.emoji;
+                    }
+                }
+
+                div.addEventListener('click', () => handleCellClick(index));
+                grid.appendChild(div);
+            });
+        }
+
+        function createBuildingPalette() {
+            const palette = document.getElementById('building-palette');
+            palette.innerHTML = '';
+
+            buildings.forEach(building => {
+                const div = document.createElement('div');
+                div.className = 'building-option';
+                if (gameState.money < building.cost) {
+                    div.className += ' disabled';
+                }
+                div.innerHTML = `
+                    <div class="building-icon">${building.emoji}</div>
+                    <div class="building-name">${building.name}</div>
+                    <div class="building-cost">${building.cost}💰</div>
+                `;
+                div.addEventListener('click', () => selectBuilding(building));
+                palette.appendChild(div);
+            });
+        }
+
+        function selectBuilding(building) {
+            if (gameState.money < building.cost) {
+                showMessage('💰 Dinheiro insuficiente!', 'warning');
+                return;
+            }
+
+            gameState.selectedBuilding = building;
+            gameState.demolishMode = false;
+
+            document.querySelectorAll('.building-option').forEach((el, i) => {
+                el.classList.toggle('selected', buildings[i].id === building.id);
+            });
+
+            showMessage(`Selecionado: ${building.emoji} ${building.name}. Clique em uma célula para construir.`, 'success');
+        }
+
+        function handleCellClick(index) {
+            const cell = gameState.grid[index];
+
+            if (cell === 'water') {
+                showMessage('🌊 Não pode construir na água!', 'warning');
+                return;
+            }
+
+            if (gameState.demolishMode) {
+                if (cell && cell !== 'water') {
+                    const building = buildings.find(b => b.id === cell);
+                    gameState.grid[index] = null;
+                    gameState.money += Math.floor(building.cost / 2);
+
+                    // Remove building effects
+                    gameState.population = Math.max(0, gameState.population - building.population);
+                    gameState.energy += building.energy;
+                    gameState.happiness = Math.max(0, Math.min(100, gameState.happiness - building.happiness));
+                    gameState.environment = Math.max(0, Math.min(100, gameState.environment - building.environment));
+                    gameState.economy = Math.max(0, Math.min(100, gameState.economy - building.economy));
+                    gameState.education = Math.max(0, Math.min(100, gameState.education - building.education));
+
+                    playSound('demolish');
+                    showMessage(`${building.emoji} demolido! +${Math.floor(building.cost / 2)}💰`, 'warning');
+                    createGrid();
+                    updateDisplay();
+                    saveProgress();
+                }
+                return;
+            }
+
+            if (!gameState.selectedBuilding) {
+                showMessage('Selecione uma construção primeiro!', 'warning');
+                return;
+            }
+
+            if (cell) {
+                showMessage('⚠️ Já existe algo aqui!', 'warning');
+                return;
+            }
+
+            // Build!
+            const building = gameState.selectedBuilding;
+            gameState.grid[index] = building.id;
+            gameState.money -= building.cost;
+            gameState.population += building.population;
+            gameState.energy += building.energy;
+            gameState.happiness = Math.max(0, Math.min(100, gameState.happiness + building.happiness));
+            gameState.environment = Math.max(0, Math.min(100, gameState.environment + building.environment));
+            gameState.economy = Math.max(0, Math.min(100, gameState.economy + building.economy));
+            gameState.education = Math.max(0, Math.min(100, gameState.education + building.education));
+
+            // Add points
+            gameState.points += 10;
+            checkLevelUp();
+
+            playSound('build');
+            showMessage(`${building.emoji} construído! -${building.cost}💰`, 'success');
+            createGrid();
+            createBuildingPalette();
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        function toggleDemolish() {
+            gameState.demolishMode = !gameState.demolishMode;
+            gameState.selectedBuilding = null;
+
+            document.querySelectorAll('.building-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            if (gameState.demolishMode) {
+                showMessage('🔨 Modo demolição ativado. Clique em uma construção para demolir.', 'warning');
+            } else {
+                showMessage('Modo demolição desativado.', '');
+            }
+        }
+
+        function nextTurn() {
+            gameState.turn++;
+
+            // Calculate income
+            const income = Math.floor(gameState.economy * 2 + gameState.population * 0.5);
+            gameState.money += income;
+
+            // Random event (30% chance)
+            if (Math.random() < 0.3) {
+                showEvent();
+                return;
+            }
+
+            processTurn(income);
+        }
+
+        function processTurn(income) {
+            // Check game over conditions
+            if (gameState.energy < 0) {
+                showMessage('⚡ Apagão! A cidade ficou sem energia!', 'danger');
+                gameState.happiness -= 10;
+            }
+
+            if (gameState.happiness <= 0) {
+                showMessage('😢 Os moradores estão muito infelizes!', 'danger');
+            }
+
+            if (gameState.turn > gameState.maxTurns) {
+                endGame();
+                return;
+            }
+
+            playSound('turn');
+            showMessage(`📅 Turno ${gameState.turn}! +${income}💰 de impostos`, 'success');
+            showRandomTip();
+
+            updateDisplay();
+            createBuildingPalette();
+            saveProgress();
+        }
+
+        function showEvent() {
+            const event = events[Math.floor(Math.random() * events.length)];
+
+            document.getElementById('event-icon').textContent = event.icon;
+            document.getElementById('event-title').textContent = event.title;
+            document.getElementById('event-description').textContent = event.description;
+
+            const optionsDiv = document.getElementById('event-options');
+            optionsDiv.innerHTML = '';
+
+            event.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'event-btn event-btn-neutral';
+                btn.textContent = option.text;
+                btn.onclick = () => handleEventChoice(option.effect);
+                optionsDiv.appendChild(btn);
+            });
+
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('event-popup').classList.add('show');
+            playSound('event');
+        }
+
+        function handleEventChoice(effect) {
+            // Apply effects
+            if (effect.money) gameState.money += effect.money;
+            if (effect.energy) gameState.energy += effect.energy;
+            if (effect.happiness) gameState.happiness = Math.max(0, Math.min(100, gameState.happiness + effect.happiness));
+            if (effect.environment) gameState.environment = Math.max(0, Math.min(100, gameState.environment + effect.environment));
+            if (effect.economy) gameState.economy = Math.max(0, Math.min(100, gameState.economy + effect.economy));
+            if (effect.education) gameState.education = Math.max(0, Math.min(100, gameState.education + effect.education));
+
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('event-popup').classList.remove('show');
+
+            const income = Math.floor(gameState.economy * 2 + gameState.population * 0.5);
+            processTurn(income);
+        }
+
+        function endGame() {
+            // Calculate final score
+            const finalScore = gameState.population +
+                              (gameState.happiness * 5) +
+                              (gameState.environment * 3) +
+                              (gameState.economy * 2) +
+                              (gameState.education * 4);
+
+            gameState.points += finalScore;
+            checkLevelUp();
+
+            let rating = '';
+            if (finalScore >= 800) rating = '🌟🌟🌟🌟🌟 METRÓPOLE PERFEITA!';
+            else if (finalScore >= 600) rating = '🌟🌟🌟🌟 GRANDE CIDADE!';
+            else if (finalScore >= 400) rating = '🌟🌟🌟 CIDADE EM CRESCIMENTO';
+            else if (finalScore >= 200) rating = '🌟🌟 VILA PROMISSORA';
+            else rating = '🌟 POVOADO INICIANTE';
+
+            showMessage(`🎮 FIM DE JOGO! Pontuação: ${finalScore} - ${rating}`, 'success');
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        function resetCity() {
+            if (!confirm('Tem certeza que quer reiniciar a cidade?')) return;
+
+            gameState.turn = 1;
+            gameState.money = 1000;
+            gameState.energy = 100;
+            gameState.population = 0;
+            gameState.happiness = 50;
+            gameState.environment = 80;
+            gameState.economy = 50;
+            gameState.education = 30;
+            gameState.grid = [];
+            gameState.selectedBuilding = null;
+            gameState.demolishMode = false;
+
+            createGrid();
+            createBuildingPalette();
+            updateDisplay();
+            showMessage('🔄 Cidade reiniciada! Boa sorte!', 'success');
+            saveProgress();
+        }
+
+        function showMessage(text, type) {
+            const box = document.getElementById('message-box');
+            box.textContent = text;
+            box.className = 'message-box ' + type;
+        }
+
+        function showRandomTip() {
+            const tip = tips[Math.floor(Math.random() * tips.length)];
+            document.getElementById('tip-text').textContent = tip;
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.points / 500) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('population').textContent = gameState.population;
+            document.getElementById('turn').textContent = gameState.turn;
+            document.getElementById('current-turn').textContent = gameState.turn;
+            document.getElementById('money').textContent = gameState.money;
+            document.getElementById('energy').textContent = gameState.energy;
+
+            document.getElementById('happiness-fill').style.width = gameState.happiness + '%';
+            document.getElementById('environment-fill').style.width = gameState.environment + '%';
+            document.getElementById('economy-fill').style.width = gameState.economy + '%';
+            document.getElementById('education-fill').style.width = gameState.education + '%';
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.population >= 50);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.population >= 200);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.population >= 500);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.population >= 1000);
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('citySimProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('citySimProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                turn: gameState.turn,
+                money: gameState.money,
+                energy: gameState.energy,
+                population: gameState.population,
+                happiness: gameState.happiness,
+                environment: gameState.environment,
+                economy: gameState.economy,
+                education: gameState.education,
+                grid: gameState.grid
+            }));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

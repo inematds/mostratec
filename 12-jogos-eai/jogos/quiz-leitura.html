@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Leitura - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9c27b0;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+        }
+
+        /* Level Selection */
+        .level-selection {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .level-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .level-btn.easy {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+        }
+
+        .level-btn.medium {
+            background: linear-gradient(135deg, #ff9800, #ffc107);
+        }
+
+        .level-btn.hard {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+        }
+
+        .level-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .level-btn small {
+            display: block;
+            font-weight: normal;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        /* Progress */
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9c27b0, #e91e63);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Text Box */
+        .text-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .text-title {
+            font-size: 1.2rem;
+            color: #9c27b0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .text-content {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.9);
+            text-align: justify;
+        }
+
+        .text-content p {
+            margin-bottom: 15px;
+        }
+
+        .text-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Question */
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #9c27b0;
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .option.wrong {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .option-letter {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-letter {
+            background: #9c27b0;
+        }
+
+        .option.correct .option-letter {
+            background: #4caf50;
+        }
+
+        .option.wrong .option-letter {
+            background: #f44336;
+        }
+
+        /* Feedback */
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+        }
+
+        .feedback-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #9c27b0;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Medals */
+        .medals-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .text-content {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Quiz de Leitura</h1>
+            <p>Leia os textos e responda às perguntas!</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="level-selection" id="levelSelection">
+            <h2 style="margin-bottom: 30px;">Escolha o Nível</h2>
+
+            <button class="level-btn easy" onclick="startGame('easy')">
+                📗 Fácil
+                <small>Textos curtos e perguntas simples (3º ano)</small>
+            </button>
+
+            <button class="level-btn medium" onclick="startGame('medium')">
+                📘 Médio
+                <small>Textos médios com interpretação (4º ano)</small>
+            </button>
+
+            <button class="level-btn hard" onclick="startGame('hard')">
+                📕 Difícil
+                <small>Textos longos e análise profunda (5º ano)</small>
+            </button>
+
+            <div class="medals-container" style="margin-top: 30px;">
+                <span class="medal" id="medal1">🥉</span>
+                <span class="medal" id="medal2">🥈</span>
+                <span class="medal" id="medal3">🥇</span>
+                <span class="medal" id="medal4">🏆</span>
+                <span class="medal" id="medal5">👑</span>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">Texto <span id="currentText">1</span> de <span id="totalTexts">5</span></div>
+            </div>
+
+            <!-- Text Box -->
+            <div class="text-box">
+                <div class="text-title" id="textTitle">📚 O Cachorro e o Osso</div>
+                <div class="text-content" id="textContent">
+                    <p>Texto será carregado aqui...</p>
+                </div>
+            </div>
+
+            <!-- Question -->
+            <div class="question-box" id="questionBox">
+                <div class="question-number">Pergunta <span id="questionNumber">1</span> de <span id="totalQuestions">3</span></div>
+                <div class="question-text" id="questionText">Pergunta aqui...</div>
+                <div class="options" id="optionsContainer">
+                    <!-- Options will be generated -->
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback" id="feedback">
+                <div class="feedback-icon" id="feedbackIcon">✅</div>
+                <div class="feedback-text" id="feedbackText">Muito bem!</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu
+                </button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()" disabled>
+                    Próxima →
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="results-title">🎉 Quiz Completo!</div>
+            <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">Você completou todos os textos!</p>
+
+            <div class="results-stats">
+                <div class="result-item">
+                    <div class="result-value" id="finalScore">0</div>
+                    <div class="result-label">Pontos</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalCorrect">0</div>
+                    <div class="result-label">Acertos</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalStreak">0</div>
+                    <div class="result-label">Maior Sequência</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalAccuracy">0%</div>
+                    <div class="result-label">Precisão</div>
+                </div>
+            </div>
+
+            <div class="medals-container">
+                <span class="medal" id="resultMedal1">🥉</span>
+                <span class="medal" id="resultMedal2">🥈</span>
+                <span class="medal" id="resultMedal3">🥇</span>
+                <span class="medal" id="resultMedal4">🏆</span>
+                <span class="medal" id="resultMedal5">👑</span>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="startGame(currentDifficulty)">
+                    🔄 Jogar Novamente
+                </button>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Text database
+        const texts = {
+            easy: [
+                {
+                    title: "🐕 O Cachorro e o Osso",
+                    content: `<p>Um cachorro estava atravessando um rio com um osso na boca. Quando olhou para a água, viu seu reflexo e pensou que era outro cachorro com um osso maior.</p>
+                    <p>O cachorro abriu a boca para pegar o osso do outro cachorro. Mas quando abriu a boca, o osso caiu na água e afundou.</p>
+                    <p>O cachorro ficou sem nenhum osso!</p>`,
+                    questions: [
+                        { q: "O que o cachorro tinha na boca?", options: ["Um pão", "Um osso", "Uma bola", "Uma carne"], answer: 1 },
+                        { q: "Onde o cachorro estava atravessando?", options: ["Uma ponte", "Uma estrada", "Um rio", "Uma floresta"], answer: 2 },
+                        { q: "O que o cachorro viu na água?", options: ["Um peixe", "Seu reflexo", "Outro cachorro", "Uma pedra"], answer: 1 }
+                    ]
+                },
+                {
+                    title: "🐢 A Tartaruga Esperta",
+                    content: `<p>Uma tartaruga vivia perto de um lago. Ela era muito lenta, mas muito esperta.</p>
+                    <p>Um dia, uma lebre desafiou a tartaruga para uma corrida. A lebre riu da tartaruga por ser tão lenta.</p>
+                    <p>A tartaruga não desistiu. Ela seguiu devagar, mas sem parar. A lebre correu e parou para descansar.</p>
+                    <p>No final, a tartaruga ganhou a corrida porque nunca parou!</p>`,
+                    questions: [
+                        { q: "Onde a tartaruga vivia?", options: ["Na floresta", "Perto de um lago", "No deserto", "Na montanha"], answer: 1 },
+                        { q: "Quem desafiou a tartaruga?", options: ["Um coelho", "Uma lebre", "Um cachorro", "Um gato"], answer: 1 },
+                        { q: "Por que a tartaruga ganhou?", options: ["Ela era rápida", "Ela nunca parou", "A lebre caiu", "Ela trapaceou"], answer: 1 }
+                    ]
+                },
+                {
+                    title: "🌻 A Semente Mágica",
+                    content: `<p>Maria ganhou uma semente de sua avó. "Plante com carinho", disse a avó.</p>
+                    <p>Maria plantou a semente no jardim. Todos os dias ela regava a plantinha e falava com ela.</p>
+                    <p>Depois de algumas semanas, nasceu um lindo girassol! Maria ficou muito feliz.</p>
+                    <p>Ela entendeu que cuidar com amor faz as coisas crescerem.</p>`,
+                    questions: [
+                        { q: "Quem deu a semente para Maria?", options: ["Sua mãe", "Seu pai", "Sua avó", "Sua irmã"], answer: 2 },
+                        { q: "O que Maria fazia todos os dias?", options: ["Brincava", "Regava a planta", "Dormia", "Estudava"], answer: 1 },
+                        { q: "O que nasceu da semente?", options: ["Uma rosa", "Um girassol", "Uma árvore", "Uma margarida"], answer: 1 }
+                    ]
+                }
+            ],
+            medium: [
+                {
+                    title: "🦁 A Assembleia dos Animais",
+                    content: `<p>Na floresta, os animais decidiram fazer uma reunião para escolher um líder. Todos os animais foram convidados: o leão, a raposa, o elefante, a coruja e muitos outros.</p>
+                    <p>O leão disse: "Eu devo ser o líder porque sou o mais forte!" A raposa falou: "Mas ser líder não é só ser forte, é preciso ser inteligente!" O elefante argumentou: "Um bom líder deve ter memória e lembrar de todos."</p>
+                    <p>Por fim, a sábia coruja disse: "Um verdadeiro líder deve ouvir a todos e pensar no bem de toda a floresta, não apenas em si mesmo."</p>
+                    <p>Os animais concordaram com a coruja e a escolheram como conselheira do grupo.</p>`,
+                    questions: [
+                        { q: "Por que os animais fizeram a reunião?", options: ["Para brincar", "Para escolher um líder", "Para caçar", "Para dormir"], answer: 1 },
+                        { q: "O que o leão achava importante para ser líder?", options: ["Ser rápido", "Ser forte", "Ser bonito", "Ser grande"], answer: 1 },
+                        { q: "Qual era a opinião da coruja sobre ser líder?", options: ["Ser o mais forte", "Ouvir a todos e pensar no bem comum", "Ser o mais velho", "Ser o mais rápido"], answer: 1 },
+                        { q: "Quem foi escolhido como conselheiro?", options: ["O leão", "A raposa", "O elefante", "A coruja"], answer: 3 }
+                    ]
+                },
+                {
+                    title: "🌊 A Cidade Submarina",
+                    content: `<p>No fundo do oceano, existia uma cidade onde viviam peixes de todas as cores. A cidade se chamava Coralina e era feita de corais coloridos e conchas brilhantes.</p>
+                    <p>Os peixes tinham tarefas diferentes: alguns cuidavam dos jardins de algas, outros ensinavam os peixes pequenos e alguns protegiam a cidade de visitantes perigosos.</p>
+                    <p>Um dia, uma tempestade muito forte atingiu a superfície do mar. As ondas agitaram toda a água e muitos corais ficaram danificados.</p>
+                    <p>Os peixes trabalharam juntos para reconstruir sua cidade. Cada um ajudou da forma que podia. Depois de muito trabalho, Coralina ficou ainda mais bonita do que antes.</p>`,
+                    questions: [
+                        { q: "Qual era o nome da cidade?", options: ["Aquática", "Coralina", "Oceânica", "Peixelândia"], answer: 1 },
+                        { q: "De que era feita a cidade?", options: ["Pedras e areia", "Corais e conchas", "Madeira", "Metal"], answer: 1 },
+                        { q: "O que aconteceu com a cidade?", options: ["Pegou fogo", "Foi atacada", "Foi danificada pela tempestade", "Desapareceu"], answer: 2 },
+                        { q: "Como os peixes resolveram o problema?", options: ["Fugiram", "Trabalharam juntos", "Pediram ajuda", "Desistiram"], answer: 1 }
+                    ]
+                }
+            ],
+            hard: [
+                {
+                    title: "🔬 O Pequeno Cientista",
+                    content: `<p>Lucas sempre foi uma criança curiosa. Desde pequeno, ele fazia perguntas que deixavam os adultos pensativos: "Por que o céu é azul?", "Como os aviões voam?", "Por que as folhas mudam de cor?"</p>
+                    <p>Seus pais, preocupados em incentivar sua curiosidade, deram a ele um kit de experiências científicas no seu aniversário. Lucas ficou encantado e passou horas fazendo experimentos no quintal de casa.</p>
+                    <p>Um dia, ele decidiu investigar por que as plantas precisam de luz do sol. Pegou três vasos com a mesma planta: um deixou no sol, outro na sombra e outro dentro de um armário escuro. Durante duas semanas, regou todos igualmente e anotou suas observações em um caderno.</p>
+                    <p>O resultado foi surpreendente: a planta do sol cresceu forte e verde, a da sombra cresceu fraca e amarelada, e a do armário escuro morreu. Lucas entendeu que as plantas fazem fotossíntese e precisam de luz para produzir seu alimento.</p>
+                    <p>Esse experimento despertou ainda mais seu interesse pela ciência. Hoje, Lucas sonha em ser biólogo e descobrir novos segredos da natureza.</p>`,
+                    questions: [
+                        { q: "Qual característica principal de Lucas é destacada no texto?", options: ["Preguiça", "Curiosidade", "Timidez", "Rapidez"], answer: 1 },
+                        { q: "Quantos vasos Lucas usou no experimento?", options: ["Dois", "Três", "Quatro", "Cinco"], answer: 1 },
+                        { q: "O que Lucas descobriu com o experimento?", options: ["Plantas não precisam de água", "Plantas precisam de luz para viver", "Plantas crescem no escuro", "Plantas preferem sombra"], answer: 1 },
+                        { q: "Qual o significado de 'fotossíntese' baseado no texto?", options: ["Tirar fotos", "Processo em que plantas produzem alimento usando luz", "Plantar sementes", "Regar plantas"], answer: 1 },
+                        { q: "O que Lucas sonha ser quando crescer?", options: ["Médico", "Professor", "Biólogo", "Astronauta"], answer: 2 }
+                    ]
+                },
+                {
+                    title: "🏰 O Reino das Palavras",
+                    content: `<p>Havia um reino onde as palavras ganhavam vida. Cada palavra tinha uma forma, uma cor e uma personalidade única. Os substantivos eram sólidos e estáveis, os verbos eram sempre agitados e em movimento, e os adjetivos mudavam de aparência conforme o humor.</p>
+                    <p>No centro do reino ficava a Grande Biblioteca, onde vivia a sábia Gramática, responsável por manter a ordem entre as palavras. Ela garantia que todas seguissem as regras para que pudessem se comunicar.</p>
+                    <p>Um dia, chegou ao reino uma palavra estrangeira chamada "Cool". Ela falava de um jeito diferente e não conhecia as regras do lugar. Algumas palavras antigas não gostaram dela e queriam expulsá-la.</p>
+                    <p>Mas a sábia Gramática interveio: "Nossa língua está sempre mudando. Novas palavras podem enriquecê-la, desde que aprendam a conviver com as outras." E assim, "Cool" foi aceita e se adaptou, tornando-se parte do reino.</p>
+                    <p>Essa história nos ensina que a língua é viva e está sempre em transformação, acolhendo novas palavras enquanto preserva suas raízes.</p>`,
+                    questions: [
+                        { q: "Como eram descritos os verbos no Reino das Palavras?", options: ["Parados e calmos", "Agitados e em movimento", "Tristes e quietos", "Grandes e pesados"], answer: 1 },
+                        { q: "Quem era responsável por manter a ordem no reino?", options: ["O Rei Substantivo", "A Rainha Verbo", "A sábia Gramática", "O Príncipe Adjetivo"], answer: 2 },
+                        { q: "Qual foi a reação de algumas palavras antigas com a chegada de 'Cool'?", options: ["Ficaram felizes", "Queriam expulsá-la", "Ignoraram", "Fugiram"], answer: 1 },
+                        { q: "Qual a mensagem principal do texto?", options: ["Palavras novas são ruins", "A língua nunca muda", "A língua é viva e está sempre em transformação", "Devemos rejeitar palavras estrangeiras"], answer: 2 },
+                        { q: "O que representa a 'Grande Biblioteca' na história?", options: ["Um lugar de punição", "O lugar onde as regras da língua são guardadas", "Uma escola de magia", "Um castelo"], answer: 1 }
+                    ]
+                }
+            ]
+        };
+
+        // Game state
+        let currentDifficulty = 'easy';
+        let currentTextIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+        let level = 1;
+        let selectedTexts = [];
+        let answered = false;
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'complete':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.15);
+                    });
+                    break;
+            }
+        }
+
+        // Shuffle
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Load progress
+        function loadProgress() {
+            const saved = localStorage.getItem('quizLeituraProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                score = data.score || 0;
+                level = data.level || 1;
+                maxStreak = data.maxStreak || 0;
+                updateMedals();
+            }
+            updateDisplay();
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('quizLeituraProgress', JSON.stringify({
+                score, level, maxStreak
+            }));
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+            document.getElementById('level').textContent = level;
+        }
+
+        // Update medals
+        function updateMedals() {
+            const thresholds = [100, 300, 600, 1000, 2000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`medal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Start game
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            currentTextIndex = 0;
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            totalQuestions = 0;
+            streak = 0;
+
+            selectedTexts = shuffle(texts[difficulty]).slice(0, 3);
+
+            document.getElementById('levelSelection').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            document.getElementById('totalTexts').textContent = selectedTexts.length;
+
+            loadText();
+            updateDisplay();
+        }
+
+        // Load text
+        function loadText() {
+            const text = selectedTexts[currentTextIndex];
+
+            document.getElementById('currentText').textContent = currentTextIndex + 1;
+            const progress = (currentTextIndex / selectedTexts.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+
+            document.getElementById('textTitle').textContent = text.title;
+            document.getElementById('textContent').innerHTML = text.content;
+
+            document.getElementById('totalQuestions').textContent = text.questions.length;
+            totalQuestions += text.questions.length;
+
+            currentQuestionIndex = 0;
+            loadQuestion();
+        }
+
+        // Load question
+        function loadQuestion() {
+            const text = selectedTexts[currentTextIndex];
+            const question = text.questions[currentQuestionIndex];
+            answered = false;
+
+            document.getElementById('questionNumber').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.q;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            question.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerHTML = `
+                    <div class="option-letter">${letters[index]}</div>
+                    <div>${option}</div>
+                `;
+                div.onclick = () => selectOption(index, question.answer);
+                container.appendChild(div);
+            });
+
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('btnNext').disabled = true;
+        }
+
+        // Select option
+        function selectOption(selected, correct) {
+            if (answered) return;
+            answered = true;
+
+            const options = document.querySelectorAll('.option');
+            options[selected].classList.add('selected');
+
+            setTimeout(() => {
+                options.forEach((opt, i) => {
+                    if (i === correct) {
+                        opt.classList.add('correct');
+                    } else if (i === selected && selected !== correct) {
+                        opt.classList.add('wrong');
+                    }
+                });
+
+                const feedback = document.getElementById('feedback');
+                const feedbackIcon = document.getElementById('feedbackIcon');
+                const feedbackText = document.getElementById('feedbackText');
+
+                if (selected === correct) {
+                    playSound('correct');
+                    correctAnswers++;
+                    streak++;
+                    if (streak > maxStreak) maxStreak = streak;
+
+                    const basePoints = { easy: 10, medium: 20, hard: 30 }[currentDifficulty];
+                    const streakBonus = Math.min(streak * 2, 20);
+                    score += basePoints + streakBonus;
+
+                    feedback.className = 'feedback success show';
+                    feedbackIcon.textContent = '🎉';
+                    feedbackText.textContent = `Correto! +${basePoints + streakBonus} pontos`;
+
+                    // Check level up
+                    const newLevel = Math.floor(score / 100) + 1;
+                    if (newLevel > level) {
+                        level = newLevel;
+                    }
+                } else {
+                    playSound('wrong');
+                    streak = 0;
+
+                    feedback.className = 'feedback error show';
+                    feedbackIcon.textContent = '😕';
+                    feedbackText.textContent = 'Não foi dessa vez!';
+                }
+
+                updateDisplay();
+                updateMedals();
+                saveProgress();
+
+                document.getElementById('btnNext').disabled = false;
+            }, 500);
+        }
+
+        // Next question
+        function nextQuestion() {
+            const text = selectedTexts[currentTextIndex];
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= text.questions.length) {
+                // Next text
+                currentTextIndex++;
+                if (currentTextIndex >= selectedTexts.length) {
+                    showResults();
+                } else {
+                    loadText();
+                }
+            } else {
+                loadQuestion();
+            }
+        }
+
+        // Show results
+        function showResults() {
+            playSound('complete');
+
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+            document.getElementById('finalStreak').textContent = maxStreak;
+            document.getElementById('finalAccuracy').textContent = `${Math.round((correctAnswers / totalQuestions) * 100)}%`;
+
+            // Update result medals
+            const thresholds = [100, 300, 600, 1000, 2000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`resultMedal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Back to menu
+        function backToMenu() {
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+        }
+
+        // Initialize
+        loadProgress();
+    </script>
+</body>
+</html>

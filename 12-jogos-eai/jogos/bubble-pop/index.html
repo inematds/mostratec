@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bubble Pop Kingdom - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a237e; touch-action: none; }
+    #gameCanvas { display: block; width: 100%; height: 100%; }
+    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, #3949ab 0%, #1a237e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    #loading.hidden { display: none; }
+    .bubble-bounce { font-size: 80px; animation: bounce 1s ease-in-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.1); } }
+    #loading h1 { color: #E1BEE7; font-family: 'Arial Black', sans-serif; font-size: 26px; margin-top: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    #loading p { color: #B39DDB; font-family: Arial, sans-serif; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="bubble-bounce">🫧</div>
+    <h1>BUBBLE POP KINGDOM</h1>
+    <p>Preparando as bolhas...</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => document.getElementById('loading').classList.add('hidden'), 1500);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Astronomy Voyager - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #030014; touch-action: none; }
+    #gameCanvas { display: block; width: 100%; height: 100%; }
+    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, #1a0a2e 0%, #030014 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    #loading.hidden { display: none; }
+    .space-icon { font-size: 100px; animation: orbit 4s linear infinite; }
+    @keyframes orbit { 0% { transform: rotate(0deg) translateX(20px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(20px) rotate(-360deg); } }
+    #loading h1 { color: #a78bfa; font-family: 'Arial Black', sans-serif; font-size: 26px; margin-top: 20px; }
+    #loading p { color: #c4b5fd; font-family: Arial, sans-serif; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="space-icon">🚀</div>
+    <h1>ASTRONOMY VOYAGER</h1>
+    <p>Navegando pelo cosmos...</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experimentos Guiados - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .experiment-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .experiment-card {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .experiment-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .experiment-card.completed {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+        }
+
+        .experiment-card .emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .experiment-card .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .experiment-card .difficulty {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .experiment-view {
+            display: none;
+        }
+
+        .experiment-view.active {
+            display: block;
+        }
+
+        .experiment-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .experiment-header .emoji {
+            font-size: 4rem;
+        }
+
+        .experiment-header h2 {
+            color: #ffd700;
+            margin: 10px 0;
+        }
+
+        .experiment-header .description {
+            color: #81ecec;
+        }
+
+        .materials-list {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .materials-list h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .materials-list ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .materials-list li {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .steps-container {
+            margin: 20px 0;
+        }
+
+        .step {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.completed {
+            display: block;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffd700, #f39c12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-size: 1.2rem;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .step-content {
+            margin-left: 55px;
+        }
+
+        .step-content p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .step-animation {
+            text-align: center;
+            font-size: 4rem;
+            margin: 20px 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .quiz-section {
+            background: rgba(108, 92, 231, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+        }
+
+        .quiz-section h4 {
+            color: #81ecec;
+            margin-bottom: 15px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .quiz-option.correct {
+            background: rgba(0, 184, 148, 0.3);
+            border-color: #00b894;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.prev {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-btn.next {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 30px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: #ffd700;
+            transform: scale(1.3);
+        }
+
+        .progress-dot.completed {
+            background: #00b894;
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .completion-screen.show {
+            display: block;
+        }
+
+        .completion-screen .emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .completion-screen h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .fun-fact {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #ffd700;
+        }
+
+        .fun-fact h4 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .experiment-card .emoji {
+                font-size: 2rem;
+            }
+
+            .step-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Experimentos <span>Guiados</span></h1>
+            <p>Aprenda ciências fazendo experimentos!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="experiments">0</div>
+                <div class="stat-label">Experimentos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Curioso">🥉</span>
+            <span class="medal" id="medal2" title="Explorador">🥈</span>
+            <span class="medal" id="medal3" title="Cientista Jr">🥇</span>
+            <span class="medal" id="medal4" title="Pesquisador">🏆</span>
+            <span class="medal" id="medal5" title="Gênio Científico">👑</span>
+        </div>
+
+        <div class="game-area">
+            <div id="experimentList" class="experiment-select"></div>
+
+            <div id="experimentView" class="experiment-view">
+                <div class="experiment-header" id="experimentHeader"></div>
+
+                <div class="materials-list" id="materialsList"></div>
+
+                <div class="progress-steps" id="progressSteps"></div>
+
+                <div class="steps-container" id="stepsContainer"></div>
+
+                <div class="navigation">
+                    <button class="nav-btn prev" id="prevBtn" onclick="prevStep()">← Anterior</button>
+                    <button class="nav-btn next" id="nextBtn" onclick="nextStep()">Próximo →</button>
+                </div>
+
+                <button class="back-btn" onclick="backToList()">← Voltar aos Experimentos</button>
+            </div>
+
+            <div id="completionScreen" class="completion-screen">
+                <div class="emoji">🎉</div>
+                <h2>Experimento Completo!</h2>
+                <p id="completionMessage"></p>
+                <div class="fun-fact" id="funFact"></div>
+                <button class="nav-btn next" onclick="backToList()">Ver Mais Experimentos</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Experimentos
+        const experiments = [
+            {
+                id: 'volcano',
+                emoji: '🌋',
+                title: 'Vulcão de Bicarbonato',
+                difficulty: 'Fácil',
+                materials: [
+                    { emoji: '🥣', name: 'Bicarbonato de sódio' },
+                    { emoji: '🍶', name: 'Vinagre' },
+                    { emoji: '🎨', name: 'Corante alimentício' },
+                    { emoji: '🥤', name: 'Copo ou garrafa' },
+                    { emoji: '🍽️', name: 'Bandeja' }
+                ],
+                steps: [
+                    {
+                        title: 'Preparar o vulcão',
+                        content: 'Coloque o copo ou garrafa no centro da bandeja. Isso será nosso vulcão!',
+                        animation: '🏔️',
+                        quiz: {
+                            question: 'Por que colocamos uma bandeja embaixo?',
+                            options: [
+                                { text: 'Para ficar mais bonito', correct: false },
+                                { text: 'Para não fazer sujeira', correct: true },
+                                { text: 'Para esquentar o vulcão', correct: false }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Adicionar bicarbonato',
+                        content: 'Coloque 2 colheres de sopa de bicarbonato de sódio dentro do copo.',
+                        animation: '🥄',
+                        quiz: {
+                            question: 'O bicarbonato de sódio é uma substância...',
+                            options: [
+                                { text: 'Ácida', correct: false },
+                                { text: 'Base (alcalina)', correct: true },
+                                { text: 'Neutra', correct: false }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Adicionar corante',
+                        content: 'Adicione algumas gotas de corante vermelho ou laranja para parecer lava!',
+                        animation: '🔴',
+                        quiz: null
+                    },
+                    {
+                        title: 'A erupção!',
+                        content: 'Despeje o vinagre no copo e observe a "erupção"! A espuma que sobe é gás carbônico (CO2) sendo liberado.',
+                        animation: '🌋💥',
+                        quiz: {
+                            question: 'O que acontece quando misturamos bicarbonato com vinagre?',
+                            options: [
+                                { text: 'Nada acontece', correct: false },
+                                { text: 'A mistura fica quente', correct: false },
+                                { text: 'Produz gás carbônico e faz espuma', correct: true }
+                            ]
+                        }
+                    }
+                ],
+                funFact: 'Vulcões de verdade liberam gases como dióxido de enxofre e vapor d\'água. A lava pode chegar a 1200°C!'
+            },
+            {
+                id: 'rainbow',
+                emoji: '🌈',
+                title: 'Arco-Íris no Copo',
+                difficulty: 'Médio',
+                materials: [
+                    { emoji: '💧', name: '5 copos com água' },
+                    { emoji: '🍬', name: 'Açúcar' },
+                    { emoji: '🎨', name: 'Corantes (5 cores)' },
+                    { emoji: '🥄', name: 'Colher' },
+                    { emoji: '🧪', name: 'Seringa ou conta-gotas' }
+                ],
+                steps: [
+                    {
+                        title: 'Preparar as camadas',
+                        content: 'Pegue 5 copos e coloque água em cada um. Adicione uma cor diferente em cada copo.',
+                        animation: '🥤🥤🥤🥤🥤',
+                        quiz: null
+                    },
+                    {
+                        title: 'Adicionar açúcar',
+                        content: 'No 1º copo: 1 colher de açúcar. No 2º: 2 colheres. No 3º: 3 colheres. E assim por diante.',
+                        animation: '🍬',
+                        quiz: {
+                            question: 'Por que adicionamos diferentes quantidades de açúcar?',
+                            options: [
+                                { text: 'Para ficar mais doce', correct: false },
+                                { text: 'Para mudar a cor', correct: false },
+                                { text: 'Para mudar a densidade da água', correct: true }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Misturar bem',
+                        content: 'Mexa cada copo até o açúcar dissolver completamente.',
+                        animation: '🔄',
+                        quiz: null
+                    },
+                    {
+                        title: 'Criar o arco-íris',
+                        content: 'Use a seringa para colocar as cores no copo, começando pela mais doce (mais açúcar) no fundo.',
+                        animation: '🌈',
+                        quiz: {
+                            question: 'Por que as cores não se misturam?',
+                            options: [
+                                { text: 'Porque as cores se repelem', correct: false },
+                                { text: 'Porque as densidades são diferentes', correct: true },
+                                { text: 'Porque a água está fria', correct: false }
+                            ]
+                        }
+                    }
+                ],
+                funFact: 'A densidade é a quantidade de massa em um volume. Água salgada do mar é mais densa que água doce, por isso é mais fácil boiar no mar!'
+            },
+            {
+                id: 'plant',
+                emoji: '🌱',
+                title: 'Planta na Luz',
+                difficulty: 'Fácil',
+                materials: [
+                    { emoji: '🌱', name: 'Feijões ou sementes' },
+                    { emoji: '🥤', name: '2 copos transparentes' },
+                    { emoji: '🧽', name: 'Algodão' },
+                    { emoji: '💧', name: 'Água' },
+                    { emoji: '📦', name: 'Caixa de sapato' }
+                ],
+                steps: [
+                    {
+                        title: 'Preparar os copos',
+                        content: 'Coloque algodão molhado em cada copo. Posicione 2-3 feijões em cada copo.',
+                        animation: '🫘',
+                        quiz: {
+                            question: 'Por que usamos algodão molhado?',
+                            options: [
+                                { text: 'Porque fica bonito', correct: false },
+                                { text: 'Para manter a semente úmida', correct: true },
+                                { text: 'Porque as sementes gostam de algodão', correct: false }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Criar o experimento',
+                        content: 'Deixe um copo na luz do sol. Coloque o outro dentro de uma caixa fechada (sem luz).',
+                        animation: '☀️📦',
+                        quiz: null
+                    },
+                    {
+                        title: 'Manter úmido',
+                        content: 'Todos os dias, coloque um pouco de água para manter o algodão úmido nos dois copos.',
+                        animation: '💧',
+                        quiz: null
+                    },
+                    {
+                        title: 'Observar por 1 semana',
+                        content: 'Depois de uma semana, compare as duas plantas. A que ficou na luz estará verde e forte. A que ficou no escuro estará amarela e fraca.',
+                        animation: '🌱🆚🥀',
+                        quiz: {
+                            question: 'Por que a planta no escuro fica amarela?',
+                            options: [
+                                { text: 'Porque não gosta do escuro', correct: false },
+                                { text: 'Porque não pode fazer fotossíntese sem luz', correct: true },
+                                { text: 'Porque está com frio', correct: false }
+                            ]
+                        }
+                    }
+                ],
+                funFact: 'As plantas fazem fotossíntese: usam luz do sol, água e gás carbônico para produzir seu próprio alimento e liberar oxigênio!'
+            },
+            {
+                id: 'magnet',
+                emoji: '🧲',
+                title: 'Magnetismo',
+                difficulty: 'Fácil',
+                materials: [
+                    { emoji: '🧲', name: 'Ímã' },
+                    { emoji: '📎', name: 'Clipes de metal' },
+                    { emoji: '🪙', name: 'Moedas' },
+                    { emoji: '📝', name: 'Papel' },
+                    { emoji: '🥄', name: 'Colher de metal' }
+                ],
+                steps: [
+                    {
+                        title: 'Reunir objetos',
+                        content: 'Junte vários objetos: clipes, moedas, papel, plástico, madeira, metal.',
+                        animation: '📎🪙📝',
+                        quiz: null
+                    },
+                    {
+                        title: 'Fazer previsões',
+                        content: 'Antes de testar, tente adivinhar: quais objetos o ímã vai atrair?',
+                        animation: '🤔',
+                        quiz: {
+                            question: 'O ímã atrai todos os metais?',
+                            options: [
+                                { text: 'Sim, todos os metais', correct: false },
+                                { text: 'Não, só alguns como ferro', correct: true },
+                                { text: 'Não atrai nenhum metal', correct: false }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Testar cada objeto',
+                        content: 'Aproxime o ímã de cada objeto e veja se ele é atraído. Anote os resultados!',
+                        animation: '🧲✨',
+                        quiz: null
+                    },
+                    {
+                        title: 'Descobrir os materiais magnéticos',
+                        content: 'Os objetos de ferro, níquel e cobalto são atraídos pelo ímã. Papel, plástico e madeira não são!',
+                        animation: '🎯',
+                        quiz: {
+                            question: 'Uma moeda de 1 real é atraída pelo ímã?',
+                            options: [
+                                { text: 'Sim, todas as moedas são', correct: false },
+                                { text: 'Depende do material da moeda', correct: true },
+                                { text: 'Não, moedas nunca são atraídas', correct: false }
+                            ]
+                        }
+                    }
+                ],
+                funFact: 'A Terra é um ímã gigante! Por isso a bússola sempre aponta para o norte - ela é atraída pelo polo magnético da Terra.'
+            }
+        ];
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            experimentsCompleted: [],
+            currentExperiment: null,
+            currentStep: 0
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'complete':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
+                        osc.start(audioContext.currentTime + i * 0.15);
+                        osc.stop(audioContext.currentTime + i * 0.15 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('experimentosGuiadosProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.experimentsCompleted = data.experimentsCompleted || [];
+            }
+            updateDisplay();
+            updateMedals();
+            renderExperimentList();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                experimentsCompleted: gameState.experimentsCompleted
+            };
+            localStorage.setItem('experimentosGuiadosProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('experiments').textContent = gameState.experimentsCompleted.length;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 1 },
+                { id: 'medal2', threshold: 2 },
+                { id: 'medal3', threshold: 3 },
+                { id: 'medal4', threshold: 4 },
+                { id: 'medal5', threshold: 5 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.experimentsCompleted.length >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Renderizar lista de experimentos
+        function renderExperimentList() {
+            const container = document.getElementById('experimentList');
+            container.innerHTML = '';
+
+            experiments.forEach(exp => {
+                const card = document.createElement('div');
+                card.className = `experiment-card ${gameState.experimentsCompleted.includes(exp.id) ? 'completed' : ''}`;
+                card.innerHTML = `
+                    <div class="emoji">${exp.emoji}</div>
+                    <div class="title">${exp.title}</div>
+                    <div class="difficulty">${exp.difficulty} ${gameState.experimentsCompleted.includes(exp.id) ? '✓' : ''}</div>
+                `;
+                card.onclick = () => startExperiment(exp);
+                container.appendChild(card);
+            });
+        }
+
+        // Iniciar experimento
+        function startExperiment(experiment) {
+            gameState.currentExperiment = experiment;
+            gameState.currentStep = 0;
+
+            document.getElementById('experimentList').style.display = 'none';
+            document.getElementById('experimentView').classList.add('active');
+            document.getElementById('completionScreen').classList.remove('show');
+
+            // Header
+            document.getElementById('experimentHeader').innerHTML = `
+                <div class="emoji">${experiment.emoji}</div>
+                <h2>${experiment.title}</h2>
+                <div class="description">Nível: ${experiment.difficulty}</div>
+            `;
+
+            // Materiais
+            document.getElementById('materialsList').innerHTML = `
+                <h3>📦 Materiais necessários:</h3>
+                <ul>
+                    ${experiment.materials.map(m => `<li>${m.emoji} ${m.name}</li>`).join('')}
+                </ul>
+            `;
+
+            // Progress dots
+            renderProgressDots();
+
+            // Steps
+            renderSteps();
+            updateNavigation();
+        }
+
+        // Renderizar dots de progresso
+        function renderProgressDots() {
+            const container = document.getElementById('progressSteps');
+            container.innerHTML = '';
+
+            gameState.currentExperiment.steps.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (index === gameState.currentStep) dot.classList.add('active');
+                if (index < gameState.currentStep) dot.classList.add('completed');
+                container.appendChild(dot);
+            });
+        }
+
+        // Renderizar steps
+        function renderSteps() {
+            const container = document.getElementById('stepsContainer');
+            container.innerHTML = '';
+
+            gameState.currentExperiment.steps.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = `step ${index === gameState.currentStep ? 'active' : ''} ${index < gameState.currentStep ? 'completed' : ''}`;
+                stepEl.id = `step-${index}`;
+
+                let quizHTML = '';
+                if (step.quiz && index === gameState.currentStep) {
+                    quizHTML = `
+                        <div class="quiz-section">
+                            <h4>🤔 ${step.quiz.question}</h4>
+                            <div class="quiz-options">
+                                ${step.quiz.options.map((opt, i) => `
+                                    <div class="quiz-option" onclick="checkQuizAnswer(${index}, ${i}, ${opt.correct})">${opt.text}</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                stepEl.innerHTML = `
+                    <div class="step-header">
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-title">${step.title}</div>
+                    </div>
+                    <div class="step-content">
+                        <p>${step.content}</p>
+                        <div class="step-animation">${step.animation}</div>
+                        ${quizHTML}
+                    </div>
+                `;
+
+                container.appendChild(stepEl);
+            });
+        }
+
+        // Verificar resposta do quiz
+        function checkQuizAnswer(stepIndex, optionIndex, isCorrect) {
+            const options = document.querySelectorAll(`#step-${stepIndex} .quiz-option`);
+            options.forEach((opt, i) => {
+                opt.onclick = null;
+                if (i === optionIndex) {
+                    opt.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+                if (gameState.currentExperiment.steps[stepIndex].quiz.options[i].correct) {
+                    opt.classList.add('correct');
+                }
+            });
+
+            if (isCorrect) {
+                playSound('correct');
+                gameState.score += 20;
+                updateDisplay();
+                saveProgress();
+            } else {
+                playSound('wrong');
+            }
+        }
+
+        // Próximo passo
+        function nextStep() {
+            if (gameState.currentStep < gameState.currentExperiment.steps.length - 1) {
+                gameState.currentStep++;
+                renderProgressDots();
+                renderSteps();
+                updateNavigation();
+            } else {
+                completeExperiment();
+            }
+        }
+
+        // Passo anterior
+        function prevStep() {
+            if (gameState.currentStep > 0) {
+                gameState.currentStep--;
+                renderProgressDots();
+                renderSteps();
+                updateNavigation();
+            }
+        }
+
+        // Atualizar navegação
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            prevBtn.disabled = gameState.currentStep === 0;
+
+            if (gameState.currentStep === gameState.currentExperiment.steps.length - 1) {
+                nextBtn.textContent = 'Completar ✓';
+            } else {
+                nextBtn.textContent = 'Próximo →';
+            }
+        }
+
+        // Completar experimento
+        function completeExperiment() {
+            playSound('complete');
+
+            if (!gameState.experimentsCompleted.includes(gameState.currentExperiment.id)) {
+                gameState.experimentsCompleted.push(gameState.currentExperiment.id);
+                gameState.score += 50;
+
+                // Level up
+                gameState.level = Math.floor(gameState.experimentsCompleted.length / 2) + 1;
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+
+            document.getElementById('experimentView').classList.remove('active');
+            document.getElementById('completionScreen').classList.add('show');
+            document.getElementById('completionMessage').textContent = `Você completou o experimento "${gameState.currentExperiment.title}"!`;
+            document.getElementById('funFact').innerHTML = `<h4>💡 Você sabia?</h4><p>${gameState.currentExperiment.funFact}</p>`;
+        }
+
+        // Voltar para lista
+        function backToList() {
+            document.getElementById('experimentView').classList.remove('active');
+            document.getElementById('completionScreen').classList.remove('show');
+            document.getElementById('experimentList').style.display = 'grid';
+            renderExperimentList();
+        }
+
+        // Inicializar
+        loadProgress();
+    </script>
+</body>
+</html>

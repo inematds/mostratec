@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Slither EAI - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a0f;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0d0d18;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .loader {
+      font-size: 48px;
+      animation: bounce 0.5s ease infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-20px); }
+    }
+
+    #loading p {
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="loader">🐍</div>
+    <p>Carregando...</p>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    // Esconder loading quando o jogo carregar
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 500);
+    });
+  </script>
+</body>
+</html>

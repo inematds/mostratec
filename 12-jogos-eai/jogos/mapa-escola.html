@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa da Escola e Bairro - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .map-container {
+            position: relative;
+            background: linear-gradient(135deg, #55efc4 0%, #81ecec 50%, #74b9ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            height: 350px;
+        }
+
+        .map-cell {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .map-cell:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.5);
+        }
+
+        .map-cell.selected {
+            background: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .map-cell.correct {
+            background: rgba(0, 184, 148, 0.5);
+            animation: pulse 0.5s ease;
+        }
+
+        .map-cell.wrong {
+            background: rgba(231, 76, 60, 0.5);
+            animation: shake 0.5s ease;
+        }
+
+        .map-cell .label {
+            font-size: 0.7rem;
+            color: #1a1a2e;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .roads {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .road-h {
+            position: absolute;
+            height: 20px;
+            background: #636e72;
+            border-radius: 3px;
+        }
+
+        .road-v {
+            position: absolute;
+            width: 20px;
+            background: #636e72;
+            border-radius: 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .question {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #81ecec;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+        }
+
+        .compass {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .compass::before {
+            content: '↑ N';
+            color: #e74c3c;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .map-cell {
+                font-size: 1.5rem;
+            }
+
+            .map-cell .label {
+                font-size: 0.6rem;
+            }
+
+            .map-grid {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Mapa da Escola e <span>Bairro</span></h1>
+            <p>Aprenda sobre localização e direções!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="round">1/10</div>
+                <div class="stat-label">Rodada</div>
+            </div>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Explorador">🥉</span>
+            <span class="medal" id="medal2" title="Navegador">🥈</span>
+            <span class="medal" id="medal3" title="Cartógrafo">🥇</span>
+            <span class="medal" id="medal4" title="Geógrafo">🏆</span>
+            <span class="medal" id="medal5" title="Mestre dos Mapas">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="question" id="question">Encontre a escola no mapa!</div>
+
+            <div class="map-container">
+                <div class="compass"></div>
+                <div class="map-grid" id="mapGrid"></div>
+            </div>
+
+            <div class="legend" id="legend"></div>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Parabéns!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="startGame()">Jogar Novamente</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Lugares do mapa
+        const places = [
+            { emoji: '🏫', name: 'Escola', type: 'school' },
+            { emoji: '🏠', name: 'Casa', type: 'house' },
+            { emoji: '🏥', name: 'Hospital', type: 'hospital' },
+            { emoji: '🏪', name: 'Mercado', type: 'market' },
+            { emoji: '⛪', name: 'Igreja', type: 'church' },
+            { emoji: '🏛️', name: 'Prefeitura', type: 'cityhall' },
+            { emoji: '🚔', name: 'Delegacia', type: 'police' },
+            { emoji: '🏦', name: 'Banco', type: 'bank' },
+            { emoji: '📚', name: 'Biblioteca', type: 'library' },
+            { emoji: '⛽', name: 'Posto', type: 'gas' },
+            { emoji: '🏞️', name: 'Praça', type: 'park' },
+            { emoji: '🎭', name: 'Teatro', type: 'theater' },
+            { emoji: '🏋️', name: 'Academia', type: 'gym' },
+            { emoji: '💊', name: 'Farmácia', type: 'pharmacy' },
+            { emoji: '🍞', name: 'Padaria', type: 'bakery' },
+            { emoji: '🍕', name: 'Pizzaria', type: 'pizzeria' },
+            { emoji: '🚌', name: 'Ponto de Ônibus', type: 'busstop' },
+            { emoji: '🌳', name: 'Árvore', type: 'tree' },
+            { emoji: '🏠', name: 'Casas', type: 'houses' },
+            { emoji: '🛣️', name: 'Rua', type: 'street' }
+        ];
+
+        // Tipos de perguntas
+        const questionTypes = [
+            { type: 'find', template: 'Encontre {place} no mapa!' },
+            { type: 'direction', template: 'O que está ao {direction} {place}?' },
+            { type: 'between', template: 'O que está entre {place1} e {place2}?' },
+            { type: 'near', template: 'Qual lugar está mais perto {place}?' }
+        ];
+
+        // Direções
+        const directions = {
+            north: { name: 'norte', dx: 0, dy: -1 },
+            south: { name: 'sul', dx: 0, dy: 1 },
+            east: { name: 'leste', dx: 1, dy: 0 },
+            west: { name: 'oeste', dx: -1, dy: 0 }
+        };
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            currentRound: 0,
+            totalRounds: 10,
+            mapLayout: [],
+            correctAnswer: null,
+            correctAnswers: 0
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('mapaEscolaProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.correctAnswers = data.correctAnswers || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                correctAnswers: gameState.correctAnswers
+            };
+            localStorage.setItem('mapaEscolaProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('round').textContent = `${gameState.currentRound}/${gameState.totalRounds}`;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 10 },
+                { id: 'medal2', threshold: 25 },
+                { id: 'medal3', threshold: 50 },
+                { id: 'medal4', threshold: 100 },
+                { id: 'medal5', threshold: 200 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.correctAnswers >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Embaralhar array
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Gerar mapa
+        function generateMap() {
+            const shuffledPlaces = shuffle(places);
+            gameState.mapLayout = [];
+
+            for (let i = 0; i < 20; i++) {
+                gameState.mapLayout.push(shuffledPlaces[i % shuffledPlaces.length]);
+            }
+        }
+
+        // Renderizar mapa
+        function renderMap() {
+            const grid = document.getElementById('mapGrid');
+            grid.innerHTML = '';
+
+            gameState.mapLayout.forEach((place, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'map-cell';
+                cell.dataset.index = index;
+                cell.innerHTML = `
+                    <span>${place.emoji}</span>
+                    <span class="label">${place.name}</span>
+                `;
+                cell.onclick = () => selectCell(index);
+                grid.appendChild(cell);
+            });
+
+            renderLegend();
+        }
+
+        // Renderizar legenda
+        function renderLegend() {
+            const legend = document.getElementById('legend');
+            const uniquePlaces = [...new Map(gameState.mapLayout.map(p => [p.type, p])).values()];
+
+            legend.innerHTML = uniquePlaces.map(p => `
+                <div class="legend-item">${p.emoji} ${p.name}</div>
+            `).join('');
+        }
+
+        // Iniciar jogo
+        function startGame() {
+            gameState.currentRound = 0;
+            gameState.streak = 0;
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+            nextRound();
+        }
+
+        // Próxima rodada
+        function nextRound() {
+            gameState.currentRound++;
+            document.getElementById('feedback').classList.remove('show');
+
+            if (gameState.currentRound > gameState.totalRounds) {
+                showResult();
+                return;
+            }
+
+            updateDisplay();
+            updateProgress();
+
+            generateMap();
+            renderMap();
+            setupQuestion();
+        }
+
+        // Configurar pergunta
+        function setupQuestion() {
+            // Limpar seleções anteriores
+            document.querySelectorAll('.map-cell').forEach(cell => {
+                cell.classList.remove('selected', 'correct', 'wrong');
+            });
+
+            // Tipo de pergunta baseado no nível
+            const questionType = gameState.level < 3 ? 'find' : ['find', 'direction'][Math.floor(Math.random() * 2)];
+
+            if (questionType === 'find') {
+                setupFindQuestion();
+            } else {
+                setupDirectionQuestion();
+            }
+        }
+
+        // Pergunta de encontrar
+        function setupFindQuestion() {
+            const targetIndex = Math.floor(Math.random() * gameState.mapLayout.length);
+            const target = gameState.mapLayout[targetIndex];
+
+            document.getElementById('question').textContent = `🔍 Encontre ${target.emoji} ${target.name} no mapa!`;
+            gameState.correctAnswer = targetIndex;
+        }
+
+        // Pergunta de direção
+        function setupDirectionQuestion() {
+            const dirKeys = Object.keys(directions);
+            const dirKey = dirKeys[Math.floor(Math.random() * dirKeys.length)];
+            const dir = directions[dirKey];
+
+            // Encontrar uma posição válida
+            let validPositions = [];
+            for (let i = 0; i < 20; i++) {
+                const x = i % 5;
+                const y = Math.floor(i / 5);
+                const newX = x + dir.dx;
+                const newY = y + dir.dy;
+
+                if (newX >= 0 && newX < 5 && newY >= 0 && newY < 4) {
+                    validPositions.push(i);
+                }
+            }
+
+            const refIndex = validPositions[Math.floor(Math.random() * validPositions.length)];
+            const refPlace = gameState.mapLayout[refIndex];
+
+            const x = refIndex % 5;
+            const y = Math.floor(refIndex / 5);
+            const targetIndex = (y + dir.dy) * 5 + (x + dir.dx);
+            const targetPlace = gameState.mapLayout[targetIndex];
+
+            document.getElementById('question').textContent = `🧭 O que está ao ${dir.name} de ${refPlace.emoji} ${refPlace.name}?`;
+
+            // Destacar lugar de referência
+            document.querySelectorAll('.map-cell')[refIndex].classList.add('selected');
+
+            gameState.correctAnswer = targetIndex;
+        }
+
+        // Selecionar célula
+        function selectCell(index) {
+            const cells = document.querySelectorAll('.map-cell');
+
+            if (index === gameState.correctAnswer) {
+                cells[index].classList.add('correct');
+                handleCorrect();
+            } else {
+                cells[index].classList.add('wrong');
+                cells[gameState.correctAnswer].classList.add('correct');
+                handleWrong();
+            }
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = 15;
+            const streakBonus = gameState.streak * 5;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.correctAnswers++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            showFeedback(`Correto! +${points} pontos`, 'success');
+
+            setTimeout(nextRound, 1500);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            updateDisplay();
+
+            const correctPlace = gameState.mapLayout[gameState.correctAnswer];
+            showFeedback(`Ops! Era ${correctPlace.emoji} ${correctPlace.name}`, 'error');
+
+            setTimeout(nextRound, 2000);
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            const percent = ((gameState.currentRound - 1) / gameState.totalRounds) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 3) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('resultScreen').classList.add('show');
+
+            const accuracy = Math.round((gameState.correctAnswers / gameState.totalRounds) * 100);
+
+            document.getElementById('resultIcon').textContent = accuracy >= 70 ? '🎉' : '💪';
+            document.getElementById('resultTitle').textContent = accuracy >= 70 ? 'Excelente Navegador!' : 'Continue Explorando!';
+            document.getElementById('resultScore').textContent = `Pontos: ${gameState.score} | Nível: ${gameState.level} | Melhor sequência: ${gameState.maxStreak}`;
+        }
+
+        // Inicializar
+        loadProgress();
+        startGame();
+    </script>
+</body>
+</html>

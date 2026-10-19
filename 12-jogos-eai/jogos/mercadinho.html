@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercadinho Educativo - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ff9800, #4caf50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Wallet */
+        .wallet {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .wallet-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .wallet-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 5px;
+        }
+
+        .wallet-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .wallet-value.spent {
+            color: #f44336;
+        }
+
+        /* Level Selection */
+        .level-selection {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .level-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .level-btn.easy {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+        }
+
+        .level-btn.medium {
+            background: linear-gradient(135deg, #ff9800, #ffc107);
+        }
+
+        .level-btn.hard {
+            background: linear-gradient(135deg, #f44336, #e91e63);
+        }
+
+        .level-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .level-btn small {
+            display: block;
+            font-weight: normal;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        /* Shopping List */
+        .shopping-list {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .shopping-list h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #ff9800;
+        }
+
+        .list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .list-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .list-item.bought {
+            background: rgba(76, 175, 80, 0.3);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .list-item-icon {
+            font-size: 1.5rem;
+        }
+
+        .list-item-name {
+            font-size: 0.9rem;
+        }
+
+        /* Store */
+        .store {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .store h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .product {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .product:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .product.selected {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .product.in-cart {
+            border-color: #ff9800;
+            opacity: 0.6;
+        }
+
+        .product-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .product-name {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        /* Cart */
+        .cart {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .cart h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .cart-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .cart-item {
+            background: rgba(255,152,0,0.2);
+            padding: 8px 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cart-item:hover {
+            background: rgba(244,67,54,0.3);
+        }
+
+        .cart-total {
+            text-align: center;
+            font-size: 1.3rem;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .cart-total span {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        /* Payment */
+        .payment {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .payment.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .payment h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .payment-question {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #ff9800;
+        }
+
+        .money-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .money-item {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .money-item:hover {
+            transform: scale(1.1);
+            background: rgba(76, 175, 80, 0.4);
+        }
+
+        .money-item.selected {
+            background: #4caf50;
+            color: white;
+        }
+
+        .money-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .money-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .payment-option {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .payment-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .payment-option.correct {
+            background: #4caf50;
+        }
+
+        .payment-option.wrong {
+            background: #f44336;
+        }
+
+        /* Feedback */
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+        }
+
+        .feedback-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #f44336, #e91e63);
+        }
+
+        .btn-menu {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff9800, #4caf50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff9800;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Medals */
+        .medals-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .store-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .product-icon {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Mercadinho Educativo</h1>
+            <p>Aprenda matemática fazendo compras!</p>
+        </div>
+
+        <!-- Wallet -->
+        <div class="wallet">
+            <div class="wallet-item">
+                <div class="wallet-label">💰 Seu Dinheiro</div>
+                <div class="wallet-value" id="money">R$ 50,00</div>
+            </div>
+            <div class="wallet-item">
+                <div class="wallet-label">🛍️ Gastos</div>
+                <div class="wallet-value spent" id="spent">R$ 0,00</div>
+            </div>
+            <div class="wallet-item">
+                <div class="wallet-label">⭐ Pontos</div>
+                <div class="wallet-value" id="score" style="color: #ff9800;">0</div>
+            </div>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="level-selection" id="levelSelection">
+            <h2 style="margin-bottom: 30px;">Escolha o Nível</h2>
+
+            <button class="level-btn easy" onclick="startGame('easy')">
+                🌟 Fácil
+                <small>Preços inteiros (R$ 5, R$ 10...)</small>
+            </button>
+
+            <button class="level-btn medium" onclick="startGame('medium')">
+                ⭐ Médio
+                <small>Preços com centavos (R$ 3,50...)</small>
+            </button>
+
+            <button class="level-btn hard" onclick="startGame('hard')">
+                💫 Difícil
+                <small>Calcule o troco corretamente!</small>
+            </button>
+
+            <div class="medals-container" style="margin-top: 30px;">
+                <span class="medal" id="medal1" title="Primeira Compra">🥉</span>
+                <span class="medal" id="medal2" title="Cliente VIP">🥈</span>
+                <span class="medal" id="medal3" title="Mestre das Compras">🥇</span>
+                <span class="medal" id="medal4" title="Economista">🏆</span>
+                <span class="medal" id="medal5" title="Lenda do Mercado">👑</span>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <!-- Shopping List -->
+            <div class="shopping-list">
+                <h3>📝 Lista de Compras</h3>
+                <div class="list-items" id="shoppingList">
+                    <!-- Items will be generated -->
+                </div>
+            </div>
+
+            <!-- Store -->
+            <div class="store">
+                <h3>🏪 Prateleiras do Mercado</h3>
+                <div class="store-grid" id="storeGrid">
+                    <!-- Products will be generated -->
+                </div>
+            </div>
+
+            <!-- Cart -->
+            <div class="cart">
+                <h3>🛒 Seu Carrinho</h3>
+                <div class="cart-items" id="cartItems">
+                    <span style="color: rgba(255,255,255,0.5);">Clique nos produtos para adicionar</span>
+                </div>
+                <div class="cart-total">
+                    Total: <span id="cartTotal">R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="payment" id="payment">
+                <h3>💵 Pagamento</h3>
+                <div class="payment-question" id="paymentQuestion">
+                    Quanto de troco você deve receber?
+                </div>
+                <div class="payment-options" id="paymentOptions">
+                    <!-- Options will be generated -->
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback" id="feedback">
+                <div class="feedback-icon" id="feedbackIcon">✅</div>
+                <div class="feedback-text" id="feedbackText">Muito bem!</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-clear" onclick="clearCart()">
+                    🗑️ Limpar
+                </button>
+                <button class="btn btn-buy" id="btnBuy" onclick="checkout()" disabled>
+                    💳 Pagar
+                </button>
+                <button class="btn btn-menu" onclick="backToMenu()">
+                    🏠 Menu
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="results-title">🎉 Compras Concluídas!</div>
+            <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">Você completou sua lista de compras!</p>
+
+            <div class="results-stats">
+                <div class="result-item">
+                    <div class="result-value" id="finalScore">0</div>
+                    <div class="result-label">Pontos</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalSaved">R$ 0</div>
+                    <div class="result-label">Economia</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalItems">0</div>
+                    <div class="result-label">Itens Comprados</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalCorrect">0</div>
+                    <div class="result-label">Cálculos Certos</div>
+                </div>
+            </div>
+
+            <div class="medals-container">
+                <span class="medal" id="resultMedal1">🥉</span>
+                <span class="medal" id="resultMedal2">🥈</span>
+                <span class="medal" id="resultMedal3">🥇</span>
+                <span class="medal" id="resultMedal4">🏆</span>
+                <span class="medal" id="resultMedal5">👑</span>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-buy" onclick="startGame(currentDifficulty)">
+                    🔄 Nova Compra
+                </button>
+                <button class="btn btn-menu" onclick="backToMenu()">
+                    🏠 Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Products database
+        const products = [
+            { id: 1, name: 'Maçã', icon: '🍎', basePrice: 2 },
+            { id: 2, name: 'Banana', icon: '🍌', basePrice: 3 },
+            { id: 3, name: 'Leite', icon: '🥛', basePrice: 5 },
+            { id: 4, name: 'Pão', icon: '🍞', basePrice: 4 },
+            { id: 5, name: 'Queijo', icon: '🧀', basePrice: 8 },
+            { id: 6, name: 'Ovo', icon: '🥚', basePrice: 6 },
+            { id: 7, name: 'Cenoura', icon: '🥕', basePrice: 2 },
+            { id: 8, name: 'Tomate', icon: '🍅', basePrice: 3 },
+            { id: 9, name: 'Batata', icon: '🥔', basePrice: 4 },
+            { id: 10, name: 'Chocolate', icon: '🍫', basePrice: 5 },
+            { id: 11, name: 'Biscoito', icon: '🍪', basePrice: 4 },
+            { id: 12, name: 'Suco', icon: '🧃', basePrice: 6 },
+            { id: 13, name: 'Arroz', icon: '🍚', basePrice: 7 },
+            { id: 14, name: 'Feijão', icon: '🫘', basePrice: 8 },
+            { id: 15, name: 'Melancia', icon: '🍉', basePrice: 10 },
+            { id: 16, name: 'Uva', icon: '🍇', basePrice: 9 }
+        ];
+
+        // Game state
+        let currentDifficulty = 'easy';
+        let money = 50;
+        let spent = 0;
+        let score = 0;
+        let cart = [];
+        let shoppingList = [];
+        let storeProducts = [];
+        let correctCalculations = 0;
+        let totalPurchases = 0;
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'add':
+                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'remove':
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'win':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.15);
+                    });
+                    break;
+            }
+        }
+
+        // Format price
+        function formatPrice(value) {
+            return `R$ ${value.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Generate price based on difficulty
+        function getPrice(basePrice) {
+            switch(currentDifficulty) {
+                case 'easy':
+                    return Math.round(basePrice);
+                case 'medium':
+                    return basePrice + (Math.random() < 0.5 ? 0.5 : 0);
+                case 'hard':
+                    return basePrice + Math.floor(Math.random() * 100) / 100;
+            }
+        }
+
+        // Shuffle array
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Load progress
+        function loadProgress() {
+            const saved = localStorage.getItem('mercadinhoProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                score = data.score || 0;
+                totalPurchases = data.totalPurchases || 0;
+                updateMedals();
+            }
+            updateDisplay();
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('mercadinhoProgress', JSON.stringify({
+                score, totalPurchases
+            }));
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('money').textContent = formatPrice(money);
+            document.getElementById('spent').textContent = formatPrice(spent);
+            document.getElementById('score').textContent = score;
+        }
+
+        // Update medals
+        function updateMedals() {
+            const thresholds = [1, 5, 10, 25, 50];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`medal${i + 1}`);
+                if (totalPurchases >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Start game
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            money = difficulty === 'easy' ? 50 : (difficulty === 'medium' ? 75 : 100);
+            spent = 0;
+            cart = [];
+            correctCalculations = 0;
+
+            // Generate store products with prices
+            storeProducts = shuffle(products).slice(0, 12).map(p => ({
+                ...p,
+                price: getPrice(p.basePrice)
+            }));
+
+            // Generate shopping list (3-5 items from store)
+            const listSize = difficulty === 'easy' ? 3 : (difficulty === 'medium' ? 4 : 5);
+            shoppingList = shuffle(storeProducts).slice(0, listSize).map(p => ({
+                ...p,
+                bought: false
+            }));
+
+            document.getElementById('levelSelection').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            renderShoppingList();
+            renderStore();
+            renderCart();
+            updateDisplay();
+        }
+
+        // Render shopping list
+        function renderShoppingList() {
+            const container = document.getElementById('shoppingList');
+            container.innerHTML = '';
+
+            shoppingList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `list-item ${item.bought ? 'bought' : ''}`;
+                div.innerHTML = `
+                    <span class="list-item-icon">${item.icon}</span>
+                    <span class="list-item-name">${item.name}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Render store
+        function renderStore() {
+            const grid = document.getElementById('storeGrid');
+            grid.innerHTML = '';
+
+            storeProducts.forEach(product => {
+                const inCart = cart.some(p => p.id === product.id);
+                const div = document.createElement('div');
+                div.className = `product ${inCart ? 'in-cart' : ''}`;
+                div.innerHTML = `
+                    <div class="product-icon">${product.icon}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">${formatPrice(product.price)}</div>
+                `;
+                div.onclick = () => addToCart(product);
+                grid.appendChild(div);
+            });
+        }
+
+        // Add to cart
+        function addToCart(product) {
+            if (cart.some(p => p.id === product.id)) return;
+
+            const total = cart.reduce((sum, p) => sum + p.price, 0) + product.price;
+            if (total > money) {
+                showFeedback('💸 Dinheiro insuficiente!', 'error');
+                return;
+            }
+
+            playSound('add');
+            cart.push(product);
+
+            // Check if item is on shopping list
+            const listItem = shoppingList.find(item => item.id === product.id);
+            if (listItem) {
+                listItem.bought = true;
+                renderShoppingList();
+            }
+
+            renderStore();
+            renderCart();
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            playSound('remove');
+            cart = cart.filter(p => p.id !== productId);
+
+            // Unmark from shopping list
+            const listItem = shoppingList.find(item => item.id === productId);
+            if (listItem) {
+                listItem.bought = false;
+                renderShoppingList();
+            }
+
+            renderStore();
+            renderCart();
+        }
+
+        // Render cart
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = '<span style="color: rgba(255,255,255,0.5);">Clique nos produtos para adicionar</span>';
+            } else {
+                cart.forEach(product => {
+                    const div = document.createElement('div');
+                    div.className = 'cart-item';
+                    div.innerHTML = `
+                        <span>${product.icon}</span>
+                        <span>${formatPrice(product.price)}</span>
+                        <span>✕</span>
+                    `;
+                    div.onclick = () => removeFromCart(product.id);
+                    container.appendChild(div);
+                });
+            }
+
+            const total = cart.reduce((sum, p) => sum + p.price, 0);
+            document.getElementById('cartTotal').textContent = formatPrice(total);
+
+            // Enable buy button if all shopping list items are in cart
+            const allItemsBought = shoppingList.every(item => item.bought);
+            document.getElementById('btnBuy').disabled = !allItemsBought;
+        }
+
+        // Clear cart
+        function clearCart() {
+            playSound('remove');
+            cart = [];
+            shoppingList.forEach(item => item.bought = false);
+            renderShoppingList();
+            renderStore();
+            renderCart();
+        }
+
+        // Checkout
+        function checkout() {
+            const total = cart.reduce((sum, p) => sum + p.price, 0);
+
+            if (currentDifficulty === 'hard') {
+                // Show payment question
+                showPaymentQuestion(total);
+            } else {
+                // Direct purchase
+                completePurchase(total);
+            }
+        }
+
+        // Show payment question
+        function showPaymentQuestion(total) {
+            const payment = document.getElementById('payment');
+            const paymentQuestion = document.getElementById('paymentQuestion');
+            const paymentOptions = document.getElementById('paymentOptions');
+
+            // Calculate change
+            const paid = Math.ceil(total / 10) * 10; // Round up to nearest 10
+            const change = paid - total;
+
+            paymentQuestion.innerHTML = `
+                Você vai pagar ${formatPrice(paid)}.<br>
+                Quanto de troco você deve receber?
+            `;
+
+            // Generate options
+            const correctAnswer = change;
+            const options = [correctAnswer];
+
+            while (options.length < 4) {
+                const offset = (Math.floor(Math.random() * 10) - 5) * (currentDifficulty === 'hard' ? 0.5 : 1);
+                const wrongAnswer = Math.max(0, correctAnswer + offset);
+                if (!options.includes(wrongAnswer) && wrongAnswer !== correctAnswer) {
+                    options.push(wrongAnswer);
+                }
+            }
+
+            // Shuffle options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            paymentOptions.innerHTML = '';
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'payment-option';
+                btn.textContent = formatPrice(option);
+                btn.onclick = () => checkPayment(option, correctAnswer, total);
+                paymentOptions.appendChild(btn);
+            });
+
+            payment.classList.add('active');
+        }
+
+        // Check payment answer
+        function checkPayment(selected, correct, total) {
+            const buttons = document.querySelectorAll('.payment-option');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                const btnValue = parseFloat(btn.textContent.replace('R$ ', '').replace(',', '.'));
+                if (Math.abs(btnValue - correct) < 0.01) {
+                    btn.classList.add('correct');
+                } else if (Math.abs(btnValue - selected) < 0.01 && Math.abs(selected - correct) > 0.01) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            setTimeout(() => {
+                document.getElementById('payment').classList.remove('active');
+
+                if (Math.abs(selected - correct) < 0.01) {
+                    correctCalculations++;
+                    completePurchase(total, true);
+                } else {
+                    completePurchase(total, false);
+                }
+            }, 1000);
+        }
+
+        // Complete purchase
+        function completePurchase(total, calculationCorrect = true) {
+            spent = total;
+            money -= total;
+
+            // Calculate points
+            let points = cart.length * 10;
+            if (calculationCorrect && currentDifficulty === 'hard') {
+                points += 20;
+            }
+
+            // Bonus for buying exactly what's on the list
+            const extraItems = cart.filter(p => !shoppingList.some(item => item.id === p.id));
+            if (extraItems.length === 0) {
+                points += 30;
+            }
+
+            score += points;
+            totalPurchases++;
+
+            if (calculationCorrect) {
+                playSound('correct');
+                showFeedback(`🎉 Compra concluída! +${points} pontos`, 'success');
+            } else {
+                playSound('wrong');
+                showFeedback(`😅 Troco errado, mas compra concluída! +${points} pontos`, 'error');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+
+            setTimeout(showResults, 2000);
+        }
+
+        // Show feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            const icon = document.getElementById('feedbackIcon');
+            const text = document.getElementById('feedbackText');
+
+            icon.textContent = type === 'success' ? '✅' : '❌';
+            text.textContent = message;
+            feedback.className = `feedback ${type} show`;
+
+            setTimeout(() => feedback.classList.remove('show'), 2000);
+        }
+
+        // Show results
+        function showResults() {
+            playSound('win');
+
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalSaved').textContent = formatPrice(money);
+            document.getElementById('finalItems').textContent = cart.length;
+            document.getElementById('finalCorrect').textContent = correctCalculations;
+
+            // Update result medals
+            const thresholds = [1, 5, 10, 25, 50];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`resultMedal${i + 1}`);
+                if (totalPurchases >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Back to menu
+        function backToMenu() {
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+        }
+
+        // Initialize
+        loadProgress();
+    </script>
+</body>
+</html>

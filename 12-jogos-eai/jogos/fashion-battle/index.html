@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fashion Battle - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #fce4ec;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #fce4ec 0%, #f8bbd9 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .fashion-demo {
+      position: relative;
+      width: 150px;
+      height: 180px;
+    }
+
+    .mannequin {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 120px;
+    }
+
+    .mannequin-head {
+      width: 40px;
+      height: 40px;
+      background: #f5cba7;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+
+    .mannequin-body {
+      width: 50px;
+      height: 60px;
+      margin: 5px auto;
+      border-radius: 10px;
+      animation: colorChange 2s ease-in-out infinite;
+    }
+
+    @keyframes colorChange {
+      0%, 100% { background: #e91e63; }
+      33% { background: #9c27b0; }
+      66% { background: #3f51b5; }
+    }
+
+    .sparkles {
+      position: absolute;
+      font-size: 20px;
+      animation: sparkle 1s ease-in-out infinite;
+    }
+
+    .sparkles:nth-child(2) { top: 10%; left: 20%; animation-delay: 0s; }
+    .sparkles:nth-child(3) { top: 20%; right: 20%; animation-delay: 0.2s; }
+    .sparkles:nth-child(4) { bottom: 30%; left: 10%; animation-delay: 0.4s; }
+    .sparkles:nth-child(5) { bottom: 20%; right: 10%; animation-delay: 0.6s; }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    #loading h1 {
+      color: #e91e63;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 32px;
+      margin-top: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    #loading p {
+      color: #9c27b0;
+      font-family: Arial, sans-serif;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .stars-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      font-size: 30px;
+    }
+
+    .star {
+      animation: starPop 0.5s ease-in-out infinite alternate;
+    }
+
+    .star:nth-child(1) { animation-delay: 0s; }
+    .star:nth-child(2) { animation-delay: 0.1s; }
+    .star:nth-child(3) { animation-delay: 0.2s; }
+    .star:nth-child(4) { animation-delay: 0.3s; }
+    .star:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes starPop {
+      0% { transform: scale(0.9); }
+      100% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="fashion-demo">
+      <span class="sparkles">✨</span>
+      <span class="sparkles">✨</span>
+      <span class="sparkles">✨</span>
+      <span class="sparkles">✨</span>
+      <div class="mannequin">
+        <div class="mannequin-head"></div>
+        <div class="mannequin-body"></div>
+      </div>
+    </div>
+    <h1>FASHION BATTLE</h1>
+    <p>Preparando o desfile...</p>
+    <div class="stars-row">
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

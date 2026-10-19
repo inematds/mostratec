@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Números até 100 - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+      min-height: 100vh;
+      font-family: 'Comic Sans MS', 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+    }
+
+    .modes {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 1rem 2rem;
+      border: 4px solid white;
+      border-radius: 2rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .mode-btn.active {
+      background: white;
+      color: #8B5CF6;
+    }
+
+    .mode-btn:hover { transform: scale(1.05); }
+
+    .game-area {
+      background: white;
+      border-radius: 2rem;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    /* Number Grid */
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 0.3rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .number-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .number-cell:hover {
+      transform: scale(1.15);
+      background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+      color: white;
+      z-index: 1;
+    }
+
+    .number-cell.highlight {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+      animation: pulse 0.5s ease infinite alternate;
+    }
+
+    .number-cell.tens {
+      background: linear-gradient(135deg, #EC4899, #DB2777);
+      color: white;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    /* Counting Mode */
+    .counting-area {
+      text-align: center;
+    }
+
+    .big-number {
+      font-size: 10rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: bounce 1s ease infinite;
+      cursor: pointer;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .number-words {
+      font-size: 1.8rem;
+      color: #6B7280;
+      margin: 1rem 0;
+    }
+
+    .objects-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: #f3f4f6;
+      border-radius: 1rem;
+      min-height: 80px;
+    }
+
+    .object-item {
+      font-size: 1.8rem;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      80% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .nav-btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.prev { background: #E5E7EB; color: #374151; }
+    .nav-btn.next { background: linear-gradient(135deg, #10B981, #059669); color: white; }
+    .nav-btn:hover { transform: scale(1.05); }
+
+    .sound-btn {
+      background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem auto;
+    }
+
+    /* Quiz Mode */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      padding: 1rem 2rem;
+      border-radius: 1rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #D97706;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #92400E;
+    }
+
+    .quiz-question {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-display {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .quiz-number {
+      font-size: 6rem;
+      font-weight: bold;
+      color: #8B5CF6;
+    }
+
+    .quiz-objects {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      max-width: 200px;
+      justify-content: center;
+    }
+
+    .quiz-objects span {
+      font-size: 2rem;
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .quiz-option {
+      padding: 1.5rem;
+      border: 4px solid #E5E7EB;
+      border-radius: 1.5rem;
+      background: white;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .quiz-option:hover {
+      border-color: #8B5CF6;
+      transform: scale(1.05);
+    }
+
+    .quiz-option.correct {
+      border-color: #10B981;
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .quiz-option.wrong {
+      border-color: #EF4444;
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .message.show { display: block; animation: popIn 0.3s ease; }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+
+    .end-screen {
+      text-align: center;
+      display: none;
+    }
+
+    .end-screen.active { display: block; }
+    .end-stars { font-size: 4rem; margin: 1rem 0; }
+    .end-score { font-size: 3rem; font-weight: bold; color: #D97706; }
+
+    .restart-btn {
+      margin-top: 1.5rem;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .restart-btn:hover { transform: scale(1.05); }
+
+    /* Sequence game */
+    .sequence-area {
+      text-align: center;
+    }
+
+    .sequence-display {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+
+    .sequence-box {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      border-radius: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #374151;
+      border: 3px solid #E5E7EB;
+    }
+
+    .sequence-box.empty {
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      border-color: #F59E0B;
+    }
+
+    .sequence-box.answer {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sequence-box.answer:hover {
+      transform: scale(1.1);
+      border-color: #8B5CF6;
+    }
+
+    .sequence-options {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .sequence-option {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 3px solid #8B5CF6;
+      border-radius: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #8B5CF6;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sequence-option:hover {
+      background: #8B5CF6;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .sequence-option.used {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .big-number { font-size: 6rem; }
+      .number-grid { gap: 0.2rem; }
+      .number-cell { font-size: 0.8rem; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔢 Números até 100</h1>
+    <p class="subtitle">Aprenda a contar de 1 a 100!</p>
+
+    <div class="modes">
+      <button class="mode-btn active" data-mode="count">🔢 Contar</button>
+      <button class="mode-btn" data-mode="grid">📊 Tabela</button>
+      <button class="mode-btn" data-mode="sequence">📝 Sequência</button>
+      <button class="mode-btn" data-mode="quiz">🎯 Quiz</button>
+    </div>
+
+    <div class="game-area">
+      <!-- Count Mode -->
+      <div id="countMode" class="counting-area">
+        <div class="big-number" id="bigNumber" onclick="speakNumber()">1</div>
+        <div class="number-words" id="numberWords">um</div>
+
+        <button class="sound-btn" onclick="speakNumber()">
+          🔊 Ouvir o número
+        </button>
+
+        <div class="objects-display" id="objectsDisplay"></div>
+
+        <div class="nav-buttons">
+          <button class="nav-btn prev" onclick="prevNumber()">⬅️ -1</button>
+          <button class="nav-btn" onclick="goToNumber(1)" style="background:#F59E0B;color:white">1</button>
+          <button class="nav-btn" onclick="goToNumber(10)" style="background:#EC4899;color:white">10</button>
+          <button class="nav-btn" onclick="goToNumber(50)" style="background:#8B5CF6;color:white">50</button>
+          <button class="nav-btn" onclick="goToNumber(100)" style="background:#10B981;color:white">100</button>
+          <button class="nav-btn next" onclick="nextNumber()">+1 ➡️</button>
+        </div>
+      </div>
+
+      <!-- Grid Mode -->
+      <div id="gridMode" style="display:none">
+        <div class="number-grid" id="numberGrid"></div>
+        <p style="text-align:center;color:#6B7280;">Clique em um número para ouvi-lo!</p>
+      </div>
+
+      <!-- Sequence Mode -->
+      <div id="sequenceMode" style="display:none" class="sequence-area">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="seqScore">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="seqRound">1</div>
+            <div class="stat-label">Rodada</div>
+          </div>
+        </div>
+
+        <p class="quiz-question">Complete a sequência:</p>
+        <div class="sequence-display" id="sequenceDisplay"></div>
+        <div class="sequence-options" id="sequenceOptions"></div>
+        <div class="message" id="seqMessage"></div>
+      </div>
+
+      <!-- Quiz Mode -->
+      <div id="quizMode" style="display:none">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="score">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value"><span id="current">1</span>/10</div>
+            <div class="stat-label">Questão</div>
+          </div>
+        </div>
+
+        <div class="quiz-question" id="quizQuestion">Quantos objetos existem?</div>
+
+        <div class="quiz-display">
+          <div class="quiz-objects" id="quizObjects"></div>
+        </div>
+
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="message" id="message"></div>
+      </div>
+
+      <!-- End Screen -->
+      <div class="end-screen" id="endScreen">
+        <h2>🎉 Parabéns!</h2>
+        <div class="end-stars" id="endStars">⭐⭐⭐</div>
+        <div class="end-score" id="endScore">100 pontos</div>
+        <p id="endMessage">Você é fera nos números!</p>
+        <button class="restart-btn" onclick="restartQuiz()">🔄 Jogar Novamente</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('numeros-100'));</script>
+
+  <script>
+    const numberWords = {
+      1: 'um', 2: 'dois', 3: 'três', 4: 'quatro', 5: 'cinco',
+      6: 'seis', 7: 'sete', 8: 'oito', 9: 'nove', 10: 'dez',
+      11: 'onze', 12: 'doze', 13: 'treze', 14: 'quatorze', 15: 'quinze',
+      16: 'dezesseis', 17: 'dezessete', 18: 'dezoito', 19: 'dezenove',
+      20: 'vinte', 30: 'trinta', 40: 'quarenta', 50: 'cinquenta',
+      60: 'sessenta', 70: 'setenta', 80: 'oitenta', 90: 'noventa', 100: 'cem'
+    };
+
+    const objects = ['🍎', '🌟', '🎈', '🐶', '🌸', '🚗', '⚽', '🎁', '🦋', '🍕'];
+
+    let currentNumber = 1;
+    let mode = 'count';
+    let quizScore = 0;
+    let quizQuestion = 0;
+    let correctAnswer = 0;
+    let totalQuestions = 10;
+    let correctCount = 0;
+    let seqScore = 0;
+    let seqRound = 1;
+    let seqAnswer = 0;
+
+    function getNumberWord(n) {
+      if (n <= 20 || n === 100) return numberWords[n];
+      const tens = Math.floor(n / 10) * 10;
+      const units = n % 10;
+      if (units === 0) return numberWords[tens];
+      return numberWords[tens] + ' e ' + numberWords[units];
+    }
+
+    function updateCountDisplay() {
+      document.getElementById('bigNumber').textContent = currentNumber;
+      document.getElementById('numberWords').textContent = getNumberWord(currentNumber);
+
+      const objectsDiv = document.getElementById('objectsDisplay');
+      objectsDiv.innerHTML = '';
+      const obj = objects[Math.floor(Math.random() * objects.length)];
+      for (let i = 0; i < Math.min(currentNumber, 20); i++) {
+        const span = document.createElement('span');
+        span.className = 'object-item';
+        span.textContent = obj;
+        span.style.animationDelay = (i * 0.05) + 's';
+        objectsDiv.appendChild(span);
+      }
+      if (currentNumber > 20) {
+        const more = document.createElement('span');
+        more.textContent = `+${currentNumber - 20} mais`;
+        more.style.color = '#6B7280';
+        objectsDiv.appendChild(more);
+      }
+    }
+
+    function speakNumber() {
+      const utterance = new SpeechSynthesisUtterance(currentNumber.toString());
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
+    }
+
+    function prevNumber() {
+      currentNumber = Math.max(1, currentNumber - 1);
+      updateCountDisplay();
+    }
+
+    function nextNumber() {
+      currentNumber = Math.min(100, currentNumber + 1);
+      updateCountDisplay();
+    }
+
+    function goToNumber(n) {
+      currentNumber = n;
+      updateCountDisplay();
+    }
+
+    // Grid
+    function createGrid() {
+      const grid = document.getElementById('numberGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'number-cell' + (i % 10 === 0 ? ' tens' : '');
+        cell.textContent = i;
+        cell.onclick = () => {
+          document.querySelectorAll('.number-cell').forEach(c => c.classList.remove('highlight'));
+          cell.classList.add('highlight');
+          const utterance = new SpeechSynthesisUtterance(i.toString());
+          utterance.lang = 'pt-BR';
+          speechSynthesis.speak(utterance);
+        };
+        grid.appendChild(cell);
+      }
+    }
+
+    // Sequence game
+    function generateSequence() {
+      const start = Math.floor(Math.random() * 90) + 1;
+      const sequence = [];
+      for (let i = 0; i < 5; i++) {
+        sequence.push(start + i);
+      }
+
+      // Pick random position to be empty
+      const emptyIndex = Math.floor(Math.random() * 5);
+      seqAnswer = sequence[emptyIndex];
+
+      const display = document.getElementById('sequenceDisplay');
+      display.innerHTML = '';
+      sequence.forEach((num, i) => {
+        const box = document.createElement('div');
+        box.className = 'sequence-box' + (i === emptyIndex ? ' empty' : '');
+        box.textContent = i === emptyIndex ? '?' : num;
+        if (i === emptyIndex) box.id = 'emptyBox';
+        display.appendChild(box);
+      });
+
+      // Generate options
+      const options = [seqAnswer];
+      while (options.length < 4) {
+        const wrong = seqAnswer + Math.floor(Math.random() * 10) - 5;
+        if (wrong > 0 && wrong <= 100 && !options.includes(wrong)) {
+          options.push(wrong);
+        }
+      }
+
+      // Shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      const optionsDiv = document.getElementById('sequenceOptions');
+      optionsDiv.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'sequence-option';
+        btn.textContent = opt;
+        btn.onclick = () => checkSequenceAnswer(opt, btn);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function checkSequenceAnswer(answer, btn) {
+      const message = document.getElementById('seqMessage');
+      const emptyBox = document.getElementById('emptyBox');
+
+      if (answer === seqAnswer) {
+        emptyBox.textContent = answer;
+        emptyBox.classList.remove('empty');
+        emptyBox.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+        emptyBox.style.color = 'white';
+
+        seqScore += 10;
+        document.getElementById('seqScore').textContent = seqScore;
+        message.textContent = '✅ Correto!';
+        message.className = 'message show success';
+
+        seqRound++;
+        document.getElementById('seqRound').textContent = seqRound;
+
+        setTimeout(() => {
+          message.classList.remove('show');
+          if (seqRound <= 10) {
+            generateSequence();
+          } else {
+            endSequenceGame();
+          }
+        }, 1000);
+      } else {
+        btn.style.opacity = '0.3';
+        btn.style.pointerEvents = 'none';
+        message.textContent = '❌ Tente novamente!';
+        message.className = 'message show error';
+        EAI.applyPenalty(1);
+        setTimeout(() => message.classList.remove('show'), 1000);
+      }
+    }
+
+    function endSequenceGame() {
+      document.getElementById('sequenceMode').style.display = 'none';
+      document.getElementById('endScreen').classList.add('active');
+      document.getElementById('endScore').textContent = seqScore + ' pontos';
+      document.getElementById('endStars').textContent = seqScore >= 80 ? '⭐⭐⭐' : seqScore >= 50 ? '⭐⭐' : '⭐';
+      document.getElementById('endMessage').textContent = 'Você completou as sequências!';
+
+      EAI.giveGameReward({
+        correct: Math.floor(seqScore / 10),
+        total: 10,
+        gameType: 'quiz'
+      });
+    }
+
+    // Quiz
+    function generateQuiz() {
+      const count = Math.floor(Math.random() * 19) + 2; // 2-20 objects
+      correctAnswer = count;
+
+      const obj = objects[Math.floor(Math.random() * objects.length)];
+
+      const objDiv = document.getElementById('quizObjects');
+      objDiv.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement('span');
+        span.textContent = obj;
+        objDiv.appendChild(span);
+      }
+
+      // Generate options
+      const options = [count];
+      while (options.length < 4) {
+        const wrong = count + Math.floor(Math.random() * 8) - 4;
+        if (wrong > 0 && wrong <= 20 && !options.includes(wrong)) {
+          options.push(wrong);
+        }
+      }
+
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      const optionsDiv = document.getElementById('quizOptions');
+      optionsDiv.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option';
+        btn.textContent = opt;
+        btn.onclick = () => checkQuizAnswer(opt, btn);
+        optionsDiv.appendChild(btn);
+      });
+
+      document.getElementById('current').textContent = quizQuestion + 1;
+    }
+
+    function checkQuizAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.quiz-option');
+      buttons.forEach(b => b.style.pointerEvents = 'none');
+
+      const message = document.getElementById('message');
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        quizScore += 10;
+        correctCount++;
+        document.getElementById('score').textContent = quizScore;
+        message.textContent = '✅ Correto!';
+        message.className = 'message show success';
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (parseInt(b.textContent) === correctAnswer) b.classList.add('correct');
+        });
+        message.textContent = `❌ Era ${correctAnswer}`;
+        message.className = 'message show error';
+        EAI.applyPenalty(1);
+      }
+
+      quizQuestion++;
+
+      if (quizQuestion >= totalQuestions) {
+        setTimeout(endQuiz, 1500);
+      } else {
+        setTimeout(() => {
+          message.classList.remove('show');
+          buttons.forEach(b => b.style.pointerEvents = 'auto');
+          generateQuiz();
+        }, 1500);
+      }
+    }
+
+    function endQuiz() {
+      document.getElementById('quizMode').style.display = 'none';
+      document.getElementById('endScreen').classList.add('active');
+
+      const percent = (correctCount / totalQuestions) * 100;
+      let stars = percent >= 90 ? '⭐⭐⭐' : percent >= 70 ? '⭐⭐' : percent >= 50 ? '⭐' : '';
+
+      document.getElementById('endStars').textContent = stars;
+      document.getElementById('endScore').textContent = quizScore + ' pontos';
+      document.getElementById('endMessage').textContent = `${correctCount}/${totalQuestions} acertos!`;
+
+      EAI.giveGameReward({
+        correct: correctCount,
+        total: totalQuestions,
+        gameType: 'quiz'
+      });
+    }
+
+    function restartQuiz() {
+      quizScore = 0;
+      quizQuestion = 0;
+      correctCount = 0;
+      seqScore = 0;
+      seqRound = 1;
+      document.getElementById('score').textContent = '0';
+      document.getElementById('seqScore').textContent = '0';
+      document.getElementById('seqRound').textContent = '1';
+      document.getElementById('endScreen').classList.remove('active');
+
+      if (mode === 'quiz') {
+        document.getElementById('quizMode').style.display = 'block';
+        generateQuiz();
+      } else if (mode === 'sequence') {
+        document.getElementById('sequenceMode').style.display = 'block';
+        generateSequence();
+      }
+    }
+
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+
+        document.getElementById('countMode').style.display = 'none';
+        document.getElementById('gridMode').style.display = 'none';
+        document.getElementById('sequenceMode').style.display = 'none';
+        document.getElementById('quizMode').style.display = 'none';
+        document.getElementById('endScreen').classList.remove('active');
+
+        if (mode === 'count') {
+          document.getElementById('countMode').style.display = 'block';
+        } else if (mode === 'grid') {
+          document.getElementById('gridMode').style.display = 'block';
+          createGrid();
+        } else if (mode === 'sequence') {
+          document.getElementById('sequenceMode').style.display = 'block';
+          seqScore = 0;
+          seqRound = 1;
+          document.getElementById('seqScore').textContent = '0';
+          document.getElementById('seqRound').textContent = '1';
+          generateSequence();
+        } else if (mode === 'quiz') {
+          document.getElementById('quizMode').style.display = 'block';
+          quizScore = 0;
+          quizQuestion = 0;
+          correctCount = 0;
+          document.getElementById('score').textContent = '0';
+          generateQuiz();
+        }
+      });
+    });
+
+    // Initialize
+    updateCountDisplay();
+  </script>
+  <script src="eai-header.js"></script>
+</body>
+</html>

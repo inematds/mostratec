@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forma Palavras - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #EC4899 0%, #F472B6 50%, #F9A8D4 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #EC4899;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #FCE7F3, #FBCFE8);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #EC4899;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #BE185D;
+    }
+    .difficulty {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .diff-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #FCE7F3;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .diff-btn.active {
+      border-color: #EC4899;
+      background: #FCE7F3;
+      color: #BE185D;
+    }
+    .category-badge {
+      display: block;
+      text-align: center;
+      background: #EC4899;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .hint-area {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .hint-image {
+      font-size: 4rem;
+      margin-bottom: 0.5rem;
+    }
+    .hint-text {
+      color: #A5B4FC;
+      font-size: 1rem;
+    }
+    .word-slots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .slot {
+      width: 50px;
+      height: 60px;
+      background: #F3F4F6;
+      border: 3px dashed #D1D5DB;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #1E1B4B;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .slot.filled {
+      background: #FCE7F3;
+      border: 3px solid #F472B6;
+    }
+    .slot.correct {
+      background: #D1FAE5;
+      border-color: #10B981;
+      animation: popIn 0.3s ease;
+    }
+    .slot.wrong {
+      background: #FEE2E2;
+      border-color: #EF4444;
+      animation: shake 0.3s ease;
+    }
+    @keyframes popIn {
+      50% { transform: scale(1.2); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .letter-pool {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      min-height: 70px;
+    }
+    .letter {
+      width: 50px;
+      height: 60px;
+      background: linear-gradient(135deg, #EC4899, #BE185D);
+      border: none;
+      border-radius: 0.75rem;
+      color: white;
+      font-size: 1.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
+    }
+    .letter:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(236, 72, 153, 0.4);
+    }
+    .letter:active {
+      transform: scale(0.95);
+    }
+    .letter.used {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #EC4899, #BE185D);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: scale(1.05);
+    }
+    .btn-secondary {
+      background: #E5E7EB;
+      color: #374151;
+    }
+    .btn-hint {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+    .timer {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #EC4899;
+      margin-bottom: 1rem;
+    }
+    .timer.warning {
+      color: #EF4444;
+      animation: pulse 0.5s ease infinite;
+    }
+    @keyframes pulse {
+      50% { transform: scale(1.1); }
+    }
+    .lives {
+      display: flex;
+      justify-content: center;
+      gap: 0.25rem;
+      margin-bottom: 1rem;
+    }
+    .life {
+      font-size: 1.5rem;
+      transition: all 0.3s;
+    }
+    .life.lost {
+      opacity: 0.2;
+      transform: scale(0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>✨ Forma Palavras</h1>
+    <p class="subtitle">Organize as letras e forme a palavra!</p>
+
+    <div class="difficulty">
+      <button class="diff-btn active" data-level="easy">Fácil</button>
+      <button class="diff-btn" data-level="medium">Médio</button>
+      <button class="diff-btn" data-level="hard">Difícil</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="level">1</div>
+        <div class="stat-label">Nível</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-label">Sequência</div>
+      </div>
+    </div>
+
+    <div class="lives" id="lives">
+      <span class="life">💖</span>
+      <span class="life">💖</span>
+      <span class="life">💖</span>
+    </div>
+
+    <div class="timer" id="timer">⏱️ 30</div>
+
+    <span class="category-badge" id="category">🐾 Animais</span>
+
+    <div class="hint-area">
+      <div class="hint-image" id="hintImage">🐕</div>
+      <p class="hint-text" id="hintText">Melhor amigo do homem</p>
+    </div>
+
+    <div class="word-slots" id="wordSlots"></div>
+
+    <div class="letter-pool" id="letterPool"></div>
+
+    <div class="message" id="message"></div>
+
+    <div class="actions">
+      <button class="btn btn-hint" id="hintBtn">💡 Dica</button>
+      <button class="btn btn-secondary" onclick="clearWord()">🔄 Limpar</button>
+      <button class="btn btn-primary" onclick="checkWord()">✓ Verificar</button>
+    </div>
+
+    <button class="btn btn-primary" onclick="resetGame()" style="margin-top: 1rem; width: 100%;">🎮 Novo Jogo</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('word-scramble'));</script>
+  <script>
+    const words = {
+      easy: [
+        { word: 'gato', category: 'Animais', image: '🐱', hint: 'Mia e ronrona' },
+        { word: 'casa', category: 'Lugares', image: '🏠', hint: 'Onde moramos' },
+        { word: 'bola', category: 'Brinquedos', image: '⚽', hint: 'Redonda e rola' },
+        { word: 'pato', category: 'Animais', image: '🦆', hint: 'Faz quá quá' },
+        { word: 'sapo', category: 'Animais', image: '🐸', hint: 'Pula e coaxa' },
+        { word: 'lua', category: 'Natureza', image: '🌙', hint: 'Brilha à noite' },
+        { word: 'sol', category: 'Natureza', image: '☀️', hint: 'Aquece o dia' },
+        { word: 'mar', category: 'Natureza', image: '🌊', hint: 'Água salgada' },
+        { word: 'ovo', category: 'Comidas', image: '🥚', hint: 'Galinha bota' },
+        { word: 'uva', category: 'Frutas', image: '🍇', hint: 'Fruta roxa' },
+      ],
+      medium: [
+        { word: 'cavalo', category: 'Animais', image: '🐴', hint: 'Animal de montaria' },
+        { word: 'escola', category: 'Lugares', image: '🏫', hint: 'Onde estudamos' },
+        { word: 'banana', category: 'Frutas', image: '🍌', hint: 'Amarela e curva' },
+        { word: 'girafa', category: 'Animais', image: '🦒', hint: 'Pescoço longo' },
+        { word: 'estrela', category: 'Natureza', image: '⭐', hint: 'Brilha no céu' },
+        { word: 'arvore', category: 'Natureza', image: '🌳', hint: 'Tem folhas' },
+        { word: 'violao', category: 'Música', image: '🎸', hint: 'Instrumento de cordas' },
+        { word: 'baleia', category: 'Animais', image: '🐋', hint: 'Gigante do mar' },
+        { word: 'nuvem', category: 'Natureza', image: '☁️', hint: 'Flutua no céu' },
+        { word: 'morango', category: 'Frutas', image: '🍓', hint: 'Vermelho e doce' },
+      ],
+      hard: [
+        { word: 'borboleta', category: 'Animais', image: '🦋', hint: 'Inseto colorido' },
+        { word: 'elefante', category: 'Animais', image: '🐘', hint: 'Tem tromba' },
+        { word: 'chocolate', category: 'Comidas', image: '🍫', hint: 'Doce marrom' },
+        { word: 'tartaruga', category: 'Animais', image: '🐢', hint: 'Carrega a casa' },
+        { word: 'abacaxi', category: 'Frutas', image: '🍍', hint: 'Fruta tropical' },
+        { word: 'jacare', category: 'Animais', image: '🐊', hint: 'Réptil perigoso' },
+        { word: 'foguete', category: 'Veículos', image: '🚀', hint: 'Vai ao espaço' },
+        { word: 'dinossauro', category: 'Animais', image: '🦕', hint: 'Animal extinto' },
+        { word: 'helicoptero', category: 'Veículos', image: '🚁', hint: 'Voa com hélice' },
+        { word: 'computador', category: 'Tecnologia', image: '💻', hint: 'Máquina de trabalho' },
+      ]
+    };
+
+    let level = 'easy';
+    let currentWord = null;
+    let shuffledLetters = [];
+    let selectedLetters = [];
+    let score = 0;
+    let currentLevel = 1;
+    let streak = 0;
+    let lives = 3;
+    let timeLeft = 30;
+    let timer = null;
+    let usedWords = [];
+    let hintsUsed = 0;
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function selectWord() {
+      const wordList = words[level];
+      const available = wordList.filter(w => !usedWords.includes(w.word));
+
+      if (available.length === 0) {
+        usedWords = [];
+        return selectWord();
+      }
+
+      const word = available[Math.floor(Math.random() * available.length)];
+      usedWords.push(word.word);
+      return word;
+    }
+
+    function startRound() {
+      currentWord = selectWord();
+      shuffledLetters = shuffle(currentWord.word.split(''));
+      selectedLetters = [];
+      hintsUsed = 0;
+
+      document.getElementById('category').textContent = `${getCategoryIcon(currentWord.category)} ${currentWord.category}`;
+      document.getElementById('hintImage').textContent = currentWord.image;
+      document.getElementById('hintText').textContent = currentWord.hint;
+      document.getElementById('message').className = 'message';
+
+      renderSlots();
+      renderLetters();
+      startTimer();
+    }
+
+    function getCategoryIcon(cat) {
+      const icons = {
+        'Animais': '🐾',
+        'Lugares': '📍',
+        'Brinquedos': '🎮',
+        'Frutas': '🍎',
+        'Natureza': '🌿',
+        'Comidas': '🍽️',
+        'Música': '🎵',
+        'Veículos': '🚗',
+        'Tecnologia': '💡'
+      };
+      return icons[cat] || '📦';
+    }
+
+    function renderSlots() {
+      const container = document.getElementById('wordSlots');
+      container.innerHTML = '';
+
+      for (let i = 0; i < currentWord.word.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot' + (selectedLetters[i] ? ' filled' : '');
+        slot.textContent = selectedLetters[i] || '';
+        slot.onclick = () => removeLetterAt(i);
+        container.appendChild(slot);
+      }
+    }
+
+    function renderLetters() {
+      const container = document.getElementById('letterPool');
+      container.innerHTML = '';
+
+      shuffledLetters.forEach((letter, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'letter';
+        btn.textContent = letter;
+
+        // Check if this letter is already used
+        const usedCount = selectedLetters.filter(l => l === letter).length;
+        const availableCount = shuffledLetters.slice(0, index + 1).filter(l => l === letter).length;
+
+        if (usedCount >= shuffledLetters.filter(l => l === letter).length) {
+          btn.classList.add('used');
+        } else {
+          btn.onclick = () => addLetter(letter, index);
+        }
+
+        container.appendChild(btn);
+      });
+    }
+
+    function addLetter(letter, index) {
+      if (selectedLetters.length >= currentWord.word.length) return;
+
+      selectedLetters.push(letter);
+
+      // Mark this specific letter as used
+      const btns = document.querySelectorAll('.letter');
+      let count = 0;
+      btns.forEach((btn, i) => {
+        if (btn.textContent === letter && !btn.classList.contains('used')) {
+          if (count === 0) {
+            btn.classList.add('used');
+            count++;
+          }
+        }
+      });
+
+      renderSlots();
+
+      // Auto-check when word is complete
+      if (selectedLetters.length === currentWord.word.length) {
+        setTimeout(checkWord, 300);
+      }
+    }
+
+    function removeLetterAt(index) {
+      if (!selectedLetters[index]) return;
+
+      const letter = selectedLetters[index];
+      selectedLetters.splice(index, 1);
+
+      // Unmark this letter
+      const btns = document.querySelectorAll('.letter.used');
+      for (const btn of btns) {
+        if (btn.textContent === letter) {
+          btn.classList.remove('used');
+          break;
+        }
+      }
+
+      renderSlots();
+    }
+
+    function clearWord() {
+      selectedLetters = [];
+      document.querySelectorAll('.letter').forEach(btn => btn.classList.remove('used'));
+      renderSlots();
+    }
+
+    function checkWord() {
+      const answer = selectedLetters.join('');
+      const correct = answer.toLowerCase() === currentWord.word.toLowerCase();
+
+      const slots = document.querySelectorAll('.slot');
+
+      if (correct) {
+        slots.forEach(slot => slot.classList.add('correct'));
+        handleCorrect();
+      } else {
+        slots.forEach((slot, i) => {
+          if (currentWord.word[i] !== selectedLetters[i]) {
+            slot.classList.add('wrong');
+          }
+        });
+        handleWrong();
+      }
+    }
+
+    function handleCorrect() {
+      clearInterval(timer);
+      streak++;
+      const basePoints = level === 'easy' ? 10 : level === 'medium' ? 20 : 30;
+      const timeBonus = Math.floor(timeLeft);
+      const streakBonus = streak >= 3 ? streak * 3 : 0;
+      const hintPenalty = hintsUsed * 5;
+      const points = Math.max(5, basePoints + timeBonus + streakBonus - hintPenalty);
+      score += points;
+
+      if (streak > 0 && streak % 3 === 0) {
+        currentLevel++;
+      }
+
+      updateStats();
+      showMessage(`🎉 Correto! +${points} pontos`, 'success');
+
+      // Rewards
+      giveReward('coins', points);
+      if (streak >= 5) {
+        setTimeout(() => giveReward('diamonds', 1), 1000);
+      }
+
+      setTimeout(startRound, 1500);
+    }
+
+    function handleWrong() {
+      streak = 0;
+      lives--;
+      updateLives();
+      updateStats();
+
+      showMessage(`❌ Tente novamente! A palavra era: ${currentWord.word.toUpperCase()}`, 'error');
+
+      if (lives <= 0) {
+        setTimeout(gameOver, 1500);
+      } else {
+        setTimeout(startRound, 2000);
+      }
+    }
+
+    function startTimer() {
+      timeLeft = level === 'easy' ? 45 : level === 'medium' ? 35 : 25;
+      updateTimerDisplay();
+
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          handleWrong();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const el = document.getElementById('timer');
+      el.textContent = `⏱️ ${timeLeft}`;
+      el.classList.toggle('warning', timeLeft <= 10);
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('level').textContent = currentLevel;
+      document.getElementById('streak').textContent = streak;
+    }
+
+    function updateLives() {
+      const livesEl = document.getElementById('lives');
+      const hearts = livesEl.querySelectorAll('.life');
+      hearts.forEach((heart, i) => {
+        heart.classList.toggle('lost', i >= lives);
+      });
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+    }
+
+    function gameOver() {
+      clearInterval(timer);
+      showMessage(`Fim de jogo! Pontuação final: ${score}`, 'error');
+
+      // Final rewards
+      if (score >= 100) {
+        setTimeout(() => giveReward('diamonds', 1), 500);
+      }
+      if (score >= 200) {
+        setTimeout(() => giveReward('gold', 1), 1500);
+      }
+    }
+
+    function resetGame() {
+      score = 0;
+      currentLevel = 1;
+      streak = 0;
+      lives = 3;
+      usedWords = [];
+
+      updateStats();
+      updateLives();
+      document.getElementById('message').className = 'message';
+
+      startRound();
+    }
+
+    // Hint button
+    document.getElementById('hintBtn').onclick = () => {
+      if (hintsUsed >= 2) return;
+      if (selectedLetters.length >= currentWord.word.length) return;
+
+      hintsUsed++;
+      const nextIndex = selectedLetters.length;
+      const correctLetter = currentWord.word[nextIndex];
+
+      // Find and click the correct letter
+      const btns = document.querySelectorAll('.letter:not(.used)');
+      for (const btn of btns) {
+        if (btn.textContent === correctLetter) {
+          btn.click();
+          break;
+        }
+      }
+    };
+
+    // Difficulty selection
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        level = btn.dataset.level;
+        resetGame();
+      });
+    });
+
+    // Initialize
+    startRound();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

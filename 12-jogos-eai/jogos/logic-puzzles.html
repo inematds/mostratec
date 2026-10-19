@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quebra-cabeças de Lógica - EAI Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #9b59b6 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #f39c12, #e74c3c, #9b59b6, #3498db, #2ecc71);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 4s ease infinite;
+        }
+
+        @keyframes rainbow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        /* Menu */
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .puzzle-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .puzzle-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(241, 196, 15, 0.5);
+            box-shadow: 0 10px 30px rgba(241, 196, 15, 0.2);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .easy { background: #2ecc71; color: white; }
+        .medium { background: #f39c12; color: white; }
+        .hard { background: #e74c3c; color: white; }
+
+        /* Game Container */
+        .game-container {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-title {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 15px;
+            color: white;
+        }
+
+        .game-workspace {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Pattern Sequence */
+        .pattern-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .pattern-sequence {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+
+        .pattern-item {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pattern-item.question {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            font-size: 1.5rem;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .option-btn {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .option-btn.correct {
+            background: rgba(46, 204, 113, 0.5);
+            border-color: #2ecc71;
+        }
+
+        .option-btn.wrong {
+            background: rgba(231, 76, 60, 0.5);
+            border-color: #e74c3c;
+        }
+
+        /* Sudoku */
+        .sudoku-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 3px;
+            border-radius: 10px;
+        }
+
+        .sudoku-cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sudoku-cell.fixed {
+            background: rgba(52, 152, 219, 0.3);
+            cursor: default;
+        }
+
+        .sudoku-cell.selected {
+            background: #f1c40f;
+        }
+
+        .sudoku-cell.error {
+            background: rgba(231, 76, 60, 0.5);
+        }
+
+        .sudoku-cell:nth-child(2n) {
+            border-right: 2px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .sudoku-cell:nth-child(n+9):nth-child(-n+12) {
+            border-top: 2px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .num-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .num-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Memory Matrix */
+        .memory-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .memory-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .memory-cell {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .memory-cell.highlighted {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            border-color: #f39c12;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+        }
+
+        .memory-cell.clicked {
+            background: rgba(52, 152, 219, 0.5);
+            border-color: #3498db;
+        }
+
+        .memory-cell.correct {
+            background: rgba(46, 204, 113, 0.5);
+            border-color: #2ecc71;
+        }
+
+        .memory-cell.wrong {
+            background: rgba(231, 76, 60, 0.5);
+            border-color: #e74c3c;
+        }
+
+        /* Math Pyramid */
+        .pyramid-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pyramid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pyramid-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pyramid-cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            border-radius: 10px;
+            border: 3px solid transparent;
+        }
+
+        .pyramid-cell.editable {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            border: 3px dashed rgba(255, 255, 255, 0.4);
+        }
+
+        .pyramid-cell.editable:hover {
+            border-color: #f1c40f;
+        }
+
+        .pyramid-cell.selected {
+            border: 3px solid #f1c40f;
+            background: rgba(241, 196, 15, 0.3);
+        }
+
+        .pyramid-cell.correct {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.3);
+        }
+
+        .pyramid-cell.wrong {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        /* Feedback */
+        .feedback {
+            padding: 15px 30px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            min-height: 50px;
+        }
+
+        .feedback.success {
+            background: rgba(46, 204, 113, 0.3);
+            border: 2px solid #2ecc71;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            border: 2px solid #e74c3c;
+        }
+
+        .feedback.info {
+            background: rgba(52, 152, 219, 0.3);
+            border: 2px solid #3498db;
+        }
+
+        /* Buttons */
+        .action-btn {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            border: none;
+            color: #2c3e50;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(241, 196, 15, 0.4);
+        }
+
+        .hint-btn {
+            background: rgba(155, 89, 182, 0.3);
+            border: 2px solid #9b59b6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hint-btn:hover {
+            background: rgba(155, 89, 182, 0.5);
+        }
+
+        /* Progress */
+        .level-display {
+            color: white;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            width: 150px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #f1c40f);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        /* Countdown */
+        .countdown {
+            font-size: 3rem;
+            color: #f1c40f;
+            font-weight: bold;
+            animation: countdown-pulse 1s infinite;
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .pattern-item { width: 50px; height: 50px; font-size: 1.5rem; }
+            .option-btn { width: 55px; height: 55px; font-size: 1.5rem; }
+            .sudoku-cell { width: 50px; height: 50px; font-size: 1.4rem; }
+            .memory-cell { width: 50px; height: 50px; }
+            .pyramid-cell { width: 50px; height: 50px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Principal -->
+    <div id="main-menu">
+        <div class="header">
+            <h1>🧩 Quebra-cabeças de Lógica</h1>
+            <p class="subtitle">Exercite seu cérebro com desafios divertidos!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span>🧠</span>
+                <span>Nível:</span>
+                <span class="stat-value" id="brain-level">1</span>
+            </div>
+            <div class="stat">
+                <span>⭐</span>
+                <span>Pontos:</span>
+                <span class="stat-value" id="total-points">0</span>
+            </div>
+            <div class="stat">
+                <span>🏆</span>
+                <span>Desafios:</span>
+                <span class="stat-value" id="challenges-done">0</span>
+            </div>
+        </div>
+
+        <div class="menu-container">
+            <div class="puzzle-card" onclick="startGame('pattern')">
+                <span class="card-icon">🔢</span>
+                <h3 class="card-title">Sequências</h3>
+                <p class="card-desc">Descubra o padrão e complete a sequência de números, formas ou emojis!</p>
+                <span class="difficulty-badge easy">Fácil → Difícil</span>
+            </div>
+
+            <div class="puzzle-card" onclick="startGame('sudoku')">
+                <span class="card-icon">🔲</span>
+                <h3 class="card-title">Mini Sudoku</h3>
+                <p class="card-desc">Preencha a grade 4x4 sem repetir números na linha ou coluna!</p>
+                <span class="difficulty-badge medium">Médio</span>
+            </div>
+
+            <div class="puzzle-card" onclick="startGame('memory')">
+                <span class="card-icon">💡</span>
+                <h3 class="card-title">Memória Visual</h3>
+                <p class="card-desc">Memorize o padrão que aparece e repita na ordem correta!</p>
+                <span class="difficulty-badge easy">Progressivo</span>
+            </div>
+
+            <div class="puzzle-card" onclick="startGame('pyramid')">
+                <span class="card-icon">🔺</span>
+                <h3 class="card-title">Pirâmide Matemática</h3>
+                <p class="card-desc">Cada bloco é a soma dos dois abaixo. Complete a pirâmide!</p>
+                <span class="difficulty-badge hard">Desafiador</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="game-container">
+        <div class="game-header">
+            <button class="back-btn" onclick="backToMenu()">
+                ← Voltar
+            </button>
+            <h2 class="game-title" id="game-title"></h2>
+            <div class="level-display">
+                <span id="level-text">Nível 1</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-workspace" id="game-workspace">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('logic-puzzles'));</script>
+    <script>
+        // Game state
+        let state = {
+            brainLevel: 1,
+            totalPoints: 0,
+            challengesDone: 0,
+            currentGame: null,
+            currentLevel: 1,
+            streak: 0
+        };
+
+        // Load/Save state
+        function loadState() {
+            const saved = localStorage.getItem('logic_puzzles_state');
+            if (saved) {
+                state = { ...state, ...JSON.parse(saved) };
+                updateStats();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('logic_puzzles_state', JSON.stringify(state));
+        }
+
+        function updateStats() {
+            document.getElementById('brain-level').textContent = state.brainLevel;
+            document.getElementById('total-points').textContent = state.totalPoints;
+            document.getElementById('challenges-done').textContent = state.challengesDone;
+        }
+
+        function addPoints(points) {
+            state.totalPoints += points;
+            state.brainLevel = Math.floor(state.totalPoints / 100) + 1;
+            updateStats();
+            saveState();
+
+            if (typeof giveReward === 'function') {
+                giveReward('coin', points);
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((state.currentLevel - 1) % 5) * 20;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('level-text').textContent = `Nível ${state.currentLevel}`;
+        }
+
+        function startGame(type) {
+            state.currentGame = type;
+            state.currentLevel = 1;
+
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+
+            const titles = {
+                pattern: '🔢 Sequências',
+                sudoku: '🔲 Mini Sudoku',
+                memory: '💡 Memória Visual',
+                pyramid: '🔺 Pirâmide Matemática'
+            };
+
+            document.getElementById('game-title').textContent = titles[type];
+            updateProgress();
+
+            switch(type) {
+                case 'pattern': setupPatternGame(); break;
+                case 'sudoku': setupSudokuGame(); break;
+                case 'memory': setupMemoryGame(); break;
+                case 'pyramid': setupPyramidGame(); break;
+            }
+        }
+
+        function backToMenu() {
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('game-workspace').innerHTML = '';
+            state.currentGame = null;
+        }
+
+        // ===== PATTERN SEQUENCES =====
+        const patternTypes = [
+            { type: 'numbers', generate: generateNumberPattern },
+            { type: 'shapes', generate: generateShapePattern },
+            { type: 'emojis', generate: generateEmojiPattern }
+        ];
+
+        function generateNumberPattern(level) {
+            const patterns = [
+                // Easy: Simple +1, +2
+                () => {
+                    const start = Math.floor(Math.random() * 5) + 1;
+                    const step = Math.floor(Math.random() * 3) + 1;
+                    const seq = [];
+                    for (let i = 0; i < 5; i++) seq.push(start + i * step);
+                    return { sequence: seq, answer: seq[4], options: generateOptions(seq[4], 'number') };
+                },
+                // Medium: x2, -1
+                () => {
+                    const seq = [2];
+                    for (let i = 1; i < 5; i++) seq.push(seq[i-1] * 2);
+                    return { sequence: seq, answer: seq[4], options: generateOptions(seq[4], 'number') };
+                },
+                // Hard: Fibonacci-like
+                () => {
+                    const a = Math.floor(Math.random() * 3) + 1;
+                    const b = Math.floor(Math.random() * 3) + 2;
+                    const seq = [a, b];
+                    for (let i = 2; i < 5; i++) seq.push(seq[i-1] + seq[i-2]);
+                    return { sequence: seq, answer: seq[4], options: generateOptions(seq[4], 'number') };
+                }
+            ];
+
+            const patternIndex = Math.min(Math.floor(level / 3), patterns.length - 1);
+            return patterns[patternIndex]();
+        }
+
+        function generateShapePattern(level) {
+            const shapes = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠'];
+            const patterns = [
+                // Repeat pattern
+                () => {
+                    const a = shapes[Math.floor(Math.random() * shapes.length)];
+                    const b = shapes[Math.floor(Math.random() * shapes.length)];
+                    const seq = [a, b, a, b, a];
+                    return { sequence: seq, answer: seq[4], options: [a, b, shapes[2], shapes[3]] };
+                },
+                // ABC pattern
+                () => {
+                    const picked = shapes.slice(0, 3);
+                    const seq = [...picked, picked[0], picked[1]];
+                    return { sequence: seq, answer: seq[4], options: picked.concat([shapes[3]]) };
+                }
+            ];
+
+            return patterns[Math.min(Math.floor(level / 2), patterns.length - 1)]();
+        }
+
+        function generateEmojiPattern(level) {
+            const sets = [
+                ['🍎', '🍊', '🍋', '🍇'],
+                ['🐶', '🐱', '🐰', '🐻'],
+                ['⭐', '🌙', '☀️', '🌈'],
+                ['❤️', '💙', '💚', '💛']
+            ];
+
+            const set = sets[Math.floor(Math.random() * sets.length)];
+
+            const patterns = [
+                () => {
+                    const seq = [set[0], set[1], set[0], set[1], set[0]];
+                    return { sequence: seq, answer: seq[4], options: set };
+                },
+                () => {
+                    const seq = [set[0], set[0], set[1], set[1], set[0]];
+                    return { sequence: seq, answer: seq[4], options: set };
+                },
+                () => {
+                    const seq = [set[0], set[1], set[2], set[0], set[1]];
+                    return { sequence: seq, answer: seq[4], options: set };
+                }
+            ];
+
+            return patterns[Math.floor(Math.random() * patterns.length)]();
+        }
+
+        function generateOptions(answer, type) {
+            const options = [answer];
+            while (options.length < 4) {
+                let opt;
+                if (type === 'number') {
+                    opt = answer + Math.floor(Math.random() * 10) - 5;
+                    if (opt !== answer && !options.includes(opt) && opt > 0) {
+                        options.push(opt);
+                    }
+                }
+            }
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        let currentPattern = null;
+
+        function setupPatternGame() {
+            const typeIndex = Math.floor(Math.random() * patternTypes.length);
+            currentPattern = patternTypes[typeIndex].generate(state.currentLevel);
+
+            // Hide the last element as the question
+            const displaySeq = [...currentPattern.sequence];
+            const questionIndex = 4;
+
+            const workspace = document.getElementById('game-workspace');
+            workspace.innerHTML = `
+                <div class="pattern-game">
+                    <p style="color: rgba(255,255,255,0.7); text-align: center;">
+                        Descubra o padrão e selecione o próximo elemento!
+                    </p>
+
+                    <div class="pattern-sequence">
+                        ${displaySeq.map((item, i) =>
+                            i === questionIndex
+                                ? `<div class="pattern-item question">?</div>`
+                                : `<div class="pattern-item">${item}</div>`
+                        ).join('')}
+                    </div>
+
+                    <div class="options-grid">
+                        ${currentPattern.options.map(opt =>
+                            `<button class="option-btn" onclick="checkPatternAnswer('${opt}')">${opt}</button>`
+                        ).join('')}
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            `;
+        }
+
+        function checkPatternAnswer(answer) {
+            const feedback = document.getElementById('feedback');
+            const buttons = document.querySelectorAll('.option-btn');
+            const questionCell = document.querySelector('.pattern-item.question');
+
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent == currentPattern.answer) {
+                    btn.classList.add('correct');
+                } else if (btn.textContent == answer) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            if (answer == currentPattern.answer) {
+                feedback.textContent = '✅ Correto! Excelente raciocínio!';
+                feedback.className = 'feedback success';
+                questionCell.textContent = currentPattern.answer;
+                questionCell.classList.remove('question');
+
+                state.streak++;
+                state.challengesDone++;
+                const points = 10 + state.currentLevel * 2 + state.streak * 2;
+                addPoints(points);
+
+                if (state.streak >= 5 && typeof giveReward === 'function') {
+                    giveReward('diamond', 1);
+                }
+
+                setTimeout(() => {
+                    state.currentLevel++;
+                    updateProgress();
+                    setupPatternGame();
+                }, 1500);
+            } else {
+                feedback.textContent = `❌ A resposta era: ${currentPattern.answer}`;
+                feedback.className = 'feedback error';
+                state.streak = 0;
+
+                setTimeout(() => {
+                    setupPatternGame();
+                }, 2000);
+            }
+        }
+
+        // ===== MINI SUDOKU =====
+        let sudokuGrid = [];
+        let sudokuSolution = [];
+        let selectedCell = null;
+
+        function generateSudoku() {
+            // Generate a valid 4x4 Sudoku
+            const solution = [
+                [1, 2, 3, 4],
+                [3, 4, 1, 2],
+                [2, 1, 4, 3],
+                [4, 3, 2, 1]
+            ];
+
+            // Shuffle rows within groups and columns
+            for (let i = 0; i < 10; i++) {
+                if (Math.random() > 0.5) {
+                    // Swap rows 0-1 or 2-3
+                    const g = Math.random() > 0.5 ? 0 : 2;
+                    [solution[g], solution[g+1]] = [solution[g+1], solution[g]];
+                } else {
+                    // Swap columns
+                    const c1 = Math.floor(Math.random() * 4);
+                    const c2 = Math.floor(Math.random() * 4);
+                    for (let r = 0; r < 4; r++) {
+                        [solution[r][c1], solution[r][c2]] = [solution[r][c2], solution[r][c1]];
+                    }
+                }
+            }
+
+            // Create puzzle by removing numbers
+            const puzzle = solution.map(row => [...row]);
+            const remove = 6 + Math.min(state.currentLevel, 4); // Remove 6-10 numbers
+
+            let removed = 0;
+            while (removed < remove) {
+                const r = Math.floor(Math.random() * 4);
+                const c = Math.floor(Math.random() * 4);
+                if (puzzle[r][c] !== 0) {
+                    puzzle[r][c] = 0;
+                    removed++;
+                }
+            }
+
+            return { puzzle, solution };
+        }
+
+        function setupSudokuGame() {
+            const { puzzle, solution } = generateSudoku();
+            sudokuGrid = puzzle.map(row => [...row]);
+            sudokuSolution = solution;
+            selectedCell = null;
+
+            const workspace = document.getElementById('game-workspace');
+            workspace.innerHTML = `
+                <div class="sudoku-game">
+                    <p style="color: rgba(255,255,255,0.7); text-align: center; max-width: 400px;">
+                        Preencha os números de 1 a 4 sem repetir na mesma linha ou coluna!
+                    </p>
+
+                    <div class="sudoku-grid" id="sudoku-grid"></div>
+
+                    <div class="number-pad">
+                        ${[1, 2, 3, 4].map(n =>
+                            `<button class="num-btn" onclick="placeSudokuNumber(${n})">${n}</button>`
+                        ).join('')}
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button class="action-btn" onclick="checkSudoku()">✓ Verificar</button>
+                        <button class="hint-btn" onclick="sudokuHint()">💡 Dica</button>
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            `;
+
+            renderSudokuGrid();
+        }
+
+        function renderSudokuGrid() {
+            const grid = document.getElementById('sudoku-grid');
+            grid.innerHTML = '';
+
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'sudoku-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    if (sudokuSolution[r][c] === sudokuGrid[r][c] && sudokuGrid[r][c] !== 0) {
+                        cell.classList.add('fixed');
+                        cell.textContent = sudokuGrid[r][c];
+                    } else {
+                        cell.textContent = sudokuGrid[r][c] || '';
+                        cell.onclick = () => selectSudokuCell(r, c);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function selectSudokuCell(r, c) {
+            document.querySelectorAll('.sudoku-cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+
+            const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+            if (cell && !cell.classList.contains('fixed')) {
+                cell.classList.add('selected');
+                selectedCell = { r, c };
+            }
+        }
+
+        function placeSudokuNumber(num) {
+            if (!selectedCell) return;
+
+            const { r, c } = selectedCell;
+            sudokuGrid[r][c] = num;
+            renderSudokuGrid();
+
+            // Reselect the cell
+            selectSudokuCell(r, c);
+        }
+
+        function checkSudoku() {
+            const feedback = document.getElementById('feedback');
+            let correct = true;
+            let complete = true;
+
+            // Check all cells
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (sudokuGrid[r][c] === 0) {
+                        complete = false;
+                    } else if (sudokuGrid[r][c] !== sudokuSolution[r][c]) {
+                        correct = false;
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (cell) cell.classList.add('error');
+                    }
+                }
+            }
+
+            if (!complete) {
+                feedback.textContent = '⚠️ Complete todos os espaços!';
+                feedback.className = 'feedback info';
+            } else if (correct) {
+                feedback.textContent = '🎉 Perfeito! Sudoku completo!';
+                feedback.className = 'feedback success';
+
+                state.challengesDone++;
+                const points = 25 + state.currentLevel * 5;
+                addPoints(points);
+
+                if (typeof giveReward === 'function') {
+                    giveReward('diamond', 1);
+                    if (state.currentLevel >= 3) giveReward('gold', 1);
+                }
+
+                setTimeout(() => {
+                    state.currentLevel++;
+                    updateProgress();
+                    setupSudokuGame();
+                }, 2000);
+            } else {
+                feedback.textContent = '❌ Há erros! Os números em vermelho estão errados.';
+                feedback.className = 'feedback error';
+
+                setTimeout(() => {
+                    document.querySelectorAll('.sudoku-cell.error').forEach(c => c.classList.remove('error'));
+                }, 2000);
+            }
+        }
+
+        function sudokuHint() {
+            // Find an empty or wrong cell and fill it
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (sudokuGrid[r][c] !== sudokuSolution[r][c]) {
+                        sudokuGrid[r][c] = sudokuSolution[r][c];
+                        renderSudokuGrid();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // ===== MEMORY MATRIX =====
+        let memorySequence = [];
+        let playerSequence = [];
+        let memorySize = 3;
+        let memoryPhase = 'watch'; // watch, play
+
+        function setupMemoryGame() {
+            memorySize = 3 + Math.floor(state.currentLevel / 2);
+            memorySize = Math.min(memorySize, 5); // Max 5x5
+            memorySequence = [];
+            playerSequence = [];
+
+            // Generate sequence
+            const seqLength = 2 + Math.floor(state.currentLevel / 2);
+            for (let i = 0; i < seqLength; i++) {
+                memorySequence.push({
+                    r: Math.floor(Math.random() * memorySize),
+                    c: Math.floor(Math.random() * memorySize)
+                });
+            }
+
+            const workspace = document.getElementById('game-workspace');
+            workspace.innerHTML = `
+                <div class="memory-game">
+                    <p style="color: rgba(255,255,255,0.7); text-align: center;">
+                        Memorize o padrão que vai aparecer!
+                    </p>
+
+                    <div class="countdown" id="countdown">3</div>
+
+                    <div class="memory-grid" id="memory-grid" style="grid-template-columns: repeat(${memorySize}, 1fr);"></div>
+
+                    <div class="feedback" id="feedback">Prepare-se...</div>
+                </div>
+            `;
+
+            renderMemoryGrid();
+            startMemoryCountdown();
+        }
+
+        function renderMemoryGrid() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+
+            for (let r = 0; r < memorySize; r++) {
+                for (let c = 0; c < memorySize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'memory-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = () => clickMemoryCell(r, c);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function startMemoryCountdown() {
+            let count = 3;
+            const countdown = document.getElementById('countdown');
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.textContent = count;
+                } else {
+                    countdown.style.display = 'none';
+                    clearInterval(interval);
+                    playMemorySequence();
+                }
+            }, 1000);
+        }
+
+        function playMemorySequence() {
+            memoryPhase = 'watch';
+            document.getElementById('feedback').textContent = '👀 Observe!';
+
+            let i = 0;
+            const interval = setInterval(() => {
+                // Clear previous highlight
+                document.querySelectorAll('.memory-cell').forEach(c => c.classList.remove('highlighted'));
+
+                if (i < memorySequence.length) {
+                    const { r, c } = memorySequence[i];
+                    const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cell) cell.classList.add('highlighted');
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.querySelectorAll('.memory-cell').forEach(c => c.classList.remove('highlighted'));
+                        memoryPhase = 'play';
+                        playerSequence = [];
+                        document.getElementById('feedback').textContent = '🎯 Sua vez! Clique na ordem correta.';
+                    }, 500);
+                }
+            }, 800);
+        }
+
+        function clickMemoryCell(r, c) {
+            if (memoryPhase !== 'play') return;
+
+            const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+            cell.classList.add('clicked');
+
+            playerSequence.push({ r, c });
+
+            const currentIndex = playerSequence.length - 1;
+            const expected = memorySequence[currentIndex];
+
+            if (r === expected.r && c === expected.c) {
+                cell.classList.remove('clicked');
+                cell.classList.add('correct');
+
+                if (playerSequence.length === memorySequence.length) {
+                    // Success!
+                    document.getElementById('feedback').textContent = '🎉 Perfeito! Memória incrível!';
+                    document.getElementById('feedback').className = 'feedback success';
+
+                    state.challengesDone++;
+                    const points = 15 + memorySequence.length * 5;
+                    addPoints(points);
+
+                    if (memorySequence.length >= 5 && typeof giveReward === 'function') {
+                        giveReward('diamond', 2);
+                    }
+
+                    setTimeout(() => {
+                        state.currentLevel++;
+                        updateProgress();
+                        setupMemoryGame();
+                    }, 1500);
+                }
+            } else {
+                // Wrong!
+                cell.classList.remove('clicked');
+                cell.classList.add('wrong');
+
+                document.getElementById('feedback').textContent = '❌ Sequência errada! Tente novamente.';
+                document.getElementById('feedback').className = 'feedback error';
+
+                setTimeout(() => {
+                    setupMemoryGame();
+                }, 1500);
+            }
+        }
+
+        // ===== MATH PYRAMID =====
+        let pyramidData = [];
+        let pyramidEditable = [];
+        let selectedPyramidCell = null;
+
+        function generatePyramid() {
+            // 4-row pyramid: base has 4 numbers
+            const base = [];
+            for (let i = 0; i < 4; i++) {
+                base.push(Math.floor(Math.random() * 5) + 1);
+            }
+
+            const pyramid = [base];
+
+            // Build up
+            for (let row = 1; row < 4; row++) {
+                const prevRow = pyramid[row - 1];
+                const newRow = [];
+                for (let i = 0; i < prevRow.length - 1; i++) {
+                    newRow.push(prevRow[i] + prevRow[i + 1]);
+                }
+                pyramid.push(newRow);
+            }
+
+            // Determine which cells to hide
+            const editable = pyramid.map(row => row.map(() => false));
+
+            // Hide some cells based on level
+            const toHide = 3 + Math.min(state.currentLevel, 5);
+            let hidden = 0;
+
+            while (hidden < toHide) {
+                const row = Math.floor(Math.random() * 4);
+                const col = Math.floor(Math.random() * pyramid[row].length);
+                if (!editable[row][col]) {
+                    editable[row][col] = true;
+                    hidden++;
+                }
+            }
+
+            return { pyramid, editable };
+        }
+
+        function setupPyramidGame() {
+            const { pyramid, editable } = generatePyramid();
+            pyramidData = pyramid.map(row => [...row]);
+            pyramidEditable = editable;
+            selectedPyramidCell = null;
+
+            // Create display data (hide editable cells)
+            const displayData = pyramid.map((row, r) =>
+                row.map((val, c) => editable[r][c] ? 0 : val)
+            );
+
+            const workspace = document.getElementById('game-workspace');
+            workspace.innerHTML = `
+                <div class="pyramid-game">
+                    <p style="color: rgba(255,255,255,0.7); text-align: center; max-width: 400px;">
+                        Cada bloco é a soma dos dois blocos abaixo dele. Complete os espaços vazios!
+                    </p>
+
+                    <div class="pyramid-container" id="pyramid-container"></div>
+
+                    <div class="number-pad" style="grid-template-columns: repeat(5, 1fr);">
+                        ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n =>
+                            `<button class="num-btn" onclick="placePyramidNumber(${n})">${n}</button>`
+                        ).join('')}
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button class="action-btn" onclick="checkPyramid()">✓ Verificar</button>
+                        <button class="hint-btn" onclick="pyramidHint()">💡 Dica</button>
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            `;
+
+            renderPyramid(displayData);
+        }
+
+        // Store the display data for re-rendering
+        let currentDisplayData = [];
+
+        function renderPyramid(displayData) {
+            currentDisplayData = displayData.map(row => [...row]);
+            const container = document.getElementById('pyramid-container');
+            container.innerHTML = '';
+
+            // Render from top to bottom (reverse order)
+            for (let r = displayData.length - 1; r >= 0; r--) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'pyramid-row';
+
+                displayData[r].forEach((val, c) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'pyramid-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    if (pyramidEditable[r][c]) {
+                        cell.classList.add('editable');
+                        cell.textContent = val || '';
+                        cell.onclick = () => selectPyramidCell(r, c);
+                    } else {
+                        cell.textContent = val;
+                    }
+
+                    rowDiv.appendChild(cell);
+                });
+
+                container.appendChild(rowDiv);
+            }
+        }
+
+        function selectPyramidCell(r, c) {
+            document.querySelectorAll('.pyramid-cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+
+            const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+            if (cell && cell.classList.contains('editable')) {
+                cell.classList.add('selected');
+                selectedPyramidCell = { r, c };
+            }
+        }
+
+        function placePyramidNumber(num) {
+            if (!selectedPyramidCell) return;
+
+            const { r, c } = selectedPyramidCell;
+            currentDisplayData[r][c] = num;
+            renderPyramid(currentDisplayData);
+            selectPyramidCell(r, c);
+        }
+
+        function checkPyramid() {
+            const feedback = document.getElementById('feedback');
+            let correct = true;
+            let complete = true;
+
+            // Check all editable cells
+            for (let r = 0; r < pyramidData.length; r++) {
+                for (let c = 0; c < pyramidData[r].length; c++) {
+                    if (pyramidEditable[r][c]) {
+                        const userVal = currentDisplayData[r][c];
+                        if (!userVal) {
+                            complete = false;
+                        } else if (userVal !== pyramidData[r][c]) {
+                            correct = false;
+                            const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            if (cell) cell.classList.add('wrong');
+                        } else {
+                            const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            if (cell) cell.classList.add('correct');
+                        }
+                    }
+                }
+            }
+
+            if (!complete) {
+                feedback.textContent = '⚠️ Complete todos os espaços!';
+                feedback.className = 'feedback info';
+            } else if (correct) {
+                feedback.textContent = '🎉 Perfeito! Pirâmide completa!';
+                feedback.className = 'feedback success';
+
+                state.challengesDone++;
+                const points = 20 + state.currentLevel * 5;
+                addPoints(points);
+
+                if (typeof giveReward === 'function') {
+                    giveReward('diamond', 1);
+                    if (state.currentLevel >= 4) giveReward('gold', 1);
+                }
+
+                setTimeout(() => {
+                    state.currentLevel++;
+                    updateProgress();
+                    setupPyramidGame();
+                }, 2000);
+            } else {
+                feedback.textContent = '❌ Há erros! Verifique os blocos em vermelho.';
+                feedback.className = 'feedback error';
+
+                setTimeout(() => {
+                    document.querySelectorAll('.pyramid-cell.wrong').forEach(c => c.classList.remove('wrong'));
+                    document.querySelectorAll('.pyramid-cell.correct').forEach(c => c.classList.remove('correct'));
+                }, 2000);
+            }
+        }
+
+        function pyramidHint() {
+            // Find an empty or wrong editable cell and fill it
+            for (let r = 0; r < pyramidData.length; r++) {
+                for (let c = 0; c < pyramidData[r].length; c++) {
+                    if (pyramidEditable[r][c] && currentDisplayData[r][c] !== pyramidData[r][c]) {
+                        currentDisplayData[r][c] = pyramidData[r][c];
+                        renderPyramid(currentDisplayData);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Initialize
+        loadState();
+    </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

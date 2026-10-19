@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Music Theory Hero - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a0a2e; touch-action: none; }
+    #gameCanvas { display: block; width: 100%; height: 100%; }
+    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #2d1b4e 0%, #1a0a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    #loading.hidden { display: none; }
+    .music-icon { font-size: 100px; animation: bounce 0.6s ease-in-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    #loading h1 { color: #e879f9; font-family: 'Arial Black', sans-serif; font-size: 26px; margin-top: 20px; }
+    #loading p { color: #f0abfc; font-family: Arial, sans-serif; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="music-icon">🎵</div>
+    <h1>MUSIC THEORY HERO</h1>
+    <p>Afinando os instrumentos...</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="game.js"></script>
+</body>
+</html>

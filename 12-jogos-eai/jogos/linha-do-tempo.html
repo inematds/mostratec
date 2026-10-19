@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linha do Tempo - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .level-select {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .level-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .level-btn.easy {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .level-btn.medium {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+        }
+
+        .level-btn.hard {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .level-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .level-btn.active {
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .theme-title {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #81ecec;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #ffd700, #ff6b6b);
+            border-radius: 2px;
+        }
+
+        .timeline-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        .timeline-slot {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .timeline-slot:nth-child(odd) {
+            flex-direction: row-reverse;
+        }
+
+        .slot-marker {
+            width: 30px;
+            height: 30px;
+            background: #ffd700;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1a2e;
+            z-index: 2;
+        }
+
+        .slot-dropzone {
+            flex: 1;
+            min-height: 80px;
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .slot-dropzone.dragover {
+            background: rgba(129, 236, 236, 0.3);
+            border-color: #81ecec;
+            transform: scale(1.02);
+        }
+
+        .slot-dropzone.correct {
+            background: rgba(0, 184, 148, 0.3);
+            border-color: #00b894;
+            border-style: solid;
+        }
+
+        .slot-dropzone.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .slot-dropzone.filled {
+            border-style: solid;
+        }
+
+        .events-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            min-height: 100px;
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .event-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .event-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .event-card.placed {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+        }
+
+        .event-date {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .check-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .timeline-slot {
+                flex-direction: column !important;
+            }
+
+            .timeline-line {
+                display: none;
+            }
+
+            .slot-marker {
+                margin: 0 auto;
+            }
+
+            .slot-dropzone {
+                width: 100%;
+            }
+
+            .event-card {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Linha do <span>Tempo</span></h1>
+            <p>Organize os eventos na ordem correta!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+        </div>
+
+        <div class="level-select">
+            <button class="level-btn easy active" onclick="setDifficulty('easy')">Fácil</button>
+            <button class="level-btn medium" onclick="setDifficulty('medium')">Médio</button>
+            <button class="level-btn hard" onclick="setDifficulty('hard')">Difícil</button>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Primeiros Passos">🥉</span>
+            <span class="medal" id="medal2" title="Historiador">🥈</span>
+            <span class="medal" id="medal3" title="Mestre do Tempo">🥇</span>
+            <span class="medal" id="medal4" title="Cronista">🏆</span>
+            <span class="medal" id="medal5" title="Guardião da História">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="theme-title" id="themeTitle">Tema: Rotina Diária</div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="timeline-container">
+                <div class="timeline-line"></div>
+                <div class="timeline-slots" id="timelineSlots"></div>
+            </div>
+
+            <div class="events-pool" id="eventsPool"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <button class="check-btn" id="checkBtn" onclick="checkOrder()" disabled>Verificar Ordem</button>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Muito Bem!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="nextRound()">Próximo Tema</button>
+                <button class="btn btn-secondary" onclick="resetGame()">Recomeçar</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Dados do jogo
+        const themes = {
+            easy: [
+                {
+                    name: "Rotina da Manhã",
+                    events: [
+                        { text: "Acordar", order: 1 },
+                        { text: "Escovar os dentes", order: 2 },
+                        { text: "Tomar café", order: 3 },
+                        { text: "Ir para escola", order: 4 }
+                    ]
+                },
+                {
+                    name: "Dias da Semana",
+                    events: [
+                        { text: "Segunda-feira", order: 1 },
+                        { text: "Terça-feira", order: 2 },
+                        { text: "Quarta-feira", order: 3 },
+                        { text: "Quinta-feira", order: 4 }
+                    ]
+                },
+                {
+                    name: "Crescimento de uma Planta",
+                    events: [
+                        { text: "Plantar semente", order: 1 },
+                        { text: "Regar a terra", order: 2 },
+                        { text: "Brotar folhas", order: 3 },
+                        { text: "Planta crescida", order: 4 }
+                    ]
+                },
+                {
+                    name: "Preparar um Lanche",
+                    events: [
+                        { text: "Lavar as mãos", order: 1 },
+                        { text: "Pegar os ingredientes", order: 2 },
+                        { text: "Fazer o sanduíche", order: 3 },
+                        { text: "Comer o lanche", order: 4 }
+                    ]
+                },
+                {
+                    name: "Estações do Ano",
+                    events: [
+                        { text: "Verão (quente)", order: 1 },
+                        { text: "Outono (folhas caem)", order: 2 },
+                        { text: "Inverno (frio)", order: 3 },
+                        { text: "Primavera (flores)", order: 4 }
+                    ]
+                }
+            ],
+            medium: [
+                {
+                    name: "Ciclo da Água",
+                    events: [
+                        { text: "Sol esquenta a água", order: 1 },
+                        { text: "Água evapora", order: 2 },
+                        { text: "Formam-se nuvens", order: 3 },
+                        { text: "Chuva cai", order: 4 },
+                        { text: "Água volta aos rios", order: 5 }
+                    ]
+                },
+                {
+                    name: "Vida da Borboleta",
+                    events: [
+                        { text: "Ovo na folha", order: 1 },
+                        { text: "Nasce a lagarta", order: 2 },
+                        { text: "Lagarta come folhas", order: 3 },
+                        { text: "Vira casulo", order: 4 },
+                        { text: "Nasce a borboleta", order: 5 }
+                    ]
+                },
+                {
+                    name: "Festa de Aniversário",
+                    events: [
+                        { text: "Fazer convites", order: 1 },
+                        { text: "Entregar convites", order: 2 },
+                        { text: "Decorar a festa", order: 3 },
+                        { text: "Receber convidados", order: 4 },
+                        { text: "Cantar parabéns", order: 5 }
+                    ]
+                },
+                {
+                    name: "Meses do Ano",
+                    events: [
+                        { text: "Janeiro", order: 1 },
+                        { text: "Abril", order: 2 },
+                        { text: "Julho", order: 3 },
+                        { text: "Outubro", order: 4 },
+                        { text: "Dezembro", order: 5 }
+                    ]
+                },
+                {
+                    name: "Do Ovo ao Pintinho",
+                    events: [
+                        { text: "Galinha põe o ovo", order: 1 },
+                        { text: "Galinha choca o ovo", order: 2 },
+                        { text: "Pintinho cresce no ovo", order: 3 },
+                        { text: "Pintinho quebra a casca", order: 4 },
+                        { text: "Pintinho nasce", order: 5 }
+                    ]
+                }
+            ],
+            hard: [
+                {
+                    name: "História do Papel",
+                    events: [
+                        { text: "Árvore cresce", order: 1 },
+                        { text: "Árvore é cortada", order: 2 },
+                        { text: "Madeira vira polpa", order: 3 },
+                        { text: "Polpa é prensada", order: 4 },
+                        { text: "Papel é secado", order: 5 },
+                        { text: "Papel é cortado", order: 6 }
+                    ]
+                },
+                {
+                    name: "Evolução dos Meios de Transporte",
+                    events: [
+                        { text: "Andar a pé", order: 1 },
+                        { text: "Cavalos e carroças", order: 2 },
+                        { text: "Bicicletas", order: 3 },
+                        { text: "Carros antigos", order: 4 },
+                        { text: "Aviões", order: 5 },
+                        { text: "Carros elétricos", order: 6 }
+                    ]
+                },
+                {
+                    name: "Do Trigo ao Pão",
+                    events: [
+                        { text: "Plantar trigo", order: 1 },
+                        { text: "Colher trigo", order: 2 },
+                        { text: "Moer o trigo", order: 3 },
+                        { text: "Fazer a massa", order: 4 },
+                        { text: "Assar no forno", order: 5 },
+                        { text: "Pão pronto", order: 6 }
+                    ]
+                },
+                {
+                    name: "Vida de uma Pessoa",
+                    events: [
+                        { text: "Bebê", order: 1 },
+                        { text: "Criança", order: 2 },
+                        { text: "Adolescente", order: 3 },
+                        { text: "Adulto jovem", order: 4 },
+                        { text: "Adulto", order: 5 },
+                        { text: "Idoso", order: 6 }
+                    ]
+                },
+                {
+                    name: "Construir uma Casa",
+                    events: [
+                        { text: "Fazer o projeto", order: 1 },
+                        { text: "Preparar o terreno", order: 2 },
+                        { text: "Fazer a fundação", order: 3 },
+                        { text: "Erguer as paredes", order: 4 },
+                        { text: "Colocar o telhado", order: 5 },
+                        { text: "Pintar e decorar", order: 6 }
+                    ]
+                }
+            ]
+        };
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            difficulty: 'easy',
+            currentThemeIndex: 0,
+            placedEvents: {},
+            correctAnswers: 0,
+            totalRounds: 0
+        };
+
+        let currentTheme = null;
+        let draggedCard = null;
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'drop':
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('linhaDoTempoProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.correctAnswers = data.correctAnswers || 0;
+                gameState.totalRounds = data.totalRounds || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                correctAnswers: gameState.correctAnswers,
+                totalRounds: gameState.totalRounds
+            };
+            localStorage.setItem('linhaDoTempoProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 5 },
+                { id: 'medal2', threshold: 15 },
+                { id: 'medal3', threshold: 30 },
+                { id: 'medal4', threshold: 50 },
+                { id: 'medal5', threshold: 100 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.correctAnswers >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Definir dificuldade
+        function setDifficulty(difficulty) {
+            gameState.difficulty = difficulty;
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.level-btn.${difficulty}`).classList.add('active');
+            gameState.currentThemeIndex = 0;
+            startRound();
+        }
+
+        // Embaralhar array
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Iniciar rodada
+        function startRound() {
+            const themesList = themes[gameState.difficulty];
+            currentTheme = themesList[gameState.currentThemeIndex % themesList.length];
+
+            gameState.placedEvents = {};
+
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('checkBtn').disabled = true;
+
+            document.getElementById('themeTitle').textContent = `Tema: ${currentTheme.name}`;
+
+            renderTimeline();
+            renderEventsPool();
+            updateProgress();
+        }
+
+        // Renderizar linha do tempo
+        function renderTimeline() {
+            const container = document.getElementById('timelineSlots');
+            container.innerHTML = '';
+
+            currentTheme.events.forEach((_, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'timeline-slot';
+                slot.innerHTML = `
+                    <div class="slot-marker">${index + 1}</div>
+                    <div class="slot-dropzone" data-slot="${index}"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+                        Arraste um evento aqui
+                    </div>
+                `;
+                container.appendChild(slot);
+            });
+        }
+
+        // Renderizar pool de eventos
+        function renderEventsPool() {
+            const pool = document.getElementById('eventsPool');
+            pool.innerHTML = '';
+
+            const shuffledEvents = shuffle(currentTheme.events);
+
+            shuffledEvents.forEach((event, index) => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.draggable = true;
+                card.dataset.eventOrder = event.order;
+                card.dataset.eventText = event.text;
+                card.textContent = event.text;
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                // Touch events para mobile
+                card.addEventListener('touchstart', handleTouchStart, { passive: false });
+                card.addEventListener('touchmove', handleTouchMove, { passive: false });
+                card.addEventListener('touchend', handleTouchEnd);
+
+                pool.appendChild(card);
+            });
+        }
+
+        // Drag handlers
+        function handleDragStart(e) {
+            draggedCard = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.slot-dropzone').forEach(slot => {
+                slot.classList.remove('dragover');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropzone = e.currentTarget;
+            dropzone.classList.remove('dragover');
+
+            if (draggedCard && !dropzone.classList.contains('filled')) {
+                const slotIndex = parseInt(dropzone.dataset.slot);
+                const eventOrder = parseInt(draggedCard.dataset.eventOrder);
+                const eventText = draggedCard.dataset.eventText;
+
+                // Colocar evento no slot
+                gameState.placedEvents[slotIndex] = eventOrder;
+                dropzone.textContent = eventText;
+                dropzone.classList.add('filled');
+                dropzone.dataset.eventOrder = eventOrder;
+
+                // Remover card do pool
+                draggedCard.remove();
+
+                playSound('drop');
+                checkAllPlaced();
+            }
+        }
+
+        // Touch handlers para mobile
+        let touchStartX, touchStartY;
+        let touchCard = null;
+        let touchClone = null;
+
+        function handleTouchStart(e) {
+            touchCard = e.target;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            touchClone = touchCard.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            document.body.appendChild(touchClone);
+
+            touchCard.style.opacity = '0.5';
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (touchClone) {
+                const touch = e.touches[0];
+                touchClone.style.left = (touch.clientX - 50) + 'px';
+                touchClone.style.top = (touch.clientY - 25) + 'px';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (touchClone) {
+                document.body.removeChild(touchClone);
+                touchClone = null;
+            }
+
+            if (touchCard) {
+                touchCard.style.opacity = '1';
+
+                const touch = e.changedTouches[0];
+                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                if (dropTarget && dropTarget.classList.contains('slot-dropzone') && !dropTarget.classList.contains('filled')) {
+                    const slotIndex = parseInt(dropTarget.dataset.slot);
+                    const eventOrder = parseInt(touchCard.dataset.eventOrder);
+                    const eventText = touchCard.dataset.eventText;
+
+                    gameState.placedEvents[slotIndex] = eventOrder;
+                    dropTarget.textContent = eventText;
+                    dropTarget.classList.add('filled');
+                    dropTarget.dataset.eventOrder = eventOrder;
+
+                    touchCard.remove();
+                    playSound('drop');
+                    checkAllPlaced();
+                }
+
+                touchCard = null;
+            }
+        }
+
+        // Verificar se todos eventos foram colocados
+        function checkAllPlaced() {
+            const totalSlots = currentTheme.events.length;
+            const filledSlots = Object.keys(gameState.placedEvents).length;
+
+            updateProgress();
+
+            if (filledSlots === totalSlots) {
+                document.getElementById('checkBtn').disabled = false;
+            }
+        }
+
+        // Atualizar barra de progresso
+        function updateProgress() {
+            const totalSlots = currentTheme.events.length;
+            const filledSlots = Object.keys(gameState.placedEvents).length;
+            const percent = (filledSlots / totalSlots) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Verificar ordem
+        function checkOrder() {
+            const dropzones = document.querySelectorAll('.slot-dropzone');
+            let allCorrect = true;
+
+            dropzones.forEach((dropzone, index) => {
+                const expectedOrder = index + 1;
+                const placedOrder = parseInt(dropzone.dataset.eventOrder);
+
+                if (placedOrder === expectedOrder) {
+                    dropzone.classList.add('correct');
+                } else {
+                    dropzone.classList.add('wrong');
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = gameState.difficulty === 'easy' ? 50 :
+                             gameState.difficulty === 'medium' ? 100 : 150;
+            const streakBonus = gameState.streak * 10;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.correctAnswers++;
+            gameState.totalRounds++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 500) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            showFeedback(`Perfeito! +${points} pontos`, 'success');
+
+            setTimeout(() => {
+                showResult(true, points);
+            }, 1500);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            gameState.totalRounds++;
+
+            updateDisplay();
+            saveProgress();
+
+            showFeedback('Ops! A ordem não está correta. Tente novamente!', 'error');
+
+            setTimeout(() => {
+                // Resetar para tentar novamente
+                document.querySelectorAll('.slot-dropzone').forEach(dropzone => {
+                    dropzone.classList.remove('wrong', 'correct', 'filled');
+                    dropzone.textContent = 'Arraste um evento aqui';
+                    delete dropzone.dataset.eventOrder;
+                });
+                gameState.placedEvents = {};
+                document.getElementById('checkBtn').disabled = true;
+                renderEventsPool();
+                updateProgress();
+            }, 2000);
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 2) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult(success, points) {
+            document.getElementById('gameArea').style.display = 'none';
+            const resultScreen = document.getElementById('resultScreen');
+            resultScreen.classList.add('show');
+
+            document.getElementById('resultIcon').textContent = success ? '🎉' : '😢';
+            document.getElementById('resultTitle').textContent = success ? 'Muito Bem!' : 'Tente Novamente';
+            document.getElementById('resultScore').textContent = success ?
+                `+${points} pontos | Sequência: ${gameState.streak}` : '';
+        }
+
+        // Próxima rodada
+        function nextRound() {
+            gameState.currentThemeIndex++;
+            startRound();
+        }
+
+        // Resetar jogo
+        function resetGame() {
+            gameState.currentThemeIndex = 0;
+            gameState.streak = 0;
+            startRound();
+        }
+
+        // Inicializar
+        loadProgress();
+        startRound();
+    </script>
+</body>
+</html>

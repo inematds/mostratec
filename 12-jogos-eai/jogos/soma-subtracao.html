@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soma e Subtração - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #06B6D4 0%, #0EA5E9 50%, #3B82F6 100%);
+      min-height: 100vh;
+      font-family: 'Comic Sans MS', 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+    }
+
+    .difficulty {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .diff-btn {
+      padding: 0.75rem 1.5rem;
+      border: 3px solid white;
+      border-radius: 2rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .diff-btn.active {
+      background: white;
+      color: #0EA5E9;
+    }
+
+    .diff-btn:hover { transform: scale(1.05); }
+
+    .game-area {
+      background: white;
+      border-radius: 2rem;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #0369A1;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #0C4A6E;
+    }
+
+    .lives {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .heart {
+      font-size: 2rem;
+      transition: all 0.3s;
+    }
+
+    .heart.lost {
+      filter: grayscale(100%);
+      transform: scale(0.8);
+    }
+
+    .question-area {
+      background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .visual-problem {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .objects-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      justify-content: center;
+      max-width: 150px;
+      padding: 1rem;
+      background: white;
+      border-radius: 1rem;
+      border: 3px solid #BAE6FD;
+    }
+
+    .objects-group span {
+      font-size: 1.5rem;
+    }
+
+    .operation-symbol {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #0EA5E9;
+    }
+
+    .operation-symbol.plus { color: #10B981; }
+    .operation-symbol.minus { color: #EF4444; }
+
+    .equals-symbol {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #6B7280;
+    }
+
+    .result-box {
+      width: 80px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      border: 3px solid #F59E0B;
+      border-radius: 1rem;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #D97706;
+    }
+
+    .equation {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #1E3A8A;
+      margin: 1rem 0;
+    }
+
+    .equation .num1 { color: #10B981; }
+    .equation .op { color: #0EA5E9; }
+    .equation .num2 { color: #EC4899; }
+
+    .answer-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .answer-btn {
+      padding: 1.25rem;
+      border: 4px solid #E5E7EB;
+      border-radius: 1.25rem;
+      background: white;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .answer-btn:hover {
+      border-color: #0EA5E9;
+      transform: scale(1.05);
+      background: #F0F9FF;
+    }
+
+    .answer-btn.correct {
+      border-color: #10B981;
+      background: #D1FAE5;
+      color: #065F46;
+      animation: correct 0.5s ease;
+    }
+
+    @keyframes correct {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .answer-btn.wrong {
+      border-color: #EF4444;
+      background: #FEE2E2;
+      color: #991B1B;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .message.show { display: block; animation: popIn 0.3s ease; }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+
+    .streak-display {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      display: none;
+      animation: fireAnim 0.5s ease infinite alternate;
+      z-index: 100;
+    }
+
+    .streak-display.show { display: block; }
+
+    @keyframes fireAnim {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    .end-screen {
+      text-align: center;
+      display: none;
+    }
+
+    .end-screen.active { display: block; }
+
+    .end-stars { font-size: 4rem; margin: 1rem 0; }
+    .end-score { font-size: 3rem; font-weight: bold; color: #0EA5E9; }
+
+    .restart-btn {
+      margin-top: 1.5rem;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #0EA5E9, #3B82F6);
+      color: white;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .restart-btn:hover { transform: scale(1.05); }
+
+    .progress-bar {
+      height: 12px;
+      background: #E5E7EB;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #0EA5E9);
+      transition: width 0.5s ease;
+    }
+
+    @media (max-width: 500px) {
+      .equation { font-size: 2rem; }
+      .answer-options { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 1.8rem; }
+      .objects-group span { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="streak-display" id="streakDisplay">🔥 <span id="streakNum">0</span> em sequência!</div>
+
+  <div class="container">
+    <h1>➕ Soma e Subtração ➖</h1>
+    <p class="subtitle">Pratique suas contas!</p>
+
+    <div class="difficulty">
+      <button class="diff-btn active" data-level="easy">🌱 Fácil</button>
+      <button class="diff-btn" data-level="medium">🌿 Médio</button>
+      <button class="diff-btn" data-level="hard">🌳 Difícil</button>
+    </div>
+
+    <div class="game-area">
+      <div id="gameScreen">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="score">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value"><span id="current">1</span>/15</div>
+            <div class="stat-label">Questão</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="streak">0</div>
+            <div class="stat-label">Sequência</div>
+          </div>
+        </div>
+
+        <div class="lives" id="lives">
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 6.67%"></div>
+        </div>
+
+        <div class="question-area">
+          <div class="visual-problem" id="visualProblem"></div>
+          <div class="equation" id="equation">
+            <span class="num1">5</span>
+            <span class="op">+</span>
+            <span class="num2">3</span>
+            <span>=</span>
+            <span>?</span>
+          </div>
+        </div>
+
+        <div class="answer-options" id="answerOptions"></div>
+        <div class="message" id="message"></div>
+      </div>
+
+      <div class="end-screen" id="endScreen">
+        <h2>🎉 Fim do Jogo!</h2>
+        <div class="end-stars" id="endStars">⭐⭐⭐</div>
+        <div class="end-score" id="endScore">0 pontos</div>
+        <p id="endMessage">Você foi muito bem!</p>
+        <button class="restart-btn" onclick="startGame()">🔄 Jogar Novamente</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('soma-subtracao'));</script>
+
+  <script>
+    const objects = ['🍎', '🌟', '🎈', '🐶', '🌸', '🚗', '⚽', '🎁', '🦋', '🍕', '🍦', '🎂'];
+
+    const levels = {
+      easy: { maxNum: 10, ops: ['+'], name: 'Fácil' },
+      medium: { maxNum: 20, ops: ['+', '-'], name: 'Médio' },
+      hard: { maxNum: 50, ops: ['+', '-'], name: 'Difícil' }
+    };
+
+    let level = 'easy';
+    let score = 0;
+    let currentQuestion = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let lives = 3;
+    let correctAnswer = 0;
+    let totalQuestions = 15;
+
+    function generateQuestion() {
+      const config = levels[level];
+      const op = config.ops[Math.floor(Math.random() * config.ops.length)];
+
+      let num1, num2, answer;
+
+      if (op === '+') {
+        num1 = Math.floor(Math.random() * (config.maxNum / 2)) + 1;
+        num2 = Math.floor(Math.random() * (config.maxNum / 2)) + 1;
+        answer = num1 + num2;
+      } else {
+        num1 = Math.floor(Math.random() * config.maxNum) + Math.floor(config.maxNum / 2);
+        num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
+        answer = num1 - num2;
+      }
+
+      correctAnswer = answer;
+
+      // Visual representation (for easy mode and small numbers)
+      const visualDiv = document.getElementById('visualProblem');
+      if (level === 'easy' && num1 <= 10 && num2 <= 10) {
+        const obj = objects[Math.floor(Math.random() * objects.length)];
+        visualDiv.innerHTML = `
+          <div class="objects-group">
+            ${obj.repeat(num1).split('').map(o => `<span>${o}</span>`).join('')}
+          </div>
+          <span class="operation-symbol ${op === '+' ? 'plus' : 'minus'}">${op}</span>
+          <div class="objects-group">
+            ${obj.repeat(num2).split('').map(o => `<span>${o}</span>`).join('')}
+          </div>
+          <span class="equals-symbol">=</span>
+          <div class="result-box">?</div>
+        `;
+        visualDiv.style.display = 'flex';
+      } else {
+        visualDiv.style.display = 'none';
+      }
+
+      // Equation display
+      document.getElementById('equation').innerHTML = `
+        <span class="num1">${num1}</span>
+        <span class="op">${op}</span>
+        <span class="num2">${num2}</span>
+        <span>=</span>
+        <span>?</span>
+      `;
+
+      // Generate options
+      const options = [answer];
+      while (options.length < 4) {
+        let wrong;
+        if (Math.random() > 0.5) {
+          wrong = answer + Math.floor(Math.random() * 5) + 1;
+        } else {
+          wrong = answer - Math.floor(Math.random() * 5) - 1;
+        }
+        if (wrong > 0 && !options.includes(wrong)) {
+          options.push(wrong);
+        }
+      }
+
+      // Shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      const optionsDiv = document.getElementById('answerOptions');
+      optionsDiv.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, btn);
+        optionsDiv.appendChild(btn);
+      });
+
+      document.getElementById('current').textContent = currentQuestion + 1;
+      document.getElementById('progressFill').style.width = ((currentQuestion + 1) / totalQuestions * 100) + '%';
+    }
+
+    function checkAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => b.style.pointerEvents = 'none');
+
+      const message = document.getElementById('message');
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        streak++;
+        correctCount++;
+
+        const streakBonus = streak >= 3 ? streak * 2 : 0;
+        const points = 10 + streakBonus;
+        score += points;
+
+        document.getElementById('score').textContent = score;
+        document.getElementById('streak').textContent = streak;
+
+        message.textContent = `✅ Correto! +${points} pontos`;
+        message.className = 'message show success';
+
+        updateStreakDisplay();
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (parseInt(b.textContent) === correctAnswer) b.classList.add('correct');
+        });
+
+        streak = 0;
+        lives--;
+
+        document.getElementById('streak').textContent = streak;
+        updateLives();
+        updateStreakDisplay();
+
+        message.textContent = `❌ Era ${correctAnswer}`;
+        message.className = 'message show error';
+
+        EAI.applyPenalty(1);
+      }
+
+      currentQuestion++;
+
+      if (lives === 0) {
+        setTimeout(endGame, 1500);
+      } else if (currentQuestion >= totalQuestions) {
+        setTimeout(endGame, 1500);
+      } else {
+        setTimeout(() => {
+          message.classList.remove('show');
+          buttons.forEach(b => b.style.pointerEvents = 'auto');
+          generateQuestion();
+        }, 1200);
+      }
+    }
+
+    function updateLives() {
+      const heartsDiv = document.getElementById('lives');
+      heartsDiv.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'heart' + (i >= lives ? ' lost' : '');
+        heart.textContent = '❤️';
+        heartsDiv.appendChild(heart);
+      }
+    }
+
+    function updateStreakDisplay() {
+      const display = document.getElementById('streakDisplay');
+      if (streak >= 3) {
+        display.classList.add('show');
+        document.getElementById('streakNum').textContent = streak;
+      } else {
+        display.classList.remove('show');
+      }
+    }
+
+    function endGame() {
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('endScreen').classList.add('active');
+
+      const percent = (correctCount / currentQuestion) * 100;
+      let stars = '';
+      let msg = '';
+
+      if (lives === 0) {
+        stars = '';
+        msg = 'Você perdeu todas as vidas! Tente novamente.';
+      } else if (percent >= 90) {
+        stars = '⭐⭐⭐';
+        msg = 'Incrível! Você é fera em matemática!';
+      } else if (percent >= 70) {
+        stars = '⭐⭐';
+        msg = 'Muito bom! Continue praticando!';
+      } else if (percent >= 50) {
+        stars = '⭐';
+        msg = 'Bom esforço! Você está melhorando!';
+      } else {
+        stars = '';
+        msg = 'Continue praticando, você vai melhorar!';
+      }
+
+      document.getElementById('endStars').textContent = stars;
+      document.getElementById('endScore').textContent = score + ' pontos';
+      document.getElementById('endMessage').textContent = `${correctCount}/${currentQuestion} acertos - ${msg}`;
+
+      // Sistema de Recompensas EAI v2.0
+      setTimeout(() => {
+        EAI.giveGameReward({
+          correct: correctCount,
+          total: currentQuestion,
+          gameType: 'quiz'
+        });
+
+        if (level === 'hard' && percent >= 80) {
+          setTimeout(() => EAI.giveReward('diamonds', 1), 800);
+        }
+      }, 500);
+    }
+
+    function startGame() {
+      score = 0;
+      currentQuestion = 0;
+      correctCount = 0;
+      streak = 0;
+      lives = 3;
+
+      document.getElementById('score').textContent = '0';
+      document.getElementById('streak').textContent = '0';
+      updateLives();
+      updateStreakDisplay();
+
+      document.getElementById('gameScreen').style.display = 'block';
+      document.getElementById('endScreen').classList.remove('active');
+
+      generateQuestion();
+    }
+
+    // Difficulty selection
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        level = btn.dataset.level;
+        startGame();
+      });
+    });
+
+    // Initialize
+    startGame();
+  </script>
+  <script src="eai-header.js"></script>
+</body>
+</html>

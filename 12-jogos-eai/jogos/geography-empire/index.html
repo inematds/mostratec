@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Geography Empire - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0f2744; touch-action: none; }
+    #gameCanvas { display: block; width: 100%; height: 100%; }
+    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a4971 0%, #0f2744 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    #loading.hidden { display: none; }
+    .geo-icon { font-size: 100px; animation: spin 10s linear infinite; }
+    @keyframes spin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+    #loading h1 { color: #4299e1; font-family: 'Arial Black', sans-serif; font-size: 26px; margin-top: 20px; }
+    #loading p { color: #90cdf4; font-family: Arial, sans-serif; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="geo-icon">🌎</div>
+    <h1>GEOGRAPHY EMPIRE</h1>
+    <p>Mapeando o mundo...</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="game.js"></script>
+</body>
+</html>

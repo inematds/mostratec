@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teatro de Personagens - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .mode-btn:hover, .mode-btn.active {
+            background: #4ecdc4;
+            transform: scale(1.05);
+        }
+
+        /* Stage */
+        .stage-container {
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 50%, #5d4e37 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .curtain-left, .curtain-right {
+            position: absolute;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            background: linear-gradient(90deg, #8e1a28, #c0392b);
+            z-index: 5;
+        }
+
+        .curtain-left {
+            left: 0;
+            border-radius: 15px 0 0 15px;
+        }
+
+        .curtain-right {
+            right: 0;
+            border-radius: 0 15px 15px 0;
+        }
+
+        .stage {
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 20px 70px;
+        }
+
+        .character-slot {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+
+        .character-slot:hover {
+            transform: scale(1.1);
+        }
+
+        .character-emoji {
+            font-size: 4em;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            transition: all 0.3s;
+        }
+
+        .character-emoji.speaking {
+            animation: speak 0.3s infinite alternate;
+        }
+
+        @keyframes speak {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .character-name {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        /* Dialog */
+        .dialog-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .dialog-bubble {
+            background: white;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .dialog-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 30px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: white transparent transparent;
+        }
+
+        .dialog-speaker {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+
+        .dialog-text {
+            margin-bottom: 10px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .dialog-option {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dialog-option:hover {
+            transform: scale(1.05);
+        }
+
+        /* Character Selection */
+        .character-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+        }
+
+        .character-option {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .character-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .character-option.selected {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+
+        .character-option-emoji {
+            font-size: 2em;
+        }
+
+        .character-option-name {
+            font-size: 0.7em;
+            margin-top: 5px;
+        }
+
+        /* Scene Selection */
+        .scene-selector {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .scene-selector.show {
+            display: block;
+        }
+
+        .scene-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .scene-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .scene-card:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-5px);
+        }
+
+        .scene-card.selected {
+            border-color: #4ecdc4;
+        }
+
+        .scene-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .scene-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .scene-description {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Script Editor */
+        .script-editor {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .script-line {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .script-speaker {
+            min-width: 100px;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .script-text {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+
+        .script-remove {
+            padding: 8px 12px;
+            background: #e74c3c;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .add-line-btn {
+            padding: 10px 20px;
+            background: #27ae60;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Actions */
+        .actions-panel {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        /* Result */
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .result-message {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .result-score {
+            font-size: 2em;
+            color: #feca57;
+            margin-bottom: 20px;
+        }
+
+        /* Tip */
+        .tip-box {
+            background: rgba(155, 89, 182, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            .character-emoji {
+                font-size: 3em;
+            }
+
+            .stage {
+                padding: 15px 50px;
+            }
+
+            .curtain-left, .curtain-right {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="plays">0</div>
+            <div class="stat-label">Peças</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="lines">0</div>
+            <div class="stat-label">Falas</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Estreante: 3 peças">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Ator: 10 peças">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Diretor: 25 peças">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Estrela: 50 peças">💎</div>
+    </div>
+
+    <div class="game-area">
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="guided" onclick="setMode('guided')">🎭 Peças Guiadas</button>
+            <button class="mode-btn" data-mode="free" onclick="setMode('free')">✨ Criar Peça</button>
+        </div>
+
+        <div class="scene-selector show" id="scene-selector">
+            <h2>🎭 Escolha uma Peça</h2>
+            <div class="scene-cards" id="scene-cards"></div>
+        </div>
+
+        <div id="theater-area" style="display: none;">
+            <div class="stage-container">
+                <div class="curtain-left"></div>
+                <div class="curtain-right"></div>
+                <div class="stage" id="stage"></div>
+            </div>
+
+            <div class="dialog-container" id="dialog-container">
+                <div class="dialog-bubble">
+                    <div class="dialog-speaker" id="dialog-speaker">Narrador</div>
+                    <div class="dialog-text" id="dialog-text">Bem-vindo ao teatro!</div>
+                </div>
+                <div class="dialog-actions" id="dialog-actions"></div>
+            </div>
+
+            <div class="actions-panel">
+                <button class="action-btn btn-play" id="play-btn" onclick="playScene()">▶️ Reproduzir</button>
+                <button class="action-btn btn-stop" id="stop-btn" onclick="stopScene()" style="display: none;">⏹️ Parar</button>
+                <button class="action-btn btn-new" onclick="backToSelection()">📋 Escolher Outra</button>
+            </div>
+        </div>
+
+        <div id="editor-area" style="display: none;">
+            <div class="character-panel">
+                <div class="panel-title">👥 Escolha os Personagens (até 4)</div>
+                <div class="character-grid" id="character-grid"></div>
+            </div>
+
+            <div class="stage-container">
+                <div class="curtain-left"></div>
+                <div class="curtain-right"></div>
+                <div class="stage" id="preview-stage"></div>
+            </div>
+
+            <div class="script-editor">
+                <div class="panel-title">📜 Escreva o Roteiro</div>
+                <div id="script-lines"></div>
+                <button class="add-line-btn" onclick="addScriptLine()">+ Adicionar Fala</button>
+            </div>
+
+            <div class="actions-panel">
+                <button class="action-btn btn-play" onclick="previewPlay()">▶️ Prévia</button>
+                <button class="action-btn btn-save" onclick="saveAndPerform()">🎭 Apresentar</button>
+                <button class="action-btn btn-new" onclick="backToSelection()">← Voltar</button>
+            </div>
+        </div>
+
+        <div class="result-screen" id="result-screen">
+            <div class="result-icon">👏</div>
+            <div class="result-title">Bravo!</div>
+            <div class="result-message" id="result-message">Que apresentação incrível!</div>
+            <div class="result-score" id="result-score">+100 pontos</div>
+            <button class="action-btn btn-new" onclick="backToSelection()">🎭 Nova Peça</button>
+        </div>
+
+        <div class="tip-box">
+            <span>💡</span> <span id="tip-text">Dica: Dê vida aos personagens com emoção nas falas!</span>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            playsCompleted: 0,
+            totalLines: 0,
+            currentMode: 'guided',
+            currentScene: null,
+            selectedCharacters: [],
+            customScript: [],
+            isPlaying: false,
+            currentLineIndex: 0
+        };
+
+        // Characters
+        const characters = [
+            { id: 'princess', emoji: '👸', name: 'Princesa' },
+            { id: 'prince', emoji: '🤴', name: 'Príncipe' },
+            { id: 'knight', emoji: '🦸', name: 'Cavaleiro' },
+            { id: 'wizard', emoji: '🧙', name: 'Mago' },
+            { id: 'dragon', emoji: '🐲', name: 'Dragão' },
+            { id: 'fairy', emoji: '🧚', name: 'Fada' },
+            { id: 'king', emoji: '🤴', name: 'Rei' },
+            { id: 'queen', emoji: '👑', name: 'Rainha' },
+            { id: 'witch', emoji: '🧙‍♀️', name: 'Bruxa' },
+            { id: 'pirate', emoji: '🏴‍☠️', name: 'Pirata' },
+            { id: 'robot', emoji: '🤖', name: 'Robô' },
+            { id: 'alien', emoji: '👽', name: 'Alienígena' },
+            { id: 'detective', emoji: '🕵️', name: 'Detetive' },
+            { id: 'chef', emoji: '👨‍🍳', name: 'Chefe' },
+            { id: 'superhero', emoji: '🦸‍♂️', name: 'Herói' },
+            { id: 'animal', emoji: '🦁', name: 'Leão' }
+        ];
+
+        // Pre-made plays
+        const plays = [
+            {
+                id: 'rescue',
+                icon: '🏰',
+                title: 'O Resgate da Princesa',
+                description: 'Uma aventura épica de coragem e amizade!',
+                characters: ['princess', 'knight', 'dragon'],
+                script: [
+                    { speaker: 'Narrador', text: 'Era uma vez, em um reino distante...' },
+                    { speaker: 'dragon', text: 'ROARRR! Ninguém pode salvar a princesa!' },
+                    { speaker: 'princess', text: 'Socorro! Alguém pode me ajudar?' },
+                    { speaker: 'knight', text: 'Não tema, princesa! Eu vim para salvá-la!' },
+                    { speaker: 'dragon', text: 'Você acha que pode me vencer, cavaleiro?' },
+                    { speaker: 'knight', text: 'Com coragem e bondade, tudo é possível!' },
+                    { speaker: 'princess', text: 'Espere! Por que vocês estão brigando?' },
+                    { speaker: 'dragon', text: 'Eu... eu só queria um amigo...' },
+                    { speaker: 'knight', text: 'Podemos ser amigos! Não precisa guardar a princesa.' },
+                    { speaker: 'princess', text: 'Que tal sermos todos amigos?' },
+                    { speaker: 'Narrador', text: 'E assim, todos viveram felizes para sempre!' }
+                ]
+            },
+            {
+                id: 'magic',
+                icon: '✨',
+                title: 'A Poção Mágica',
+                description: 'Uma história sobre ajudar os outros!',
+                characters: ['wizard', 'fairy', 'witch'],
+                script: [
+                    { speaker: 'Narrador', text: 'No laboratório mágico...' },
+                    { speaker: 'wizard', text: 'Preciso fazer uma poção para curar a floresta!' },
+                    { speaker: 'fairy', text: 'Eu posso ajudar! Tenho pó de estrela!' },
+                    { speaker: 'witch', text: 'Ha ha! Eu vou atrapalhar vocês!' },
+                    { speaker: 'wizard', text: 'Por que você quer atrapalhar?' },
+                    { speaker: 'witch', text: 'Porque... ninguém me convida para nada.' },
+                    { speaker: 'fairy', text: 'Oh! Você quer nos ajudar com a poção?' },
+                    { speaker: 'witch', text: 'Eu? Vocês me deixariam ajudar?' },
+                    { speaker: 'wizard', text: 'Claro! Juntos somos mais fortes!' },
+                    { speaker: 'Narrador', text: 'Com a ajuda de todos, a floresta foi salva!' }
+                ]
+            },
+            {
+                id: 'space',
+                icon: '🚀',
+                title: 'Aventura no Espaço',
+                description: 'Uma jornada intergaláctica!',
+                characters: ['robot', 'alien', 'superhero'],
+                script: [
+                    { speaker: 'Narrador', text: 'Na estação espacial...' },
+                    { speaker: 'robot', text: 'Alerta! Nave desconhecida se aproximando!' },
+                    { speaker: 'superhero', text: 'Fiquem calmos! Vou investigar.' },
+                    { speaker: 'alien', text: 'Olá, terráqueos! Viemos em paz!' },
+                    { speaker: 'robot', text: 'Como podemos confiar em vocês?' },
+                    { speaker: 'alien', text: 'Nosso planeta precisa de ajuda. Podem nos ensinar?' },
+                    { speaker: 'superhero', text: 'Ensinar o quê?' },
+                    { speaker: 'alien', text: 'Como fazer amizade! Em nosso planeta, todos são sozinhos.' },
+                    { speaker: 'robot', text: 'Isso é triste. Podemos ajudar!' },
+                    { speaker: 'Narrador', text: 'E assim nasceu uma amizade intergaláctica!' }
+                ]
+            },
+            {
+                id: 'kitchen',
+                icon: '🍳',
+                title: 'Confusão na Cozinha',
+                description: 'Uma comédia deliciosa!',
+                characters: ['chef', 'princess', 'detective'],
+                script: [
+                    { speaker: 'Narrador', text: 'Na cozinha do castelo...' },
+                    { speaker: 'chef', text: 'Oh não! O bolo da princesa sumiu!' },
+                    { speaker: 'princess', text: 'Meu bolo de aniversário! Quem fez isso?' },
+                    { speaker: 'detective', text: 'Deixe comigo! Vou investigar!' },
+                    { speaker: 'detective', text: 'Hmm... há migalhas pelo chão...' },
+                    { speaker: 'chef', text: 'As migalhas levam até... o jardim!' },
+                    { speaker: 'princess', text: 'Olhem! Os passarinhos estão comendo!' },
+                    { speaker: 'detective', text: 'Caso resolvido! Foram os pássaros famintos.' },
+                    { speaker: 'chef', text: 'Vou fazer um bolo novo - e também comida para os pássaros!' },
+                    { speaker: 'Narrador', text: 'E todos celebraram juntos!' }
+                ]
+            }
+        ];
+
+        const tips = [
+            'Dê vida aos personagens com emoção nas falas!',
+            'Cada personagem tem sua própria personalidade.',
+            'Pense no que cada personagem sentiria.',
+            'Uma boa história tem começo, meio e fim.',
+            'Conflitos são importantes, mas a amizade vence!',
+            'Use sua imaginação para criar diálogos únicos!',
+            'Pratique diferentes vozes para cada personagem.'
+        ];
+
+        // Audio
+        let audioCtx = null;
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+            if (type === 'speak') {
+                osc.frequency.setValueAtTime(300 + Math.random() * 200, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'applause') {
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(200 + Math.random() * 600, audioCtx.currentTime);
+                        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                        o.start(audioCtx.currentTime);
+                        o.stop(audioCtx.currentTime + 0.05);
+                    }, i * 100);
+                }
+            }
+        }
+
+        // Initialize
+        function init() {
+            loadProgress();
+            loadPlayCards();
+            loadCharacterGrid();
+            updateDisplay();
+            updateMedals();
+            showRandomTip();
+        }
+
+        function loadPlayCards() {
+            const container = document.getElementById('scene-cards');
+            container.innerHTML = plays.map(play => `
+                <div class="scene-card" onclick="selectPlay('${play.id}')">
+                    <div class="scene-icon">${play.icon}</div>
+                    <div class="scene-title">${play.title}</div>
+                    <div class="scene-description">${play.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function loadCharacterGrid() {
+            const container = document.getElementById('character-grid');
+            container.innerHTML = characters.map(char => `
+                <div class="character-option" data-id="${char.id}" onclick="toggleCharacter('${char.id}')">
+                    <div class="character-option-emoji">${char.emoji}</div>
+                    <div class="character-option-name">${char.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function setMode(mode) {
+            gameState.currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+
+            if (mode === 'guided') {
+                document.getElementById('scene-selector').classList.add('show');
+                document.getElementById('editor-area').style.display = 'none';
+                document.getElementById('theater-area').style.display = 'none';
+            } else {
+                document.getElementById('scene-selector').classList.remove('show');
+                document.getElementById('editor-area').style.display = 'block';
+                document.getElementById('theater-area').style.display = 'none';
+                gameState.selectedCharacters = [];
+                gameState.customScript = [];
+                updatePreviewStage();
+                updateScriptEditor();
+            }
+        }
+
+        function selectPlay(playId) {
+            const play = plays.find(p => p.id === playId);
+            gameState.currentScene = play;
+            gameState.currentLineIndex = 0;
+
+            document.getElementById('scene-selector').classList.remove('show');
+            document.getElementById('theater-area').style.display = 'block';
+            document.getElementById('result-screen').classList.remove('show');
+
+            setupStage(play.characters);
+            showLine(0);
+        }
+
+        function setupStage(characterIds) {
+            const stage = document.getElementById('stage');
+            stage.innerHTML = characterIds.map(id => {
+                const char = characters.find(c => c.id === id);
+                return `
+                    <div class="character-slot" data-id="${id}">
+                        <div class="character-emoji" id="char-${id}">${char.emoji}</div>
+                        <div class="character-name">${char.name}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showLine(index) {
+            if (!gameState.currentScene) return;
+
+            const script = gameState.currentScene.script;
+            if (index >= script.length) {
+                finishPlay();
+                return;
+            }
+
+            const line = script[index];
+            gameState.currentLineIndex = index;
+
+            // Update dialog
+            document.getElementById('dialog-speaker').textContent =
+                line.speaker === 'Narrador' ? '📖 Narrador' : getCharacterName(line.speaker);
+            document.getElementById('dialog-text').textContent = line.text;
+
+            // Highlight speaking character
+            document.querySelectorAll('.character-emoji').forEach(el => el.classList.remove('speaking'));
+            if (line.speaker !== 'Narrador') {
+                const charEl = document.getElementById(`char-${line.speaker}`);
+                if (charEl) charEl.classList.add('speaking');
+            }
+
+            playSound('speak');
+
+            // Show next button
+            document.getElementById('dialog-actions').innerHTML = `
+                <button class="dialog-option" onclick="showLine(${index + 1})">Próxima fala →</button>
+            `;
+        }
+
+        function getCharacterName(id) {
+            const char = characters.find(c => c.id === id);
+            return char ? `${char.emoji} ${char.name}` : id;
+        }
+
+        function playScene() {
+            if (!gameState.currentScene) return;
+
+            gameState.isPlaying = true;
+            document.getElementById('play-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-block';
+
+            let index = 0;
+            const script = gameState.currentScene.script;
+
+            const interval = setInterval(() => {
+                if (!gameState.isPlaying || index >= script.length) {
+                    clearInterval(interval);
+                    gameState.isPlaying = false;
+                    document.getElementById('play-btn').style.display = 'inline-block';
+                    document.getElementById('stop-btn').style.display = 'none';
+                    if (index >= script.length) finishPlay();
+                    return;
+                }
+
+                showLine(index);
+                index++;
+            }, 3000);
+        }
+
+        function stopScene() {
+            gameState.isPlaying = false;
+            document.getElementById('play-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+        }
+
+        function finishPlay() {
+            playSound('applause');
+
+            gameState.playsCompleted++;
+            gameState.totalLines += gameState.currentScene.script.length;
+
+            const points = 50 + gameState.currentScene.script.length * 5;
+            gameState.points += points;
+
+            const newLevel = Math.floor(gameState.points / 300) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+            }
+
+            document.getElementById('theater-area').style.display = 'none';
+            document.getElementById('result-screen').classList.add('show');
+            document.getElementById('result-score').textContent = `+${points} pontos!`;
+
+            const messages = [
+                'Que apresentação incrível! 👏',
+                'Você foi muito bem! 🌟',
+                'Os personagens ganharam vida! ✨',
+                'Bravo! Bravo! 🎭',
+                'Um verdadeiro artista! 🎪'
+            ];
+            document.getElementById('result-message').textContent = messages[Math.floor(Math.random() * messages.length)];
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+        }
+
+        // Free mode functions
+        function toggleCharacter(id) {
+            const index = gameState.selectedCharacters.indexOf(id);
+            if (index > -1) {
+                gameState.selectedCharacters.splice(index, 1);
+            } else if (gameState.selectedCharacters.length < 4) {
+                gameState.selectedCharacters.push(id);
+            }
+
+            document.querySelectorAll('.character-option').forEach(el => {
+                el.classList.toggle('selected', gameState.selectedCharacters.includes(el.dataset.id));
+            });
+
+            updatePreviewStage();
+            updateScriptEditor();
+        }
+
+        function updatePreviewStage() {
+            const stage = document.getElementById('preview-stage');
+            if (gameState.selectedCharacters.length === 0) {
+                stage.innerHTML = '<p style="opacity: 0.5; text-align: center; width: 100%;">Selecione personagens acima</p>';
+                return;
+            }
+
+            stage.innerHTML = gameState.selectedCharacters.map(id => {
+                const char = characters.find(c => c.id === id);
+                return `
+                    <div class="character-slot">
+                        <div class="character-emoji">${char.emoji}</div>
+                        <div class="character-name">${char.name}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateScriptEditor() {
+            const container = document.getElementById('script-lines');
+
+            if (gameState.selectedCharacters.length === 0) {
+                container.innerHTML = '<p style="opacity: 0.5; text-align: center;">Selecione personagens primeiro</p>';
+                return;
+            }
+
+            container.innerHTML = gameState.customScript.map((line, i) => `
+                <div class="script-line">
+                    <select class="script-speaker" onchange="updateScriptSpeaker(${i}, this.value)">
+                        <option value="Narrador" ${line.speaker === 'Narrador' ? 'selected' : ''}>Narrador</option>
+                        ${gameState.selectedCharacters.map(id => {
+                            const char = characters.find(c => c.id === id);
+                            return `<option value="${id}" ${line.speaker === id ? 'selected' : ''}>${char.name}</option>`;
+                        }).join('')}
+                    </select>
+                    <input type="text" class="script-text" value="${line.text}"
+                           onchange="updateScriptText(${i}, this.value)" placeholder="Digite a fala...">
+                    <button class="script-remove" onclick="removeScriptLine(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addScriptLine() {
+            if (gameState.selectedCharacters.length === 0) return;
+
+            gameState.customScript.push({
+                speaker: 'Narrador',
+                text: ''
+            });
+            updateScriptEditor();
+        }
+
+        function updateScriptSpeaker(index, speaker) {
+            gameState.customScript[index].speaker = speaker;
+        }
+
+        function updateScriptText(index, text) {
+            gameState.customScript[index].text = text;
+        }
+
+        function removeScriptLine(index) {
+            gameState.customScript.splice(index, 1);
+            updateScriptEditor();
+        }
+
+        function previewPlay() {
+            if (gameState.customScript.length === 0) {
+                alert('Adicione algumas falas primeiro!');
+                return;
+            }
+
+            gameState.currentScene = {
+                script: gameState.customScript.filter(l => l.text.trim()),
+                characters: gameState.selectedCharacters
+            };
+
+            document.getElementById('editor-area').style.display = 'none';
+            document.getElementById('theater-area').style.display = 'block';
+
+            setupStage(gameState.selectedCharacters);
+            showLine(0);
+        }
+
+        function saveAndPerform() {
+            if (gameState.customScript.length < 3) {
+                alert('Adicione pelo menos 3 falas!');
+                return;
+            }
+
+            previewPlay();
+        }
+
+        function backToSelection() {
+            document.getElementById('theater-area').style.display = 'none';
+            document.getElementById('editor-area').style.display = 'none';
+            document.getElementById('result-screen').classList.remove('show');
+
+            if (gameState.currentMode === 'guided') {
+                document.getElementById('scene-selector').classList.add('show');
+            } else {
+                document.getElementById('editor-area').style.display = 'block';
+            }
+
+            gameState.currentScene = null;
+            gameState.isPlaying = false;
+        }
+
+        function showRandomTip() {
+            document.getElementById('tip-text').textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('plays').textContent = gameState.playsCompleted;
+            document.getElementById('lines').textContent = gameState.totalLines;
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.playsCompleted >= 3);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.playsCompleted >= 10);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.playsCompleted >= 25);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.playsCompleted >= 50);
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('teatroPersonagensProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+                gameState.playsCompleted = data.playsCompleted || 0;
+                gameState.totalLines = data.totalLines || 0;
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('teatroPersonagensProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                playsCompleted: gameState.playsCompleted,
+                totalLines: gameState.totalLines
+            }));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

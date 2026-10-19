@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa do Brasil - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #059669;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+      padding: 0.5rem 1.25rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #059669;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #047857;
+    }
+    .game-mode {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #D1FAE5;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      border-color: #10B981;
+      background: #D1FAE5;
+      color: #059669;
+    }
+    .question-area {
+      background: linear-gradient(135deg, #1E3A5F, #0F172A);
+      border-radius: 1rem;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: white;
+    }
+    .question {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .target-state {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #34D399;
+    }
+    .map-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .map-container svg {
+      width: 100%;
+      height: auto;
+    }
+    .state {
+      fill: #D1FAE5;
+      stroke: #059669;
+      stroke-width: 1;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .state:hover {
+      fill: #A7F3D0;
+    }
+    .state.correct {
+      fill: #34D399;
+      animation: pulse-correct 0.5s ease;
+    }
+    .state.wrong {
+      fill: #FCA5A5;
+      animation: shake 0.3s ease;
+    }
+    .state.completed {
+      fill: #6EE7B7;
+    }
+    .state.highlight {
+      fill: #FCD34D;
+    }
+    @keyframes pulse-correct {
+      50% { transform: scale(1.05); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    .state-label {
+      font-size: 8px;
+      font-weight: bold;
+      fill: #065F46;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+    .state#DF {
+      fill: #FCD34D;
+      stroke: #B45309;
+      stroke-width: 2;
+    }
+    .state#DF:hover {
+      fill: #FDE68A;
+    }
+    .state#DF.completed {
+      fill: #FBBF24;
+    }
+    .feedback {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      margin-top: 1rem;
+      font-weight: bold;
+      min-height: 3rem;
+    }
+    .feedback.success {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+    .feedback.error {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    .feedback.info {
+      background: #E0F2FE;
+      color: #0369A1;
+    }
+    .btn {
+      display: block;
+      margin: 1rem auto 0;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .info-card {
+      background: #F0FDF4;
+      border: 2px solid #A7F3D0;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .info-card.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .info-card h3 {
+      color: #059669;
+      margin-bottom: 0.5rem;
+    }
+    .info-card p {
+      color: #374151;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    .regions {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .region-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .region-norte { background: #D1FAE5; color: #065F46; }
+    .region-nordeste { background: #FEF3C7; color: #92400E; }
+    .region-centro { background: #FEE2E2; color: #991B1B; }
+    .region-sudeste { background: #DBEAFE; color: #1E40AF; }
+    .region-sul { background: #E9D5FF; color: #6B21A8; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>🗺️ Mapa do Brasil</h1>
+    <p class="subtitle">Aprenda os estados e capitais do Brasil!</p>
+
+    <div class="game-mode">
+      <button class="mode-btn active" data-mode="state">Estados</button>
+      <button class="mode-btn" data-mode="capital">Capitais</button>
+      <button class="mode-btn" data-mode="region">Regiões</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-label">Sequência</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="remaining">27</div>
+        <div class="stat-label">Restantes</div>
+      </div>
+    </div>
+
+    <div class="regions">
+      <span class="region-badge region-norte">Norte</span>
+      <span class="region-badge region-nordeste">Nordeste</span>
+      <span class="region-badge region-centro">Centro-Oeste</span>
+      <span class="region-badge region-sudeste">Sudeste</span>
+      <span class="region-badge region-sul">Sul</span>
+    </div>
+
+    <div class="question-area">
+      <p class="question" id="question">Clique no estado:</p>
+      <p class="target-state" id="target">São Paulo</p>
+    </div>
+
+    <div class="map-container">
+      <svg viewBox="0 0 500 480" id="brazilMap"></svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="info-card" id="infoCard">
+      <h3 id="infoTitle">São Paulo</h3>
+      <p id="infoCapital"><strong>Capital:</strong> São Paulo</p>
+      <p id="infoRegion"><strong>Região:</strong> Sudeste</p>
+      <p id="infoFact"><strong>Curiosidade:</strong> É o estado mais populoso do Brasil.</p>
+    </div>
+
+    <button class="btn" onclick="resetGame()">🔄 Novo Jogo</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('brazil-map'));</script>
+  <script>
+    const states = [
+      { id: 'AC', name: 'Acre', capital: 'Rio Branco', region: 'Norte', x: 95, y: 180, fact: 'Faz fronteira com Peru e Bolívia.' },
+      { id: 'AL', name: 'Alagoas', capital: 'Maceió', region: 'Nordeste', x: 410, y: 185, fact: 'Menor estado do Nordeste.' },
+      { id: 'AP', name: 'Amapá', capital: 'Macapá', region: 'Norte', x: 290, y: 55, fact: 'Cortado pela linha do Equador.' },
+      { id: 'AM', name: 'Amazonas', capital: 'Manaus', region: 'Norte', x: 160, y: 120, fact: 'Maior estado do Brasil.' },
+      { id: 'BA', name: 'Bahia', capital: 'Salvador', region: 'Nordeste', x: 375, y: 230, fact: 'Primeira capital do Brasil.' },
+      { id: 'CE', name: 'Ceará', capital: 'Fortaleza', region: 'Nordeste', x: 385, y: 130, fact: 'Terra da luz e do humor.' },
+      { id: 'DF', name: 'Distrito Federal', capital: 'Brasília', region: 'Centro-Oeste', x: 310, y: 275, fact: 'Capital federal do Brasil.' },
+      { id: 'ES', name: 'Espírito Santo', capital: 'Vitória', region: 'Sudeste', x: 385, y: 315, fact: 'Grandes praias e montanhas.' },
+      { id: 'GO', name: 'Goiás', capital: 'Goiânia', region: 'Centro-Oeste', x: 295, y: 290, fact: 'Estado do cerrado.' },
+      { id: 'MA', name: 'Maranhão', capital: 'São Luís', region: 'Nordeste', x: 325, y: 120, fact: 'Lençóis Maranhenses.' },
+      { id: 'MT', name: 'Mato Grosso', capital: 'Cuiabá', region: 'Centro-Oeste', x: 220, y: 230, fact: 'Centro geodésico da América do Sul.' },
+      { id: 'MS', name: 'Mato Grosso do Sul', capital: 'Campo Grande', region: 'Centro-Oeste', x: 235, y: 330, fact: 'Pantanal sul-mato-grossense.' },
+      { id: 'MG', name: 'Minas Gerais', capital: 'Belo Horizonte', region: 'Sudeste', x: 340, y: 305, fact: 'Estado das montanhas e queijo.' },
+      { id: 'PA', name: 'Pará', capital: 'Belém', region: 'Norte', x: 255, y: 100, fact: 'Ilha do Marajó, maior ilha fluvial.' },
+      { id: 'PB', name: 'Paraíba', capital: 'João Pessoa', region: 'Nordeste', x: 420, y: 155, fact: 'Ponto mais oriental das Américas.' },
+      { id: 'PR', name: 'Paraná', capital: 'Curitiba', region: 'Sul', x: 285, y: 375, fact: 'Cataratas do Iguaçu.' },
+      { id: 'PE', name: 'Pernambuco', capital: 'Recife', region: 'Nordeste', x: 410, y: 165, fact: 'Berço do frevo e maracatu.' },
+      { id: 'PI', name: 'Piauí', capital: 'Teresina', region: 'Nordeste', x: 355, y: 155, fact: 'Delta do Parnaíba.' },
+      { id: 'RJ', name: 'Rio de Janeiro', capital: 'Rio de Janeiro', region: 'Sudeste', x: 365, y: 345, fact: 'Cristo Redentor e Pão de Açúcar.' },
+      { id: 'RN', name: 'Rio Grande do Norte', capital: 'Natal', region: 'Nordeste', x: 415, y: 135, fact: 'Maior cajueiro do mundo.' },
+      { id: 'RS', name: 'Rio Grande do Sul', capital: 'Porto Alegre', region: 'Sul', x: 275, y: 430, fact: 'Terra do chimarrão e churrasco.' },
+      { id: 'RO', name: 'Rondônia', capital: 'Porto Velho', region: 'Norte', x: 145, y: 190, fact: 'Estrada de Ferro Madeira-Mamoré.' },
+      { id: 'RR', name: 'Roraima', capital: 'Boa Vista', region: 'Norte', x: 185, y: 50, fact: 'Monte Roraima, ponto mais alto.' },
+      { id: 'SC', name: 'Santa Catarina', capital: 'Florianópolis', region: 'Sul', x: 300, y: 400, fact: 'Colonização alemã e italiana.' },
+      { id: 'SP', name: 'São Paulo', capital: 'São Paulo', region: 'Sudeste', x: 305, y: 350, fact: 'Estado mais populoso do Brasil.' },
+      { id: 'SE', name: 'Sergipe', capital: 'Aracaju', region: 'Nordeste', x: 405, y: 205, fact: 'Menor estado do Brasil.' },
+      { id: 'TO', name: 'Tocantins', capital: 'Palmas', region: 'Norte', x: 305, y: 195, fact: 'Estado mais novo do Brasil (1988).' },
+    ];
+
+    // Simplified Brazil map paths
+    const statePaths = {
+      'AC': 'M60,160 L110,150 L130,180 L120,210 L70,210 Z',
+      'AL': 'M400,175 L420,170 L425,195 L405,200 Z',
+      'AP': 'M270,30 L310,25 L320,70 L290,90 L260,70 Z',
+      'AM': 'M80,80 L230,60 L250,140 L220,180 L130,190 L80,150 Z',
+      'BA': 'M340,200 L410,190 L420,260 L380,310 L320,280 L330,220 Z',
+      'CE': 'M370,100 L410,95 L415,150 L375,160 L365,130 Z',
+      'DF': 'M300,268 L322,268 L322,288 L300,288 Z',
+      'ES': 'M375,295 L400,290 L405,340 L380,345 Z',
+      'GO': 'M260,250 L340,240 L355,310 L295,340 L255,300 Z',
+      'MA': 'M290,90 L360,85 L375,150 L320,160 L290,130 Z',
+      'MT': 'M170,180 L270,170 L280,280 L230,300 L165,260 Z',
+      'MS': 'M200,300 L280,290 L290,380 L220,390 L190,350 Z',
+      'MG': 'M300,270 L380,260 L400,340 L340,370 L290,340 Z',
+      'PA': 'M220,60 L320,50 L340,150 L280,180 L210,150 Z',
+      'PB': 'M405,145 L435,140 L438,165 L408,170 Z',
+      'PR': 'M250,350 L320,345 L330,400 L260,410 L240,380 Z',
+      'PE': 'M375,155 L425,150 L430,180 L380,185 Z',
+      'PI': 'M330,120 L375,115 L385,190 L345,200 L325,160 Z',
+      'RJ': 'M345,330 L385,325 L395,365 L355,375 L340,355 Z',
+      'RN': 'M400,115 L435,110 L440,145 L405,150 Z',
+      'RS': 'M240,400 L310,395 L320,460 L250,470 L230,440 Z',
+      'RO': 'M110,160 L175,155 L185,220 L140,235 L100,200 Z',
+      'RR': 'M150,25 L220,20 L230,80 L190,95 L145,70 Z',
+      'SC': 'M270,385 L330,380 L340,420 L285,430 L265,405 Z',
+      'SP': 'M275,330 L350,320 L365,380 L300,395 L265,365 Z',
+      'SE': 'M395,190 L420,188 L422,215 L398,218 Z',
+      'TO': 'M280,160 L330,155 L340,240 L295,250 L275,210 Z',
+    };
+
+    let gameMode = 'state';
+    let score = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let currentTarget = null;
+    let remainingStates = [];
+    let completedStates = [];
+
+    function initMap() {
+      const svg = document.getElementById('brazilMap');
+      svg.innerHTML = '';
+
+      // Render DF last so it appears on top
+      const sortedStates = [...states].sort((a, b) => {
+        if (a.id === 'DF') return 1;
+        if (b.id === 'DF') return -1;
+        return 0;
+      });
+
+      sortedStates.forEach(state => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', statePaths[state.id]);
+        path.setAttribute('class', 'state');
+        path.setAttribute('id', state.id);
+        path.onclick = () => handleStateClick(state);
+
+        const regionClass = `region-${state.region.toLowerCase().replace('-', '').replace(' ', '')}`;
+        path.setAttribute('data-region', state.region);
+
+        svg.appendChild(path);
+
+        // Add label (skip for DF as it's small)
+        if (state.id !== 'DF') {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', state.x);
+          text.setAttribute('y', state.y);
+          text.setAttribute('class', 'state-label');
+          text.textContent = state.id;
+          svg.appendChild(text);
+        }
+      });
+
+      // Add DF label on top with special styling
+      const dfState = states.find(s => s.id === 'DF');
+      const dfLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      dfLabel.setAttribute('x', dfState.x);
+      dfLabel.setAttribute('y', dfState.y);
+      dfLabel.setAttribute('class', 'state-label');
+      dfLabel.setAttribute('style', 'font-size: 7px; fill: #92400E;');
+      dfLabel.textContent = 'DF';
+      svg.appendChild(dfLabel);
+    }
+
+    function selectNextTarget() {
+      if (remainingStates.length === 0) {
+        gameComplete();
+        return;
+      }
+
+      const index = Math.floor(Math.random() * remainingStates.length);
+      currentTarget = remainingStates[index];
+
+      let questionText = '';
+      let targetText = '';
+
+      switch (gameMode) {
+        case 'state':
+          questionText = 'Clique no estado:';
+          targetText = currentTarget.name;
+          break;
+        case 'capital':
+          questionText = 'Qual estado tem a capital:';
+          targetText = currentTarget.capital;
+          break;
+        case 'region':
+          questionText = 'Clique em um estado da região:';
+          targetText = currentTarget.region;
+          break;
+      }
+
+      document.getElementById('question').textContent = questionText;
+      document.getElementById('target').textContent = targetText;
+      document.getElementById('remaining').textContent = remainingStates.length;
+    }
+
+    function handleStateClick(state) {
+      if (completedStates.includes(state.id)) return;
+
+      let isCorrect = false;
+
+      switch (gameMode) {
+        case 'state':
+        case 'capital':
+          isCorrect = state.id === currentTarget.id;
+          break;
+        case 'region':
+          isCorrect = state.region === currentTarget.region;
+          break;
+      }
+
+      const stateEl = document.getElementById(state.id);
+
+      if (isCorrect) {
+        handleCorrect(state, stateEl);
+      } else {
+        handleWrong(state, stateEl);
+      }
+    }
+
+    function handleCorrect(state, stateEl) {
+      stateEl.classList.add('correct');
+      setTimeout(() => {
+        stateEl.classList.remove('correct');
+        stateEl.classList.add('completed');
+      }, 500);
+
+      streak++;
+      correctCount++;
+      const points = 10 + (streak >= 3 ? streak * 2 : 0);
+      score += points;
+
+      updateStats();
+
+      // Remove from remaining
+      if (gameMode === 'region') {
+        // Remove all states of this region
+        remainingStates = remainingStates.filter(s => s.region !== currentTarget.region);
+        states.filter(s => s.region === currentTarget.region).forEach(s => {
+          completedStates.push(s.id);
+          document.getElementById(s.id).classList.add('completed');
+        });
+      } else {
+        remainingStates = remainingStates.filter(s => s.id !== state.id);
+        completedStates.push(state.id);
+      }
+
+      showFeedback(`✅ Correto! ${state.name} - ${state.capital}`, 'success');
+      showInfo(state);
+
+      // Rewards
+      giveReward('coins', points);
+
+      setTimeout(selectNextTarget, 1500);
+    }
+
+    function handleWrong(state, stateEl) {
+      stateEl.classList.add('wrong');
+      setTimeout(() => stateEl.classList.remove('wrong'), 500);
+
+      streak = 0;
+      updateStats();
+
+      const correctState = states.find(s => s.id === currentTarget.id);
+      showFeedback(`❌ Esse é ${state.name}. Procure ${currentTarget.name}!`, 'error');
+
+      // Highlight correct
+      document.getElementById(currentTarget.id).classList.add('highlight');
+      setTimeout(() => {
+        document.getElementById(currentTarget.id).classList.remove('highlight');
+      }, 2000);
+    }
+
+    function showFeedback(message, type) {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = message;
+      feedback.className = `feedback ${type}`;
+    }
+
+    function showInfo(state) {
+      document.getElementById('infoTitle').textContent = state.name;
+      document.getElementById('infoCapital').innerHTML = `<strong>Capital:</strong> ${state.capital}`;
+      document.getElementById('infoRegion').innerHTML = `<strong>Região:</strong> ${state.region}`;
+      document.getElementById('infoFact').innerHTML = `<strong>Curiosidade:</strong> ${state.fact}`;
+      document.getElementById('infoCard').classList.add('show');
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+      document.getElementById('streak').textContent = streak;
+    }
+
+    function gameComplete() {
+      showFeedback(`🎉 Parabéns! Você completou o mapa! Pontuação: ${score}`, 'success');
+
+      // Rewards
+      setTimeout(() => giveReward('diamonds', 2), 500);
+      if (score >= 200) {
+        setTimeout(() => giveReward('gold', 1), 1500);
+      }
+    }
+
+    function resetGame() {
+      score = 0;
+      correctCount = 0;
+      streak = 0;
+      completedStates = [];
+      remainingStates = [...states];
+
+      if (gameMode === 'region') {
+        // For region mode, use unique regions
+        const regions = [...new Set(states.map(s => s.region))];
+        remainingStates = regions.map(r => states.find(s => s.region === r));
+      }
+
+      updateStats();
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('infoCard').classList.remove('show');
+
+      // Reset map
+      states.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) {
+          el.classList.remove('completed', 'correct', 'wrong', 'highlight');
+        }
+      });
+
+      selectNextTarget();
+    }
+
+    // Event listeners
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gameMode = btn.dataset.mode;
+        resetGame();
+      });
+    });
+
+    // Initialize
+    initMap();
+    resetGame();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

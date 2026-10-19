@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórias em Cartas - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .story-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #81ecec;
+            margin-bottom: 20px;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+
+        .story-card {
+            width: 160px;
+            min-height: 180px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            user-select: none;
+        }
+
+        .story-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .story-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .story-card .card-number {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .story-card .card-image {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .story-card .card-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .story-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .story-slot {
+            width: 160px;
+            min-height: 180px;
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .story-slot.dragover {
+            background: rgba(129, 236, 236, 0.3);
+            border-color: #81ecec;
+        }
+
+        .story-slot.filled {
+            border-style: solid;
+            border-color: #6c5ce7;
+        }
+
+        .story-slot .slot-number {
+            font-size: 2rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+
+        .story-slot .slot-label {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+        }
+
+        .check-btn {
+            display: block;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .complete-story {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .complete-story.show {
+            display: block;
+        }
+
+        .complete-story h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .complete-story p {
+            line-height: 1.8;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .story-card, .story-slot {
+                width: 140px;
+                min-height: 160px;
+            }
+
+            .story-card .card-image {
+                font-size: 2.5rem;
+            }
+
+            .story-card .card-text {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Histórias em <span>Cartas</span></h1>
+            <p>Organize as cartas para contar a história!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stories">0</div>
+                <div class="stat-label">Histórias</div>
+            </div>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Contador de Histórias">🥉</span>
+            <span class="medal" id="medal2" title="Narrador">🥈</span>
+            <span class="medal" id="medal3" title="Escritor">🥇</span>
+            <span class="medal" id="medal4" title="Autor">🏆</span>
+            <span class="medal" id="medal5" title="Mestre das Histórias">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="story-title" id="storyTitle">A História do Patinho</div>
+            <div class="instruction">Arraste as cartas para os espaços na ordem correta!</div>
+
+            <div class="story-slots" id="storySlots"></div>
+
+            <div class="cards-container" id="cardsContainer"></div>
+
+            <button class="check-btn" id="checkBtn" onclick="checkStory()" disabled>Verificar História</button>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="complete-story" id="completeStory">
+                <h3>📖 A História Completa</h3>
+                <p id="storyText"></p>
+            </div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Parabéns!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="nextStory()">Próxima História</button>
+                <button class="btn btn-secondary" onclick="resetGame()">Recomeçar</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Histórias
+        const stories = [
+            {
+                title: "O Patinho no Lago",
+                cards: [
+                    { image: "🥚", text: "Era uma vez um ovo no ninho." },
+                    { image: "🐣", text: "O patinho nasceu do ovo." },
+                    { image: "🐥", text: "O patinho aprendeu a andar." },
+                    { image: "🐤", text: "O patinho foi até o lago." },
+                    { image: "🦆", text: "O patinho nadou feliz!" }
+                ]
+            },
+            {
+                title: "A Semente Mágica",
+                cards: [
+                    { image: "🌰", text: "João plantou uma semente." },
+                    { image: "💧", text: "Ele regou a terra todo dia." },
+                    { image: "🌱", text: "Um broto apareceu!" },
+                    { image: "🌿", text: "A planta cresceu muito." },
+                    { image: "🌻", text: "Uma linda flor nasceu!" }
+                ]
+            },
+            {
+                title: "O Dia na Escola",
+                cards: [
+                    { image: "⏰", text: "O despertador tocou cedo." },
+                    { image: "🍳", text: "Maria tomou café da manhã." },
+                    { image: "🚌", text: "Ela pegou o ônibus escolar." },
+                    { image: "📚", text: "Estudou muito na escola." },
+                    { image: "🏠", text: "Voltou feliz para casa!" }
+                ]
+            },
+            {
+                title: "A Festa de Aniversário",
+                cards: [
+                    { image: "📬", text: "Pedro mandou os convites." },
+                    { image: "🎈", text: "Decorou a casa com balões." },
+                    { image: "👫", text: "Os amigos chegaram!" },
+                    { image: "🎂", text: "Cantaram parabéns." },
+                    { image: "🎁", text: "Pedro abriu os presentes!" }
+                ]
+            },
+            {
+                title: "A Borboleta",
+                cards: [
+                    { image: "🥚", text: "A borboleta pôs um ovo." },
+                    { image: "🐛", text: "Uma lagarta nasceu." },
+                    { image: "🌿", text: "A lagarta comeu folhas." },
+                    { image: "🫛", text: "Ela fez um casulo." },
+                    { image: "🦋", text: "Uma borboleta nasceu!" }
+                ]
+            },
+            {
+                title: "O Cachorrinho Perdido",
+                cards: [
+                    { image: "🐕", text: "Rex saiu de casa." },
+                    { image: "🌳", text: "Ele se perdeu no parque." },
+                    { image: "😢", text: "Ficou com medo e tristeza." },
+                    { image: "👧", text: "Uma menina o encontrou." },
+                    { image: "🏠", text: "Rex voltou para casa feliz!" }
+                ]
+            },
+            {
+                title: "Fazendo um Bolo",
+                cards: [
+                    { image: "📝", text: "Mamãe leu a receita." },
+                    { image: "🥚", text: "Separou os ingredientes." },
+                    { image: "🥣", text: "Misturou tudo na tigela." },
+                    { image: "🔥", text: "Colocou no forno quente." },
+                    { image: "🍰", text: "O bolo ficou delicioso!" }
+                ]
+            },
+            {
+                title: "Um Dia de Chuva",
+                cards: [
+                    { image: "☀️", text: "O dia começou com sol." },
+                    { image: "☁️", text: "Nuvens escuras chegaram." },
+                    { image: "🌧️", text: "Começou a chover forte." },
+                    { image: "🌈", text: "A chuva parou e surgiu um arco-íris." },
+                    { image: "😊", text: "Todos ficaram felizes!" }
+                ]
+            }
+        ];
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            currentStoryIndex: 0,
+            storiesCompleted: 0,
+            placedCards: {}
+        };
+
+        let currentStory = null;
+        let draggedCard = null;
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'drop':
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('historiasCartasProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.storiesCompleted = data.storiesCompleted || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                storiesCompleted: gameState.storiesCompleted
+            };
+            localStorage.setItem('historiasCartasProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('stories').textContent = gameState.storiesCompleted;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 3 },
+                { id: 'medal2', threshold: 8 },
+                { id: 'medal3', threshold: 15 },
+                { id: 'medal4', threshold: 30 },
+                { id: 'medal5', threshold: 50 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.storiesCompleted >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Embaralhar array
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Iniciar história
+        function startStory() {
+            currentStory = stories[gameState.currentStoryIndex % stories.length];
+            gameState.placedCards = {};
+
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('completeStory').classList.remove('show');
+            document.getElementById('checkBtn').disabled = true;
+
+            document.getElementById('storyTitle').textContent = currentStory.title;
+
+            renderSlots();
+            renderCards();
+            updateProgress();
+        }
+
+        // Renderizar slots
+        function renderSlots() {
+            const container = document.getElementById('storySlots');
+            container.innerHTML = '';
+
+            currentStory.cards.forEach((_, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'story-slot';
+                slot.dataset.slot = index;
+                slot.innerHTML = `
+                    <div class="slot-number">${index + 1}</div>
+                    <div class="slot-label">Parte ${index + 1}</div>
+                `;
+
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragleave', handleDragLeave);
+                slot.addEventListener('drop', handleDrop);
+
+                container.appendChild(slot);
+            });
+        }
+
+        // Renderizar cartas
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            const shuffledCards = shuffle(currentStory.cards.map((card, index) => ({ ...card, originalIndex: index })));
+
+            shuffledCards.forEach((card) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'story-card';
+                cardEl.draggable = true;
+                cardEl.dataset.originalIndex = card.originalIndex;
+                cardEl.innerHTML = `
+                    <div class="card-image">${card.image}</div>
+                    <div class="card-text">${card.text}</div>
+                `;
+
+                cardEl.addEventListener('dragstart', handleDragStart);
+                cardEl.addEventListener('dragend', handleDragEnd);
+
+                // Touch events
+                cardEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+                cardEl.addEventListener('touchmove', handleTouchMove, { passive: false });
+                cardEl.addEventListener('touchend', handleTouchEnd);
+
+                container.appendChild(cardEl);
+            });
+        }
+
+        // Drag handlers
+        function handleDragStart(e) {
+            draggedCard = e.target.closest('.story-card');
+            draggedCard.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.closest('.story-card').classList.remove('dragging');
+            document.querySelectorAll('.story-slot').forEach(slot => {
+                slot.classList.remove('dragover');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (!e.currentTarget.classList.contains('filled')) {
+                e.currentTarget.classList.add('dragover');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.currentTarget;
+            slot.classList.remove('dragover');
+
+            if (draggedCard && !slot.classList.contains('filled')) {
+                placeCard(slot, draggedCard);
+            }
+        }
+
+        // Touch handlers
+        let touchCard = null;
+        let touchClone = null;
+
+        function handleTouchStart(e) {
+            touchCard = e.target.closest('.story-card');
+            if (!touchCard) return;
+
+            touchClone = touchCard.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchCard.offsetWidth + 'px';
+            document.body.appendChild(touchClone);
+
+            touchCard.style.opacity = '0.5';
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (touchClone) {
+                const touch = e.touches[0];
+                touchClone.style.left = (touch.clientX - 80) + 'px';
+                touchClone.style.top = (touch.clientY - 90) + 'px';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (touchClone) {
+                document.body.removeChild(touchClone);
+                touchClone = null;
+            }
+
+            if (touchCard) {
+                touchCard.style.opacity = '1';
+
+                const touch = e.changedTouches[0];
+                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                if (dropTarget) {
+                    const slot = dropTarget.closest('.story-slot');
+                    if (slot && !slot.classList.contains('filled')) {
+                        placeCard(slot, touchCard);
+                    }
+                }
+
+                touchCard = null;
+            }
+        }
+
+        // Colocar carta no slot
+        function placeCard(slot, card) {
+            const slotIndex = parseInt(slot.dataset.slot);
+            const cardIndex = parseInt(card.dataset.originalIndex);
+
+            gameState.placedCards[slotIndex] = cardIndex;
+
+            // Mover carta para o slot
+            slot.innerHTML = '';
+            slot.appendChild(card);
+            slot.classList.add('filled');
+            card.draggable = false;
+
+            playSound('drop');
+            checkAllPlaced();
+        }
+
+        // Verificar se todas cartas foram colocadas
+        function checkAllPlaced() {
+            const totalSlots = currentStory.cards.length;
+            const filledSlots = Object.keys(gameState.placedCards).length;
+
+            updateProgress();
+
+            if (filledSlots === totalSlots) {
+                document.getElementById('checkBtn').disabled = false;
+            }
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            const totalSlots = currentStory.cards.length;
+            const filledSlots = Object.keys(gameState.placedCards).length;
+            const percent = (filledSlots / totalSlots) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Verificar história
+        function checkStory() {
+            let allCorrect = true;
+
+            Object.keys(gameState.placedCards).forEach(slotIndex => {
+                const cardIndex = gameState.placedCards[slotIndex];
+                if (parseInt(cardIndex) !== parseInt(slotIndex)) {
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = 50;
+            const streakBonus = gameState.streak * 10;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.storiesCompleted++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 300) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            // Mostrar história completa
+            const storyText = currentStory.cards.map(card => card.text).join(' ');
+            document.getElementById('storyText').textContent = storyText;
+            document.getElementById('completeStory').classList.add('show');
+
+            showFeedback(`Perfeito! +${points} pontos`, 'success');
+
+            setTimeout(() => {
+                showResult(true, points);
+            }, 3000);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            updateDisplay();
+
+            showFeedback('Ops! A ordem não está correta. Tente novamente!', 'error');
+
+            setTimeout(() => {
+                // Resetar
+                document.querySelectorAll('.story-slot').forEach(slot => {
+                    slot.classList.remove('filled');
+                });
+                gameState.placedCards = {};
+                document.getElementById('checkBtn').disabled = true;
+                renderSlots();
+                renderCards();
+                updateProgress();
+            }, 2000);
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 2) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult(success, points) {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('resultScreen').classList.add('show');
+
+            document.getElementById('resultIcon').textContent = '🎉';
+            document.getElementById('resultTitle').textContent = 'História Completa!';
+            document.getElementById('resultScore').textContent = `+${points} pontos | Sequência: ${gameState.streak}`;
+        }
+
+        // Próxima história
+        function nextStory() {
+            gameState.currentStoryIndex++;
+            startStory();
+        }
+
+        // Resetar jogo
+        function resetGame() {
+            gameState.currentStoryIndex = 0;
+            gameState.streak = 0;
+            startStory();
+        }
+
+        // Inicializar
+        loadProgress();
+        startStory();
+    </script>
+</body>
+</html>

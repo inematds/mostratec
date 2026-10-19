@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stop Motion Simples - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .medals-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .medal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .medal-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+        .medal-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+        .medal-gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+        .medal-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        /* Animation Stage */
+        .animation-stage {
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #90EE90 60%, #228B22 100%);
+            border-radius: 15px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .stage-object {
+            position: absolute;
+            font-size: 3em;
+            cursor: move;
+            user-select: none;
+            transition: none;
+        }
+
+        .stage-object.selected {
+            filter: drop-shadow(0 0 10px #feca57);
+        }
+
+        /* Timeline */
+        .timeline-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .timeline-title {
+            font-weight: bold;
+        }
+
+        .frame-counter {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+
+        .timeline {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .frame {
+            min-width: 80px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frame:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .frame.current {
+            border-color: #4ecdc4;
+        }
+
+        .frame.has-content {
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #90EE90 60%);
+        }
+
+        .frame-number {
+            position: absolute;
+            bottom: 2px;
+            right: 5px;
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        .frame-preview {
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .add-frame {
+            min-width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+
+        .add-frame:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Object Palette */
+        .object-palette {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .palette-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .palette-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            background: #4ecdc4;
+        }
+
+        .objects-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .palette-object {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .palette-object:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        /* Controls */
+        .controls-panel {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        /* Speed Control */
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .speed-slider {
+            width: 100px;
+        }
+
+        .speed-label {
+            font-size: 0.9em;
+        }
+
+        /* Result */
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .result-message {
+            margin-bottom: 20px;
+        }
+
+        .result-score {
+            font-size: 2em;
+            color: #feca57;
+            margin-bottom: 20px;
+        }
+
+        /* Tip */
+        .tip-box {
+            background: rgba(155, 89, 182, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        /* Saved Animations */
+        .saved-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .saved-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .saved-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .saved-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .saved-item:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .saved-preview {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .saved-info {
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 500px) {
+            .animation-stage {
+                height: 200px;
+            }
+
+            .stage-object {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value" id="points">0</div>
+            <div class="stat-label">Pontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="level">1</div>
+            <div class="stat-label">Nível</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="animations">0</div>
+            <div class="stat-label">Animações</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="frames">0</div>
+            <div class="stat-label">Frames</div>
+        </div>
+    </div>
+
+    <div class="medals-display">
+        <div class="medal medal-bronze" id="medal-bronze" title="Iniciante: 3 animações">🏅</div>
+        <div class="medal medal-silver" id="medal-silver" title="Animador: 10 animações">🥈</div>
+        <div class="medal medal-gold" id="medal-gold" title="Diretor: 25 animações">🥇</div>
+        <div class="medal medal-diamond" id="medal-diamond" title="Pixar: 50 animações">💎</div>
+    </div>
+
+    <div class="game-area">
+        <div class="title">🎬 Stop Motion Simples</div>
+
+        <div class="animation-stage" id="animation-stage"></div>
+
+        <div class="timeline-container">
+            <div class="timeline-header">
+                <div class="timeline-title">📽️ Timeline</div>
+                <div class="frame-counter">Frame: <span id="current-frame">1</span>/<span id="total-frames">1</span></div>
+            </div>
+            <div class="timeline" id="timeline">
+                <div class="frame current has-content" data-frame="0">
+                    <div class="frame-preview"></div>
+                    <div class="frame-number">1</div>
+                </div>
+                <div class="add-frame" onclick="addFrame()">+</div>
+            </div>
+        </div>
+
+        <div class="object-palette">
+            <div class="palette-title">🎨 Objetos</div>
+            <div class="palette-categories">
+                <button class="category-btn active" data-category="characters" onclick="selectCategory('characters')">👤 Personagens</button>
+                <button class="category-btn" data-category="animals" onclick="selectCategory('animals')">🐾 Animais</button>
+                <button class="category-btn" data-category="nature" onclick="selectCategory('nature')">🌳 Natureza</button>
+                <button class="category-btn" data-category="objects" onclick="selectCategory('objects')">📦 Objetos</button>
+                <button class="category-btn" data-category="transport" onclick="selectCategory('transport')">🚗 Transporte</button>
+            </div>
+            <div class="objects-grid" id="objects-grid"></div>
+        </div>
+
+        <div class="controls-panel">
+            <button class="control-btn btn-capture" onclick="captureFrame()">📸 Capturar</button>
+            <button class="control-btn btn-play" id="play-btn" onclick="playAnimation()">▶️ Reproduzir</button>
+            <button class="control-btn btn-stop" id="stop-btn" style="display: none;" onclick="stopAnimation()">⏹️ Parar</button>
+            <button class="control-btn btn-delete" onclick="deleteSelectedObject()">🗑️ Remover</button>
+            <button class="control-btn btn-clear" onclick="clearStage()">🧹 Limpar</button>
+            <button class="control-btn btn-save" onclick="saveAnimation()">💾 Salvar</button>
+        </div>
+
+        <div class="controls-panel">
+            <div class="speed-control">
+                <span class="speed-label">Velocidade:</span>
+                <input type="range" class="speed-slider" id="speed-slider" min="100" max="1000" value="500" step="100">
+                <span id="speed-value">500ms</span>
+            </div>
+        </div>
+
+        <div class="result-screen" id="result-screen">
+            <div class="result-icon">🎬</div>
+            <div class="result-title">Animação Salva!</div>
+            <div class="result-message" id="result-message">Sua animação ficou incrível!</div>
+            <div class="result-score" id="result-score">+50 pontos</div>
+            <button class="control-btn btn-play" onclick="newAnimation()">🎬 Nova Animação</button>
+        </div>
+
+        <div class="saved-container" id="saved-container">
+            <div class="saved-title">📁 Minhas Animações</div>
+            <div class="saved-grid" id="saved-grid">
+                <p style="opacity: 0.5; width: 100%; text-align: center;">Nenhuma animação salva ainda</p>
+            </div>
+        </div>
+
+        <div class="tip-box">
+            <span>💡</span> <span id="tip-text">Dica: Mova os objetos um pouco entre cada frame para criar movimento!</span>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 0,
+            level: 1,
+            animationsCreated: 0,
+            totalFrames: 0,
+            frames: [{ objects: [] }],
+            currentFrame: 0,
+            stageObjects: [],
+            selectedObject: null,
+            isPlaying: false,
+            playInterval: null,
+            savedAnimations: [],
+            speed: 500
+        };
+
+        // Object categories
+        const objectCategories = {
+            characters: ['👤', '👧', '👦', '👨', '👩', '🧒', '👴', '👵', '🧙', '👸', '🤴', '🦸', '🧚', '🤖', '👽', '🎅'],
+            animals: ['🐕', '🐈', '🐦', '🦋', '🐟', '🐢', '🦁', '🐘', '🦒', '🐻', '🦊', '🐰', '🐸', '🦆', '🦜', '🐝'],
+            nature: ['🌳', '🌲', '🌴', '🌵', '🌸', '🌻', '🌺', '🍄', '☁️', '☀️', '🌙', '⭐', '🌈', '💧', '🔥', '❄️'],
+            objects: ['⚽', '🏀', '🎈', '🎁', '📚', '✏️', '🎨', '🎭', '🎪', '🏠', '🏰', '⛺', '🗿', '💎', '🔔', '🎵'],
+            transport: ['🚗', '🚕', '🚌', '🚀', '✈️', '🚁', '🚢', '⛵', '🚂', '🚲', '🛴', '🛹', '🏍️', '🚜', '🚚', '🛸']
+        };
+
+        const tips = [
+            'Mova os objetos um pouco entre cada frame para criar movimento!',
+            'Quanto mais frames, mais suave a animação!',
+            'Comece com movimentos simples.',
+            'Use a velocidade mais lenta para ver os detalhes.',
+            'Conte uma história com sua animação!',
+            'Experimente diferentes objetos juntos!',
+            'Salve suas melhores criações!'
+        ];
+
+        // Audio
+        let audioCtx = null;
+        function playSound(type) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+
+            if (type === 'capture') {
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'click') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'save') {
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // Initialize
+        function init() {
+            loadProgress();
+            selectCategory('characters');
+            setupSpeedSlider();
+            renderStage();
+            renderTimeline();
+            updateDisplay();
+            updateMedals();
+            loadSavedAnimations();
+            showRandomTip();
+        }
+
+        function selectCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+
+            const grid = document.getElementById('objects-grid');
+            grid.innerHTML = objectCategories[category].map(obj => `
+                <div class="palette-object" onclick="addObject('${obj}')">${obj}</div>
+            `).join('');
+        }
+
+        function setupSpeedSlider() {
+            const slider = document.getElementById('speed-slider');
+            slider.addEventListener('input', () => {
+                gameState.speed = parseInt(slider.value);
+                document.getElementById('speed-value').textContent = gameState.speed + 'ms';
+            });
+        }
+
+        function addObject(emoji) {
+            playSound('click');
+
+            const stage = document.getElementById('animation-stage');
+            const stageRect = stage.getBoundingClientRect();
+
+            const obj = {
+                id: Date.now(),
+                emoji: emoji,
+                x: Math.random() * (stageRect.width - 60) + 30,
+                y: Math.random() * (stageRect.height - 60) + 30
+            };
+
+            gameState.stageObjects.push(obj);
+            renderStage();
+        }
+
+        function renderStage() {
+            const stage = document.getElementById('animation-stage');
+            stage.innerHTML = gameState.stageObjects.map(obj => `
+                <div class="stage-object ${gameState.selectedObject === obj.id ? 'selected' : ''}"
+                     data-id="${obj.id}"
+                     style="left: ${obj.x}px; top: ${obj.y}px;"
+                     onmousedown="startDrag(event, ${obj.id})"
+                     ontouchstart="startDrag(event, ${obj.id})">
+                    ${obj.emoji}
+                </div>
+            `).join('');
+        }
+
+        let draggedObject = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function startDrag(e, objectId) {
+            e.preventDefault();
+            gameState.selectedObject = objectId;
+            draggedObject = gameState.stageObjects.find(o => o.id === objectId);
+
+            const stage = document.getElementById('animation-stage');
+            const stageRect = stage.getBoundingClientRect();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            dragOffset.x = clientX - stageRect.left - draggedObject.x;
+            dragOffset.y = clientY - stageRect.top - draggedObject.y;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('touchend', stopDrag);
+
+            renderStage();
+        }
+
+        function drag(e) {
+            if (!draggedObject) return;
+
+            const stage = document.getElementById('animation-stage');
+            const stageRect = stage.getBoundingClientRect();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            let newX = clientX - stageRect.left - dragOffset.x;
+            let newY = clientY - stageRect.top - dragOffset.y;
+
+            // Keep within bounds
+            newX = Math.max(0, Math.min(stageRect.width - 50, newX));
+            newY = Math.max(0, Math.min(stageRect.height - 50, newY));
+
+            draggedObject.x = newX;
+            draggedObject.y = newY;
+
+            renderStage();
+        }
+
+        function stopDrag() {
+            draggedObject = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        function deleteSelectedObject() {
+            if (gameState.selectedObject) {
+                gameState.stageObjects = gameState.stageObjects.filter(o => o.id !== gameState.selectedObject);
+                gameState.selectedObject = null;
+                renderStage();
+            }
+        }
+
+        function clearStage() {
+            gameState.stageObjects = [];
+            gameState.selectedObject = null;
+            renderStage();
+        }
+
+        function captureFrame() {
+            playSound('capture');
+
+            // Save current state to current frame
+            gameState.frames[gameState.currentFrame] = {
+                objects: JSON.parse(JSON.stringify(gameState.stageObjects))
+            };
+
+            renderTimeline();
+        }
+
+        function addFrame() {
+            // Copy current frame's objects to new frame
+            const newFrame = {
+                objects: JSON.parse(JSON.stringify(gameState.stageObjects))
+            };
+            gameState.frames.push(newFrame);
+            gameState.currentFrame = gameState.frames.length - 1;
+
+            renderTimeline();
+            updateFrameCounter();
+        }
+
+        function selectFrame(index) {
+            // Save current stage to current frame before switching
+            gameState.frames[gameState.currentFrame] = {
+                objects: JSON.parse(JSON.stringify(gameState.stageObjects))
+            };
+
+            gameState.currentFrame = index;
+
+            // Load the selected frame's objects
+            if (gameState.frames[index] && gameState.frames[index].objects) {
+                gameState.stageObjects = JSON.parse(JSON.stringify(gameState.frames[index].objects));
+            } else {
+                gameState.stageObjects = [];
+            }
+
+            renderStage();
+            renderTimeline();
+            updateFrameCounter();
+        }
+
+        function deleteFrame(index) {
+            if (gameState.frames.length <= 1) return;
+
+            gameState.frames.splice(index, 1);
+
+            if (gameState.currentFrame >= gameState.frames.length) {
+                gameState.currentFrame = gameState.frames.length - 1;
+            }
+
+            selectFrame(gameState.currentFrame);
+        }
+
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = gameState.frames.map((frame, i) => `
+                <div class="frame ${i === gameState.currentFrame ? 'current' : ''} ${frame.objects && frame.objects.length > 0 ? 'has-content' : ''}"
+                     data-frame="${i}" onclick="selectFrame(${i})" ondblclick="deleteFrame(${i})">
+                    <div class="frame-preview">${frame.objects && frame.objects.length > 0 ? frame.objects[0].emoji : ''}</div>
+                    <div class="frame-number">${i + 1}</div>
+                </div>
+            `).join('') + '<div class="add-frame" onclick="addFrame()">+</div>';
+
+            updateFrameCounter();
+        }
+
+        function updateFrameCounter() {
+            document.getElementById('current-frame').textContent = gameState.currentFrame + 1;
+            document.getElementById('total-frames').textContent = gameState.frames.length;
+        }
+
+        function playAnimation() {
+            if (gameState.frames.length < 2) {
+                alert('Adicione pelo menos 2 frames para criar uma animação!');
+                return;
+            }
+
+            // Save current frame first
+            gameState.frames[gameState.currentFrame] = {
+                objects: JSON.parse(JSON.stringify(gameState.stageObjects))
+            };
+
+            gameState.isPlaying = true;
+            document.getElementById('play-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-block';
+
+            let frameIndex = 0;
+
+            gameState.playInterval = setInterval(() => {
+                if (!gameState.isPlaying) return;
+
+                if (frameIndex >= gameState.frames.length) {
+                    frameIndex = 0; // Loop
+                }
+
+                // Display frame
+                gameState.stageObjects = JSON.parse(JSON.stringify(gameState.frames[frameIndex].objects || []));
+                gameState.currentFrame = frameIndex;
+                renderStage();
+                renderTimeline();
+
+                frameIndex++;
+            }, gameState.speed);
+        }
+
+        function stopAnimation() {
+            gameState.isPlaying = false;
+            if (gameState.playInterval) {
+                clearInterval(gameState.playInterval);
+            }
+            document.getElementById('play-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+        }
+
+        function saveAnimation() {
+            if (gameState.frames.length < 2) {
+                alert('Adicione pelo menos 2 frames!');
+                return;
+            }
+
+            // Save current frame
+            gameState.frames[gameState.currentFrame] = {
+                objects: JSON.parse(JSON.stringify(gameState.stageObjects))
+            };
+
+            playSound('save');
+
+            const animation = {
+                id: Date.now(),
+                frames: JSON.parse(JSON.stringify(gameState.frames)),
+                date: new Date().toLocaleDateString('pt-BR'),
+                preview: gameState.frames[0].objects && gameState.frames[0].objects.length > 0 ?
+                         gameState.frames[0].objects[0].emoji : '🎬'
+            };
+
+            gameState.savedAnimations.unshift(animation);
+            if (gameState.savedAnimations.length > 10) gameState.savedAnimations.pop();
+
+            // Add points
+            const points = 30 + gameState.frames.length * 5;
+            gameState.points += points;
+            gameState.animationsCreated++;
+            gameState.totalFrames += gameState.frames.length;
+
+            const newLevel = Math.floor(gameState.points / 300) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+            }
+
+            // Show result
+            document.getElementById('result-screen').classList.add('show');
+            document.getElementById('result-score').textContent = `+${points} pontos!`;
+
+            const messages = [
+                'Sua animação ficou incrível!',
+                'Você é um verdadeiro animador!',
+                'Que criatividade fantástica!',
+                'Continue criando coisas incríveis!'
+            ];
+            document.getElementById('result-message').textContent = messages[Math.floor(Math.random() * messages.length)];
+
+            updateDisplay();
+            updateMedals();
+            loadSavedAnimations();
+            saveProgress();
+        }
+
+        function newAnimation() {
+            document.getElementById('result-screen').classList.remove('show');
+            gameState.frames = [{ objects: [] }];
+            gameState.currentFrame = 0;
+            gameState.stageObjects = [];
+            renderStage();
+            renderTimeline();
+        }
+
+        function loadSavedAnimation(id) {
+            const animation = gameState.savedAnimations.find(a => a.id === id);
+            if (animation) {
+                gameState.frames = JSON.parse(JSON.stringify(animation.frames));
+                gameState.currentFrame = 0;
+                gameState.stageObjects = JSON.parse(JSON.stringify(gameState.frames[0].objects || []));
+                renderStage();
+                renderTimeline();
+            }
+        }
+
+        function loadSavedAnimations() {
+            const grid = document.getElementById('saved-grid');
+
+            if (gameState.savedAnimations.length === 0) {
+                grid.innerHTML = '<p style="opacity: 0.5; width: 100%; text-align: center;">Nenhuma animação salva ainda</p>';
+                return;
+            }
+
+            grid.innerHTML = gameState.savedAnimations.map(anim => `
+                <div class="saved-item" onclick="loadSavedAnimation(${anim.id})">
+                    <div class="saved-preview">${anim.preview}</div>
+                    <div class="saved-info">${anim.frames.length} frames<br>${anim.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function showRandomTip() {
+            document.getElementById('tip-text').textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        function updateDisplay() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('animations').textContent = gameState.animationsCreated;
+            document.getElementById('frames').textContent = gameState.totalFrames;
+        }
+
+        function updateMedals() {
+            document.getElementById('medal-bronze').classList.toggle('earned', gameState.animationsCreated >= 3);
+            document.getElementById('medal-silver').classList.toggle('earned', gameState.animationsCreated >= 10);
+            document.getElementById('medal-gold').classList.toggle('earned', gameState.animationsCreated >= 25);
+            document.getElementById('medal-diamond').classList.toggle('earned', gameState.animationsCreated >= 50);
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('stopMotionProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.points = data.points || 0;
+                gameState.level = data.level || 1;
+                gameState.animationsCreated = data.animationsCreated || 0;
+                gameState.totalFrames = data.totalFrames || 0;
+                gameState.savedAnimations = data.savedAnimations || [];
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('stopMotionProgress', JSON.stringify({
+                points: gameState.points,
+                level: gameState.level,
+                animationsCreated: gameState.animationsCreated,
+                totalFrames: gameState.totalFrames,
+                savedAnimations: gameState.savedAnimations
+            }));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

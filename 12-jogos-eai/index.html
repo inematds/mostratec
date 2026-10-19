@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jogos do EAI</title>
+<meta name="description" content="Os 119 jogos do antigo EAI (arcade e educacionais) reunidos para revisão: jogue, veja o teste no celular e a avaliação de cada um.">
+<link rel="stylesheet" href="../assets/pagina.css">
+<style>
+  .painel{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
+  .num{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+  .num b{display:block;font:800 26px/1.1 Sora,sans-serif;color:var(--txt)}
+  .num span{font-size:13px;color:var(--mut)}
+  .num.ok b{color:var(--ok)} .num.at b{color:var(--warm)} .num.ap b{color:var(--amb)}
+  .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0 16px}
+  .filtros input,.filtros select{min-height:44px;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:15px Inter,sans-serif}
+  .filtros input{flex:1 1 220px}
+  .filtros select{flex:0 1 auto;max-width:100%}
+  .conta{color:var(--mut);font-size:14px;margin:0 0 12px}
+  .jogo{padding:0;overflow:hidden}
+  .jogo .capa{display:block;aspect-ratio:4/5;background:var(--bg2);border-bottom:1px solid var(--line);position:relative}
+  .jogo .capa img{width:100%;height:100%;object-fit:cover;display:block}
+  .jogo .capa .n{position:absolute;top:8px;left:8px;background:var(--bg);color:var(--amb);font:800 14px/1 Sora,sans-serif;border-radius:8px;padding:6px 9px}
+  .jogo .corpo{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .jogo h3{margin:0;font-size:17px}
+  .jogo p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+  .tag.at{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 45%,transparent)}
+  .tag.ap{color:var(--amb-ink);background:var(--amb);border-color:var(--amb)}
+  .tag.aj{color:var(--sky);border-color:color-mix(in srgb,var(--sky) 45%,transparent)}
+  .tag.fo{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+  .obs{font-size:13px;color:var(--mut);border-left:2px solid var(--line);padding-left:8px}
+  .jogo .btn{margin-top:auto;justify-content:center}
+  .grade{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+  @media (max-width:420px){.jogo .corpo{padding:10px 10px 12px}.jogo h3{font-size:15px}.jogo p{font-size:13px}}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="./">INEMA<b>.</b>JOGOS EAI</a>
+    <nav class="nav" aria-label="MOSTRATEC">
+      <a href="../">Estande</a>
+      <a href="../10-fabrica-de-jogos/">Fábrica de Jogos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <span class="chip">Revisão · jogos do EAI</span>
+    <h1>Os jogos do <em>EAI</em>, um por um</h1>
+    <p class="lead">Os jogos arcade e educacionais do antigo EAI (dezembro de 2025) agora estão aqui. Todos passaram por um <b>teste automático no celular</b>. Agora cada um é avaliado e ajustado. Para falar de um jogo, use o <b>número</b> do cartão.</p>
+    <div class="painel" id="painel"></div>
+  </section>
+
+  <div class="filtros">
+    <input id="busca" type="search" placeholder="Buscar por nome, matéria ou número" aria-label="Buscar">
+    <select id="fArea" aria-label="Área"><option value="">Todas as áreas</option><option>Arcade</option><option>Educacional</option></select>
+    <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option></select>
+    <select id="fSit" aria-label="Situação">
+      <option value="">Todas as situações</option>
+      <option value="a avaliar">A avaliar</option>
+      <option value="aprovado">Aprovados</option>
+      <option value="ajustar">A ajustar</option>
+      <option value="fora">Fora</option>
+      <option value="atencao">Teste com atenção</option>
+    </select>
+  </div>
+  <p class="conta" id="conta"></p>
+  <div class="grade" id="grade"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="./">Jogos do EAI</a>
+  </div>
+</footer>
+
+<script src="dados.js"></script>
+<script>
+const J = window.JOGOS || [];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const SIT = { "a avaliar": ["", "a avaliar"], aprovado: ["ap", "aprovado"], ajustar: ["aj", "a ajustar"], fora: ["fo", "fora"] };
+
+// Painel de números
+const conta = f => J.filter(f).length;
+$("painel").innerHTML = [
+  ["", J.length, "jogos"],
+  ["ok", conta(j => j.teste === "ok"), "teste ok no celular"],
+  ["at", conta(j => j.teste === "atencao"), "teste com atenção"],
+  ["ap", conta(j => j.avaliacao === "aprovado"), "aprovados"],
+  ["", conta(j => j.avaliacao === "a avaliar"), "a avaliar"],
+].map(([c, n, t]) => `<div class="num ${c}"><b>${n}</b><span>${t}</span></div>`).join("");
+
+// Categorias no filtro
+[...new Set(J.map(j => j.categoria))].sort((a, b) => a.localeCompare(b, "pt")).forEach(c => {
+  const o = document.createElement("option"); o.textContent = c; $("fCat").appendChild(o);
+});
+
+function cartao(j) {
+  const [cls, rot] = SIT[j.avaliacao] || SIT["a avaliar"];
+  const teste = j.teste === "ok" ? `<span class="tag ok">teste ok</span>`
+    : `<span class="tag at" title="${esc(j.problemas.join("; "))}">atenção: ${esc(j.problemas.join("; "))}</span>`;
+  const extra = [j.idade && `${esc(j.idade)} anos`, j.serie && esc(j.serie)].filter(Boolean).join(" · ");
+  return `<article class="card jogo" id="j${j.n}">
+    <a class="capa" href="${esc(j.arquivo)}"><img src="${esc(j.capa)}" alt="Tela do jogo ${esc(j.titulo)}" loading="lazy"><span class="n">#${j.n}</span></a>
+    <div class="corpo">
+      <h3>${esc(j.titulo)}</h3>
+      <div class="tags"><span class="tag">${esc(j.area)}</span><span class="tag">${esc(j.categoria)}</span>${extra ? `<span class="tag">${extra}</span>` : ""}</div>
+      <p>${esc(j.descricao)}</p>
+      <div class="tags">${teste}<span class="tag ${cls}">${rot}</span></div>
+      ${j.obs ? `<div class="obs">${esc(j.obs)}</div>` : ""}
+      ${j.revisao ? `<div class="obs">Revisão: ${esc(j.revisao)}</div>` : ""}
+      <a class="btn pri" href="${esc(j.arquivo)}">Jogar</a>
+    </div>
+  </article>`;
+}
+
+function filtra() {
+  const q = $("busca").value.trim().toLowerCase().replace(/^#/, "");
+  const a = $("fArea").value, c = $("fCat").value, s = $("fSit").value;
+  const lista = J.filter(j =>
+    (!a || j.area === a) && (!c || j.categoria === c) &&
+    (!s || (s === "atencao" ? j.teste === "atencao" : j.avaliacao === s)) &&
+    (!q || String(j.n) === q || [j.titulo, j.descricao, j.categoria, j.slug].join(" ").toLowerCase().includes(q)));
+  $("grade").innerHTML = lista.map(cartao).join("");
+  $("conta").textContent = `${lista.length} de ${J.length} jogos`;
+}
+["busca", "fArea", "fCat", "fSit"].forEach(id => $(id).addEventListener("input", filtra));
+filtra();
+</script>
+</body>
+</html>

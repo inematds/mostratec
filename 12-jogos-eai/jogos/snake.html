@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+    }
+    .game-container {
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #10B981, #34D399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .score-board {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .score-item {
+      background: rgba(255,255,255,0.1);
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+    }
+    .score-item span {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #10B981;
+    }
+    canvas {
+      border: 3px solid #10B981;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+    }
+    .controls {
+      margin-top: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    .btn {
+      background: #10B981;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn:hover {
+      background: #059669;
+      transform: scale(1.05);
+    }
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 2rem;
+      border-radius: 1rem;
+      text-align: center;
+      display: none;
+    }
+    .game-over h2 {
+      color: #EF4444;
+      margin-bottom: 1rem;
+    }
+    .mobile-controls {
+      display: none;
+      margin-top: 1rem;
+      gap: 0.5rem;
+    }
+    .mobile-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(16, 185, 129, 0.3);
+      border: 2px solid #10B981;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .mobile-btn:active {
+      background: #10B981;
+    }
+    @media (max-width: 600px) {
+      .mobile-controls { display: grid; grid-template-columns: repeat(3, 60px); }
+      .controls { display: none; }
+      canvas { max-width: 90vw; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Snake</h1>
+    <div class="score-board">
+      <div class="score-item">Pontos: <span id="score">0</span></div>
+      <div class="score-item">Recorde: <span id="highscore">0</span></div>
+    </div>
+    <canvas id="game" width="400" height="400"></canvas>
+    <p class="controls">Use as setas do teclado ou WASD para mover</p>
+    <div class="mobile-controls">
+      <div></div>
+      <button class="mobile-btn" onclick="changeDirection({key:'ArrowUp'})">↑</button>
+      <div></div>
+      <button class="mobile-btn" onclick="changeDirection({key:'ArrowLeft'})">←</button>
+      <button class="mobile-btn" onclick="changeDirection({key:'ArrowDown'})">↓</button>
+      <button class="mobile-btn" onclick="changeDirection({key:'ArrowRight'})">→</button>
+    </div>
+    <button class="btn" onclick="resetGame()">Novo Jogo</button>
+  </div>
+
+  <!-- EAI Systems -->
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>
+    // Inicializar contador para este jogo
+    document.addEventListener('DOMContentLoaded', () => {
+      initEaiCounter('snake');
+    });
+  </script>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [{x: 10, y: 10}];
+    let food = {x: 15, y: 15};
+    let dx = 0, dy = 0;
+    let score = 0;
+    let highscore = parseInt(localStorage.getItem('snake_highscore') || '0');
+    let gameLoop;
+    let gameSpeed = 100;
+
+    document.getElementById('highscore').textContent = highscore;
+
+    function drawGame() {
+      // Clear canvas
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      for(let i = 0; i < tileCount; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * gridSize, 0);
+        ctx.lineTo(i * gridSize, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * gridSize);
+        ctx.lineTo(canvas.width, i * gridSize);
+        ctx.stroke();
+      }
+
+      // Draw snake
+      snake.forEach((segment, index) => {
+        const gradient = ctx.createRadialGradient(
+          segment.x * gridSize + gridSize/2,
+          segment.y * gridSize + gridSize/2,
+          0,
+          segment.x * gridSize + gridSize/2,
+          segment.y * gridSize + gridSize/2,
+          gridSize/2
+        );
+        gradient.addColorStop(0, index === 0 ? '#34D399' : '#10B981');
+        gradient.addColorStop(1, index === 0 ? '#10B981' : '#059669');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(
+          segment.x * gridSize + 1,
+          segment.y * gridSize + 1,
+          gridSize - 2,
+          gridSize - 2,
+          4
+        );
+        ctx.fill();
+      });
+
+      // Draw food
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(
+        food.x * gridSize + gridSize/2,
+        food.y * gridSize + gridSize/2,
+        gridSize/2 - 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Glow effect on food
+      ctx.shadowColor = '#EF4444';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function moveSnake() {
+      if (dx === 0 && dy === 0) return;
+
+      const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+      // Wall collision
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        gameOver();
+        return;
+      }
+
+      // Self collision
+      if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        gameOver();
+        return;
+      }
+
+      snake.unshift(head);
+
+      // Eat food
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        document.getElementById('score').textContent = score;
+        placeFood();
+        // Speed up slightly
+        if (gameSpeed > 50) {
+          gameSpeed -= 2;
+          clearInterval(gameLoop);
+          gameLoop = setInterval(update, gameSpeed);
+        }
+      } else {
+        snake.pop();
+      }
+    }
+
+    function placeFood() {
+      do {
+        food = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+    }
+
+    let hasStartedPlaying = false;
+
+    function changeDirection(e) {
+      const key = e.key;
+      const moved = dx !== 0 || dy !== 0;
+
+      if ((key === 'ArrowUp' || key === 'w' || key === 'W') && dy !== 1) { dx = 0; dy = -1; }
+      else if ((key === 'ArrowDown' || key === 's' || key === 'S') && dy !== -1) { dx = 0; dy = 1; }
+      else if ((key === 'ArrowLeft' || key === 'a' || key === 'A') && dx !== 1) { dx = -1; dy = 0; }
+      else if ((key === 'ArrowRight' || key === 'd' || key === 'D') && dx !== -1) { dx = 1; dy = 0; }
+
+      // Contar jogada quando começar a jogar
+      if (!hasStartedPlaying && (dx !== 0 || dy !== 0)) {
+        hasStartedPlaying = true;
+        if (typeof incrementPlayCount === 'function') incrementPlayCount();
+      }
+    }
+
+    function gameOver() {
+      clearInterval(gameLoop);
+      const isNewRecord = score > highscore;
+      if (isNewRecord) {
+        highscore = score;
+        localStorage.setItem('snake_highscore', highscore.toString());
+        document.getElementById('highscore').textContent = highscore;
+      }
+
+      // Recompensas baseadas na pontuação
+      // Moedas: 1 moeda para cada 10 pontos (mínimo 5 se jogou)
+      if (score > 0) {
+        const coinsEarned = Math.max(5, Math.floor(score / 10) * 5);
+        setTimeout(() => giveReward('coins', coinsEarned), 300);
+
+        // Diamante: se fez mais de 100 pontos
+        if (score >= 100) {
+          setTimeout(() => giveReward('diamonds', 1), 1300);
+        }
+
+        // Diamante extra: se fez mais de 200 pontos
+        if (score >= 200) {
+          setTimeout(() => giveReward('diamonds', 2), 2300);
+        }
+
+        // Ouro: se bateu recorde com mais de 150 pontos
+        if (isNewRecord && score >= 150) {
+          setTimeout(() => giveReward('gold', 1), 3300);
+        }
+      }
+
+      setTimeout(() => {
+        alert(`Game Over! Pontuação: ${score}`);
+      }, 500);
+    }
+
+    function resetGame() {
+      snake = [{x: 10, y: 10}];
+      dx = 0;
+      dy = 0;
+      score = 0;
+      gameSpeed = 100;
+      hasStartedPlaying = false;
+      document.getElementById('score').textContent = '0';
+      placeFood();
+      clearInterval(gameLoop);
+      gameLoop = setInterval(update, gameSpeed);
+    }
+
+    function update() {
+      moveSnake();
+      drawGame();
+    }
+
+    document.addEventListener('keydown', changeDirection);
+
+    // Touch support
+    let touchStartX, touchStartY;
+    canvas.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    });
+    canvas.addEventListener('touchend', e => {
+      const diffX = e.changedTouches[0].clientX - touchStartX;
+      const diffY = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        changeDirection({key: diffX > 0 ? 'ArrowRight' : 'ArrowLeft'});
+      } else {
+        changeDirection({key: diffY > 0 ? 'ArrowDown' : 'ArrowUp'});
+      }
+    });
+
+    // Cleanup when page is unloaded (prevents memory leaks in iframe)
+    window.addEventListener('beforeunload', () => {
+      clearInterval(gameLoop);
+    });
+
+    // Pause game when tab/window is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearInterval(gameLoop);
+      } else if (dx !== 0 || dy !== 0) {
+        gameLoop = setInterval(update, gameSpeed);
+      }
+    });
+
+    // Start
+    drawGame();
+    gameLoop = setInterval(update, gameSpeed);
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

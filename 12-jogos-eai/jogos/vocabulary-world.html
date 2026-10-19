@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulário Mundial - EAI Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95rem;
+        }
+
+        .flags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 1.5rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Level Selection */
+        .level-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .level-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .level-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .level-card.active {
+            border-color: #667eea;
+        }
+
+        .level-card.locked {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        .level-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .level-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .level-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .level-desc {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .level-price {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .level-price.free {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            color: white;
+        }
+
+        /* Category Selection */
+        .category-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .cat-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .cat-btn:hover, .cat-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        /* Game Area */
+        .game-area {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            min-height: 400px;
+        }
+
+        /* Progress */
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Word Display */
+        .word-display {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .word-emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .word-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .word-phonetic {
+            font-size: 1.1rem;
+            color: #888;
+            font-style: italic;
+        }
+
+        .speak-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: white;
+            margin: 15px auto;
+            display: block;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .speak-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .speak-btn.speaking {
+            animation: pulse-speak 0.5s ease infinite;
+        }
+
+        @keyframes pulse-speak {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(17, 153, 142, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(17, 153, 142, 0); }
+        }
+
+        /* Level 1: Learn Mode */
+        .translations {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .translation-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .translation-row .flag {
+            font-size: 1.5rem;
+        }
+
+        .translation-row .text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .translation-row .mini-speak {
+            background: #667eea;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            color: white;
+        }
+
+        /* Level 2: Image Quiz */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .image-option {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            position: relative;
+        }
+
+        .image-option:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .image-option.correct {
+            border-color: #38ef7d;
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            animation: correct-pulse 0.5s ease;
+        }
+
+        .image-option.wrong {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            animation: shake 0.5s ease;
+        }
+
+        .image-option.hidden {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+
+        @keyframes correct-pulse {
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Level 3: Build Mode */
+        .build-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .build-target {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .build-area {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #90EE90 60%, #228B22 100%);
+            border-radius: 20px;
+            position: relative;
+            border: 4px solid #667eea;
+            overflow: hidden;
+        }
+
+        .build-piece {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.3;
+        }
+
+        .build-piece.placed {
+            opacity: 1;
+        }
+
+        .build-piece.wrong {
+            animation: shake 0.3s ease;
+        }
+
+        .pieces-tray {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 15px;
+            max-width: 500px;
+        }
+
+        .piece-btn {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 2rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .piece-btn:hover {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .piece-btn.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .piece-btn.next {
+            border-color: #38ef7d;
+            box-shadow: 0 0 15px rgba(56, 239, 125, 0.5);
+            animation: glow 1s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            50% { box-shadow: 0 0 25px rgba(56, 239, 125, 0.8); }
+        }
+
+        /* Feedback */
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .feedback.success {
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            color: #1a5928;
+        }
+
+        .feedback.error {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            color: #9a3412;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Unlock Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 400px;
+            text-align: center;
+            animation: modal-in 0.3s ease;
+        }
+
+        @keyframes modal-in {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-price {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f59e0b;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-unlock {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .level-selection { grid-template-columns: 1fr; }
+            .image-grid { grid-template-columns: repeat(2, 1fr); }
+            .build-area { width: 250px; height: 250px; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Vocabulário Mundial</h1>
+            <p class="subtitle">Aprenda inglês de forma divertida!</p>
+            <div class="flags">🇧🇷 🇺🇸 🇪🇸</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span>🪙</span>
+                <span>Moedas:</span>
+                <span class="stat-value" id="coins">0</span>
+            </div>
+            <div class="stat">
+                <span>⭐</span>
+                <span>Pontos:</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat">
+                <span>🔥</span>
+                <span>Sequência:</span>
+                <span class="stat-value" id="streak">0</span>
+            </div>
+            <div class="stat">
+                <span>❤️</span>
+                <span>Vidas:</span>
+                <span class="stat-value" id="lives">5</span>
+            </div>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="level-selection" id="level-selection">
+            <div class="level-card active" data-level="1" onclick="selectLevel(1)">
+                <div class="level-icon">📖</div>
+                <div class="level-title">Nível 1</div>
+                <div class="level-desc">Aprenda as palavras em 3 idiomas com áudio</div>
+                <div class="level-price free">✨ Grátis</div>
+            </div>
+            <div class="level-card locked" data-level="2" onclick="selectLevel(2)">
+                <div class="level-icon">🎯</div>
+                <div class="level-title">Nível 2</div>
+                <div class="level-desc">Ouça a palavra e escolha a imagem correta</div>
+                <div class="level-price">🪙 10.000</div>
+            </div>
+            <div class="level-card locked" data-level="3" onclick="selectLevel(3)">
+                <div class="level-icon">🏗️</div>
+                <div class="level-title">Nível 3</div>
+                <div class="level-desc">Monte objetos: casa, carro, árvore...</div>
+                <div class="level-price">🪙 30.000</div>
+            </div>
+        </div>
+
+        <!-- Category Bar -->
+        <div class="category-bar" id="categories"></div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="game-area">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress" style="width: 0%"></div>
+            </div>
+            <div id="game-content">
+                <!-- Game content loads here -->
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" id="btn-next" onclick="nextWord()">Próxima ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unlock Modal -->
+    <div class="modal-overlay" id="unlock-modal">
+        <div class="modal">
+            <h2 id="modal-title">🔓 Desbloquear Nível</h2>
+            <p id="modal-desc">Desbloqueie este nível para continuar aprendendo!</p>
+            <div class="modal-price">
+                <span>🪙</span>
+                <span id="modal-price">10.000</span>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-unlock" onclick="confirmUnlock()">Desbloquear</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('vocabulary-world'));</script>
+    <script>
+        // Vocabulary Database
+        const vocabulary = {
+            animals: {
+                name: '🐾 Animais',
+                words: [
+                    { emoji: '🐶', pt: 'Cachorro', en: 'Dog', es: 'Perro', phonetic: '/dɔɡ/' },
+                    { emoji: '🐱', pt: 'Gato', en: 'Cat', es: 'Gato', phonetic: '/kæt/' },
+                    { emoji: '🐦', pt: 'Pássaro', en: 'Bird', es: 'Pájaro', phonetic: '/bɜːrd/' },
+                    { emoji: '🐠', pt: 'Peixe', en: 'Fish', es: 'Pez', phonetic: '/fɪʃ/' },
+                    { emoji: '🐴', pt: 'Cavalo', en: 'Horse', es: 'Caballo', phonetic: '/hɔːrs/' },
+                    { emoji: '🐄', pt: 'Vaca', en: 'Cow', es: 'Vaca', phonetic: '/kaʊ/' },
+                    { emoji: '🐷', pt: 'Porco', en: 'Pig', es: 'Cerdo', phonetic: '/pɪɡ/' },
+                    { emoji: '🐰', pt: 'Coelho', en: 'Rabbit', es: 'Conejo', phonetic: '/ˈræbɪt/' },
+                    { emoji: '🦁', pt: 'Leão', en: 'Lion', es: 'León', phonetic: '/ˈlaɪən/' },
+                    { emoji: '🐘', pt: 'Elefante', en: 'Elephant', es: 'Elefante', phonetic: '/ˈelɪfənt/' },
+                    { emoji: '🦋', pt: 'Borboleta', en: 'Butterfly', es: 'Mariposa', phonetic: '/ˈbʌtərflaɪ/' },
+                    { emoji: '🐢', pt: 'Tartaruga', en: 'Turtle', es: 'Tortuga', phonetic: '/ˈtɜːrtl/' },
+                ]
+            },
+            fruits: {
+                name: '🍎 Frutas',
+                words: [
+                    { emoji: '🍎', pt: 'Maçã', en: 'Apple', es: 'Manzana', phonetic: '/ˈæpl/' },
+                    { emoji: '🍌', pt: 'Banana', en: 'Banana', es: 'Plátano', phonetic: '/bəˈnænə/' },
+                    { emoji: '🍊', pt: 'Laranja', en: 'Orange', es: 'Naranja', phonetic: '/ˈɒrɪndʒ/' },
+                    { emoji: '🍇', pt: 'Uva', en: 'Grape', es: 'Uva', phonetic: '/ɡreɪp/' },
+                    { emoji: '🍓', pt: 'Morango', en: 'Strawberry', es: 'Fresa', phonetic: '/ˈstrɔːbəri/' },
+                    { emoji: '🍉', pt: 'Melancia', en: 'Watermelon', es: 'Sandía', phonetic: '/ˈwɔːtərmelən/' },
+                    { emoji: '🍋', pt: 'Limão', en: 'Lemon', es: 'Limón', phonetic: '/ˈlemən/' },
+                    { emoji: '🍑', pt: 'Pêssego', en: 'Peach', es: 'Durazno', phonetic: '/piːtʃ/' },
+                    { emoji: '🍒', pt: 'Cereja', en: 'Cherry', es: 'Cereza', phonetic: '/ˈtʃeri/' },
+                    { emoji: '🍍', pt: 'Abacaxi', en: 'Pineapple', es: 'Piña', phonetic: '/ˈpaɪnæpl/' },
+                ]
+            },
+            food: {
+                name: '🍔 Comidas',
+                words: [
+                    { emoji: '🍞', pt: 'Pão', en: 'Bread', es: 'Pan', phonetic: '/bred/' },
+                    { emoji: '🧀', pt: 'Queijo', en: 'Cheese', es: 'Queso', phonetic: '/tʃiːz/' },
+                    { emoji: '🥚', pt: 'Ovo', en: 'Egg', es: 'Huevo', phonetic: '/eɡ/' },
+                    { emoji: '🍚', pt: 'Arroz', en: 'Rice', es: 'Arroz', phonetic: '/raɪs/' },
+                    { emoji: '🍕', pt: 'Pizza', en: 'Pizza', es: 'Pizza', phonetic: '/ˈpiːtsə/' },
+                    { emoji: '🍔', pt: 'Hambúrguer', en: 'Hamburger', es: 'Hamburguesa', phonetic: '/ˈhæmbɜːrɡər/' },
+                    { emoji: '🌮', pt: 'Taco', en: 'Taco', es: 'Taco', phonetic: '/ˈtɑːkoʊ/' },
+                    { emoji: '🍦', pt: 'Sorvete', en: 'Ice cream', es: 'Helado', phonetic: '/aɪs kriːm/' },
+                    { emoji: '🍪', pt: 'Biscoito', en: 'Cookie', es: 'Galleta', phonetic: '/ˈkʊki/' },
+                    { emoji: '🍰', pt: 'Bolo', en: 'Cake', es: 'Pastel', phonetic: '/keɪk/' },
+                ]
+            },
+            objects: {
+                name: '📦 Objetos',
+                words: [
+                    { emoji: '📱', pt: 'Celular', en: 'Phone', es: 'Teléfono', phonetic: '/foʊn/' },
+                    { emoji: '💻', pt: 'Computador', en: 'Computer', es: 'Computadora', phonetic: '/kəmˈpjuːtər/' },
+                    { emoji: '📺', pt: 'Televisão', en: 'Television', es: 'Televisión', phonetic: '/ˈtelɪvɪʒn/' },
+                    { emoji: '🪑', pt: 'Cadeira', en: 'Chair', es: 'Silla', phonetic: '/tʃeər/' },
+                    { emoji: '🚪', pt: 'Porta', en: 'Door', es: 'Puerta', phonetic: '/dɔːr/' },
+                    { emoji: '🛏️', pt: 'Cama', en: 'Bed', es: 'Cama', phonetic: '/bed/' },
+                    { emoji: '🔑', pt: 'Chave', en: 'Key', es: 'Llave', phonetic: '/kiː/' },
+                    { emoji: '📚', pt: 'Livro', en: 'Book', es: 'Libro', phonetic: '/bʊk/' },
+                    { emoji: '✏️', pt: 'Lápis', en: 'Pencil', es: 'Lápiz', phonetic: '/ˈpensl/' },
+                    { emoji: '⌚', pt: 'Relógio', en: 'Watch', es: 'Reloj', phonetic: '/wɒtʃ/' },
+                ]
+            },
+            kitchen: {
+                name: '🍳 Cozinha',
+                words: [
+                    { emoji: '🍴', pt: 'Garfo', en: 'Fork', es: 'Tenedor', phonetic: '/fɔːrk/' },
+                    { emoji: '🥄', pt: 'Colher', en: 'Spoon', es: 'Cuchara', phonetic: '/spuːn/' },
+                    { emoji: '🔪', pt: 'Faca', en: 'Knife', es: 'Cuchillo', phonetic: '/naɪf/' },
+                    { emoji: '🍽️', pt: 'Prato', en: 'Plate', es: 'Plato', phonetic: '/pleɪt/' },
+                    { emoji: '🥛', pt: 'Copo', en: 'Glass', es: 'Vaso', phonetic: '/ɡlɑːs/' },
+                    { emoji: '☕', pt: 'Xícara', en: 'Cup', es: 'Taza', phonetic: '/kʌp/' },
+                    { emoji: '🍶', pt: 'Garrafa', en: 'Bottle', es: 'Botella', phonetic: '/ˈbɒtl/' },
+                    { emoji: '🥣', pt: 'Tigela', en: 'Bowl', es: 'Tazón', phonetic: '/boʊl/' },
+                    { emoji: '🧂', pt: 'Sal', en: 'Salt', es: 'Sal', phonetic: '/sɔːlt/' },
+                    { emoji: '🧊', pt: 'Gelo', en: 'Ice', es: 'Hielo', phonetic: '/aɪs/' },
+                ]
+            },
+            body: {
+                name: '🫀 Corpo',
+                words: [
+                    { emoji: '👁️', pt: 'Olho', en: 'Eye', es: 'Ojo', phonetic: '/aɪ/' },
+                    { emoji: '👂', pt: 'Orelha', en: 'Ear', es: 'Oreja', phonetic: '/ɪər/' },
+                    { emoji: '👃', pt: 'Nariz', en: 'Nose', es: 'Nariz', phonetic: '/noʊz/' },
+                    { emoji: '👄', pt: 'Boca', en: 'Mouth', es: 'Boca', phonetic: '/maʊθ/' },
+                    { emoji: '✋', pt: 'Mão', en: 'Hand', es: 'Mano', phonetic: '/hænd/' },
+                    { emoji: '🦶', pt: 'Pé', en: 'Foot', es: 'Pie', phonetic: '/fʊt/' },
+                    { emoji: '💪', pt: 'Braço', en: 'Arm', es: 'Brazo', phonetic: '/ɑːrm/' },
+                    { emoji: '🦵', pt: 'Perna', en: 'Leg', es: 'Pierna', phonetic: '/leɡ/' },
+                    { emoji: '❤️', pt: 'Coração', en: 'Heart', es: 'Corazón', phonetic: '/hɑːrt/' },
+                    { emoji: '🧠', pt: 'Cérebro', en: 'Brain', es: 'Cerebro', phonetic: '/breɪn/' },
+                ]
+            },
+            transport: {
+                name: '🚗 Transportes',
+                words: [
+                    { emoji: '🚗', pt: 'Carro', en: 'Car', es: 'Coche', phonetic: '/kɑːr/' },
+                    { emoji: '🚌', pt: 'Ônibus', en: 'Bus', es: 'Autobús', phonetic: '/bʌs/' },
+                    { emoji: '🚲', pt: 'Bicicleta', en: 'Bicycle', es: 'Bicicleta', phonetic: '/ˈbaɪsɪkl/' },
+                    { emoji: '✈️', pt: 'Avião', en: 'Airplane', es: 'Avión', phonetic: '/ˈeərpleɪn/' },
+                    { emoji: '🚂', pt: 'Trem', en: 'Train', es: 'Tren', phonetic: '/treɪn/' },
+                    { emoji: '🚢', pt: 'Navio', en: 'Ship', es: 'Barco', phonetic: '/ʃɪp/' },
+                    { emoji: '🚁', pt: 'Helicóptero', en: 'Helicopter', es: 'Helicóptero', phonetic: '/ˈhelɪkɒptər/' },
+                    { emoji: '🏍️', pt: 'Moto', en: 'Motorcycle', es: 'Motocicleta', phonetic: '/ˈmoʊtərsaɪkl/' },
+                    { emoji: '🚀', pt: 'Foguete', en: 'Rocket', es: 'Cohete', phonetic: '/ˈrɒkɪt/' },
+                    { emoji: '⛵', pt: 'Barco a vela', en: 'Sailboat', es: 'Velero', phonetic: '/ˈseɪlboʊt/' },
+                ]
+            },
+            colors: {
+                name: '🎨 Cores',
+                words: [
+                    { emoji: '🔴', pt: 'Vermelho', en: 'Red', es: 'Rojo', phonetic: '/red/' },
+                    { emoji: '🔵', pt: 'Azul', en: 'Blue', es: 'Azul', phonetic: '/bluː/' },
+                    { emoji: '🟢', pt: 'Verde', en: 'Green', es: 'Verde', phonetic: '/ɡriːn/' },
+                    { emoji: '🟡', pt: 'Amarelo', en: 'Yellow', es: 'Amarillo', phonetic: '/ˈjeloʊ/' },
+                    { emoji: '🟠', pt: 'Laranja', en: 'Orange', es: 'Naranja', phonetic: '/ˈɒrɪndʒ/' },
+                    { emoji: '🟣', pt: 'Roxo', en: 'Purple', es: 'Morado', phonetic: '/ˈpɜːrpl/' },
+                    { emoji: '⚫', pt: 'Preto', en: 'Black', es: 'Negro', phonetic: '/blæk/' },
+                    { emoji: '⚪', pt: 'Branco', en: 'White', es: 'Blanco', phonetic: '/waɪt/' },
+                    { emoji: '🟤', pt: 'Marrom', en: 'Brown', es: 'Marrón', phonetic: '/braʊn/' },
+                    { emoji: '💗', pt: 'Rosa', en: 'Pink', es: 'Rosa', phonetic: '/pɪŋk/' },
+                ]
+            }
+        };
+
+        // Build Mode Objects
+        const buildObjects = {
+            house: {
+                name: 'House',
+                namePt: 'Casa',
+                emoji: '🏠',
+                pieces: [
+                    { emoji: '🟫', name: 'Foundation', namePt: 'Fundação', x: 50, y: 220, w: 200, h: 30 },
+                    { emoji: '🧱', name: 'Walls', namePt: 'Paredes', x: 50, y: 120, w: 200, h: 100 },
+                    { emoji: '🚪', name: 'Door', namePt: 'Porta', x: 130, y: 170, w: 40, h: 50 },
+                    { emoji: '🪟', name: 'Window', namePt: 'Janela', x: 70, y: 140, w: 40, h: 40 },
+                    { emoji: '🪟', name: 'Window 2', namePt: 'Janela 2', x: 190, y: 140, w: 40, h: 40 },
+                    { emoji: '🔺', name: 'Roof', namePt: 'Telhado', x: 30, y: 60, w: 240, h: 60 },
+                ]
+            },
+            car: {
+                name: 'Car',
+                namePt: 'Carro',
+                emoji: '🚗',
+                pieces: [
+                    { emoji: '⬛', name: 'Wheel 1', namePt: 'Roda 1', x: 70, y: 200, w: 40, h: 40 },
+                    { emoji: '⬛', name: 'Wheel 2', namePt: 'Roda 2', x: 190, y: 200, w: 40, h: 40 },
+                    { emoji: '🟦', name: 'Body', namePt: 'Carroceria', x: 50, y: 150, w: 200, h: 60 },
+                    { emoji: '🟦', name: 'Cabin', namePt: 'Cabine', x: 90, y: 100, w: 120, h: 50 },
+                    { emoji: '🪟', name: 'Window', namePt: 'Janela', x: 100, y: 110, w: 45, h: 35 },
+                    { emoji: '🪟', name: 'Window 2', namePt: 'Janela 2', x: 155, y: 110, w: 45, h: 35 },
+                ]
+            },
+            tree: {
+                name: 'Tree',
+                namePt: 'Árvore',
+                emoji: '🌳',
+                pieces: [
+                    { emoji: '🟫', name: 'Trunk', namePt: 'Tronco', x: 130, y: 180, w: 40, h: 70 },
+                    { emoji: '🟢', name: 'Leaves 1', namePt: 'Folhas 1', x: 100, y: 120, w: 100, h: 70 },
+                    { emoji: '🟢', name: 'Leaves 2', namePt: 'Folhas 2', x: 80, y: 80, w: 140, h: 60 },
+                    { emoji: '🟢', name: 'Leaves 3', namePt: 'Folhas 3', x: 110, y: 40, w: 80, h: 50 },
+                    { emoji: '🍎', name: 'Apple', namePt: 'Maçã', x: 170, y: 90, w: 25, h: 25 },
+                ]
+            },
+            robot: {
+                name: 'Robot',
+                namePt: 'Robô',
+                emoji: '🤖',
+                pieces: [
+                    { emoji: '🦿', name: 'Left Leg', namePt: 'Perna Esq.', x: 100, y: 200, w: 30, h: 50 },
+                    { emoji: '🦿', name: 'Right Leg', namePt: 'Perna Dir.', x: 170, y: 200, w: 30, h: 50 },
+                    { emoji: '🟦', name: 'Body', namePt: 'Corpo', x: 90, y: 120, w: 120, h: 80 },
+                    { emoji: '🦾', name: 'Left Arm', namePt: 'Braço Esq.', x: 50, y: 130, w: 40, h: 60 },
+                    { emoji: '🦾', name: 'Right Arm', namePt: 'Braço Dir.', x: 210, y: 130, w: 40, h: 60 },
+                    { emoji: '🤖', name: 'Head', namePt: 'Cabeça', x: 110, y: 50, w: 80, h: 70 },
+                ]
+            },
+            boat: {
+                name: 'Boat',
+                namePt: 'Barco',
+                emoji: '⛵',
+                pieces: [
+                    { emoji: '🟫', name: 'Hull', namePt: 'Casco', x: 50, y: 180, w: 200, h: 50 },
+                    { emoji: '🟫', name: 'Mast', namePt: 'Mastro', x: 145, y: 80, w: 10, h: 100 },
+                    { emoji: '⬜', name: 'Sail', namePt: 'Vela', x: 155, y: 90, w: 80, h: 80 },
+                    { emoji: '🚩', name: 'Flag', namePt: 'Bandeira', x: 140, y: 60, w: 30, h: 25 },
+                    { emoji: '🪟', name: 'Porthole', namePt: 'Vigia', x: 100, y: 190, w: 25, h: 25 },
+                ]
+            }
+        };
+
+        // Game State
+        let state = {
+            coins: 0,
+            score: 0,
+            streak: 0,
+            lives: 5,
+            maxLives: 5,
+            currentLevel: 1,
+            unlockedLevels: [1],
+            currentCategory: 'animals',
+            currentWords: [],
+            currentIndex: 0,
+            currentBuildObject: null,
+            currentPieceIndex: 0,
+            pendingUnlockLevel: null
+        };
+
+        const LEVEL_PRICES = { 2: 10000, 3: 30000 };
+
+        // Initialize
+        function init() {
+            loadState();
+            initCategories();
+            updateUI();
+            startRound();
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('vocab_world_v2_state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
+            }
+
+            // Sync with wallet
+            if (typeof getWallet === 'function') {
+                const wallet = getWallet();
+                state.coins = wallet.coins;
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('vocab_world_v2_state', JSON.stringify(state));
+        }
+
+        function updateUI() {
+            document.getElementById('coins').textContent = state.coins.toLocaleString();
+            document.getElementById('score').textContent = state.score;
+            document.getElementById('streak').textContent = state.streak;
+            document.getElementById('lives').textContent = state.lives;
+
+            // Update level cards
+            document.querySelectorAll('.level-card').forEach(card => {
+                const level = parseInt(card.dataset.level);
+                card.classList.toggle('active', level === state.currentLevel);
+                card.classList.toggle('locked', !state.unlockedLevels.includes(level));
+            });
+        }
+
+        function initCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+
+            if (state.currentLevel === 3) {
+                // Build mode categories
+                Object.entries(buildObjects).forEach(([key, obj], index) => {
+                    const btn = document.createElement('button');
+                    btn.className = `cat-btn ${index === 0 ? 'active' : ''}`;
+                    btn.dataset.category = key;
+                    btn.textContent = `${obj.emoji} ${obj.namePt}`;
+                    btn.onclick = () => selectBuildObject(key);
+                    container.appendChild(btn);
+                });
+            } else {
+                Object.entries(vocabulary).forEach(([key, cat], index) => {
+                    const btn = document.createElement('button');
+                    btn.className = `cat-btn ${index === 0 ? 'active' : ''}`;
+                    btn.dataset.category = key;
+                    btn.textContent = cat.name;
+                    btn.onclick = () => selectCategory(key);
+                    container.appendChild(btn);
+                });
+            }
+        }
+
+        function selectLevel(level) {
+            if (state.unlockedLevels.includes(level)) {
+                state.currentLevel = level;
+                state.lives = state.maxLives;
+                initCategories();
+                startRound();
+                updateUI();
+                saveState();
+            } else {
+                // Show unlock modal
+                state.pendingUnlockLevel = level;
+                const price = LEVEL_PRICES[level];
+                document.getElementById('modal-title').textContent = `🔓 Desbloquear Nível ${level}`;
+                document.getElementById('modal-price').textContent = price.toLocaleString();
+                document.getElementById('unlock-modal').classList.add('show');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('unlock-modal').classList.remove('show');
+            state.pendingUnlockLevel = null;
+        }
+
+        function confirmUnlock() {
+            const level = state.pendingUnlockLevel;
+            const price = LEVEL_PRICES[level];
+
+            if (state.coins >= price) {
+                state.coins -= price;
+                state.unlockedLevels.push(level);
+                state.currentLevel = level;
+                state.lives = state.maxLives;
+
+                // Update wallet
+                if (typeof getWallet === 'function') {
+                    const wallet = getWallet();
+                    wallet.coins -= price;
+                    localStorage.setItem('eai_wallet', JSON.stringify(wallet));
+                }
+
+                closeModal();
+                initCategories();
+                startRound();
+                updateUI();
+                saveState();
+            } else {
+                alert(`Você precisa de ${price.toLocaleString()} moedas! Jogue mais para ganhar moedas.`);
+            }
+        }
+
+        function selectCategory(category) {
+            state.currentCategory = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            startRound();
+        }
+
+        function selectBuildObject(key) {
+            state.currentBuildObject = key;
+            state.currentPieceIndex = 0;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === key);
+            });
+            renderBuildMode();
+        }
+
+        function startRound() {
+            if (state.currentLevel === 3) {
+                state.currentBuildObject = Object.keys(buildObjects)[0];
+                state.currentPieceIndex = 0;
+                renderBuildMode();
+            } else {
+                const words = [...vocabulary[state.currentCategory].words];
+                state.currentWords = shuffleArray(words);
+                state.currentIndex = 0;
+                updateProgress();
+                renderWord();
+            }
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function updateProgress() {
+            const progress = (state.currentIndex / state.currentWords.length) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        function renderWord() {
+            const word = state.currentWords[state.currentIndex];
+            if (!word) {
+                showRoundComplete();
+                return;
+            }
+
+            if (state.currentLevel === 1) {
+                renderLearnMode(word);
+            } else if (state.currentLevel === 2) {
+                renderImageQuiz(word);
+            }
+        }
+
+        // LEVEL 1: Learn Mode
+        function renderLearnMode(word) {
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div class="word-display">
+                    <div class="word-emoji">${word.emoji}</div>
+                    <div class="word-text">${word.en}</div>
+                    <div class="word-phonetic">${word.phonetic}</div>
+                    <button class="speak-btn" onclick="speak('${word.en}', 'en')">🔊</button>
+                </div>
+                <div class="translations">
+                    <div class="translation-row">
+                        <span class="flag">🇧🇷</span>
+                        <span class="text">${word.pt}</span>
+                        <button class="mini-speak" onclick="speak('${word.pt}', 'pt')">🔊</button>
+                    </div>
+                    <div class="translation-row">
+                        <span class="flag">🇺🇸</span>
+                        <span class="text">${word.en}</span>
+                        <button class="mini-speak" onclick="speak('${word.en}', 'en')">🔊</button>
+                    </div>
+                    <div class="translation-row">
+                        <span class="flag">🇪🇸</span>
+                        <span class="text">${word.es}</span>
+                        <button class="mini-speak" onclick="speak('${word.es}', 'es')">🔊</button>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => speak(word.en, 'en'), 300);
+
+            // Give coins for learning
+            addScore(5);
+        }
+
+        // LEVEL 2: Image Quiz
+        function renderImageQuiz(word) {
+            const content = document.getElementById('game-content');
+
+            // Get 5 wrong options
+            const allWords = vocabulary[state.currentCategory].words;
+            const wrongOptions = allWords
+                .filter(w => w.en !== word.en)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 5);
+
+            const options = shuffleArray([word, ...wrongOptions]);
+
+            content.innerHTML = `
+                <div class="word-display">
+                    <div class="word-text" style="font-size: 2rem; color: #667eea;">Qual é a imagem correta?</div>
+                    <div class="word-text">${word.en}</div>
+                    <div class="word-phonetic">${word.phonetic}</div>
+                    <button class="speak-btn" onclick="speak('${word.en}', 'en')">🔊</button>
+                </div>
+                <div class="image-grid" id="image-grid">
+                    ${options.map((opt, i) => `
+                        <div class="image-option" data-word="${opt.en}" onclick="checkImageAnswer('${opt.en}', '${word.en}', this)">
+                            ${opt.emoji}
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="feedback"></div>
+            `;
+
+            setTimeout(() => speak(word.en, 'en'), 300);
+        }
+
+        function checkImageAnswer(selected, correct, element) {
+            const isCorrect = selected === correct;
+            const feedback = document.getElementById('feedback');
+
+            if (isCorrect) {
+                element.classList.add('correct');
+                feedback.innerHTML = `<div class="feedback success">✅ Correto! +15 pontos</div>`;
+
+                state.streak++;
+                addScore(15 + state.streak * 2);
+
+                speak(correct, 'en');
+
+                setTimeout(() => {
+                    state.currentIndex++;
+                    updateProgress();
+                    renderWord();
+                }, 1500);
+            } else {
+                element.classList.add('wrong');
+
+                setTimeout(() => {
+                    element.classList.add('hidden');
+                }, 500);
+
+                state.streak = 0;
+                state.lives--;
+                state.score = Math.max(0, state.score - 5);
+
+                feedback.innerHTML = `<div class="feedback error">❌ Errado! -5 pontos | ❤️ ${state.lives} vidas</div>`;
+                updateUI();
+
+                if (state.lives <= 0) {
+                    setTimeout(() => gameOver(), 1000);
+                }
+            }
+        }
+
+        // LEVEL 3: Build Mode
+        function renderBuildMode() {
+            const obj = buildObjects[state.currentBuildObject];
+            const content = document.getElementById('game-content');
+
+            content.innerHTML = `
+                <div class="build-container">
+                    <div class="build-target">
+                        <div class="word-text">Build: ${obj.name}</div>
+                        <div class="word-phonetic">Construir: ${obj.namePt}</div>
+                        <button class="speak-btn" onclick="speak('${obj.name}', 'en')">🔊</button>
+                    </div>
+
+                    <div class="build-area" id="build-area">
+                        ${obj.pieces.map((piece, i) => `
+                            <div class="build-piece ${i < state.currentPieceIndex ? 'placed' : ''}"
+                                 id="piece-${i}"
+                                 style="left: ${piece.x}px; top: ${piece.y}px; width: ${piece.w}px; height: ${piece.h}px; font-size: ${Math.min(piece.w, piece.h) * 0.6}px; display: flex; align-items: center; justify-content: center;">
+                                ${piece.emoji}
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="word-text" style="font-size: 1.2rem; margin: 15px 0;">
+                        Coloque: <strong id="current-piece-name">${obj.pieces[state.currentPieceIndex]?.name || 'Complete!'}</strong>
+                        <br><span style="color: #888; font-size: 0.9rem;">${obj.pieces[state.currentPieceIndex]?.namePt || ''}</span>
+                    </div>
+
+                    <div class="pieces-tray" id="pieces-tray">
+                        ${shuffleArray([...obj.pieces]).map((piece, i) => `
+                            <button class="piece-btn ${obj.pieces.indexOf(piece) < state.currentPieceIndex ? 'used' : ''} ${obj.pieces.indexOf(piece) === state.currentPieceIndex ? 'next' : ''}"
+                                    data-piece-index="${obj.pieces.indexOf(piece)}"
+                                    onclick="placePiece(${obj.pieces.indexOf(piece)})">
+                                ${piece.emoji}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div id="feedback"></div>
+                </div>
+            `;
+
+            if (obj.pieces[state.currentPieceIndex]) {
+                setTimeout(() => speak(obj.pieces[state.currentPieceIndex].name, 'en'), 300);
+            }
+        }
+
+        function placePiece(pieceIndex) {
+            const obj = buildObjects[state.currentBuildObject];
+            const feedback = document.getElementById('feedback');
+
+            if (pieceIndex === state.currentPieceIndex) {
+                // Correct piece
+                document.getElementById(`piece-${pieceIndex}`).classList.add('placed');
+
+                state.streak++;
+                addScore(20 + state.streak * 3);
+
+                speak(obj.pieces[pieceIndex].name, 'en');
+
+                state.currentPieceIndex++;
+
+                if (state.currentPieceIndex >= obj.pieces.length) {
+                    feedback.innerHTML = `<div class="feedback success">🎉 ${obj.namePt} construído! +50 pontos bônus!</div>`;
+                    addScore(50);
+
+                    if (typeof giveReward === 'function') {
+                        giveReward('diamond', 2);
+                    }
+
+                    setTimeout(() => {
+                        // Move to next object
+                        const keys = Object.keys(buildObjects);
+                        const currentIdx = keys.indexOf(state.currentBuildObject);
+                        const nextIdx = (currentIdx + 1) % keys.length;
+                        selectBuildObject(keys[nextIdx]);
+                    }, 2000);
+                } else {
+                    feedback.innerHTML = `<div class="feedback success">✅ Correto! +${20 + state.streak * 3} pontos</div>`;
+                    setTimeout(() => renderBuildMode(), 1000);
+                }
+            } else {
+                // Wrong piece
+                const btn = document.querySelector(`[data-piece-index="${pieceIndex}"]`);
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 500);
+
+                state.streak = 0;
+                state.lives--;
+                state.score = Math.max(0, state.score - 10);
+
+                feedback.innerHTML = `<div class="feedback error">❌ Peça errada! -10 pontos | ❤️ ${state.lives} vidas</div>`;
+                updateUI();
+
+                if (state.lives <= 0) {
+                    setTimeout(() => gameOver(), 1000);
+                }
+            }
+        }
+
+        function gameOver() {
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 4rem;">😢</div>
+                    <h2 style="color: #e74c3c; margin: 20px 0;">Game Over!</h2>
+                    <p style="color: #666; font-size: 1.2rem;">Suas vidas acabaram!</p>
+                    <p style="color: #667eea; font-size: 1.5rem; margin: 20px 0;">Pontuação: ${state.score}</p>
+                    <button class="btn btn-primary" onclick="restartGame()">🔄 Jogar Novamente</button>
+                </div>
+            `;
+        }
+
+        function restartGame() {
+            state.lives = state.maxLives;
+            state.streak = 0;
+            updateUI();
+            startRound();
+        }
+
+        function showRoundComplete() {
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 4rem;">🎉</div>
+                    <h2 style="color: #667eea; margin: 20px 0;">Rodada Completa!</h2>
+                    <p style="color: #666; font-size: 1.2rem;">Você completou todas as palavras!</p>
+                    <p style="color: #667eea; font-size: 1.5rem; margin: 20px 0;">Pontuação: ${state.score}</p>
+                    <button class="btn btn-primary" onclick="startRound()">🔄 Próxima Rodada</button>
+                </div>
+            `;
+
+            if (typeof giveReward === 'function') {
+                giveReward('diamond', 1);
+            }
+        }
+
+        function nextWord() {
+            state.currentIndex++;
+            if (state.currentIndex >= state.currentWords.length) {
+                state.currentIndex = 0;
+            }
+            updateProgress();
+            renderWord();
+        }
+
+        function addScore(points) {
+            state.score += points;
+            state.coins += points;
+
+            // Update wallet
+            if (typeof giveReward === 'function') {
+                giveReward('coin', points);
+            }
+
+            updateUI();
+            saveState();
+        }
+
+        function speak(text, lang) {
+            if (!('speechSynthesis' in window)) return;
+
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const langCodes = { pt: 'pt-BR', en: 'en-US', es: 'es-ES' };
+            utterance.lang = langCodes[lang] || 'en-US';
+            utterance.rate = 0.85;
+
+            document.querySelectorAll('.speak-btn, .mini-speak').forEach(btn => btn.classList.add('speaking'));
+            utterance.onend = () => {
+                document.querySelectorAll('.speak-btn, .mini-speak').forEach(btn => btn.classList.remove('speaking'));
+            };
+
+            speechSynthesis.speak(utterance);
+        }
+
+        // Sync coins with wallet periodically
+        setInterval(() => {
+            if (typeof getWallet === 'function') {
+                const wallet = getWallet();
+                state.coins = wallet.coins;
+                document.getElementById('coins').textContent = state.coins.toLocaleString();
+            }
+        }, 2000);
+
+        // Initialize
+        init();
+    </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

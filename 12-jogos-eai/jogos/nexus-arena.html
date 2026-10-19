@@ -1,0 +1,3016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS ARENA - EAI Games</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: #0a0a1a;
+      min-height: 100vh;
+      overflow: hidden;
+      color: white;
+    }
+
+    /* Animated Background */
+    .bg-animated {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .bg-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: radial-gradient(circle, rgba(0, 255, 255, 0.8), transparent);
+      border-radius: 50%;
+      animation: float 15s infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Game Container */
+    .game-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Main Menu */
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(135deg, #00ffff, #ff00ff, #00ffff);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: logoShine 3s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+      margin-bottom: 10px;
+    }
+
+    @keyframes logoShine {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .subtitle {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(0.8rem, 2vw, 1.2rem);
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      margin-bottom: 50px;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 18px 40px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      color: white;
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 50px rgba(0, 212, 255, 0.6);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #ff00ff, #cc00cc);
+      color: white;
+      box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
+    }
+
+    .btn-tertiary {
+      background: linear-gradient(135deg, #ffaa00, #ff6600);
+      color: white;
+      box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+    }
+
+    .btn-tertiary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 50px rgba(255, 170, 0, 0.5);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-outline:hover {
+      border-color: #00ffff;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    /* Player Stats Bar */
+    .player-stats {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 15px 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .stats-left, .stats-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    .stat-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .level-badge {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .xp-bar {
+      width: 150px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ffff, #00ff88);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* Class Selection */
+    .class-selection {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      padding: 20px;
+    }
+
+    .class-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .class-card:hover {
+      transform: translateY(-10px);
+      border-color: var(--class-color);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px var(--class-glow);
+    }
+
+    .class-card.selected {
+      border-color: var(--class-color);
+      box-shadow: 0 0 50px var(--class-glow);
+    }
+
+    .class-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--class-color);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .class-card:hover::before,
+    .class-card.selected::before {
+      opacity: 1;
+    }
+
+    .class-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 15px;
+      background: linear-gradient(135deg, var(--class-color), var(--class-secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 10px 30px var(--class-glow);
+    }
+
+    .class-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--class-color);
+    }
+
+    .class-type {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 12px;
+    }
+
+    .class-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .class-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .class-stat-bar {
+      width: 80px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .class-stat-fill {
+      height: 100%;
+      background: var(--class-color);
+      border-radius: 3px;
+    }
+
+    /* Hacker */
+    .class-hacker {
+      --class-color: #00ffff;
+      --class-secondary: #0088aa;
+      --class-glow: rgba(0, 255, 255, 0.3);
+    }
+
+    /* Engineer */
+    .class-engineer {
+      --class-color: #ffaa00;
+      --class-secondary: #cc7700;
+      --class-glow: rgba(255, 170, 0, 0.3);
+    }
+
+    /* Strategist */
+    .class-strategist {
+      --class-color: #ff00ff;
+      --class-secondary: #aa00aa;
+      --class-glow: rgba(255, 0, 255, 0.3);
+    }
+
+    /* Creator */
+    .class-creator {
+      --class-color: #00ff88;
+      --class-secondary: #00aa55;
+      --class-glow: rgba(0, 255, 136, 0.3);
+    }
+
+    /* Explorer */
+    .class-explorer {
+      --class-color: #ff6644;
+      --class-secondary: #cc4422;
+      --class-glow: rgba(255, 102, 68, 0.3);
+    }
+
+    /* Arena Screen */
+    .arena-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 80px 20px 20px;
+    }
+
+    .arena-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+
+    .timer {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #00ffff;
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    .timer.warning {
+      color: #ffaa00;
+      animation: pulse 0.5s infinite;
+    }
+
+    .timer.danger {
+      color: #ff4444;
+      animation: pulse 0.3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .score-display {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .score-value {
+      color: #ffd700;
+      margin-left: 10px;
+    }
+
+    .combo-display {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #ff00ff, #aa00ff);
+      border-radius: 25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+
+    .combo-display.active {
+      animation: comboPulse 0.3s ease;
+    }
+
+    @keyframes comboPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Arena Battle Area */
+    .arena-battle {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      min-height: 0;
+    }
+
+    .arena-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .player-area {
+      background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(0,100,150,0.1));
+      border: 2px solid rgba(0,255,255,0.3);
+      border-radius: 20px;
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .player-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--class-color), var(--class-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 5px 20px var(--class-glow);
+    }
+
+    .player-details h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+
+    .player-class {
+      font-size: 0.85rem;
+      color: var(--class-color);
+    }
+
+    .health-bar {
+      width: 100%;
+      height: 25px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .health-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4444, #ff6666);
+      border-radius: 12px;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .health-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .health-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .energy-bar {
+      width: 100%;
+      height: 15px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .energy-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00aaff, #00ffff);
+      border-radius: 8px;
+      transition: width 0.3s ease;
+    }
+
+    .abilities {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ability-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      position: relative;
+    }
+
+    .ability-btn:hover:not(.locked):not(.cooldown) {
+      transform: translateY(-5px);
+      border-color: #00ffff;
+      box-shadow: 0 10px 30px rgba(0,255,255,0.3);
+    }
+
+    .ability-btn.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .ability-btn.cooldown {
+      opacity: 0.6;
+    }
+
+    .ability-btn.cooldown::after {
+      content: attr(data-cooldown);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .ability-btn.ready {
+      border-color: #00ff88;
+      animation: abilityReady 1s infinite;
+    }
+
+    @keyframes abilityReady {
+      0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+      50% { box-shadow: 0 0 30px rgba(0,255,136,0.6); }
+    }
+
+    /* Challenge Portal */
+    .challenge-portal {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(100,0,150,0.1));
+      border: 2px solid rgba(255,0,255,0.3);
+      border-radius: 20px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .portal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: #ff00ff;
+    }
+
+    .portal-reward {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 15px;
+      background: rgba(255,215,0,0.2);
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .challenge-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .challenge-question {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 25px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Pattern Challenge */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .pattern-cell {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+
+    .pattern-cell.filled {
+      background: linear-gradient(135deg, #00ffff, #0088aa);
+      box-shadow: 0 5px 20px rgba(0,255,255,0.3);
+    }
+
+    .pattern-cell.empty {
+      background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(255,0,255,0.1));
+      border: 2px dashed rgba(255,0,255,0.5);
+      cursor: pointer;
+    }
+
+    .pattern-cell.empty:hover {
+      background: linear-gradient(135deg, rgba(255,0,255,0.5), rgba(255,0,255,0.3));
+      transform: scale(1.1);
+    }
+
+    .pattern-options {
+      display: flex;
+      gap: 15px;
+    }
+
+    .pattern-option {
+      width: 70px;
+      height: 70px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pattern-option:hover {
+      border-color: #00ffff;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,255,255,0.3);
+    }
+
+    .pattern-option.correct {
+      background: linear-gradient(135deg, #00ff88, #00aa55);
+      border-color: #00ff88;
+      animation: correctAnswer 0.5s ease;
+    }
+
+    .pattern-option.wrong {
+      background: linear-gradient(135deg, #ff4444, #aa0000);
+      border-color: #ff4444;
+      animation: wrongAnswer 0.5s ease;
+    }
+
+    @keyframes correctAnswer {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes wrongAnswer {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    /* Sequence Challenge */
+    .sequence-display {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .sequence-item {
+      width: 80px;
+      height: 80px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      transition: all 0.3s;
+    }
+
+    .sequence-item.highlight {
+      animation: sequenceHighlight 0.5s ease;
+    }
+
+    @keyframes sequenceHighlight {
+      0%, 100% { transform: scale(1); box-shadow: none; }
+      50% { transform: scale(1.2); box-shadow: 0 0 40px currentColor; }
+    }
+
+    .sequence-input {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .sequence-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+
+    .sequence-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .sequence-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Code Blocks Challenge */
+    .code-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .code-target {
+      background: rgba(0,0,0,0.4);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .code-target-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: #00ffff;
+    }
+
+    .code-blocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .code-block {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #1a1a3a, #2a2a4a);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 1rem;
+      transition: all 0.3s;
+      user-select: none;
+    }
+
+    .code-block:hover {
+      border-color: #00ffff;
+      transform: translateY(-3px);
+    }
+
+    .code-block.selected {
+      border-color: #00ff88;
+      background: linear-gradient(135deg, #003322, #004433);
+    }
+
+    .code-block.if-block { border-left: 4px solid #ffaa00; }
+    .code-block.loop-block { border-left: 4px solid #00ffff; }
+    .code-block.action-block { border-left: 4px solid #ff00ff; }
+    .code-block.var-block { border-left: 4px solid #00ff88; }
+
+    .code-solution {
+      min-height: 60px;
+      background: rgba(0,0,0,0.3);
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 15px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .code-solution .code-block {
+      cursor: grab;
+    }
+
+    /* Memory Challenge */
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 70px);
+      gap: 12px;
+    }
+
+    .memory-card {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      cursor: pointer;
+      perspective: 1000px;
+      transition: transform 0.3s;
+    }
+
+    .memory-card:hover {
+      transform: scale(1.05);
+    }
+
+    .memory-card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+
+    .memory-card.flipped .memory-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .memory-card-front, .memory-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .memory-card-front {
+      background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .memory-card-back {
+      background: linear-gradient(135deg, #00ffff, #0088aa);
+      transform: rotateY(180deg);
+    }
+
+    .memory-card.matched .memory-card-back {
+      background: linear-gradient(135deg, #00ff88, #00aa55);
+    }
+
+    /* Decision Challenge */
+    .decision-scenario {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .decision-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+    }
+
+    .decision-text {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.9);
+      max-width: 400px;
+    }
+
+    .decision-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .decision-option {
+      padding: 15px 25px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+      font-size: 1rem;
+    }
+
+    .decision-option:hover {
+      border-color: #ff00ff;
+      transform: translateX(10px);
+      background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(255,0,255,0.05));
+    }
+
+    .decision-option.selected {
+      border-color: #00ff88;
+      background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,255,136,0.05));
+    }
+
+    /* Enemy Area */
+    .enemy-area {
+      background: linear-gradient(135deg, rgba(255,50,50,0.1), rgba(150,0,0,0.1));
+      border: 2px solid rgba(255,50,50,0.3);
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .enemy-avatar {
+      background: linear-gradient(135deg, #ff4444, #aa0000);
+    }
+
+    .enemies-list {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .enemy-card {
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .enemy-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .enemy-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .enemy-health {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .enemy-health-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4444, #ff6666);
+      transition: width 0.3s;
+    }
+
+    /* Results Screen */
+    .results-container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .results-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    .results-title.victory {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .results-title.defeat {
+      color: #ff4444;
+    }
+
+    .results-stats {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .results-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .results-stat:last-child {
+      border-bottom: none;
+    }
+
+    .results-stat-label {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .results-stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .results-xp {
+      background: linear-gradient(135deg, rgba(0,255,255,0.2), rgba(0,100,150,0.2));
+      border: 2px solid rgba(0,255,255,0.3);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .xp-gained {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      color: #00ffff;
+      margin-bottom: 10px;
+    }
+
+    .level-progress {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .level-progress .xp-bar {
+      flex: 1;
+    }
+
+    /* Rankings Screen */
+    .rankings-container {
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .rankings-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .rankings-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .rankings-tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .ranking-tab {
+      padding: 10px 25px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 25px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+      color: white;
+    }
+
+    .ranking-tab:hover {
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .ranking-tab.active {
+      background: linear-gradient(135deg, #ff00ff, #aa00ff);
+      border-color: transparent;
+    }
+
+    .rankings-list {
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.3s;
+    }
+
+    .ranking-item:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .ranking-item.current-player {
+      background: rgba(0,255,255,0.1);
+    }
+
+    .ranking-position {
+      width: 50px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .ranking-position.gold { color: #ffd700; }
+    .ranking-position.silver { color: #c0c0c0; }
+    .ranking-position.bronze { color: #cd7f32; }
+
+    .ranking-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      margin-right: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .ranking-info {
+      flex: 1;
+    }
+
+    .ranking-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      margin-bottom: 3px;
+    }
+
+    .ranking-class {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .ranking-score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: #ffd700;
+    }
+
+    /* Customization Screen */
+    .customization-container {
+      display: flex;
+      gap: 30px;
+      max-width: 900px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .customization-preview {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border-radius: 25px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .preview-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .preview-frame {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      border-radius: 50%;
+      border: 4px solid;
+      animation: frameRotate 10s linear infinite;
+    }
+
+    @keyframes frameRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .preview-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .preview-title {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      padding: 5px 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+    }
+
+    .customization-options {
+      flex: 1.5;
+    }
+
+    .customization-section {
+      margin-bottom: 25px;
+    }
+
+    .customization-section h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .customization-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 10px;
+    }
+
+    .customization-item {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      transition: all 0.3s;
+    }
+
+    .customization-item:hover {
+      border-color: rgba(255,255,255,0.3);
+      transform: scale(1.1);
+    }
+
+    .customization-item.selected {
+      border-color: #00ffff;
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    }
+
+    .customization-item.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .customization-item.locked::after {
+      content: '🔒';
+      font-size: 0.8rem;
+      position: absolute;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 25px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+    }
+
+    .modal-text {
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 25px;
+    }
+
+    /* Notifications */
+    .notification {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      padding: 15px 25px;
+      background: linear-gradient(135deg, #00ff88, #00aa55);
+      border-radius: 15px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.xp {
+      background: linear-gradient(135deg, #00ffff, #0088aa);
+    }
+
+    .notification.level-up {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+    }
+
+    .notification.combo {
+      background: linear-gradient(135deg, #ff00ff, #aa00ff);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .arena-battle {
+        flex-direction: column;
+      }
+
+      .class-selection {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .customization-container {
+        flex-direction: column;
+      }
+
+      .pattern-grid {
+        grid-template-columns: repeat(4, 50px);
+      }
+
+      .pattern-cell {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+
+      .memory-grid {
+        grid-template-columns: repeat(4, 55px);
+      }
+
+      .memory-card {
+        width: 55px;
+        height: 55px;
+      }
+
+      .player-stats {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .stats-left, .stats-right {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Special Effects */
+    .damage-flash {
+      animation: damageFlash 0.2s ease;
+    }
+
+    @keyframes damageFlash {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(2) hue-rotate(180deg); }
+    }
+
+    .power-up-effect {
+      animation: powerUp 0.5s ease;
+    }
+
+    @keyframes powerUp {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); filter: brightness(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    .floating-text {
+      position: absolute;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      animation: floatUp 1s ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+    }
+
+    /* Chest Styles */
+    .chest-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .chest {
+      font-size: 6rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      animation: chestFloat 2s ease-in-out infinite;
+    }
+
+    .chest:hover {
+      transform: scale(1.1);
+    }
+
+    @keyframes chestFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .chest-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(255,215,0,0.4), transparent);
+      border-radius: 50%;
+      animation: glowPulse 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    .chest.opening {
+      animation: chestOpen 0.5s ease forwards;
+    }
+
+    @keyframes chestOpen {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3) rotate(-10deg); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .chest-reward {
+      text-align: center;
+      animation: rewardAppear 0.5s ease;
+    }
+
+    @keyframes rewardAppear {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .reward-icon {
+      font-size: 5rem;
+      margin-bottom: 15px;
+      animation: coinSpin 1s ease infinite;
+    }
+
+    @keyframes coinSpin {
+      0%, 100% { transform: rotateY(0deg); }
+      50% { transform: rotateY(180deg); }
+    }
+
+    .reward-amount {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.5);
+      margin-bottom: 10px;
+    }
+
+    .reward-text {
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Coins in game */
+    .coins-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,170,0,0.1));
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 20px;
+    }
+
+    .coins-value {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .coin-float {
+      position: fixed;
+      font-size: 2rem;
+      pointer-events: none;
+      animation: coinFloatUp 1s ease forwards;
+      z-index: 9999;
+    }
+
+    @keyframes coinFloatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-100px) scale(0.5); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-animated">
+    <div class="bg-grid"></div>
+    <div class="bg-particles" id="particles"></div>
+  </div>
+
+  <div class="game-container">
+    <!-- Player Stats Bar (hidden on menu) -->
+    <div class="player-stats" id="playerStats" style="display: none;">
+      <div class="stats-left">
+        <div class="level-badge" id="playerLevel">Nivel 1</div>
+        <div class="stat-item">
+          <div class="xp-bar">
+            <div class="xp-fill" id="xpFill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stats-right">
+        <div class="stat-item" style="background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,170,0,0.1)); padding: 5px 12px; border-radius: 20px;">
+          <span class="stat-icon">🪙</span>
+          <span id="totalCoins" style="color: #ffd700; font-weight: 700;">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">⭐</span>
+          <span id="totalScore">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">🏆</span>
+          <span id="playerRank">#--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chest Modal -->
+    <div class="modal-overlay" id="chestModal">
+      <div class="modal" style="background: linear-gradient(135deg, #2a1a0a, #1a0a00); border-color: rgba(255,215,0,0.3);">
+        <div class="chest-container" id="chestContainer">
+          <div class="chest" id="chest" onclick="openChest()">
+            <div class="chest-body">📦</div>
+            <div class="chest-glow"></div>
+          </div>
+          <p style="color: rgba(255,255,255,0.7); margin-top: 20px;">Clique no bau para abrir!</p>
+        </div>
+        <div class="chest-reward" id="chestReward" style="display: none;">
+          <div class="reward-icon" id="rewardIcon">🪙</div>
+          <div class="reward-amount" id="rewardAmount">+50</div>
+          <div class="reward-text" id="rewardText">Moedas!</div>
+          <button class="btn btn-primary" style="margin-top: 20px;" onclick="closeChest()">Coletar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div class="screen active" id="menuScreen">
+      <h1 class="logo">NEXUS ARENA</h1>
+      <p class="subtitle">Pense para Vencer</p>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" onclick="showScreen('classSelect')">Jogar</button>
+        <button class="btn btn-secondary" onclick="showScreen('rankings')">Rankings</button>
+        <button class="btn btn-tertiary" onclick="showScreen('customize')">Personalizar</button>
+        <button class="btn btn-outline" onclick="showScreen('tutorial')">Como Jogar</button>
+      </div>
+    </div>
+
+    <!-- Class Selection Screen -->
+    <div class="screen" id="classSelect">
+      <h2 style="font-family: 'Orbitron'; font-size: 2rem; margin-bottom: 30px;">Escolha sua Classe</h2>
+      <div class="class-selection">
+        <div class="class-card class-hacker" onclick="selectClass('hacker')">
+          <div class="class-icon">💻</div>
+          <div class="class-name">Hacker</div>
+          <div class="class-type">Padroes e Logica</div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <span>Logica</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 95%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Velocidade</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 80%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Poder</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 70%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-card class-engineer" onclick="selectClass('engineer')">
+          <div class="class-icon">⚙️</div>
+          <div class="class-name">Engenheiro</div>
+          <div class="class-type">Sequencias e Planejamento</div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <span>Construcao</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 90%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Defesa</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 85%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Estrategia</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 75%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-card class-strategist" onclick="selectClass('strategist')">
+          <div class="class-icon">🎯</div>
+          <div class="class-name">Estrategista</div>
+          <div class="class-type">Decisoes Rapidas</div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <span>Tatica</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 95%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Adaptacao</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 90%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Lideranca</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 80%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-card class-creator" onclick="selectClass('creator')">
+          <div class="class-icon">🔮</div>
+          <div class="class-name">Criador</div>
+          <div class="class-type">Programacao Visual</div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <span>Criatividade</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 95%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Codigo</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 90%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Magia</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 85%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-card class-explorer" onclick="selectClass('explorer')">
+          <div class="class-icon">🔍</div>
+          <div class="class-name">Explorador</div>
+          <div class="class-type">Memoria e Observacao</div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <span>Memoria</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 95%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Percepcao</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 90%"></div></div>
+            </div>
+            <div class="class-stat">
+              <span>Agilidade</span>
+              <div class="class-stat-bar"><div class="class-stat-fill" style="width: 75%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn btn-outline" onclick="showScreen('menuScreen')">Voltar</button>
+        <button class="btn btn-primary" id="startBattleBtn" onclick="startBattle()" style="opacity: 0.5; pointer-events: none;">Iniciar Batalha</button>
+      </div>
+    </div>
+
+    <!-- Arena Screen -->
+    <div class="screen" id="arenaScreen">
+      <div class="arena-container">
+        <div class="arena-header">
+          <div class="timer" id="gameTimer">3:00</div>
+          <div class="score-display">Pontos:<span class="score-value" id="currentScore">0</span></div>
+          <div class="combo-display" id="comboDisplay">COMBO x1</div>
+        </div>
+
+        <div class="arena-battle">
+          <!-- Player Area -->
+          <div class="arena-left">
+            <div class="player-area" id="playerArea">
+              <div class="player-info">
+                <div class="player-avatar" id="playerAvatar">💻</div>
+                <div class="player-details">
+                  <h3 id="playerName">Jogador</h3>
+                  <div class="player-class" id="playerClassDisplay">Hacker</div>
+                </div>
+              </div>
+              <div class="health-bar">
+                <div class="health-fill" id="playerHealth" style="width: 100%"></div>
+                <div class="health-text"><span id="healthValue">100</span>/100</div>
+              </div>
+              <div class="energy-bar">
+                <div class="energy-fill" id="playerEnergy" style="width: 100%"></div>
+              </div>
+              <div class="abilities" id="abilities">
+                <button class="ability-btn locked" title="Ataque Logico">⚡</button>
+                <button class="ability-btn locked" title="Escudo Digital">🛡️</button>
+                <button class="ability-btn locked" title="Hack Rapido">💥</button>
+                <button class="ability-btn locked" title="Super Poder">🌟</button>
+              </div>
+            </div>
+
+            <!-- Enemies -->
+            <div class="enemy-area">
+              <div class="enemies-list" id="enemiesList">
+                <div class="enemy-card">
+                  <div class="enemy-icon">🤖</div>
+                  <div class="enemy-name">Bot Alpha</div>
+                  <div class="enemy-health">
+                    <div class="enemy-health-fill" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="enemy-card">
+                  <div class="enemy-icon">👾</div>
+                  <div class="enemy-name">Virus Beta</div>
+                  <div class="enemy-health">
+                    <div class="enemy-health-fill" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="enemy-card">
+                  <div class="enemy-icon">🔥</div>
+                  <div class="enemy-name">Firewall</div>
+                  <div class="enemy-health">
+                    <div class="enemy-health-fill" style="width: 80%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Challenge Portal -->
+          <div class="challenge-portal" id="challengePortal">
+            <div class="portal-header">
+              <div class="portal-title">Portal de Desafio</div>
+              <div class="portal-reward">
+                <span>⚡</span>
+                <span id="rewardText">+1 Habilidade</span>
+              </div>
+            </div>
+            <div class="challenge-content" id="challengeContent">
+              <!-- Challenge will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="screen" id="resultsScreen">
+      <div class="results-container">
+        <h2 class="results-title victory" id="resultsTitle">Vitoria!</h2>
+        <div class="results-stats">
+          <div class="results-stat">
+            <span class="results-stat-label">Pontuacao</span>
+            <span class="results-stat-value" id="finalScore">0</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-label">Moedas Ganhas</span>
+            <span class="results-stat-value" style="color: #ffd700;" id="coinsEarned">0</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-label">Desafios Completos</span>
+            <span class="results-stat-value" id="challengesCompleted">0</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-label">Maior Combo</span>
+            <span class="results-stat-value" id="maxCombo">x1</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-label">Precisao</span>
+            <span class="results-stat-value" id="accuracy">100%</span>
+          </div>
+        </div>
+        <div class="results-xp">
+          <div class="xp-gained" id="xpGained">+250 XP</div>
+          <div class="level-progress">
+            <span id="currentLevelLabel">Nivel 1</span>
+            <div class="xp-bar" style="flex: 1">
+              <div class="xp-fill" id="resultXpFill" style="width: 60%"></div>
+            </div>
+            <span id="nextLevelLabel">Nivel 2</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+          <button class="btn btn-primary" onclick="startBattle()">Jogar Novamente</button>
+          <button class="btn btn-outline" onclick="showScreen('menuScreen')">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rankings Screen -->
+    <div class="screen" id="rankings">
+      <div class="rankings-container">
+        <div class="rankings-header">
+          <h2 class="rankings-title">Rankings Globais</h2>
+          <div class="rankings-tabs">
+            <button class="ranking-tab active">Semanal</button>
+            <button class="ranking-tab">Mensal</button>
+            <button class="ranking-tab">Geral</button>
+          </div>
+        </div>
+        <div class="rankings-list" id="rankingsList">
+          <!-- Rankings will be loaded here -->
+        </div>
+        <button class="btn btn-outline" style="margin-top: 20px;" onclick="showScreen('menuScreen')">Voltar</button>
+      </div>
+    </div>
+
+    <!-- Customize Screen -->
+    <div class="screen" id="customize">
+      <div class="customization-container">
+        <div class="customization-preview">
+          <div class="preview-avatar class-hacker" id="previewAvatar">
+            💻
+            <div class="preview-frame" style="border-color: #00ffff;"></div>
+          </div>
+          <div class="preview-name" id="previewName">Jogador</div>
+          <div class="preview-title" id="previewTitle">Iniciante</div>
+        </div>
+        <div class="customization-options">
+          <div class="customization-section">
+            <h3>Avatar</h3>
+            <div class="customization-grid" id="avatarGrid">
+              <!-- Avatars loaded via JS -->
+            </div>
+          </div>
+          <div class="customization-section">
+            <h3>Moldura</h3>
+            <div class="customization-grid" id="frameGrid">
+              <!-- Frames loaded via JS -->
+            </div>
+          </div>
+          <div class="customization-section">
+            <h3>Titulo</h3>
+            <div class="customization-grid" id="titleGrid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));">
+              <!-- Titles loaded via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline" style="margin-top: 20px;" onclick="showScreen('menuScreen')">Voltar</button>
+    </div>
+
+    <!-- Tutorial Screen -->
+    <div class="screen" id="tutorial">
+      <div style="max-width: 600px; text-align: center;">
+        <h2 style="font-family: 'Orbitron'; font-size: 2rem; margin-bottom: 30px;">Como Jogar</h2>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 20px; padding: 25px; margin-bottom: 20px; text-align: left;">
+          <h3 style="color: #00ffff; margin-bottom: 15px;">1. Escolha sua Classe</h3>
+          <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Cada classe tem habilidades unicas baseadas em diferentes tipos de raciocinio.</p>
+
+          <h3 style="color: #ff00ff; margin-bottom: 15px;">2. Resolva Desafios</h3>
+          <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Durante a batalha, resolva desafios de logica para desbloquear poderes e habilidades.</p>
+
+          <h3 style="color: #ffaa00; margin-bottom: 15px;">3. Derrote Inimigos</h3>
+          <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Use suas habilidades desbloqueadas para atacar inimigos e se defender.</p>
+
+          <h3 style="color: #00ff88; margin-bottom: 15px;">4. Suba no Ranking</h3>
+          <p style="color: rgba(255,255,255,0.7);">Ganhe XP, suba de nivel e compete com outros jogadores pelo topo do ranking.</p>
+        </div>
+        <button class="btn btn-primary" onclick="showScreen('menuScreen')">Entendi!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification"></div>
+
+  <script>
+    // Game State
+    const gameState = {
+      playerName: 'Jogador',
+      selectedClass: null,
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      totalScore: 0,
+      currentScore: 0,
+      coins: 0,
+      totalCoins: 0,
+      combo: 1,
+      maxCombo: 1,
+      health: 100,
+      energy: 100,
+      challengesCompleted: 0,
+      challengesFailed: 0,
+      timeRemaining: 180,
+      gameActive: false,
+      unlockedAbilities: [false, false, false, false],
+      enemies: [],
+      currentChallenge: null,
+      avatar: '💻',
+      title: 'Iniciante',
+      frameColor: '#00ffff',
+      chestsOpened: 0,
+      pendingChest: false
+    };
+
+    // Class Data
+    const classData = {
+      hacker: {
+        name: 'Hacker',
+        icon: '💻',
+        color: '#00ffff',
+        secondary: '#0088aa',
+        challenges: ['pattern', 'sequence'],
+        abilities: ['⚡', '🛡️', '💥', '🌟']
+      },
+      engineer: {
+        name: 'Engenheiro',
+        icon: '⚙️',
+        color: '#ffaa00',
+        secondary: '#cc7700',
+        challenges: ['sequence', 'code'],
+        abilities: ['🔧', '🏗️', '⚡', '🚀']
+      },
+      strategist: {
+        name: 'Estrategista',
+        icon: '🎯',
+        color: '#ff00ff',
+        secondary: '#aa00aa',
+        challenges: ['decision', 'pattern'],
+        abilities: ['🎯', '🛡️', '⚔️', '👁️']
+      },
+      creator: {
+        name: 'Criador',
+        icon: '🔮',
+        color: '#00ff88',
+        secondary: '#00aa55',
+        challenges: ['code', 'pattern'],
+        abilities: ['🔮', '✨', '🌀', '💫']
+      },
+      explorer: {
+        name: 'Explorador',
+        icon: '🔍',
+        color: '#ff6644',
+        secondary: '#cc4422',
+        challenges: ['memory', 'decision'],
+        abilities: ['🔍', '🗺️', '⚡', '🏃']
+      }
+    };
+
+    // Challenge Templates
+    const challenges = {
+      pattern: [
+        { sequence: [2, 4, 6, 8], answer: 10, options: [9, 10, 11, 12], question: 'Qual o proximo numero da sequencia?' },
+        { sequence: [1, 1, 2, 3, 5], answer: 8, options: [6, 7, 8, 9], question: 'Complete a sequencia de Fibonacci:' },
+        { sequence: [3, 6, 12, 24], answer: 48, options: [36, 42, 48, 54], question: 'Qual numero vem depois?' },
+        { sequence: [1, 4, 9, 16], answer: 25, options: [20, 25, 30, 36], question: 'Sequencia de quadrados perfeitos:' },
+        { sequence: [100, 50, 25], answer: 12.5, options: [10, 12.5, 15, 20], question: 'Divisao por 2:' }
+      ],
+      sequence: [
+        { colors: ['🔴', '🟢', '🔵', '🔴', '🟢'], answer: '🔵', options: ['🔴', '🟢', '🔵', '🟡'], question: 'Qual cor completa o padrao?' },
+        { colors: ['⬆️', '➡️', '⬇️', '⬅️', '⬆️'], answer: '➡️', options: ['⬆️', '➡️', '⬇️', '⬅️'], question: 'Qual direcao vem depois?' },
+        { colors: ['🌙', '🌙', '⭐', '🌙', '🌙'], answer: '⭐', options: ['🌙', '⭐', '☀️', '🌟'], question: 'Complete o padrao:' },
+        { colors: ['1️⃣', '2️⃣', '1️⃣', '2️⃣', '3️⃣'], answer: '1️⃣', options: ['1️⃣', '2️⃣', '3️⃣', '4️⃣'], question: 'Qual vem depois do 3?' }
+      ],
+      code: [
+        {
+          target: 'Mover para frente 3x',
+          blocks: ['avançar()', 'girar()', 'repetir(3)', 'parar()'],
+          solution: ['repetir(3)', 'avançar()'],
+          question: 'Monte o codigo correto:'
+        },
+        {
+          target: 'Se inimigo, atacar',
+          blocks: ['se(inimigo)', 'atacar()', 'defender()', 'fim'],
+          solution: ['se(inimigo)', 'atacar()', 'fim'],
+          question: 'Complete a logica:'
+        }
+      ],
+      memory: [
+        { pairs: ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑', '🍎', '🍊', '🍋', '🍇', '🍓', '🍑'] },
+        { pairs: ['⭐', '🌙', '☀️', '🌈', '⚡', '💧', '⭐', '🌙', '☀️', '🌈', '⚡', '💧'] }
+      ],
+      decision: [
+        {
+          icon: '🏰',
+          scenario: 'Um grupo de inimigos se aproxima. Voce tem energia limitada.',
+          options: [
+            { text: 'Atacar diretamente', result: 'damage', value: 20 },
+            { text: 'Levantar escudo primeiro', result: 'correct', value: 30 },
+            { text: 'Recuar e recuperar', result: 'partial', value: 15 },
+            { text: 'Usar super poder', result: 'damage', value: 10 }
+          ],
+          correctIndex: 1
+        },
+        {
+          icon: '💎',
+          scenario: 'Voce encontra um portal misterioso. Pode ser uma armadilha ou um tesouro.',
+          options: [
+            { text: 'Entrar imediatamente', result: 'damage', value: -10 },
+            { text: 'Analisar com cuidado', result: 'correct', value: 40 },
+            { text: 'Ignorar e seguir', result: 'partial', value: 5 },
+            { text: 'Chamar reforcos', result: 'partial', value: 20 }
+          ],
+          correctIndex: 1
+        },
+        {
+          icon: '⚔️',
+          scenario: 'Dois caminhos: um curto mas perigoso, outro longo mas seguro.',
+          options: [
+            { text: 'Caminho curto - arriscar', result: 'damage', value: -15 },
+            { text: 'Caminho longo - garantir', result: 'correct', value: 25 },
+            { text: 'Criar um terceiro caminho', result: 'partial', value: 15 },
+            { text: 'Voltar e repensar', result: 'damage', value: -5 }
+          ],
+          correctIndex: 1
+        }
+      ]
+    };
+
+    // Rankings Data
+    const rankingsData = [
+      { name: 'CyberNinja', class: 'hacker', score: 15420, avatar: '🥷' },
+      { name: 'TechMaster', class: 'engineer', score: 14850, avatar: '👨‍💻' },
+      { name: 'MindGamer', class: 'strategist', score: 13990, avatar: '🧠' },
+      { name: 'CodeWizard', class: 'creator', score: 12750, avatar: '🧙' },
+      { name: 'DataHunter', class: 'explorer', score: 11980, avatar: '🔎' },
+      { name: 'LogicKing', class: 'hacker', score: 11450, avatar: '👑' },
+      { name: 'BuilderPro', class: 'engineer', score: 10890, avatar: '🏗️' },
+      { name: 'StrategyAce', class: 'strategist', score: 10250, avatar: '🎖️' },
+      { name: 'PixelMage', class: 'creator', score: 9870, avatar: '🎮' },
+      { name: 'PathFinder', class: 'explorer', score: 9540, avatar: '🧭' }
+    ];
+
+    // Customization Options
+    const avatars = ['💻', '⚙️', '🎯', '🔮', '🔍', '🤖', '👾', '🎮', '🚀', '⚡', '🌟', '🔥'];
+    const frames = ['#00ffff', '#ff00ff', '#ffaa00', '#00ff88', '#ff6644', '#ffd700'];
+    const titles = ['Iniciante', 'Aprendiz', 'Veterano', 'Mestre', 'Lenda', 'Campea(o)'];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      loadRankings();
+      loadCustomization();
+      loadSavedData();
+    });
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      const showStats = ['arenaScreen', 'resultsScreen'].includes(screenId);
+      document.getElementById('playerStats').style.display = showStats ? 'flex' : 'none';
+    }
+
+    function selectClass(className) {
+      gameState.selectedClass = className;
+      const data = classData[className];
+
+      // Update UI
+      document.querySelectorAll('.class-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      document.querySelector(`.class-${className}`).classList.add('selected');
+
+      // Enable start button
+      const startBtn = document.getElementById('startBattleBtn');
+      startBtn.style.opacity = '1';
+      startBtn.style.pointerEvents = 'auto';
+
+      // Update avatar
+      gameState.avatar = data.icon;
+      updatePreview();
+    }
+
+    function startBattle() {
+      if (!gameState.selectedClass) return;
+
+      const data = classData[gameState.selectedClass];
+
+      // Reset game state
+      gameState.currentScore = 0;
+      gameState.coins = 0;
+      gameState.combo = 1;
+      gameState.maxCombo = 1;
+      gameState.health = 100;
+      gameState.energy = 100;
+      gameState.challengesCompleted = 0;
+      gameState.challengesFailed = 0;
+      gameState.timeRemaining = 180;
+      gameState.gameActive = true;
+      gameState.unlockedAbilities = [false, false, false, false];
+      gameState.pendingChest = false;
+
+      // Setup player area
+      const playerArea = document.getElementById('playerArea');
+      playerArea.className = `player-area class-${gameState.selectedClass}`;
+      playerArea.style.setProperty('--class-color', data.color);
+      playerArea.style.setProperty('--class-secondary', data.secondary);
+      playerArea.style.setProperty('--class-glow', data.color.replace(')', ', 0.3)').replace('rgb', 'rgba'));
+
+      document.getElementById('playerAvatar').textContent = data.icon;
+      document.getElementById('playerClassDisplay').textContent = data.name;
+      document.getElementById('playerClassDisplay').style.color = data.color;
+
+      // Setup abilities
+      const abilities = document.getElementById('abilities');
+      abilities.innerHTML = data.abilities.map((icon, i) =>
+        `<button class="ability-btn locked" onclick="useAbility(${i})" title="Habilidade ${i+1}">${icon}</button>`
+      ).join('');
+
+      // Setup enemies
+      generateEnemies();
+
+      // Show arena
+      showScreen('arenaScreen');
+      updateUI();
+
+      // Start timer
+      startTimer();
+
+      // Generate first challenge
+      generateChallenge();
+    }
+
+    function startTimer() {
+      const timerEl = document.getElementById('gameTimer');
+
+      const interval = setInterval(() => {
+        if (!gameState.gameActive) {
+          clearInterval(interval);
+          return;
+        }
+
+        gameState.timeRemaining--;
+        const mins = Math.floor(gameState.timeRemaining / 60);
+        const secs = gameState.timeRemaining % 60;
+        timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+        // Timer warnings
+        timerEl.classList.remove('warning', 'danger');
+        if (gameState.timeRemaining <= 30) {
+          timerEl.classList.add('danger');
+        } else if (gameState.timeRemaining <= 60) {
+          timerEl.classList.add('warning');
+        }
+
+        if (gameState.timeRemaining <= 0) {
+          clearInterval(interval);
+          endGame(true);
+        }
+      }, 1000);
+    }
+
+    function generateEnemies() {
+      const enemyTypes = [
+        { icon: '🤖', name: 'Bot Alpha', health: 100 },
+        { icon: '👾', name: 'Virus Beta', health: 80 },
+        { icon: '🔥', name: 'Firewall', health: 120 },
+        { icon: '💀', name: 'Malware', health: 90 },
+        { icon: '🦠', name: 'Bug', health: 60 }
+      ];
+
+      gameState.enemies = [];
+      const count = 2 + Math.floor(gameState.level / 2);
+
+      for (let i = 0; i < Math.min(count, 4); i++) {
+        const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+        gameState.enemies.push({
+          ...type,
+          maxHealth: type.health,
+          currentHealth: type.health
+        });
+      }
+
+      updateEnemies();
+    }
+
+    function updateEnemies() {
+      const list = document.getElementById('enemiesList');
+      list.innerHTML = gameState.enemies.map((enemy, i) => `
+        <div class="enemy-card" id="enemy-${i}">
+          <div class="enemy-icon">${enemy.icon}</div>
+          <div class="enemy-name">${enemy.name}</div>
+          <div class="enemy-health">
+            <div class="enemy-health-fill" style="width: ${(enemy.currentHealth / enemy.maxHealth) * 100}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function generateChallenge() {
+      const data = classData[gameState.selectedClass];
+      const challengeTypes = data.challenges;
+      const type = challengeTypes[Math.floor(Math.random() * challengeTypes.length)];
+
+      const challengeList = challenges[type];
+      const challenge = challengeList[Math.floor(Math.random() * challengeList.length)];
+
+      gameState.currentChallenge = { type, ...challenge };
+
+      renderChallenge();
+    }
+
+    function renderChallenge() {
+      const content = document.getElementById('challengeContent');
+      const challenge = gameState.currentChallenge;
+
+      if (!challenge) return;
+
+      let html = '';
+
+      switch (challenge.type) {
+        case 'pattern':
+          html = `
+            <div class="challenge-question">${challenge.question}</div>
+            <div class="pattern-grid">
+              ${challenge.sequence.map(n => `<div class="pattern-cell filled">${n}</div>`).join('')}
+              <div class="pattern-cell empty">?</div>
+            </div>
+            <div class="pattern-options">
+              ${challenge.options.map(opt => `
+                <div class="pattern-option" onclick="answerPattern(${opt}, ${challenge.answer})">${opt}</div>
+              `).join('')}
+            </div>
+          `;
+          break;
+
+        case 'sequence':
+          html = `
+            <div class="challenge-question">${challenge.question}</div>
+            <div class="sequence-display">
+              ${challenge.colors.map(c => `<div class="sequence-item" style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); font-size: 2rem;">${c}</div>`).join('')}
+              <div class="sequence-item" style="background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(255,0,255,0.1)); border: 2px dashed rgba(255,0,255,0.5);">?</div>
+            </div>
+            <div class="sequence-input">
+              ${challenge.options.map(opt => `
+                <button class="sequence-btn" style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));" onclick="answerSequence('${opt}', '${challenge.answer}')">${opt}</button>
+              `).join('')}
+            </div>
+          `;
+          break;
+
+        case 'decision':
+          html = `
+            <div class="decision-scenario">
+              <div class="decision-icon">${challenge.icon}</div>
+              <div class="decision-text">${challenge.scenario}</div>
+            </div>
+            <div class="decision-options">
+              ${challenge.options.map((opt, i) => `
+                <div class="decision-option" onclick="answerDecision(${i}, ${challenge.correctIndex})">${opt.text}</div>
+              `).join('')}
+            </div>
+          `;
+          break;
+
+        case 'memory':
+          const shuffled = [...challenge.pairs].sort(() => Math.random() - 0.5);
+          html = `
+            <div class="challenge-question">Encontre os pares!</div>
+            <div class="memory-grid">
+              ${shuffled.map((symbol, i) => `
+                <div class="memory-card" onclick="flipCard(this, '${symbol}', ${i})">
+                  <div class="memory-card-inner">
+                    <div class="memory-card-front">❓</div>
+                    <div class="memory-card-back">${symbol}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+          gameState.memoryState = { flipped: [], matched: 0, total: challenge.pairs.length / 2 };
+          break;
+
+        case 'code':
+          html = `
+            <div class="code-workspace">
+              <div class="code-target">
+                <div class="code-target-text">${challenge.target}</div>
+              </div>
+              <div class="code-blocks">
+                ${challenge.blocks.map(block => `
+                  <div class="code-block ${getBlockType(block)}" onclick="selectCodeBlock(this, '${block}')">${block}</div>
+                `).join('')}
+              </div>
+              <div class="code-solution" id="codeSolution"></div>
+              <button class="btn btn-primary" style="margin-top: 15px;" onclick="checkCodeSolution()">Verificar</button>
+            </div>
+          `;
+          gameState.codeState = { selected: [], solution: challenge.solution };
+          break;
+      }
+
+      content.innerHTML = html;
+    }
+
+    function getBlockType(block) {
+      if (block.includes('se') || block.includes('if')) return 'if-block';
+      if (block.includes('repetir') || block.includes('loop')) return 'loop-block';
+      if (block.includes('()') && !block.includes('se')) return 'action-block';
+      return 'var-block';
+    }
+
+    // Challenge Answer Functions
+    function answerPattern(selected, correct) {
+      const options = document.querySelectorAll('.pattern-option');
+      options.forEach(opt => {
+        if (parseInt(opt.textContent) === selected) {
+          if (selected === correct) {
+            opt.classList.add('correct');
+            challengeSuccess();
+          } else {
+            opt.classList.add('wrong');
+            challengeFail();
+          }
+        }
+      });
+    }
+
+    function answerSequence(selected, correct) {
+      const buttons = document.querySelectorAll('.sequence-btn');
+      buttons.forEach(btn => {
+        if (btn.textContent === selected) {
+          if (selected === correct) {
+            btn.style.background = 'linear-gradient(135deg, #00ff88, #00aa55)';
+            challengeSuccess();
+          } else {
+            btn.style.background = 'linear-gradient(135deg, #ff4444, #aa0000)';
+            challengeFail();
+          }
+        }
+      });
+    }
+
+    function answerDecision(selected, correct) {
+      const options = document.querySelectorAll('.decision-option');
+      options.forEach((opt, i) => {
+        if (i === selected) {
+          if (selected === correct) {
+            opt.classList.add('selected');
+            challengeSuccess();
+          } else {
+            opt.style.borderColor = '#ff4444';
+            opt.style.background = 'rgba(255,0,0,0.1)';
+            challengeFail();
+          }
+        }
+        if (i === correct) {
+          opt.classList.add('selected');
+        }
+      });
+    }
+
+    let memoryFlippedCards = [];
+    function flipCard(card, symbol, index) {
+      if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      if (memoryFlippedCards.length >= 2) return;
+
+      card.classList.add('flipped');
+      memoryFlippedCards.push({ card, symbol, index });
+
+      if (memoryFlippedCards.length === 2) {
+        setTimeout(() => {
+          const [first, second] = memoryFlippedCards;
+          if (first.symbol === second.symbol && first.index !== second.index) {
+            first.card.classList.add('matched');
+            second.card.classList.add('matched');
+            gameState.memoryState.matched++;
+
+            if (gameState.memoryState.matched >= gameState.memoryState.total) {
+              challengeSuccess();
+            }
+          } else {
+            first.card.classList.remove('flipped');
+            second.card.classList.remove('flipped');
+          }
+          memoryFlippedCards = [];
+        }, 800);
+      }
+    }
+
+    function selectCodeBlock(element, block) {
+      if (element.classList.contains('selected')) {
+        element.classList.remove('selected');
+        gameState.codeState.selected = gameState.codeState.selected.filter(b => b !== block);
+      } else {
+        element.classList.add('selected');
+        gameState.codeState.selected.push(block);
+      }
+
+      const solution = document.getElementById('codeSolution');
+      solution.innerHTML = gameState.codeState.selected.map(b =>
+        `<div class="code-block ${getBlockType(b)}">${b}</div>`
+      ).join('');
+    }
+
+    function checkCodeSolution() {
+      const selected = gameState.codeState.selected;
+      const solution = gameState.codeState.solution;
+
+      if (JSON.stringify(selected) === JSON.stringify(solution)) {
+        challengeSuccess();
+      } else {
+        challengeFail();
+      }
+    }
+
+    function challengeSuccess() {
+      gameState.challengesCompleted++;
+      gameState.combo++;
+      if (gameState.combo > gameState.maxCombo) {
+        gameState.maxCombo = gameState.combo;
+      }
+
+      // Calculate points
+      const basePoints = 100;
+      const comboBonus = gameState.combo * 10;
+      const points = basePoints + comboBonus;
+      gameState.currentScore += points;
+
+      // Give coins
+      const coinReward = 5 + Math.floor(gameState.combo * 2);
+      gameState.coins += coinReward;
+      gameState.totalCoins += coinReward;
+      document.getElementById('totalCoins').textContent = gameState.totalCoins.toLocaleString();
+
+      // Unlock ability
+      const abilityIndex = gameState.unlockedAbilities.findIndex(a => !a);
+      if (abilityIndex !== -1) {
+        gameState.unlockedAbilities[abilityIndex] = true;
+        updateAbilities();
+        showNotification('Habilidade Desbloqueada!', 'level-up');
+      }
+
+      // Damage random enemy
+      if (gameState.enemies.length > 0) {
+        const enemyIndex = Math.floor(Math.random() * gameState.enemies.length);
+        const damage = 20 + (gameState.combo * 5);
+        damageEnemy(enemyIndex, damage);
+      }
+
+      showNotification(`+${points} pontos! +${coinReward} moedas!`, 'xp');
+      updateUI();
+
+      // Chance to get a chest every 5 challenges
+      if (gameState.challengesCompleted % 5 === 0 && gameState.challengesCompleted > 0) {
+        setTimeout(() => {
+          if (gameState.gameActive) {
+            showChest();
+          }
+        }, 1000);
+        return;
+      }
+
+      // Next challenge after delay
+      setTimeout(() => {
+        if (gameState.gameActive && !gameState.pendingChest) {
+          generateChallenge();
+        }
+      }, 1500);
+    }
+
+    function challengeFail() {
+      gameState.challengesFailed++;
+      gameState.combo = 1;
+
+      // Take damage
+      gameState.health -= 10;
+      if (gameState.health <= 0) {
+        gameState.health = 0;
+        endGame(false);
+        return;
+      }
+
+      updateUI();
+
+      // Flash damage
+      document.getElementById('playerArea').classList.add('damage-flash');
+      setTimeout(() => {
+        document.getElementById('playerArea').classList.remove('damage-flash');
+      }, 200);
+
+      // Next challenge after delay
+      setTimeout(() => {
+        if (gameState.gameActive) {
+          generateChallenge();
+        }
+      }, 1500);
+    }
+
+    function damageEnemy(index, damage) {
+      if (!gameState.enemies[index]) return;
+
+      gameState.enemies[index].currentHealth -= damage;
+
+      const enemyEl = document.getElementById(`enemy-${index}`);
+      if (enemyEl) {
+        enemyEl.classList.add('damage-flash');
+        setTimeout(() => enemyEl.classList.remove('damage-flash'), 200);
+      }
+
+      if (gameState.enemies[index].currentHealth <= 0) {
+        gameState.enemies.splice(index, 1);
+        gameState.currentScore += 200;
+        showNotification('Inimigo Derrotado! +200', 'combo');
+
+        if (gameState.enemies.length === 0) {
+          endGame(true);
+          return;
+        }
+      }
+
+      updateEnemies();
+    }
+
+    function useAbility(index) {
+      if (!gameState.unlockedAbilities[index]) return;
+
+      const abilities = document.querySelectorAll('.ability-btn');
+      const ability = abilities[index];
+
+      if (ability.classList.contains('cooldown')) return;
+
+      // Use ability
+      gameState.unlockedAbilities[index] = false;
+      ability.classList.remove('ready');
+      ability.classList.add('locked');
+
+      // Effect based on ability
+      switch (index) {
+        case 0: // Attack
+          if (gameState.enemies.length > 0) {
+            damageEnemy(0, 50);
+          }
+          break;
+        case 1: // Shield
+          gameState.health = Math.min(100, gameState.health + 20);
+          break;
+        case 2: // Special
+          gameState.enemies.forEach((_, i) => damageEnemy(i, 30));
+          break;
+        case 3: // Ultimate
+          gameState.currentScore += 500;
+          gameState.health = 100;
+          break;
+      }
+
+      updateUI();
+    }
+
+    function updateAbilities() {
+      const abilities = document.querySelectorAll('.ability-btn');
+      abilities.forEach((btn, i) => {
+        if (gameState.unlockedAbilities[i]) {
+          btn.classList.remove('locked');
+          btn.classList.add('ready');
+        }
+      });
+    }
+
+    function updateUI() {
+      document.getElementById('currentScore').textContent = gameState.currentScore.toLocaleString();
+      document.getElementById('healthValue').textContent = gameState.health;
+      document.getElementById('playerHealth').style.width = gameState.health + '%';
+      document.getElementById('playerEnergy').style.width = gameState.energy + '%';
+
+      const comboEl = document.getElementById('comboDisplay');
+      comboEl.textContent = `COMBO x${gameState.combo}`;
+      comboEl.classList.add('active');
+      setTimeout(() => comboEl.classList.remove('active'), 300);
+
+      // Update player stats
+      document.getElementById('totalScore').textContent = (gameState.totalScore + gameState.currentScore).toLocaleString();
+      document.getElementById('playerLevel').textContent = `Nivel ${gameState.level}`;
+      document.getElementById('xpFill').style.width = (gameState.xp / gameState.xpToNextLevel * 100) + '%';
+    }
+
+    function endGame(victory) {
+      gameState.gameActive = false;
+
+      // Calculate XP
+      const baseXP = victory ? 100 : 50;
+      const challengeXP = gameState.challengesCompleted * 20;
+      const comboXP = gameState.maxCombo * 10;
+      const totalXP = baseXP + challengeXP + comboXP;
+
+      gameState.xp += totalXP;
+      gameState.totalScore += gameState.currentScore;
+
+      // Level up check
+      while (gameState.xp >= gameState.xpToNextLevel) {
+        gameState.xp -= gameState.xpToNextLevel;
+        gameState.level++;
+        gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
+        showNotification('NIVEL UP!', 'level-up');
+      }
+
+      // Update results screen
+      const title = document.getElementById('resultsTitle');
+      title.textContent = victory ? 'Vitoria!' : 'Derrota';
+      title.className = 'results-title ' + (victory ? 'victory' : 'defeat');
+
+      document.getElementById('finalScore').textContent = gameState.currentScore.toLocaleString();
+      document.getElementById('coinsEarned').textContent = gameState.coins.toLocaleString();
+      document.getElementById('challengesCompleted').textContent = gameState.challengesCompleted;
+      document.getElementById('maxCombo').textContent = 'x' + gameState.maxCombo;
+
+      const total = gameState.challengesCompleted + gameState.challengesFailed;
+      const accuracy = total > 0 ? Math.round((gameState.challengesCompleted / total) * 100) : 100;
+      document.getElementById('accuracy').textContent = accuracy + '%';
+
+      document.getElementById('xpGained').textContent = '+' + totalXP + ' XP';
+      document.getElementById('currentLevelLabel').textContent = 'Nivel ' + gameState.level;
+      document.getElementById('nextLevelLabel').textContent = 'Nivel ' + (gameState.level + 1);
+      document.getElementById('resultXpFill').style.width = (gameState.xp / gameState.xpToNextLevel * 100) + '%';
+
+      saveData();
+      showScreen('resultsScreen');
+    }
+
+    function showNotification(text, type = '') {
+      const notification = document.getElementById('notification');
+      notification.textContent = text;
+      notification.className = 'notification ' + type + ' show';
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+
+    function loadRankings() {
+      const list = document.getElementById('rankingsList');
+
+      // Add current player to rankings if they have score
+      let rankings = [...rankingsData];
+      if (gameState.totalScore > 0) {
+        rankings.push({
+          name: gameState.playerName,
+          class: gameState.selectedClass || 'hacker',
+          score: gameState.totalScore,
+          avatar: gameState.avatar,
+          isPlayer: true
+        });
+      }
+
+      rankings.sort((a, b) => b.score - a.score);
+
+      list.innerHTML = rankings.slice(0, 10).map((player, i) => {
+        const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        const classInfo = classData[player.class] || classData.hacker;
+
+        return `
+          <div class="ranking-item ${player.isPlayer ? 'current-player' : ''}">
+            <div class="ranking-position ${posClass}">#${i + 1}</div>
+            <div class="ranking-avatar" style="background: linear-gradient(135deg, ${classInfo.color}, ${classInfo.secondary});">${player.avatar}</div>
+            <div class="ranking-info">
+              <div class="ranking-name">${player.name}</div>
+              <div class="ranking-class">${classInfo.name}</div>
+            </div>
+            <div class="ranking-score">${player.score.toLocaleString()}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function loadCustomization() {
+      // Avatars
+      const avatarGrid = document.getElementById('avatarGrid');
+      avatarGrid.innerHTML = avatars.map((avatar, i) => `
+        <div class="customization-item ${i > 5 && gameState.level < 5 ? 'locked' : ''} ${avatar === gameState.avatar ? 'selected' : ''}"
+             onclick="selectAvatar('${avatar}', ${i})">${avatar}</div>
+      `).join('');
+
+      // Frames
+      const frameGrid = document.getElementById('frameGrid');
+      frameGrid.innerHTML = frames.map((color, i) => `
+        <div class="customization-item ${i > 2 && gameState.level < 3 ? 'locked' : ''} ${color === gameState.frameColor ? 'selected' : ''}"
+             style="border-color: ${color}; background: linear-gradient(135deg, ${color}22, ${color}11);"
+             onclick="selectFrame('${color}', ${i})"></div>
+      `).join('');
+
+      // Titles
+      const titleGrid = document.getElementById('titleGrid');
+      titleGrid.innerHTML = titles.map((title, i) => `
+        <div class="customization-item ${i > gameState.level ? 'locked' : ''} ${title === gameState.title ? 'selected' : ''}"
+             style="font-size: 0.7rem; text-align: center;"
+             onclick="selectTitle('${title}', ${i})">${title}</div>
+      `).join('');
+    }
+
+    function selectAvatar(avatar, index) {
+      if (index > 5 && gameState.level < 5) return;
+      gameState.avatar = avatar;
+      loadCustomization();
+      updatePreview();
+    }
+
+    function selectFrame(color, index) {
+      if (index > 2 && gameState.level < 3) return;
+      gameState.frameColor = color;
+      loadCustomization();
+      updatePreview();
+    }
+
+    function selectTitle(title, index) {
+      if (index > gameState.level) return;
+      gameState.title = title;
+      loadCustomization();
+      updatePreview();
+    }
+
+    function updatePreview() {
+      document.getElementById('previewAvatar').textContent = gameState.avatar;
+      document.getElementById('previewName').textContent = gameState.playerName;
+      document.getElementById('previewTitle').textContent = gameState.title;
+      document.querySelector('.preview-frame').style.borderColor = gameState.frameColor;
+    }
+
+    function saveData() {
+      const data = {
+        level: gameState.level,
+        xp: gameState.xp,
+        xpToNextLevel: gameState.xpToNextLevel,
+        totalScore: gameState.totalScore,
+        totalCoins: gameState.totalCoins,
+        chestsOpened: gameState.chestsOpened,
+        avatar: gameState.avatar,
+        title: gameState.title,
+        frameColor: gameState.frameColor,
+        selectedClass: gameState.selectedClass
+      };
+      localStorage.setItem('nexusArenaData', JSON.stringify(data));
+    }
+
+    function loadSavedData() {
+      const saved = localStorage.getItem('nexusArenaData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        Object.assign(gameState, data);
+        updatePreview();
+        loadRankings();
+        document.getElementById('totalCoins').textContent = gameState.totalCoins.toLocaleString();
+      }
+    }
+
+    // Coin Functions
+    function addCoins(amount) {
+      gameState.coins += amount;
+      gameState.totalCoins += amount;
+
+      // Animate coin
+      const coin = document.createElement('div');
+      coin.className = 'coin-float';
+      coin.textContent = '🪙';
+      coin.style.left = '50%';
+      coin.style.top = '50%';
+      document.body.appendChild(coin);
+
+      setTimeout(() => coin.remove(), 1000);
+
+      document.getElementById('totalCoins').textContent = gameState.totalCoins.toLocaleString();
+      showNotification(`+${amount} moedas!`, 'xp');
+    }
+
+    // Chest Functions
+    function showChest() {
+      gameState.pendingChest = true;
+      document.getElementById('chestModal').classList.add('active');
+      document.getElementById('chestContainer').style.display = 'flex';
+      document.getElementById('chestReward').style.display = 'none';
+      document.getElementById('chest').classList.remove('opening');
+    }
+
+    function openChest() {
+      const chest = document.getElementById('chest');
+      chest.classList.add('opening');
+
+      // Generate reward
+      const rewards = [
+        { icon: '🪙', amount: 50, text: 'Moedas!' },
+        { icon: '🪙', amount: 100, text: 'Moedas!' },
+        { icon: '🪙', amount: 150, text: 'Muitas Moedas!' },
+        { icon: '💎', amount: 200, text: 'Tesouro Raro!' },
+        { icon: '⭐', amount: 50, text: 'XP Bonus!', isXP: true },
+        { icon: '❤️', amount: 30, text: 'Vida Extra!', isHealth: true }
+      ];
+
+      // Weighted random - more coins common
+      const weights = [30, 25, 15, 10, 12, 8];
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let random = Math.random() * totalWeight;
+      let rewardIndex = 0;
+
+      for (let i = 0; i < weights.length; i++) {
+        random -= weights[i];
+        if (random <= 0) {
+          rewardIndex = i;
+          break;
+        }
+      }
+
+      const reward = rewards[rewardIndex];
+
+      setTimeout(() => {
+        document.getElementById('chestContainer').style.display = 'none';
+        document.getElementById('chestReward').style.display = 'block';
+        document.getElementById('rewardIcon').textContent = reward.icon;
+        document.getElementById('rewardAmount').textContent = '+' + reward.amount;
+        document.getElementById('rewardText').textContent = reward.text;
+
+        // Apply reward
+        if (reward.isXP) {
+          gameState.xp += reward.amount;
+          checkLevelUp();
+        } else if (reward.isHealth) {
+          gameState.health = Math.min(100, gameState.health + reward.amount);
+        } else {
+          gameState.coins += reward.amount;
+          gameState.totalCoins += reward.amount;
+          document.getElementById('totalCoins').textContent = gameState.totalCoins.toLocaleString();
+        }
+
+        gameState.chestsOpened++;
+      }, 500);
+    }
+
+    function closeChest() {
+      document.getElementById('chestModal').classList.remove('active');
+      gameState.pendingChest = false;
+      updateUI();
+      saveData();
+
+      // Continue game after closing chest
+      if (gameState.gameActive) {
+        setTimeout(() => {
+          generateChallenge();
+        }, 500);
+      }
+    }
+
+    function checkLevelUp() {
+      while (gameState.xp >= gameState.xpToNextLevel) {
+        gameState.xp -= gameState.xpToNextLevel;
+        gameState.level++;
+        gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
+        showNotification('NIVEL UP! Nivel ' + gameState.level, 'level-up');
+      }
+    }
+  </script>
+</body>
+</html>

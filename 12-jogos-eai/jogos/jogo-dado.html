@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Dado - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .dice {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .dice.rolling {
+            animation: roll 0.5s ease-in-out;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(0.8); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(0.8); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .dice .dot {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .dice .dot.filled {
+            background: #1a1a2e;
+        }
+
+        .question {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #81ecec;
+            margin: 20px 0;
+        }
+
+        .result-display {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        .roll-btn {
+            display: block;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .roll-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .option-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            animation: pulse 0.5s ease;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .dice {
+                width: 80px;
+                height: 80px;
+                padding: 10px;
+            }
+
+            .option-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Jogo do <span>Dado</span></h1>
+            <p>Jogue os dados e faça as contas!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="round">1/10</div>
+                <div class="stat-label">Rodada</div>
+            </div>
+        </div>
+
+        <div class="mode-select">
+            <button class="mode-btn active" onclick="setMode('sum')">Somar</button>
+            <button class="mode-btn" onclick="setMode('subtract')">Subtrair</button>
+            <button class="mode-btn" onclick="setMode('compare')">Comparar</button>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Jogador">🥉</span>
+            <span class="medal" id="medal2" title="Calculador">🥈</span>
+            <span class="medal" id="medal3" title="Expert">🥇</span>
+            <span class="medal" id="medal4" title="Mestre dos Dados">🏆</span>
+            <span class="medal" id="medal5" title="Campeão">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="dice-container" id="diceContainer">
+                <div class="dice" id="dice1"></div>
+                <div class="dice" id="dice2"></div>
+            </div>
+
+            <div class="question" id="question">Clique para jogar os dados!</div>
+
+            <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 Jogar Dados</button>
+
+            <div class="options-container" id="optionsContainer"></div>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Parabéns!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="startGame()">Jogar Novamente</button>
+                <button class="btn btn-secondary" onclick="changeMode()">Trocar Modo</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Configuração dos pontos do dado
+        const dicePatterns = {
+            1: [false, false, false, false, true, false, false, false, false],
+            2: [true, false, false, false, false, false, false, false, true],
+            3: [true, false, false, false, true, false, false, false, true],
+            4: [true, false, true, false, false, false, true, false, true],
+            5: [true, false, true, false, true, false, true, false, true],
+            6: [true, false, true, true, false, true, true, false, true]
+        };
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            currentRound: 0,
+            totalRounds: 10,
+            mode: 'sum',
+            dice1Value: 0,
+            dice2Value: 0,
+            correctAnswer: 0,
+            correctAnswers: 0
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'roll':
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.setValueAtTime(200 + Math.random() * 300, audioContext.currentTime);
+                            gain.gain.setValueAtTime(0.05, audioContext.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                            osc.start(audioContext.currentTime);
+                            osc.stop(audioContext.currentTime + 0.05);
+                        }, i * 80);
+                    }
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('jogoDadoProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.correctAnswers = data.correctAnswers || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                correctAnswers: gameState.correctAnswers
+            };
+            localStorage.setItem('jogoDadoProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('round').textContent = `${gameState.currentRound}/${gameState.totalRounds}`;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 10 },
+                { id: 'medal2', threshold: 30 },
+                { id: 'medal3', threshold: 60 },
+                { id: 'medal4', threshold: 100 },
+                { id: 'medal5', threshold: 200 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.correctAnswers >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Definir modo
+        function setMode(mode) {
+            gameState.mode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            startGame();
+        }
+
+        function changeMode() {
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+        }
+
+        // Renderizar dado
+        function renderDice(diceId, value) {
+            const dice = document.getElementById(diceId);
+            dice.innerHTML = '';
+
+            const pattern = dicePatterns[value];
+            pattern.forEach(filled => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${filled ? 'filled' : ''}`;
+                dice.appendChild(dot);
+            });
+        }
+
+        // Iniciar jogo
+        function startGame() {
+            gameState.currentRound = 0;
+            gameState.streak = 0;
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+            resetRound();
+        }
+
+        // Resetar rodada
+        function resetRound() {
+            document.getElementById('rollBtn').disabled = false;
+            document.getElementById('rollBtn').style.display = 'block';
+            document.getElementById('optionsContainer').innerHTML = '';
+            document.getElementById('question').textContent = 'Clique para jogar os dados!';
+            document.getElementById('feedback').classList.remove('show');
+
+            renderDice('dice1', 1);
+            renderDice('dice2', 1);
+        }
+
+        // Jogar dados
+        function rollDice() {
+            gameState.currentRound++;
+            updateDisplay();
+            updateProgress();
+
+            if (gameState.currentRound > gameState.totalRounds) {
+                showResult();
+                return;
+            }
+
+            document.getElementById('rollBtn').disabled = true;
+            playSound('roll');
+
+            const dice1 = document.getElementById('dice1');
+            const dice2 = document.getElementById('dice2');
+            dice1.classList.add('rolling');
+            dice2.classList.add('rolling');
+
+            // Animação de rolagem
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                const tempVal1 = Math.floor(Math.random() * 6) + 1;
+                const tempVal2 = Math.floor(Math.random() * 6) + 1;
+                renderDice('dice1', tempVal1);
+                renderDice('dice2', tempVal2);
+                rollCount++;
+
+                if (rollCount >= 10) {
+                    clearInterval(rollInterval);
+
+                    // Valores finais
+                    gameState.dice1Value = Math.floor(Math.random() * 6) + 1;
+                    gameState.dice2Value = Math.floor(Math.random() * 6) + 1;
+
+                    renderDice('dice1', gameState.dice1Value);
+                    renderDice('dice2', gameState.dice2Value);
+
+                    dice1.classList.remove('rolling');
+                    dice2.classList.remove('rolling');
+
+                    setupQuestion();
+                }
+            }, 100);
+        }
+
+        // Configurar pergunta
+        function setupQuestion() {
+            document.getElementById('rollBtn').style.display = 'none';
+
+            switch(gameState.mode) {
+                case 'sum':
+                    gameState.correctAnswer = gameState.dice1Value + gameState.dice2Value;
+                    document.getElementById('question').textContent = `${gameState.dice1Value} + ${gameState.dice2Value} = ?`;
+                    break;
+                case 'subtract':
+                    const bigger = Math.max(gameState.dice1Value, gameState.dice2Value);
+                    const smaller = Math.min(gameState.dice1Value, gameState.dice2Value);
+                    gameState.correctAnswer = bigger - smaller;
+                    document.getElementById('question').textContent = `${bigger} - ${smaller} = ?`;
+                    break;
+                case 'compare':
+                    if (gameState.dice1Value > gameState.dice2Value) {
+                        gameState.correctAnswer = 'maior';
+                    } else if (gameState.dice1Value < gameState.dice2Value) {
+                        gameState.correctAnswer = 'menor';
+                    } else {
+                        gameState.correctAnswer = 'igual';
+                    }
+                    document.getElementById('question').textContent = `O primeiro dado é maior, menor ou igual ao segundo?`;
+                    break;
+            }
+
+            renderOptions();
+        }
+
+        // Renderizar opções
+        function renderOptions() {
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            let options = [];
+
+            if (gameState.mode === 'compare') {
+                options = [
+                    { value: 'maior', label: '>' },
+                    { value: 'igual', label: '=' },
+                    { value: 'menor', label: '<' }
+                ];
+            } else {
+                options.push({ value: gameState.correctAnswer, label: gameState.correctAnswer });
+
+                while (options.length < 4) {
+                    let wrong;
+                    if (gameState.mode === 'sum') {
+                        wrong = Math.floor(Math.random() * 12) + 2;
+                    } else {
+                        wrong = Math.floor(Math.random() * 6);
+                    }
+
+                    if (!options.find(o => o.value === wrong)) {
+                        options.push({ value: wrong, label: wrong });
+                    }
+                }
+
+                // Embaralhar
+                options.sort(() => Math.random() - 0.5);
+            }
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.label;
+                btn.onclick = () => checkAnswer(opt.value, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        // Verificar resposta
+        function checkAnswer(answer, btnElement) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.onclick = null);
+
+            if (answer === gameState.correctAnswer) {
+                btnElement.classList.add('correct');
+                handleCorrect();
+            } else {
+                btnElement.classList.add('wrong');
+                buttons.forEach(btn => {
+                    const btnValue = gameState.mode === 'compare' ?
+                        (btn.textContent === '>' ? 'maior' : btn.textContent === '<' ? 'menor' : 'igual') :
+                        parseInt(btn.textContent);
+                    if (btnValue === gameState.correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                handleWrong();
+            }
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = 10;
+            const streakBonus = gameState.streak * 5;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.correctAnswers++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            showFeedback(`Correto! +${points} pontos`, 'success');
+
+            setTimeout(() => {
+                if (gameState.currentRound < gameState.totalRounds) {
+                    resetRound();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            updateDisplay();
+
+            const answerLabel = gameState.mode === 'compare' ?
+                (gameState.correctAnswer === 'maior' ? '>' : gameState.correctAnswer === 'menor' ? '<' : '=') :
+                gameState.correctAnswer;
+
+            showFeedback(`Ops! A resposta era ${answerLabel}`, 'error');
+
+            setTimeout(() => {
+                if (gameState.currentRound < gameState.totalRounds) {
+                    resetRound();
+                } else {
+                    showResult();
+                }
+            }, 2000);
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            const percent = ((gameState.currentRound - 1) / gameState.totalRounds) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 3) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('resultScreen').classList.add('show');
+
+            document.getElementById('resultIcon').textContent = gameState.streak >= 5 ? '🎉' : '💪';
+            document.getElementById('resultTitle').textContent = gameState.streak >= 5 ? 'Excelente!' : 'Bom trabalho!';
+            document.getElementById('resultScore').textContent = `Pontos: ${gameState.score} | Nível: ${gameState.level} | Melhor sequência: ${gameState.maxStreak}`;
+        }
+
+        // Inicializar
+        loadProgress();
+        resetRound();
+    </script>
+</body>
+</html>

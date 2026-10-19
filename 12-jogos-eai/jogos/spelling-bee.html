@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soletrando - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #D97706;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    .bee-icon {
+      font-size: 2.5rem;
+      animation: fly 2s ease-in-out infinite;
+    }
+    @keyframes fly {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-10px) rotate(5deg); }
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #D97706;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #92400E;
+    }
+    .word-display {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .category {
+      background: #F59E0B;
+      color: white;
+      display: inline-block;
+      padding: 0.25rem 1rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .hint {
+      color: #A5B4FC;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .word-image {
+      font-size: 4rem;
+      margin: 1rem 0;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+    .letter-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .letter-box {
+      width: 45px;
+      height: 55px;
+      background: white;
+      border: 3px solid #C7D2FE;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1E1B4B;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .letter-box.filled {
+      border-color: #A78BFA;
+      background: #EDE9FE;
+    }
+    .letter-box.correct {
+      border-color: #10B981;
+      background: #D1FAE5;
+      color: #065F46;
+      animation: pop 0.3s ease;
+    }
+    .letter-box.wrong {
+      border-color: #EF4444;
+      background: #FEE2E2;
+      color: #991B1B;
+      animation: shake 0.3s ease;
+    }
+    @keyframes pop {
+      50% { transform: scale(1.2); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .key {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(135deg, #F3F4F6, #E5E7EB);
+      color: #374151;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+    .key:hover {
+      background: linear-gradient(135deg, #FDE68A, #FCD34D);
+      transform: scale(1.1);
+    }
+    .key:active {
+      transform: scale(0.95);
+    }
+    .key.used {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .key.backspace {
+      grid-column: span 2;
+      aspect-ratio: auto;
+      padding: 0.5rem;
+      background: linear-gradient(135deg, #FCA5A5, #EF4444);
+      color: white;
+    }
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+    .btn-secondary {
+      background: #E5E7EB;
+      color: #374151;
+    }
+    .btn-hint {
+      background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+      color: white;
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.success {
+      display: block;
+      background: #D1FAE5;
+      color: #065F46;
+    }
+    .message.error {
+      display: block;
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    .difficulty {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .diff-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #E5E7EB;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .diff-btn.active {
+      border-color: #F59E0B;
+      background: #FEF3C7;
+      color: #D97706;
+    }
+    .lives {
+      display: flex;
+      justify-content: center;
+      gap: 0.25rem;
+      margin-bottom: 1rem;
+    }
+    .life {
+      font-size: 1.5rem;
+      transition: all 0.3s;
+    }
+    .life.lost {
+      opacity: 0.2;
+      transform: scale(0.8);
+    }
+    .audio-btn {
+      background: linear-gradient(135deg, #3B82F6, #2563EB);
+      color: white;
+      border: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin: 1rem auto;
+      display: block;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+    .audio-btn:hover {
+      transform: scale(1.1);
+    }
+    .audio-btn:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1><span class="bee-icon">🐝</span> Soletrando</h1>
+    <p class="subtitle">Ouça a palavra e escreva corretamente!</p>
+
+    <div class="difficulty">
+      <button class="diff-btn active" data-level="easy">Fácil (4-5 letras)</button>
+      <button class="diff-btn" data-level="medium">Médio (6-7 letras)</button>
+      <button class="diff-btn" data-level="hard">Difícil (8+ letras)</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-label">Sequência</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="level">1</div>
+        <div class="stat-label">Nível</div>
+      </div>
+    </div>
+
+    <div class="lives" id="lives">
+      <span class="life">❤️</span>
+      <span class="life">❤️</span>
+      <span class="life">❤️</span>
+    </div>
+
+    <div class="word-display">
+      <span class="category" id="category">Animais</span>
+      <div class="word-image" id="wordImage">🐕</div>
+      <p class="hint" id="hint">Melhor amigo do homem</p>
+      <button class="audio-btn" id="audioBtn" title="Ouvir palavra">🔊</button>
+      <div class="letter-boxes" id="letterBoxes"></div>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <div class="actions">
+      <button class="btn btn-hint" id="hintBtn">💡 Dica</button>
+      <button class="btn btn-primary" id="skipBtn">⏭️ Pular</button>
+      <button class="btn btn-secondary" onclick="resetGame()">🔄 Reiniciar</button>
+    </div>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('spelling-bee'));</script>
+  <script>
+    const words = {
+      easy: [
+        { word: 'gato', category: 'Animais', image: '🐱', hint: 'Mia e adora dormir' },
+        { word: 'casa', category: 'Lugares', image: '🏠', hint: 'Onde moramos' },
+        { word: 'bola', category: 'Brinquedos', image: '⚽', hint: 'Usada em esportes' },
+        { word: 'água', category: 'Natureza', image: '💧', hint: 'Bebemos ela' },
+        { word: 'mesa', category: 'Móveis', image: '🪑', hint: 'Comemos nela' },
+        { word: 'pato', category: 'Animais', image: '🦆', hint: 'Nada no lago' },
+        { word: 'bolo', category: 'Comidas', image: '🎂', hint: 'De aniversário' },
+        { word: 'fogo', category: 'Natureza', image: '🔥', hint: 'Quente e brilhante' },
+        { word: 'sapo', category: 'Animais', image: '🐸', hint: 'Pula e coaxa' },
+        { word: 'urso', category: 'Animais', image: '🐻', hint: 'Grande e peludo' },
+        { word: 'pera', category: 'Frutas', image: '🍐', hint: 'Fruta verde' },
+        { word: 'mapa', category: 'Escola', image: '🗺️', hint: 'Mostra lugares' },
+        { word: 'luva', category: 'Roupas', image: '🧤', hint: 'Esquenta as mãos' },
+        { word: 'nave', category: 'Veículos', image: '🚀', hint: 'Vai ao espaço' },
+        { word: 'flor', category: 'Natureza', image: '🌸', hint: 'Nasce no jardim' },
+      ],
+      medium: [
+        { word: 'cavalo', category: 'Animais', image: '🐴', hint: 'Animal de montaria' },
+        { word: 'escola', category: 'Lugares', image: '🏫', hint: 'Onde aprendemos' },
+        { word: 'girafa', category: 'Animais', image: '🦒', hint: 'Pescoço longo' },
+        { word: 'banana', category: 'Frutas', image: '🍌', hint: 'Fruta amarela' },
+        { word: 'árvore', category: 'Natureza', image: '🌳', hint: 'Tem folhas' },
+        { word: 'janeiro', category: 'Meses', image: '📅', hint: 'Primeiro mês' },
+        { word: 'estrela', category: 'Espaço', image: '⭐', hint: 'Brilha no céu' },
+        { word: 'morcego', category: 'Animais', image: '🦇', hint: 'Voa à noite' },
+        { word: 'violão', category: 'Música', image: '🎸', hint: 'Instrumento musical' },
+        { word: 'nuvem', category: 'Natureza', image: '☁️', hint: 'Flutua no céu' },
+        { word: 'baleia', category: 'Animais', image: '🐋', hint: 'Maior mamífero' },
+        { word: 'foguete', category: 'Espaço', image: '🚀', hint: 'Vai para o espaço' },
+        { word: 'morango', category: 'Frutas', image: '🍓', hint: 'Fruta vermelha' },
+        { word: 'coração', category: 'Corpo', image: '❤️', hint: 'Bombeia sangue' },
+        { word: 'presente', category: 'Festa', image: '🎁', hint: 'Damos no aniversário' },
+      ],
+      hard: [
+        { word: 'borboleta', category: 'Animais', image: '🦋', hint: 'Inseto colorido' },
+        { word: 'elefante', category: 'Animais', image: '🐘', hint: 'Tem tromba' },
+        { word: 'hipopótamo', category: 'Animais', image: '🦛', hint: 'Vive na água' },
+        { word: 'dinossauro', category: 'Animais', image: '🦕', hint: 'Animal extinto' },
+        { word: 'chocolate', category: 'Comidas', image: '🍫', hint: 'Doce marrom' },
+        { word: 'computador', category: 'Tecnologia', image: '💻', hint: 'Usamos para trabalhar' },
+        { word: 'helicóptero', category: 'Veículos', image: '🚁', hint: 'Voa com hélices' },
+        { word: 'biblioteca', category: 'Lugares', image: '📚', hint: 'Muitos livros' },
+        { word: 'tartaruga', category: 'Animais', image: '🐢', hint: 'Anda devagar' },
+        { word: 'refrigerante', category: 'Bebidas', image: '🥤', hint: 'Bebida com gás' },
+        { word: 'crocodilo', category: 'Animais', image: '🐊', hint: 'Réptil perigoso' },
+        { word: 'astronauta', category: 'Profissões', image: '👨‍🚀', hint: 'Viaja ao espaço' },
+        { word: 'temperatura', category: 'Ciência', image: '🌡️', hint: 'Mede calor' },
+        { word: 'paralelepípedo', category: 'Matemática', image: '📦', hint: 'Forma geométrica' },
+        { word: 'rinoceronte', category: 'Animais', image: '🦏', hint: 'Tem chifre' },
+      ]
+    };
+
+    let currentLevel = 'easy';
+    let currentWord = null;
+    let userInput = [];
+    let score = 0;
+    let streak = 0;
+    let lives = 3;
+    let level = 1;
+    let usedWords = [];
+    let usedKeys = [];
+    let hintsUsed = 0;
+
+    const synth = window.speechSynthesis;
+
+    function initKeyboard() {
+      const keyboard = document.getElementById('keyboard');
+      const letters = 'qwertyuiopasdfghjklçzxcvbnm'.split('');
+      keyboard.innerHTML = '';
+
+      letters.forEach(letter => {
+        const key = document.createElement('button');
+        key.className = 'key';
+        key.textContent = letter;
+        key.onclick = () => handleKeyPress(letter);
+        keyboard.appendChild(key);
+      });
+
+      const backspace = document.createElement('button');
+      backspace.className = 'key backspace';
+      backspace.textContent = '⌫ Apagar';
+      backspace.onclick = () => handleBackspace();
+      keyboard.appendChild(backspace);
+    }
+
+    function speak(text) {
+      if (synth.speaking) synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.8;
+      synth.speak(utterance);
+    }
+
+    function selectWord() {
+      const wordList = words[currentLevel];
+      const available = wordList.filter(w => !usedWords.includes(w.word));
+
+      if (available.length === 0) {
+        usedWords = [];
+        return selectWord();
+      }
+
+      const word = available[Math.floor(Math.random() * available.length)];
+      usedWords.push(word.word);
+      return word;
+    }
+
+    function startRound() {
+      currentWord = selectWord();
+      userInput = [];
+      usedKeys = [];
+      hintsUsed = 0;
+
+      document.getElementById('category').textContent = currentWord.category;
+      document.getElementById('wordImage').textContent = currentWord.image;
+      document.getElementById('hint').textContent = currentWord.hint;
+      document.getElementById('message').className = 'message';
+
+      renderLetterBoxes();
+      updateKeyboard();
+
+      setTimeout(() => speak(currentWord.word), 500);
+    }
+
+    function renderLetterBoxes() {
+      const container = document.getElementById('letterBoxes');
+      container.innerHTML = '';
+
+      for (let i = 0; i < currentWord.word.length; i++) {
+        const box = document.createElement('div');
+        box.className = 'letter-box';
+        if (userInput[i]) {
+          box.textContent = userInput[i];
+          box.classList.add('filled');
+        }
+        container.appendChild(box);
+      }
+    }
+
+    function updateKeyboard() {
+      document.querySelectorAll('.key').forEach(key => {
+        if (key.classList.contains('backspace')) return;
+        key.classList.toggle('used', usedKeys.includes(key.textContent));
+      });
+    }
+
+    function handleKeyPress(letter) {
+      if (userInput.length >= currentWord.word.length) return;
+      if (usedKeys.includes(letter)) return;
+
+      userInput.push(letter);
+      usedKeys.push(letter);
+      renderLetterBoxes();
+      updateKeyboard();
+
+      if (userInput.length === currentWord.word.length) {
+        checkAnswer();
+      }
+    }
+
+    function handleBackspace() {
+      if (userInput.length === 0) return;
+      const removed = userInput.pop();
+      usedKeys = usedKeys.filter(k => k !== removed);
+      renderLetterBoxes();
+      updateKeyboard();
+    }
+
+    function checkAnswer() {
+      const answer = userInput.join('');
+      const correct = answer.toLowerCase() === currentWord.word.toLowerCase();
+
+      const boxes = document.querySelectorAll('.letter-box');
+      boxes.forEach((box, i) => {
+        setTimeout(() => {
+          if (currentWord.word[i].toLowerCase() === userInput[i]?.toLowerCase()) {
+            box.classList.add('correct');
+          } else {
+            box.classList.add('wrong');
+          }
+        }, i * 100);
+      });
+
+      setTimeout(() => {
+        if (correct) {
+          handleCorrect();
+        } else {
+          handleWrong();
+        }
+      }, currentWord.word.length * 100 + 500);
+    }
+
+    function handleCorrect() {
+      streak++;
+      const basePoints = currentLevel === 'easy' ? 10 : currentLevel === 'medium' ? 20 : 30;
+      const streakBonus = streak >= 3 ? streak * 5 : 0;
+      const hintPenalty = hintsUsed * 5;
+      const points = Math.max(5, basePoints + streakBonus - hintPenalty);
+      score += points;
+
+      document.getElementById('message').className = 'message success';
+      document.getElementById('message').textContent = `🎉 Correto! +${points} pontos`;
+
+      if (streak > 0 && streak % 5 === 0) {
+        level++;
+        document.getElementById('level').textContent = level;
+      }
+
+      updateStats();
+
+      // Rewards
+      giveReward('coins', points);
+      if (streak >= 5) {
+        setTimeout(() => giveReward('diamonds', 1), 1000);
+      }
+
+      setTimeout(startRound, 2000);
+    }
+
+    function handleWrong() {
+      streak = 0;
+      lives--;
+      updateLives();
+
+      document.getElementById('message').className = 'message error';
+      document.getElementById('message').textContent = `❌ Era: ${currentWord.word.toUpperCase()}`;
+
+      updateStats();
+
+      if (lives <= 0) {
+        setTimeout(gameOver, 2000);
+      } else {
+        setTimeout(startRound, 2500);
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('streak').textContent = streak;
+    }
+
+    function updateLives() {
+      const livesEl = document.getElementById('lives');
+      const hearts = livesEl.querySelectorAll('.life');
+      hearts.forEach((heart, i) => {
+        heart.classList.toggle('lost', i >= lives);
+      });
+    }
+
+    function gameOver() {
+      document.getElementById('message').className = 'message error';
+      document.getElementById('message').textContent = `Fim de jogo! Pontuação: ${score}`;
+
+      // Final rewards
+      if (score >= 100) {
+        setTimeout(() => giveReward('diamonds', 1), 500);
+      }
+      if (score >= 200) {
+        setTimeout(() => giveReward('gold', 1), 1500);
+      }
+    }
+
+    function resetGame() {
+      score = 0;
+      streak = 0;
+      lives = 3;
+      level = 1;
+      usedWords = [];
+
+      updateStats();
+      updateLives();
+      document.getElementById('level').textContent = '1';
+      document.getElementById('message').className = 'message';
+
+      startRound();
+    }
+
+    // Event listeners
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentLevel = btn.dataset.level;
+        resetGame();
+      });
+    });
+
+    document.getElementById('audioBtn').onclick = () => speak(currentWord.word);
+
+    document.getElementById('hintBtn').onclick = () => {
+      if (hintsUsed < 2 && userInput.length < currentWord.word.length) {
+        hintsUsed++;
+        // Reveal next letter
+        const nextIndex = userInput.length;
+        userInput.push(currentWord.word[nextIndex]);
+        renderLetterBoxes();
+      }
+    };
+
+    document.getElementById('skipBtn').onclick = () => {
+      lives--;
+      updateLives();
+      if (lives <= 0) {
+        gameOver();
+      } else {
+        startRound();
+      }
+    };
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Backspace') {
+        handleBackspace();
+      } else if (/^[a-zA-ZçÇ]$/.test(e.key)) {
+        handleKeyPress(e.key.toLowerCase());
+      }
+    });
+
+    // Initialize
+    initKeyboard();
+    startRound();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

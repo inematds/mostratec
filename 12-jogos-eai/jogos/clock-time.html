@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Que Horas São? - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 50%, #93C5FD 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #3B82F6;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #3B82F6;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #1D4ED8;
+    }
+    .mode-select {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #DBEAFE;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+    .mode-btn.active {
+      border-color: #3B82F6;
+      background: #DBEAFE;
+      color: #1D4ED8;
+    }
+    .clock-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .clock {
+      width: 250px;
+      height: 250px;
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3), inset 0 0 30px rgba(255,255,255,0.1);
+    }
+    .clock-face {
+      position: absolute;
+      inset: 15px;
+      background: linear-gradient(135deg, #F8FAFC, #E2E8F0);
+      border-radius: 50%;
+    }
+    .clock-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 15px;
+      height: 15px;
+      background: #1E1B4B;
+      border-radius: 50%;
+      z-index: 10;
+    }
+    .number {
+      position: absolute;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #1E1B4B;
+      text-align: center;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+    }
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+    }
+    .hand-hour {
+      width: 8px;
+      height: 60px;
+      background: #1E1B4B;
+      margin-left: -4px;
+    }
+    .hand-minute {
+      width: 5px;
+      height: 85px;
+      background: #3B82F6;
+      margin-left: -2.5px;
+    }
+    .tick {
+      position: absolute;
+      background: #94A3B8;
+    }
+    .tick-major {
+      width: 3px;
+      height: 15px;
+      background: #1E1B4B;
+    }
+    .tick-minor {
+      width: 2px;
+      height: 8px;
+    }
+    .question {
+      text-align: center;
+      font-size: 1.3rem;
+      color: #1E1B4B;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .answer-btn {
+      padding: 1rem;
+      background: linear-gradient(135deg, #F1F5F9, #E2E8F0);
+      border: 3px solid transparent;
+      border-radius: 1rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #1E1B4B;
+    }
+    .answer-btn:hover {
+      background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+      transform: scale(1.02);
+    }
+    .answer-btn.correct {
+      background: #D1FAE5;
+      border-color: #10B981;
+      animation: pop 0.3s ease;
+    }
+    .answer-btn.wrong {
+      background: #FEE2E2;
+      border-color: #EF4444;
+      animation: shake 0.3s ease;
+    }
+    @keyframes pop {
+      50% { transform: scale(1.1); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+    }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+    .btn {
+      display: block;
+      margin: 0 auto;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #3B82F6, #2563EB);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .streak-fire {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      display: none;
+    }
+    .streak-fire.show {
+      display: block;
+      animation: bounce 0.5s ease infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    .digital-display {
+      background: #1E1B4B;
+      color: #60A5FA;
+      font-family: 'Courier New', monospace;
+      font-size: 3rem;
+      text-align: center;
+      padding: 1rem 2rem;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      letter-spacing: 5px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .time-input {
+      display: none;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .time-input.show {
+      display: flex;
+    }
+    .time-input input {
+      width: 70px;
+      height: 60px;
+      font-size: 1.8rem;
+      text-align: center;
+      border: 3px solid #DBEAFE;
+      border-radius: 1rem;
+      font-weight: bold;
+    }
+    .time-input input:focus {
+      outline: none;
+      border-color: #3B82F6;
+    }
+    .time-input span {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1E1B4B;
+    }
+  </style>
+</head>
+<body>
+  <div class="streak-fire" id="streakFire">🔥 <span id="streakNum">0</span></div>
+
+  <div class="game-container">
+    <h1>🕐 Que Horas São?</h1>
+    <p class="subtitle">Aprenda a ler as horas!</p>
+
+    <div class="mode-select">
+      <button class="mode-btn active" data-mode="read">Ler Horas</button>
+      <button class="mode-btn" data-mode="set">Ajustar Relógio</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="level">1</div>
+        <div class="stat-label">Nível</div>
+      </div>
+    </div>
+
+    <div class="clock-container">
+      <div class="clock">
+        <div class="clock-face" id="clockFace">
+          <div class="clock-center"></div>
+          <div class="hand hand-hour" id="hourHand"></div>
+          <div class="hand hand-minute" id="minuteHand"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="question" id="question">Que horas são?</p>
+
+    <!-- Read mode: multiple choice -->
+    <div class="answers" id="answers"></div>
+
+    <!-- Set mode: digital display and input -->
+    <div class="digital-display" id="digitalDisplay" style="display: none;">--:--</div>
+    <div class="time-input" id="timeInput">
+      <input type="number" id="hourInput" min="1" max="12" placeholder="HH">
+      <span>:</span>
+      <input type="number" id="minuteInput" min="0" max="59" placeholder="MM">
+      <button class="btn" onclick="checkTimeInput()">✓</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <button class="btn" onclick="resetGame()">🔄 Novo Jogo</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('clock-time'));</script>
+  <script>
+    let gameMode = 'read';
+    let score = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let level = 1;
+    let currentHour = 12;
+    let currentMinute = 0;
+    let correctAnswer = '';
+
+    function initClock() {
+      const face = document.getElementById('clockFace');
+
+      // Add numbers
+      for (let i = 1; i <= 12; i++) {
+        const angle = (i * 30 - 90) * (Math.PI / 180);
+        const radius = 85;
+        const x = 110 + radius * Math.cos(angle) - 15;
+        const y = 110 + radius * Math.sin(angle) - 15;
+
+        const num = document.createElement('div');
+        num.className = 'number';
+        num.style.left = x + 'px';
+        num.style.top = y + 'px';
+        num.textContent = i;
+        face.appendChild(num);
+      }
+
+      // Add ticks
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * 6 - 90) * (Math.PI / 180);
+        const isMajor = i % 5 === 0;
+        const outerRadius = 100;
+        const innerRadius = isMajor ? 85 : 92;
+
+        const tick = document.createElement('div');
+        tick.className = `tick ${isMajor ? 'tick-major' : 'tick-minor'}`;
+
+        const x = 110 + outerRadius * Math.cos(angle);
+        const y = 110 + outerRadius * Math.sin(angle);
+
+        tick.style.left = (x - 1) + 'px';
+        tick.style.top = (y - (isMajor ? 7.5 : 4)) + 'px';
+        tick.style.transform = `rotate(${i * 6}deg)`;
+        tick.style.transformOrigin = 'center top';
+
+        face.appendChild(tick);
+      }
+    }
+
+    function setClockHands(hour, minute) {
+      const hourAngle = (hour % 12) * 30 + minute * 0.5;
+      const minuteAngle = minute * 6;
+
+      document.getElementById('hourHand').style.transform = `rotate(${hourAngle}deg)`;
+      document.getElementById('minuteHand').style.transform = `rotate(${minuteAngle}deg)`;
+    }
+
+    function generateTime() {
+      // Level determines difficulty
+      if (level <= 3) {
+        // Easy: only full hours
+        currentHour = Math.floor(Math.random() * 12) + 1;
+        currentMinute = 0;
+      } else if (level <= 6) {
+        // Medium: half hours
+        currentHour = Math.floor(Math.random() * 12) + 1;
+        currentMinute = Math.random() > 0.5 ? 0 : 30;
+      } else if (level <= 9) {
+        // Hard: quarter hours
+        currentHour = Math.floor(Math.random() * 12) + 1;
+        currentMinute = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
+      } else {
+        // Expert: 5-minute intervals
+        currentHour = Math.floor(Math.random() * 12) + 1;
+        currentMinute = Math.floor(Math.random() * 12) * 5;
+      }
+
+      setClockHands(currentHour, currentMinute);
+      correctAnswer = formatTime(currentHour, currentMinute);
+    }
+
+    function formatTime(h, m) {
+      return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function formatTimeWords(h, m) {
+      if (m === 0) return `${h} horas`;
+      if (m === 15) return `${h} e quinze`;
+      if (m === 30) return `${h} e meia`;
+      if (m === 45) return `${h} e quarenta e cinco`;
+      return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function generateOptions() {
+      const options = [correctAnswer];
+
+      while (options.length < 4) {
+        let fakeHour = Math.floor(Math.random() * 12) + 1;
+        let fakeMinute;
+
+        if (level <= 3) {
+          fakeMinute = 0;
+        } else if (level <= 6) {
+          fakeMinute = Math.random() > 0.5 ? 0 : 30;
+        } else if (level <= 9) {
+          fakeMinute = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
+        } else {
+          fakeMinute = Math.floor(Math.random() * 12) * 5;
+        }
+
+        const fakeAnswer = formatTime(fakeHour, fakeMinute);
+        if (!options.includes(fakeAnswer)) {
+          options.push(fakeAnswer);
+        }
+      }
+
+      // Shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      return options;
+    }
+
+    function startRound() {
+      generateTime();
+
+      if (gameMode === 'read') {
+        document.getElementById('answers').style.display = 'grid';
+        document.getElementById('digitalDisplay').style.display = 'none';
+        document.getElementById('timeInput').classList.remove('show');
+        document.getElementById('question').textContent = 'Que horas são?';
+
+        const options = generateOptions();
+        const container = document.getElementById('answers');
+        container.innerHTML = '';
+
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'answer-btn';
+          btn.textContent = opt;
+          btn.onclick = () => checkAnswer(opt, btn);
+          container.appendChild(btn);
+        });
+      } else {
+        document.getElementById('answers').style.display = 'none';
+        document.getElementById('digitalDisplay').style.display = 'block';
+        document.getElementById('digitalDisplay').textContent = correctAnswer;
+        document.getElementById('timeInput').classList.add('show');
+        document.getElementById('question').textContent = 'Ajuste o relógio para:';
+        document.getElementById('hourInput').value = '';
+        document.getElementById('minuteInput').value = '';
+
+        // Randomize clock hands
+        setClockHands(Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) * 5);
+      }
+
+      document.getElementById('message').className = 'message';
+    }
+
+    function checkAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        handleCorrect();
+      } else {
+        btn.classList.add('wrong');
+        // Show correct answer
+        buttons.forEach(b => {
+          if (b.textContent === correctAnswer) b.classList.add('correct');
+        });
+        handleWrong();
+      }
+    }
+
+    function checkTimeInput() {
+      const hour = parseInt(document.getElementById('hourInput').value);
+      const minute = parseInt(document.getElementById('minuteInput').value) || 0;
+
+      if (isNaN(hour) || hour < 1 || hour > 12) {
+        showMessage('Digite uma hora válida (1-12)', 'error');
+        return;
+      }
+
+      setClockHands(hour, minute);
+
+      setTimeout(() => {
+        if (hour === currentHour && minute === currentMinute) {
+          handleCorrect();
+        } else {
+          handleWrong();
+          setTimeout(() => setClockHands(currentHour, currentMinute), 500);
+        }
+      }, 500);
+    }
+
+    function handleCorrect() {
+      streak++;
+      correctCount++;
+      const points = 10 + (streak >= 3 ? streak * 2 : 0);
+      score += points;
+
+      if (correctCount % 5 === 0) level++;
+
+      updateStats();
+      updateStreak();
+      showMessage(`🎉 Correto! +${points} pontos`, 'success');
+
+      giveReward('coins', points);
+      if (streak >= 5 && streak % 5 === 0) {
+        setTimeout(() => giveReward('diamonds', 1), 1000);
+      }
+
+      setTimeout(startRound, 1500);
+    }
+
+    function handleWrong() {
+      streak = 0;
+      updateStreak();
+      showMessage(`❌ Era ${correctAnswer} (${formatTimeWords(currentHour, currentMinute)})`, 'error');
+
+      setTimeout(startRound, 2500);
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+      document.getElementById('level').textContent = level;
+    }
+
+    function updateStreak() {
+      const fire = document.getElementById('streakFire');
+      if (streak >= 3) {
+        fire.classList.add('show');
+        document.getElementById('streakNum').textContent = streak;
+      } else {
+        fire.classList.remove('show');
+      }
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+    }
+
+    function resetGame() {
+      score = 0;
+      correctCount = 0;
+      streak = 0;
+      level = 1;
+
+      updateStats();
+      updateStreak();
+      document.getElementById('message').className = 'message';
+
+      startRound();
+    }
+
+    // Mode selection
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gameMode = btn.dataset.mode;
+        resetGame();
+      });
+    });
+
+    // Initialize
+    initClock();
+    startRound();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

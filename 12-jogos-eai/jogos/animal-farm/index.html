@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Animal Farm Builder - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #7cb342; touch-action: none; }
+    #gameCanvas { display: block; width: 100%; height: 100%; }
+    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, #8bc34a 0%, #689f38 50%, #558b2f 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    #loading.hidden { display: none; }
+    .animal-bounce { font-size: 80px; animation: bounce 0.7s ease-in-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+    #loading h1 { color: #fff; font-family: 'Arial Black', sans-serif; font-size: 24px; margin-top: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    #loading p { color: #c5e1a5; font-family: Arial, sans-serif; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="animal-bounce">🐄</div>
+    <h1>ANIMAL FARM BUILDER</h1>
+    <p>Preparando a fazenda...</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => document.getElementById('loading').classList.add('hidden'), 1500);
+    });
+  </script>
+</body>
+</html>

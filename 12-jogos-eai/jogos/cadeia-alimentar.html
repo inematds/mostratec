@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadeia Alimentar - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        /* Stats */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+        }
+
+        /* Level Selection */
+        .level-selection {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .level-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .level-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .level-btn small {
+            display: block;
+            font-weight: normal;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .level-btn.forest {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .level-btn.ocean {
+            background: linear-gradient(135deg, #2196f3, #0d47a1);
+        }
+
+        .level-btn.savanna {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        /* Progress */
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        /* Ecosystem */
+        .ecosystem {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ecosystem-name {
+            font-size: 1.2rem;
+            color: #4caf50;
+            margin-bottom: 15px;
+        }
+
+        .ecosystem-icon {
+            font-size: 3rem;
+        }
+
+        /* Chain Display */
+        .chain-display {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .chain-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .chain-slots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chain-slot {
+            width: 80px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .chain-slot.filled {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(139, 195, 74, 0.3));
+            border: 2px solid #4caf50;
+        }
+
+        .chain-slot.highlight {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.2);
+            animation: pulse 1s infinite;
+        }
+
+        .chain-slot .slot-icon {
+            font-size: 2.5rem;
+        }
+
+        .chain-slot .slot-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+
+        .chain-arrow {
+            font-size: 1.5rem;
+            color: #4caf50;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Options */
+        .options-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .options-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .option {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .option:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+        }
+
+        .option.selected {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .option.wrong {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.3);
+            opacity: 0.5;
+        }
+
+        .option.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .option-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .option-name {
+            font-size: 0.85rem;
+        }
+
+        /* Info */
+        .info-box {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-box.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .info-box h4 {
+            color: #4caf50;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .info-box p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Feedback */
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Medals */
+        .medals-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .medal.earned {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chain-slot {
+                width: 60px;
+                height: 80px;
+            }
+
+            .chain-slot .slot-icon {
+                font-size: 1.8rem;
+            }
+
+            .option {
+                min-width: 80px;
+                padding: 10px;
+            }
+
+            .option-icon {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦁 Cadeia Alimentar</h1>
+            <p>Monte a cadeia alimentar corretamente!</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="chains">0</div>
+                <div class="stat-label">Cadeias</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="level-selection" id="levelSelection">
+            <h2 style="margin-bottom: 30px;">Escolha o Ecossistema</h2>
+
+            <button class="level-btn forest" onclick="startGame('forest')">
+                🌳 Floresta
+                <small>Árvores, insetos e mamíferos</small>
+            </button>
+
+            <button class="level-btn ocean" onclick="startGame('ocean')">
+                🌊 Oceano
+                <small>Algas, peixes e tubarões</small>
+            </button>
+
+            <button class="level-btn savanna" onclick="startGame('savanna')">
+                🦁 Savana
+                <small>Capim, herbívoros e predadores</small>
+            </button>
+
+            <div class="medals-container" style="margin-top: 30px;">
+                <span class="medal" id="medal1">🥉</span>
+                <span class="medal" id="medal2">🥈</span>
+                <span class="medal" id="medal3">🥇</span>
+                <span class="medal" id="medal4">🏆</span>
+                <span class="medal" id="medal5">👑</span>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Ecosystem -->
+            <div class="ecosystem">
+                <div class="ecosystem-name" id="ecosystemName">🌳 Floresta</div>
+            </div>
+
+            <!-- Chain Display -->
+            <div class="chain-display">
+                <div class="chain-title">Monte a cadeia alimentar na ordem correta:</div>
+                <div class="chain-slots" id="chainSlots">
+                    <!-- Slots will be generated -->
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="options-container">
+                <div class="options-title">Clique nos seres vivos na ordem correta:</div>
+                <div class="options" id="optionsContainer">
+                    <!-- Options will be generated -->
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="info-box" id="infoBox">
+                <h4>💡 Dica</h4>
+                <p id="infoText"></p>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback" id="feedback">
+                <span id="feedbackText"></span>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu
+                </button>
+                <button class="btn btn-secondary" onclick="clearChain()">
+                    🔄 Limpar
+                </button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextChain()" disabled>
+                    Próxima →
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="results-title">🎉 Parabéns!</div>
+            <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">Você completou todas as cadeias!</p>
+
+            <div class="results-stats">
+                <div class="result-item">
+                    <div class="result-value" id="finalScore">0</div>
+                    <div class="result-label">Pontos</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalChains">0</div>
+                    <div class="result-label">Cadeias</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalLevel">1</div>
+                    <div class="result-label">Nível</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="finalAccuracy">0%</div>
+                    <div class="result-label">Precisão</div>
+                </div>
+            </div>
+
+            <div class="medals-container">
+                <span class="medal" id="resultMedal1">🥉</span>
+                <span class="medal" id="resultMedal2">🥈</span>
+                <span class="medal" id="resultMedal3">🥇</span>
+                <span class="medal" id="resultMedal4">🏆</span>
+                <span class="medal" id="resultMedal5">👑</span>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="startGame(currentEcosystem)">
+                    🔄 Jogar Novamente
+                </button>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chain database
+        const chains = {
+            forest: [
+                {
+                    name: "Cadeia da Floresta 1",
+                    chain: [
+                        { icon: "🌿", name: "Planta", type: "produtor" },
+                        { icon: "🐛", name: "Lagarta", type: "consumidor1" },
+                        { icon: "🐦", name: "Pássaro", type: "consumidor2" },
+                        { icon: "🦅", name: "Águia", type: "consumidor3" }
+                    ],
+                    info: "As plantas produzem alimento pela fotossíntese. A lagarta come a planta, o pássaro come a lagarta, e a águia come o pássaro!"
+                },
+                {
+                    name: "Cadeia da Floresta 2",
+                    chain: [
+                        { icon: "🍃", name: "Folhas", type: "produtor" },
+                        { icon: "🐜", name: "Formiga", type: "consumidor1" },
+                        { icon: "🐸", name: "Sapo", type: "consumidor2" },
+                        { icon: "🐍", name: "Cobra", type: "consumidor3" }
+                    ],
+                    info: "As folhas caídas alimentam as formigas, que são comidas pelos sapos, que são presas das cobras!"
+                },
+                {
+                    name: "Cadeia da Floresta 3",
+                    chain: [
+                        { icon: "🌰", name: "Castanha", type: "produtor" },
+                        { icon: "🐿️", name: "Esquilo", type: "consumidor1" },
+                        { icon: "🦉", name: "Coruja", type: "consumidor2" }
+                    ],
+                    info: "A castanheira produz castanhas que alimentam os esquilos. A coruja caça os esquilos à noite!"
+                }
+            ],
+            ocean: [
+                {
+                    name: "Cadeia do Oceano 1",
+                    chain: [
+                        { icon: "🌊", name: "Alga", type: "produtor" },
+                        { icon: "🦐", name: "Camarão", type: "consumidor1" },
+                        { icon: "🐟", name: "Peixe", type: "consumidor2" },
+                        { icon: "🦈", name: "Tubarão", type: "consumidor3" }
+                    ],
+                    info: "As algas fazem fotossíntese no mar. Camarões comem algas, peixes comem camarões, e tubarões comem peixes!"
+                },
+                {
+                    name: "Cadeia do Oceano 2",
+                    chain: [
+                        { icon: "🦠", name: "Plâncton", type: "produtor" },
+                        { icon: "🐚", name: "Molusco", type: "consumidor1" },
+                        { icon: "🐙", name: "Polvo", type: "consumidor2" },
+                        { icon: "🐋", name: "Baleia", type: "consumidor3" }
+                    ],
+                    info: "O plâncton é a base da cadeia oceânica. Moluscos filtram plâncton, polvos caçam moluscos!"
+                },
+                {
+                    name: "Cadeia do Oceano 3",
+                    chain: [
+                        { icon: "🪸", name: "Coral", type: "produtor" },
+                        { icon: "🐠", name: "Peixe-palhaço", type: "consumidor1" },
+                        { icon: "🦑", name: "Lula", type: "consumidor2" }
+                    ],
+                    info: "Os corais abrigam pequenos peixes que são caçados por predadores maiores como a lula!"
+                }
+            ],
+            savanna: [
+                {
+                    name: "Cadeia da Savana 1",
+                    chain: [
+                        { icon: "🌾", name: "Capim", type: "produtor" },
+                        { icon: "🦓", name: "Zebra", type: "consumidor1" },
+                        { icon: "🦁", name: "Leão", type: "consumidor2" }
+                    ],
+                    info: "O capim cresce na savana e alimenta as zebras. Os leões são os principais predadores das zebras!"
+                },
+                {
+                    name: "Cadeia da Savana 2",
+                    chain: [
+                        { icon: "🌱", name: "Grama", type: "produtor" },
+                        { icon: "🐘", name: "Elefante", type: "consumidor1" },
+                        { icon: "🦅", name: "Abutre", type: "decompositor" }
+                    ],
+                    info: "Elefantes comem muita vegetação. Quando morrem, os abutres ajudam na decomposição!"
+                },
+                {
+                    name: "Cadeia da Savana 3",
+                    chain: [
+                        { icon: "🌿", name: "Arbusto", type: "produtor" },
+                        { icon: "🦒", name: "Girafa", type: "consumidor1" },
+                        { icon: "🐆", name: "Leopardo", type: "consumidor2" },
+                        { icon: "🦅", name: "Abutre", type: "decompositor" }
+                    ],
+                    info: "Girafas alcançam folhas altas dos arbustos. Leopardos caçam girafas jovens. Abutres limpam os restos!"
+                }
+            ]
+        };
+
+        // Game state
+        let currentEcosystem = 'forest';
+        let currentChainIndex = 0;
+        let score = 0;
+        let completedChains = 0;
+        let level = 1;
+        let attempts = 0;
+        let correctAttempts = 0;
+        let selectedChains = [];
+        let placedItems = [];
+        let currentChain = null;
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'place':
+                    oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'complete':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.15);
+                    });
+                    break;
+            }
+        }
+
+        // Shuffle
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Load progress
+        function loadProgress() {
+            const saved = localStorage.getItem('cadeiaAlimentarProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                score = data.score || 0;
+                level = data.level || 1;
+                completedChains = data.completedChains || 0;
+                updateMedals();
+            }
+            updateDisplay();
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('cadeiaAlimentarProgress', JSON.stringify({
+                score, level, completedChains
+            }));
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('chains').textContent = completedChains;
+            document.getElementById('level').textContent = level;
+        }
+
+        // Update medals
+        function updateMedals() {
+            const thresholds = [50, 150, 300, 500, 1000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`medal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Start game
+        function startGame(ecosystem) {
+            currentEcosystem = ecosystem;
+            currentChainIndex = 0;
+            attempts = 0;
+            correctAttempts = 0;
+
+            selectedChains = shuffle(chains[ecosystem]);
+
+            const ecosystemNames = {
+                forest: '🌳 Floresta',
+                ocean: '🌊 Oceano',
+                savanna: '🦁 Savana'
+            };
+            document.getElementById('ecosystemName').textContent = ecosystemNames[ecosystem];
+
+            document.getElementById('levelSelection').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            loadChain();
+            updateDisplay();
+        }
+
+        // Load chain
+        function loadChain() {
+            currentChain = selectedChains[currentChainIndex];
+            placedItems = [];
+
+            const progress = (currentChainIndex / selectedChains.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+
+            // Render slots
+            const slotsContainer = document.getElementById('chainSlots');
+            slotsContainer.innerHTML = '';
+
+            currentChain.chain.forEach((item, index) => {
+                if (index > 0) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'chain-arrow';
+                    arrow.textContent = '→';
+                    slotsContainer.appendChild(arrow);
+                }
+
+                const slot = document.createElement('div');
+                slot.className = 'chain-slot';
+                slot.id = `slot-${index}`;
+                slot.innerHTML = `
+                    <span class="slot-icon">?</span>
+                    <span class="slot-label">${index === 0 ? 'Produtor' : `Consumidor ${index}`}</span>
+                `;
+                slotsContainer.appendChild(slot);
+            });
+
+            // Highlight first slot
+            document.getElementById('slot-0').classList.add('highlight');
+
+            // Render options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const shuffledOptions = shuffle([...currentChain.chain]);
+            shuffledOptions.forEach((item, index) => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.dataset.name = item.name;
+                option.innerHTML = `
+                    <div class="option-icon">${item.icon}</div>
+                    <div class="option-name">${item.name}</div>
+                `;
+                option.onclick = () => selectItem(item);
+                optionsContainer.appendChild(option);
+            });
+
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('infoBox').classList.remove('show');
+            document.getElementById('btnNext').disabled = true;
+        }
+
+        // Select item
+        function selectItem(item) {
+            const currentSlotIndex = placedItems.length;
+            const expectedItem = currentChain.chain[currentSlotIndex];
+
+            attempts++;
+
+            if (item.name === expectedItem.name) {
+                playSound('place');
+                correctAttempts++;
+                placedItems.push(item);
+
+                // Fill slot
+                const slot = document.getElementById(`slot-${currentSlotIndex}`);
+                slot.classList.remove('highlight');
+                slot.classList.add('filled');
+                slot.querySelector('.slot-icon').textContent = item.icon;
+
+                // Mark option as used
+                const options = document.querySelectorAll('.option');
+                options.forEach(opt => {
+                    if (opt.dataset.name === item.name) {
+                        opt.classList.add('used');
+                    }
+                });
+
+                // Check if chain is complete
+                if (placedItems.length === currentChain.chain.length) {
+                    playSound('correct');
+                    completedChains++;
+
+                    const points = currentChain.chain.length * 10;
+                    score += points;
+
+                    const newLevel = Math.floor(score / 100) + 1;
+                    if (newLevel > level) level = newLevel;
+
+                    // Show feedback
+                    const feedback = document.getElementById('feedback');
+                    feedback.className = 'feedback success show';
+                    document.getElementById('feedbackText').textContent = `🎉 Correto! +${points} pontos`;
+
+                    // Show info
+                    document.getElementById('infoText').textContent = currentChain.info;
+                    document.getElementById('infoBox').classList.add('show');
+
+                    updateDisplay();
+                    updateMedals();
+                    saveProgress();
+
+                    document.getElementById('btnNext').disabled = false;
+                } else {
+                    // Highlight next slot
+                    document.getElementById(`slot-${currentSlotIndex + 1}`).classList.add('highlight');
+                }
+            } else {
+                playSound('wrong');
+
+                // Mark wrong option
+                const options = document.querySelectorAll('.option');
+                options.forEach(opt => {
+                    if (opt.dataset.name === item.name) {
+                        opt.classList.add('wrong');
+                        setTimeout(() => opt.classList.remove('wrong'), 500);
+                    }
+                });
+
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback error show';
+                document.getElementById('feedbackText').textContent = `❌ ${item.name} não vem nessa posição!`;
+                setTimeout(() => feedback.classList.remove('show'), 1500);
+            }
+        }
+
+        // Clear chain
+        function clearChain() {
+            loadChain();
+        }
+
+        // Next chain
+        function nextChain() {
+            currentChainIndex++;
+
+            if (currentChainIndex >= selectedChains.length) {
+                showResults();
+            } else {
+                loadChain();
+            }
+        }
+
+        // Show results
+        function showResults() {
+            playSound('complete');
+
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalChains').textContent = completedChains;
+            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('finalAccuracy').textContent = attempts > 0 ? `${Math.round((correctAttempts / attempts) * 100)}%` : '0%';
+
+            const thresholds = [50, 150, 300, 500, 1000];
+            for (let i = 0; i < 5; i++) {
+                const medal = document.getElementById(`resultMedal${i + 1}`);
+                if (score >= thresholds[i]) {
+                    medal.classList.add('earned');
+                }
+            }
+        }
+
+        // Back to menu
+        function backToMenu() {
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+        }
+
+        // Initialize
+        loadProgress();
+    </script>
+</body>
+</html>

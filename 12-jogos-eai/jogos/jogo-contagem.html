@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Contagem - EAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
+        }
+
+        .medals {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .medal {
+            font-size: 2rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .medal.earned {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .counting-area {
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .count-item {
+            font-size: 3rem;
+            animation: pop 0.3s ease;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .count-item:hover {
+            transform: scale(1.2);
+        }
+
+        .count-item.counted {
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #81ecec;
+        }
+
+        .answer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .number-input {
+            font-size: 3rem;
+            width: 120px;
+            text-align: center;
+            padding: 10px;
+            border: 3px solid #6c5ce7;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+        }
+
+        .number-input:focus {
+            border-color: #a29bfe;
+            box-shadow: 0 0 20px rgba(162, 155, 254, 0.3);
+        }
+
+        .number-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .num-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .num-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .num-btn:active {
+            transform: scale(0.95);
+        }
+
+        .submit-btn {
+            padding: 15px 50px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #55efc4;
+        }
+
+        .feedback.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff7675;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .streak-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        .streak-display.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .count-helper {
+            font-size: 1rem;
+            color: #81ecec;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .count-item {
+                font-size: 2rem;
+            }
+
+            .num-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .number-input {
+                font-size: 2rem;
+                width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔢 Jogo da <span>Contagem</span></h1>
+            <p>Conte os objetos e digite o número!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Nível</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="round">1/10</div>
+                <div class="stat-label">Rodada</div>
+            </div>
+        </div>
+
+        <div class="mode-select">
+            <button class="mode-btn active" onclick="setMode('count')">Contar Objetos</button>
+            <button class="mode-btn" onclick="setMode('sequence')">Sequência</button>
+            <button class="mode-btn" onclick="setMode('compare')">Maior/Menor</button>
+        </div>
+
+        <div class="medals">
+            <span class="medal" id="medal1" title="Contador Iniciante">🥉</span>
+            <span class="medal" id="medal2" title="Bom Contador">🥈</span>
+            <span class="medal" id="medal3" title="Mestre dos Números">🥇</span>
+            <span class="medal" id="medal4" title="Gênio Matemático">🏆</span>
+            <span class="medal" id="medal5" title="Rei da Contagem">👑</span>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="question" id="question">Quantos objetos você vê?</div>
+
+            <div class="counting-area" id="countingArea"></div>
+
+            <div class="count-helper" id="countHelper">Clique nos objetos para contar!</div>
+
+            <div class="answer-section" id="answerSection">
+                <input type="number" class="number-input" id="answerInput" min="0" max="99" placeholder="?">
+
+                <div class="number-buttons" id="numberButtons">
+                    <button class="num-btn" onclick="addNumber(1)">1</button>
+                    <button class="num-btn" onclick="addNumber(2)">2</button>
+                    <button class="num-btn" onclick="addNumber(3)">3</button>
+                    <button class="num-btn" onclick="addNumber(4)">4</button>
+                    <button class="num-btn" onclick="addNumber(5)">5</button>
+                    <button class="num-btn" onclick="addNumber(6)">6</button>
+                    <button class="num-btn" onclick="addNumber(7)">7</button>
+                    <button class="num-btn" onclick="addNumber(8)">8</button>
+                    <button class="num-btn" onclick="addNumber(9)">9</button>
+                    <button class="num-btn" onclick="addNumber(0)">0</button>
+                </div>
+
+                <button class="submit-btn" onclick="checkAnswer()">Verificar</button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-title" id="resultTitle">Parabéns!</div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="startGame()">Jogar Novamente</button>
+                <button class="btn btn-secondary" onclick="changeMode()">Trocar Modo</button>
+            </div>
+        </div>
+
+        <div class="streak-display" id="streakDisplay">🔥 Sequência: <span id="streakCount">0</span></div>
+    </div>
+
+    <script>
+        // Emojis para contagem
+        const countEmojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🌟', '⭐', '🎈', '🎁', '🦋', '🐱', '🐶', '🐰', '🐻', '🌺', '🌻', '🍀', '🎵', '❤️', '💎'];
+
+        // Estado do jogo
+        let gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            maxStreak: 0,
+            currentRound: 0,
+            totalRounds: 10,
+            mode: 'count',
+            correctAnswer: 0,
+            counted: 0,
+            correctAnswers: 0
+        };
+
+        // Funções de áudio
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'click':
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+            }
+        }
+
+        // Carregar progresso
+        function loadProgress() {
+            const saved = localStorage.getItem('jogoContagemProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.level = data.level || 1;
+                gameState.maxStreak = data.maxStreak || 0;
+                gameState.correctAnswers = data.correctAnswers || 0;
+            }
+            updateDisplay();
+            updateMedals();
+        }
+
+        // Salvar progresso
+        function saveProgress() {
+            const data = {
+                score: gameState.score,
+                level: gameState.level,
+                maxStreak: gameState.maxStreak,
+                correctAnswers: gameState.correctAnswers
+            };
+            localStorage.setItem('jogoContagemProgress', JSON.stringify(data));
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('round').textContent = `${gameState.currentRound}/${gameState.totalRounds}`;
+        }
+
+        // Atualizar medalhas
+        function updateMedals() {
+            const medals = [
+                { id: 'medal1', threshold: 10 },
+                { id: 'medal2', threshold: 30 },
+                { id: 'medal3', threshold: 60 },
+                { id: 'medal4', threshold: 100 },
+                { id: 'medal5', threshold: 200 }
+            ];
+
+            medals.forEach(medal => {
+                const el = document.getElementById(medal.id);
+                if (gameState.correctAnswers >= medal.threshold) {
+                    el.classList.add('earned');
+                }
+            });
+        }
+
+        // Definir modo
+        function setMode(mode) {
+            gameState.mode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            startGame();
+        }
+
+        function changeMode() {
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+        }
+
+        // Iniciar jogo
+        function startGame() {
+            gameState.currentRound = 0;
+            gameState.streak = 0;
+            document.getElementById('resultScreen').classList.remove('show');
+            document.getElementById('gameArea').style.display = 'block';
+            nextRound();
+        }
+
+        // Próxima rodada
+        function nextRound() {
+            gameState.currentRound++;
+            gameState.counted = 0;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('feedback').classList.remove('show');
+
+            if (gameState.currentRound > gameState.totalRounds) {
+                showResult();
+                return;
+            }
+
+            updateDisplay();
+            updateProgress();
+
+            switch(gameState.mode) {
+                case 'count':
+                    setupCountMode();
+                    break;
+                case 'sequence':
+                    setupSequenceMode();
+                    break;
+                case 'compare':
+                    setupCompareMode();
+                    break;
+            }
+        }
+
+        // Modo Contar
+        function setupCountMode() {
+            document.getElementById('question').textContent = 'Quantos objetos você vê?';
+            document.getElementById('countHelper').textContent = 'Clique nos objetos para contar!';
+            document.getElementById('numberButtons').style.display = 'grid';
+            document.getElementById('answerInput').style.display = 'block';
+
+            const countingArea = document.getElementById('countingArea');
+            countingArea.innerHTML = '';
+
+            // Determinar quantidade baseado no nível
+            const minCount = Math.min(1 + Math.floor(gameState.level / 2), 5);
+            const maxCount = Math.min(5 + gameState.level * 2, 20);
+            const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+
+            gameState.correctAnswer = count;
+
+            // Escolher emoji aleatório
+            const emoji = countEmojis[Math.floor(Math.random() * countEmojis.length)];
+
+            // Criar itens
+            for (let i = 0; i < count; i++) {
+                const item = document.createElement('span');
+                item.className = 'count-item';
+                item.textContent = emoji;
+                item.onclick = () => countItem(item);
+                countingArea.appendChild(item);
+            }
+        }
+
+        // Modo Sequência
+        function setupSequenceMode() {
+            document.getElementById('countHelper').textContent = 'Complete a sequência!';
+            document.getElementById('numberButtons').style.display = 'grid';
+            document.getElementById('answerInput').style.display = 'block';
+
+            const countingArea = document.getElementById('countingArea');
+            countingArea.innerHTML = '';
+
+            // Gerar sequência
+            const start = Math.floor(Math.random() * 10) + 1;
+            const step = Math.random() > 0.5 ? 1 : 2;
+            const missingIndex = Math.floor(Math.random() * 4) + 1;
+
+            let sequence = [];
+            for (let i = 0; i < 5; i++) {
+                sequence.push(start + i * step);
+            }
+
+            gameState.correctAnswer = sequence[missingIndex];
+
+            document.getElementById('question').textContent = 'Qual número está faltando?';
+
+            sequence.forEach((num, index) => {
+                const item = document.createElement('span');
+                item.className = 'count-item';
+                item.style.cursor = 'default';
+                if (index === missingIndex) {
+                    item.textContent = '?';
+                    item.style.color = '#ffd700';
+                } else {
+                    item.textContent = num;
+                }
+                countingArea.appendChild(item);
+            });
+        }
+
+        // Modo Comparar
+        function setupCompareMode() {
+            document.getElementById('countHelper').textContent = 'Clique no grupo com MAIS objetos!';
+            document.getElementById('numberButtons').style.display = 'none';
+            document.getElementById('answerInput').style.display = 'none';
+            document.getElementById('question').textContent = 'Qual grupo tem MAIS?';
+
+            const countingArea = document.getElementById('countingArea');
+            countingArea.innerHTML = '';
+            countingArea.style.flexDirection = 'column';
+
+            const count1 = Math.floor(Math.random() * 8) + 2;
+            let count2 = Math.floor(Math.random() * 8) + 2;
+            while (count2 === count1) {
+                count2 = Math.floor(Math.random() * 8) + 2;
+            }
+
+            const emoji1 = countEmojis[Math.floor(Math.random() * countEmojis.length)];
+            const emoji2 = countEmojis[Math.floor(Math.random() * countEmojis.length)];
+
+            gameState.correctAnswer = count1 > count2 ? 1 : 2;
+
+            // Grupo 1
+            const group1 = document.createElement('div');
+            group1.style.cssText = 'background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; cursor: pointer; margin: 10px; transition: all 0.3s ease;';
+            group1.innerHTML = emoji1.repeat(count1).split('').map(e => `<span style="font-size: 2rem; margin: 5px;">${e}</span>`).join('');
+            group1.onclick = () => checkCompare(1, group1);
+            group1.onmouseover = () => group1.style.background = 'rgba(108, 92, 231, 0.3)';
+            group1.onmouseout = () => group1.style.background = 'rgba(255,255,255,0.1)';
+
+            // Grupo 2
+            const group2 = document.createElement('div');
+            group2.style.cssText = 'background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; cursor: pointer; margin: 10px; transition: all 0.3s ease;';
+            group2.innerHTML = emoji2.repeat(count2).split('').map(e => `<span style="font-size: 2rem; margin: 5px;">${e}</span>`).join('');
+            group2.onclick = () => checkCompare(2, group2);
+            group2.onmouseover = () => group2.style.background = 'rgba(108, 92, 231, 0.3)';
+            group2.onmouseout = () => group2.style.background = 'rgba(255,255,255,0.1)';
+
+            countingArea.appendChild(group1);
+            countingArea.appendChild(group2);
+        }
+
+        // Contar item (clique)
+        function countItem(item) {
+            if (!item.classList.contains('counted')) {
+                item.classList.add('counted');
+                gameState.counted++;
+                playSound('click');
+                document.getElementById('countHelper').textContent = `Contando: ${gameState.counted}`;
+            }
+        }
+
+        // Adicionar número
+        function addNumber(num) {
+            const input = document.getElementById('answerInput');
+            if (input.value.length < 2) {
+                input.value += num;
+            }
+            playSound('click');
+        }
+
+        // Verificar resposta
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+
+            if (isNaN(userAnswer)) {
+                showFeedback('Digite um número!', 'error');
+                return;
+            }
+
+            if (userAnswer === gameState.correctAnswer) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        // Verificar comparação
+        function checkCompare(choice, element) {
+            if (choice === gameState.correctAnswer) {
+                element.style.background = 'rgba(0, 184, 148, 0.5)';
+                handleCorrect();
+            } else {
+                element.style.background = 'rgba(231, 76, 60, 0.5)';
+                handleWrong();
+            }
+        }
+
+        // Resposta correta
+        function handleCorrect() {
+            playSound('correct');
+
+            gameState.streak++;
+            if (gameState.streak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.streak;
+            }
+
+            const basePoints = 10 + gameState.level * 5;
+            const streakBonus = gameState.streak * 5;
+            const points = basePoints + streakBonus;
+
+            gameState.score += points;
+            gameState.correctAnswers++;
+
+            // Level up
+            const newLevel = Math.floor(gameState.score / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                playSound('levelup');
+            }
+
+            updateDisplay();
+            updateMedals();
+            saveProgress();
+            showStreak();
+
+            showFeedback(`Correto! +${points} pontos`, 'success');
+
+            setTimeout(nextRound, 1500);
+        }
+
+        // Resposta errada
+        function handleWrong() {
+            playSound('wrong');
+            gameState.streak = 0;
+            updateDisplay();
+
+            showFeedback(`Ops! A resposta era ${gameState.correctAnswer}`, 'error');
+
+            setTimeout(nextRound, 2000);
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            const percent = ((gameState.currentRound - 1) / gameState.totalRounds) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Mostrar feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        // Mostrar sequência
+        function showStreak() {
+            if (gameState.streak >= 3) {
+                const streakDisplay = document.getElementById('streakDisplay');
+                document.getElementById('streakCount').textContent = gameState.streak;
+                streakDisplay.classList.add('show');
+                setTimeout(() => streakDisplay.classList.remove('show'), 2000);
+            }
+        }
+
+        // Mostrar resultado
+        function showResult() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('resultScreen').classList.add('show');
+
+            const accuracy = Math.round((gameState.correctAnswers / gameState.totalRounds) * 100);
+
+            document.getElementById('resultIcon').textContent = accuracy >= 70 ? '🎉' : '💪';
+            document.getElementById('resultTitle').textContent = accuracy >= 70 ? 'Muito Bem!' : 'Continue Praticando!';
+            document.getElementById('resultScore').textContent = `Pontos: ${gameState.score} | Nível: ${gameState.level} | Melhor sequência: ${gameState.maxStreak}`;
+        }
+
+        // Inicializar
+        loadProgress();
+        startGame();
+    </script>
+</body>
+</html>

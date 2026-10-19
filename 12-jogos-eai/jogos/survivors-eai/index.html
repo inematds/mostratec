@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Survivors EAI - EAI Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1a2e;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .survivor-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+
+    .player-demo {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
+      z-index: 2;
+    }
+
+    .enemy-demo {
+      position: absolute;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      animation: approach 2s ease-in-out infinite;
+    }
+
+    .enemy-demo:nth-child(2) {
+      background: #27ae60;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 0s;
+    }
+
+    .enemy-demo:nth-child(3) {
+      background: #8e44ad;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      animation-delay: 0.5s;
+    }
+
+    .enemy-demo:nth-child(4) {
+      background: #ecf0f1;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 1s;
+    }
+
+    .enemy-demo:nth-child(5) {
+      background: #bdc3c7;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      animation-delay: 1.5s;
+    }
+
+    @keyframes approach {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .sword-demo {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #ecf0f1);
+      transform-origin: left center;
+      animation: swordSpin 1s linear infinite;
+    }
+
+    @keyframes swordSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #loading h1 {
+      color: #fff;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 36px;
+      margin-top: 30px;
+      text-shadow: 0 0 30px rgba(231, 76, 60, 0.5);
+    }
+
+    #loading p {
+      color: #e74c3c;
+      font-family: Arial, sans-serif;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .xp-orbs {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .xp-orb {
+      width: 15px;
+      height: 15px;
+      background: #2ecc71;
+      border-radius: 50%;
+      animation: orbPulse 0.5s ease-in-out infinite alternate;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    }
+
+    .xp-orb:nth-child(2) { animation-delay: 0.1s; }
+    .xp-orb:nth-child(3) { animation-delay: 0.2s; }
+    .xp-orb:nth-child(4) { animation-delay: 0.3s; }
+    .xp-orb:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes orbPulse {
+      0% { transform: scale(0.8); opacity: 0.6; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="survivor-container">
+      <div class="enemy-demo"></div>
+      <div class="enemy-demo"></div>
+      <div class="enemy-demo"></div>
+      <div class="enemy-demo"></div>
+      <div class="player-demo"></div>
+      <div class="sword-demo"></div>
+    </div>
+    <h1>SURVIVORS EAI</h1>
+    <p>Preparando a horda...</p>
+    <div class="xp-orbs">
+      <div class="xp-orb"></div>
+      <div class="xp-orb"></div>
+      <div class="xp-orb"></div>
+      <div class="xp-orb"></div>
+      <div class="xp-orb"></div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

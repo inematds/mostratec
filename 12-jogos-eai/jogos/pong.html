@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pong - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #3B82F6, #60A5FA);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .score-board {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .player-score {
+      text-align: center;
+    }
+    .player-score .label {
+      font-size: 0.9rem;
+      color: #888;
+    }
+    .player-score .score {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #3B82F6;
+    }
+    canvas {
+      border: 3px solid #3B82F6;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+    }
+    .controls {
+      margin-top: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .btn {
+      background: #3B82F6;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn:hover {
+      background: #2563EB;
+      transform: scale(1.05);
+    }
+    .btn.secondary {
+      background: rgba(59, 130, 246, 0.2);
+      border: 2px solid #3B82F6;
+    }
+    .mode-select {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mode-btn {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid transparent;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      border-color: #3B82F6;
+      background: rgba(59, 130, 246, 0.3);
+    }
+    .mobile-controls {
+      display: none;
+      margin-top: 1rem;
+      gap: 1rem;
+    }
+    .mobile-pad {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .mobile-pad button {
+      width: 80px;
+      height: 50px;
+      background: rgba(59, 130, 246, 0.3);
+      border: 2px solid #3B82F6;
+      border-radius: 8px;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .mobile-pad button:active {
+      background: #3B82F6;
+    }
+    @media (max-width: 600px) {
+      .mobile-controls { display: flex; justify-content: space-between; width: 100%; max-width: 400px; }
+      canvas { max-width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Pong</h1>
+
+  <div class="mode-select">
+    <button class="mode-btn active" data-mode="cpu">vs CPU</button>
+    <button class="mode-btn" data-mode="2p">2 Jogadores</button>
+  </div>
+
+  <div class="score-board">
+    <div class="player-score">
+      <div class="label">Jogador 1</div>
+      <div class="score" id="p1score">0</div>
+    </div>
+    <div class="player-score">
+      <div class="label" id="p2label">CPU</div>
+      <div class="score" id="p2score">0</div>
+    </div>
+  </div>
+
+  <canvas id="game" width="600" height="400"></canvas>
+
+  <p class="controls">
+    <span id="controlsText">Use W/S para mover. Primeiro a 11 vence!</span>
+  </p>
+
+  <div class="mobile-controls">
+    <div class="mobile-pad">
+      <button onmousedown="p1Up=true" onmouseup="p1Up=false" ontouchstart="p1Up=true" ontouchend="p1Up=false">↑</button>
+      <button onmousedown="p1Down=true" onmouseup="p1Down=false" ontouchstart="p1Down=true" ontouchend="p1Down=false">↓</button>
+    </div>
+    <div class="mobile-pad" id="p2controls" style="display:none">
+      <button onmousedown="p2Up=true" onmouseup="p2Up=false" ontouchstart="p2Up=true" ontouchend="p2Up=false">↑</button>
+      <button onmousedown="p2Down=true" onmouseup="p2Down=false" ontouchstart="p2Down=true" ontouchend="p2Down=false">↓</button>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn" onclick="resetGame()">Novo Jogo</button>
+    <button class="btn secondary" onclick="pauseGame()" id="pauseBtn">Pausar</button>
+  </div>
+
+  <!-- EAI Wallet System -->
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('pong'));</script>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // Game state
+    let gameMode = 'cpu';
+    let paused = false;
+    let p1Up = false, p1Down = false, p2Up = false, p2Down = false;
+
+    // Paddle properties
+    const paddleWidth = 10;
+    const paddleHeight = 80;
+    const paddleSpeed = 6;
+
+    // Ball properties
+    let ballSize = 10;
+    let ballSpeedX = 5;
+    let ballSpeedY = 3;
+
+    // Positions
+    let p1Y = canvas.height / 2 - paddleHeight / 2;
+    let p2Y = canvas.height / 2 - paddleHeight / 2;
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballDX = ballSpeedX;
+    let ballDY = ballSpeedY;
+
+    // Scores
+    let p1Score = 0;
+    let p2Score = 0;
+    const winScore = 11;
+
+    // Mode selection
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gameMode = btn.dataset.mode;
+        document.getElementById('p2label').textContent = gameMode === 'cpu' ? 'CPU' : 'Jogador 2';
+        document.getElementById('controlsText').textContent = gameMode === 'cpu'
+          ? 'Use W/S para mover. Primeiro a 11 vence!'
+          : 'P1: W/S | P2: ↑/↓ - Primeiro a 11 vence!';
+        document.getElementById('p2controls').style.display = gameMode === '2p' ? 'flex' : 'none';
+        resetGame();
+      });
+    });
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawNet() {
+      ctx.setLineDash([10, 10]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function draw() {
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Net
+      drawNet();
+
+      // Paddles
+      ctx.shadowColor = '#3B82F6';
+      ctx.shadowBlur = 15;
+      drawRect(20, p1Y, paddleWidth, paddleHeight, '#3B82F6');
+      drawRect(canvas.width - 30, p2Y, paddleWidth, paddleHeight, '#3B82F6');
+      ctx.shadowBlur = 0;
+
+      // Ball
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 10;
+      drawCircle(ballX, ballY, ballSize, '#fff');
+      ctx.shadowBlur = 0;
+    }
+
+    function movePaddles() {
+      // Player 1
+      if (p1Up && p1Y > 0) p1Y -= paddleSpeed;
+      if (p1Down && p1Y < canvas.height - paddleHeight) p1Y += paddleSpeed;
+
+      // Player 2 or CPU
+      if (gameMode === '2p') {
+        if (p2Up && p2Y > 0) p2Y -= paddleSpeed;
+        if (p2Down && p2Y < canvas.height - paddleHeight) p2Y += paddleSpeed;
+      } else {
+        // CPU AI
+        const p2Center = p2Y + paddleHeight / 2;
+        const difficulty = 0.08; // Lower = easier
+        if (p2Center < ballY - 20) p2Y += paddleSpeed * difficulty * 10;
+        else if (p2Center > ballY + 20) p2Y -= paddleSpeed * difficulty * 10;
+        p2Y = Math.max(0, Math.min(canvas.height - paddleHeight, p2Y));
+      }
+    }
+
+    function moveBall() {
+      ballX += ballDX;
+      ballY += ballDY;
+
+      // Top/bottom collision
+      if (ballY - ballSize < 0 || ballY + ballSize > canvas.height) {
+        ballDY = -ballDY;
+      }
+
+      // Paddle collision
+      // Left paddle
+      if (ballX - ballSize < 30 && ballY > p1Y && ballY < p1Y + paddleHeight) {
+        ballDX = Math.abs(ballDX) * 1.05;
+        const hitPos = (ballY - p1Y) / paddleHeight;
+        ballDY = (hitPos - 0.5) * 10;
+      }
+      // Right paddle
+      if (ballX + ballSize > canvas.width - 30 && ballY > p2Y && ballY < p2Y + paddleHeight) {
+        ballDX = -Math.abs(ballDX) * 1.05;
+        const hitPos = (ballY - p2Y) / paddleHeight;
+        ballDY = (hitPos - 0.5) * 10;
+      }
+
+      // Score
+      if (ballX < 0) {
+        p2Score++;
+        document.getElementById('p2score').textContent = p2Score;
+        checkWin() || resetBall();
+      }
+      if (ballX > canvas.width) {
+        p1Score++;
+        document.getElementById('p1score').textContent = p1Score;
+        checkWin() || resetBall();
+      }
+
+      // Speed limit
+      ballDX = Math.max(-15, Math.min(15, ballDX));
+      ballDY = Math.max(-8, Math.min(8, ballDY));
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballDX = (Math.random() > 0.5 ? 1 : -1) * ballSpeedX;
+      ballDY = (Math.random() - 0.5) * ballSpeedY * 2;
+    }
+
+    function checkWin() {
+      if (p1Score >= winScore || p2Score >= winScore) {
+        paused = true;
+        const playerWon = p1Score >= winScore;
+        const winner = playerWon ? 'Jogador 1' : (gameMode === 'cpu' ? 'CPU' : 'Jogador 2');
+
+        // Recompensas se o jogador 1 venceu (ou qualquer jogador no modo 2p)
+        if (playerWon || gameMode === '2p') {
+          // Moedas baseadas na diferença de pontos
+          const scoreDiff = Math.abs(p1Score - p2Score);
+          const coinsEarned = 20 + (scoreDiff * 5);
+          setTimeout(() => giveReward('coins', coinsEarned), 300);
+
+          // Diamante: se venceu a CPU
+          if (playerWon && gameMode === 'cpu') {
+            setTimeout(() => giveReward('diamonds', 1), 1300);
+          }
+
+          // Diamante extra: se venceu com diferença de 5 ou mais
+          if (scoreDiff >= 5) {
+            setTimeout(() => giveReward('diamonds', 1), 2300);
+          }
+
+          // Ouro: se fez 11x0 (partida perfeita)
+          if ((p1Score === winScore && p2Score === 0) || (p2Score === winScore && p1Score === 0)) {
+            setTimeout(() => giveReward('gold', 1), 3300);
+          }
+        }
+
+        setTimeout(() => alert(`${winner} venceu!`), 500);
+        return true;
+      }
+      return false;
+    }
+
+    function resetGame() {
+      p1Score = 0;
+      p2Score = 0;
+      document.getElementById('p1score').textContent = '0';
+      document.getElementById('p2score').textContent = '0';
+      p1Y = canvas.height / 2 - paddleHeight / 2;
+      p2Y = canvas.height / 2 - paddleHeight / 2;
+      paused = false;
+      document.getElementById('pauseBtn').textContent = 'Pausar';
+      resetBall();
+    }
+
+    function pauseGame() {
+      paused = !paused;
+      document.getElementById('pauseBtn').textContent = paused ? 'Continuar' : 'Pausar';
+    }
+
+    function update() {
+      if (!paused) {
+        movePaddles();
+        moveBall();
+      }
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', e => {
+      if (e.key === 'w' || e.key === 'W') p1Up = true;
+      if (e.key === 's' || e.key === 'S') p1Down = true;
+      if (e.key === 'ArrowUp') { p2Up = true; e.preventDefault(); }
+      if (e.key === 'ArrowDown') { p2Down = true; e.preventDefault(); }
+      if (e.key === ' ') { pauseGame(); e.preventDefault(); }
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.key === 'w' || e.key === 'W') p1Up = false;
+      if (e.key === 's' || e.key === 'S') p1Down = false;
+      if (e.key === 'ArrowUp') p2Up = false;
+      if (e.key === 'ArrowDown') p2Down = false;
+    });
+
+    // Start
+    update();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizza das Frações - EAI Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #DC2626 0%, #EF4444 50%, #F87171 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1rem;
+    }
+    .game-container {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      max-width: 550px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #DC2626;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stat {
+      text-align: center;
+      background: linear-gradient(135deg, #FEE2E2, #FECACA);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+    }
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #DC2626;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #B91C1C;
+    }
+    .mode-select {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mode-btn {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #FEE2E2;
+      border-radius: 0.75rem;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+    }
+    .mode-btn.active {
+      border-color: #DC2626;
+      background: #FEE2E2;
+      color: #B91C1C;
+    }
+    .pizza-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .pizza {
+      width: 280px;
+      height: 280px;
+      position: relative;
+    }
+    .pizza-base {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #FDE68A, #FCD34D);
+      border-radius: 50%;
+      border: 8px solid #B45309;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .pizza-slice {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      clip-path: polygon(100% 100%, 0% 100%, 100% 0%);
+      background: linear-gradient(135deg, #DC2626, #EF4444);
+      transform-origin: 100% 100%;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid #B91C1C;
+    }
+    .pizza-slice:hover {
+      filter: brightness(1.1);
+    }
+    .pizza-slice.selected {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      border-color: #059669;
+    }
+    .pizza-slice.correct {
+      animation: pop 0.4s ease;
+    }
+    .pizza-slice.wrong {
+      animation: shake 0.4s ease;
+    }
+    @keyframes pop {
+      50% { transform: scale(1.1); }
+    }
+    @keyframes shake {
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    .pizza-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: #FCD34D;
+      border-radius: 50%;
+      border: 4px solid #B45309;
+      z-index: 10;
+    }
+    .toppings {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .topping {
+      position: absolute;
+      font-size: 1rem;
+      filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    }
+    .question-area {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .question {
+      color: white;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .fraction-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .fraction {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      padding: 0.5rem 1.5rem;
+      border-radius: 1rem;
+    }
+    .fraction-num {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #DC2626;
+      border-bottom: 3px solid #1E1B4B;
+      padding-bottom: 0.25rem;
+    }
+    .fraction-den {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1E1B4B;
+      padding-top: 0.25rem;
+    }
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .answer-btn {
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #F1F5F9, #E2E8F0);
+      border: 3px solid transparent;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .answer-btn:hover {
+      background: linear-gradient(135deg, #FEE2E2, #FECACA);
+      transform: scale(1.02);
+    }
+    .answer-btn.correct {
+      background: #D1FAE5;
+      border-color: #10B981;
+    }
+    .answer-btn.wrong {
+      background: #FEE2E2;
+      border-color: #EF4444;
+    }
+    .message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .message.show {
+      display: block;
+    }
+    .message.success { background: #D1FAE5; color: #065F46; }
+    .message.error { background: #FEE2E2; color: #991B1B; }
+    .btn {
+      display: block;
+      margin: 0 auto;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #DC2626, #B91C1C);
+      color: white;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .instruction {
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>🍕 Pizza das Frações</h1>
+    <p class="subtitle">Aprenda frações com pizza!</p>
+
+    <div class="mode-select">
+      <button class="mode-btn active" data-mode="identify">Identificar</button>
+      <button class="mode-btn" data-mode="select">Selecionar</button>
+      <button class="mode-btn" data-mode="compare">Comparar</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="score">0</div>
+        <div class="stat-label">Pontos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="correct">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="streak">0</div>
+        <div class="stat-label">Sequência</div>
+      </div>
+    </div>
+
+    <p class="instruction" id="instruction">Qual fração da pizza está destacada?</p>
+
+    <div class="pizza-container">
+      <div class="pizza">
+        <div class="pizza-base" id="pizzaBase">
+          <div class="pizza-center"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-area" id="questionArea">
+      <p class="question" id="question">Quantas fatias estão selecionadas?</p>
+      <div class="fraction-display" id="fractionDisplay" style="display: none;">
+        <div class="fraction">
+          <span class="fraction-num" id="fracNum">?</span>
+          <span class="fraction-den" id="fracDen">8</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="answers" id="answers"></div>
+
+    <div class="message" id="message"></div>
+
+    <button class="btn" onclick="resetGame()">🔄 Novo Jogo</button>
+  </div>
+
+  <script src="eai-wallet.js"></script>
+  <script src="eai-counter.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => initEaiCounter('fraction-pizza'));</script>
+  <script>
+    let gameMode = 'identify';
+    let score = 0;
+    let correctCount = 0;
+    let streak = 0;
+    let currentSlices = 8;
+    let selectedSlices = [];
+    let targetNumerator = 0;
+    let correctAnswer = '';
+
+    const sliceConfigs = [2, 4, 6, 8];
+    const toppings = ['🍅', '🧀', '🫒', '🌶️', '🍄'];
+
+    function createPizza(numSlices) {
+      const base = document.getElementById('pizzaBase');
+      base.innerHTML = '<div class="pizza-center"></div>';
+
+      const anglePerSlice = 360 / numSlices;
+
+      for (let i = 0; i < numSlices; i++) {
+        const slice = document.createElement('div');
+        slice.className = 'pizza-slice';
+        slice.dataset.index = i;
+
+        // Calculate rotation and clip path based on slice count
+        const rotation = i * anglePerSlice - 90;
+
+        if (numSlices === 2) {
+          slice.style.width = '50%';
+          slice.style.height = '100%';
+          slice.style.left = i === 0 ? '50%' : '0%';
+          slice.style.top = '0%';
+          slice.style.clipPath = 'none';
+          slice.style.transform = 'none';
+          slice.style.transformOrigin = 'center';
+          slice.style.borderRadius = i === 0 ? '0 140px 140px 0' : '140px 0 0 140px';
+        } else {
+          slice.style.width = '50%';
+          slice.style.height = '50%';
+          slice.style.left = '50%';
+          slice.style.top = '50%';
+          slice.style.transform = `rotate(${rotation}deg) translateX(-100%) translateY(-100%)`;
+          slice.style.transformOrigin = '0% 0%';
+
+          // Different clip paths for different slice counts
+          if (numSlices === 4) {
+            slice.style.clipPath = 'polygon(100% 100%, 0% 100%, 0% 0%, 100% 0%)';
+          } else if (numSlices === 6) {
+            slice.style.clipPath = 'polygon(100% 100%, 50% 100%, 0% 0%, 100% 50%)';
+          } else {
+            slice.style.clipPath = 'polygon(100% 100%, 70% 100%, 0% 30%, 30% 0%, 100% 70%)';
+          }
+        }
+
+        slice.onclick = () => toggleSlice(i);
+        base.appendChild(slice);
+
+        // Add random toppings
+        addToppings(slice, i, numSlices);
+      }
+    }
+
+    function addToppings(slice, index, total) {
+      const container = document.createElement('div');
+      container.className = 'toppings';
+
+      const numToppings = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < numToppings; i++) {
+        const topping = document.createElement('span');
+        topping.className = 'topping';
+        topping.textContent = toppings[Math.floor(Math.random() * toppings.length)];
+        topping.style.left = (20 + Math.random() * 60) + '%';
+        topping.style.top = (20 + Math.random() * 60) + '%';
+        container.appendChild(topping);
+      }
+
+      slice.appendChild(container);
+    }
+
+    function toggleSlice(index) {
+      if (gameMode !== 'select') return;
+
+      const slice = document.querySelector(`.pizza-slice[data-index="${index}"]`);
+      const isSelected = selectedSlices.includes(index);
+
+      if (isSelected) {
+        selectedSlices = selectedSlices.filter(i => i !== index);
+        slice.classList.remove('selected');
+      } else {
+        selectedSlices.push(index);
+        slice.classList.add('selected');
+      }
+
+      updateSelectionDisplay();
+    }
+
+    function updateSelectionDisplay() {
+      document.getElementById('fracNum').textContent = selectedSlices.length;
+    }
+
+    function highlightSlices(count) {
+      selectedSlices = [];
+      const slices = document.querySelectorAll('.pizza-slice');
+
+      // Select random slices
+      const indices = Array.from({length: currentSlices}, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+
+      for (let i = 0; i < count; i++) {
+        selectedSlices.push(indices[i]);
+        slices[indices[i]].classList.add('selected');
+      }
+    }
+
+    function startRound() {
+      // Reset slices
+      document.querySelectorAll('.pizza-slice').forEach(slice => {
+        slice.classList.remove('selected', 'correct', 'wrong');
+      });
+      selectedSlices = [];
+
+      // Pick random number of slices
+      currentSlices = sliceConfigs[Math.floor(Math.random() * sliceConfigs.length)];
+      createPizza(currentSlices);
+
+      if (gameMode === 'identify') {
+        // Show some selected slices, ask for fraction
+        targetNumerator = 1 + Math.floor(Math.random() * (currentSlices - 1));
+        highlightSlices(targetNumerator);
+        correctAnswer = `${targetNumerator}/${currentSlices}`;
+
+        document.getElementById('instruction').textContent = 'Qual fração da pizza está destacada?';
+        document.getElementById('question').textContent = `${targetNumerator} de ${currentSlices} fatias`;
+        document.getElementById('fractionDisplay').style.display = 'none';
+
+        generateFractionOptions();
+
+      } else if (gameMode === 'select') {
+        // Show fraction, ask to select slices
+        targetNumerator = 1 + Math.floor(Math.random() * (currentSlices - 1));
+        correctAnswer = targetNumerator;
+
+        document.getElementById('instruction').textContent = 'Clique nas fatias para selecionar a fração:';
+        document.getElementById('question').textContent = 'Selecione:';
+        document.getElementById('fractionDisplay').style.display = 'flex';
+        document.getElementById('fracNum').textContent = '?';
+        document.getElementById('fracDen').textContent = currentSlices;
+
+        // Show target fraction
+        setTimeout(() => {
+          document.getElementById('fracNum').textContent = targetNumerator;
+        }, 100);
+
+        generateSelectButton();
+
+      } else if (gameMode === 'compare') {
+        // Compare two fractions
+        generateCompareQuestion();
+      }
+
+      document.getElementById('message').className = 'message';
+    }
+
+    function generateFractionOptions() {
+      const container = document.getElementById('answers');
+      container.innerHTML = '';
+
+      const options = [correctAnswer];
+
+      while (options.length < 4) {
+        const fakeNum = 1 + Math.floor(Math.random() * (currentSlices - 1));
+        const fakeDen = sliceConfigs[Math.floor(Math.random() * sliceConfigs.length)];
+        const fake = `${fakeNum}/${fakeDen}`;
+        if (!options.includes(fake)) {
+          options.push(fake);
+        }
+      }
+
+      // Shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+
+      options.forEach(opt => {
+        const [num, den] = opt.split('/');
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerHTML = `<span style="font-size:1.5rem;border-bottom:2px solid #333;">${num}</span><span style="font-size:1.5rem;">${den}</span>`;
+        btn.onclick = () => checkFractionAnswer(opt, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function generateSelectButton() {
+      const container = document.getElementById('answers');
+      container.innerHTML = '';
+
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.style.gridColumn = 'span 4';
+      btn.innerHTML = '✓ Verificar Seleção';
+      btn.onclick = checkSelectAnswer;
+      container.appendChild(btn);
+    }
+
+    function generateCompareQuestion() {
+      const container = document.getElementById('answers');
+      container.innerHTML = '';
+
+      // Generate two fractions
+      const frac1Num = 1 + Math.floor(Math.random() * 3);
+      const frac1Den = sliceConfigs[Math.floor(Math.random() * sliceConfigs.length)];
+      const frac2Num = 1 + Math.floor(Math.random() * 3);
+      const frac2Den = sliceConfigs[Math.floor(Math.random() * sliceConfigs.length)];
+
+      const val1 = frac1Num / frac1Den;
+      const val2 = frac2Num / frac2Den;
+
+      if (val1 > val2) correctAnswer = '>';
+      else if (val1 < val2) correctAnswer = '<';
+      else correctAnswer = '=';
+
+      document.getElementById('instruction').textContent = 'Qual fração é maior?';
+      document.getElementById('question').innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;">
+          <div class="fraction" style="background:white;padding:0.5rem 1rem;border-radius:0.5rem;">
+            <span style="font-size:1.5rem;border-bottom:2px solid #333;">${frac1Num}</span>
+            <span style="font-size:1.5rem;">${frac1Den}</span>
+          </div>
+          <span style="font-size:2rem;">?</span>
+          <div class="fraction" style="background:white;padding:0.5rem 1rem;border-radius:0.5rem;">
+            <span style="font-size:1.5rem;border-bottom:2px solid #333;">${frac2Num}</span>
+            <span style="font-size:1.5rem;">${frac2Den}</span>
+          </div>
+        </div>
+      `;
+      document.getElementById('fractionDisplay').style.display = 'none';
+
+      // Show corresponding pizzas
+      highlightSlices(Math.round(frac1Num * currentSlices / frac1Den));
+
+      ['<', '=', '>'].forEach(sym => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.style.fontSize = '2rem';
+        btn.textContent = sym;
+        btn.onclick = () => checkCompareAnswer(sym, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function checkFractionAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        handleCorrect();
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (b.textContent.replace(/\s/g, '') === correctAnswer.replace('/', '')) {
+            b.classList.add('correct');
+          }
+        });
+        handleWrong();
+      }
+    }
+
+    function checkSelectAnswer() {
+      const slices = document.querySelectorAll('.pizza-slice');
+
+      if (selectedSlices.length === targetNumerator) {
+        slices.forEach(s => {
+          if (s.classList.contains('selected')) s.classList.add('correct');
+        });
+        handleCorrect();
+      } else {
+        slices.forEach(s => {
+          if (s.classList.contains('selected')) s.classList.add('wrong');
+        });
+        handleWrong();
+      }
+    }
+
+    function checkCompareAnswer(answer, btn) {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      if (answer === correctAnswer) {
+        btn.classList.add('correct');
+        handleCorrect();
+      } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => {
+          if (b.textContent === correctAnswer) b.classList.add('correct');
+        });
+        handleWrong();
+      }
+    }
+
+    function handleCorrect() {
+      streak++;
+      correctCount++;
+      const points = 10 + (streak >= 3 ? streak * 2 : 0);
+      score += points;
+
+      updateStats();
+      showMessage(`🎉 Correto! +${points} pontos`, 'success');
+
+      giveReward('coins', points);
+      if (streak >= 5 && streak % 5 === 0) {
+        setTimeout(() => giveReward('diamonds', 1), 1000);
+      }
+
+      setTimeout(startRound, 1500);
+    }
+
+    function handleWrong() {
+      streak = 0;
+      updateStats();
+      showMessage(`❌ Resposta incorreta!`, 'error');
+
+      setTimeout(startRound, 2000);
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('correct').textContent = correctCount;
+      document.getElementById('streak').textContent = streak;
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message show ${type}`;
+    }
+
+    function resetGame() {
+      score = 0;
+      correctCount = 0;
+      streak = 0;
+
+      updateStats();
+      document.getElementById('message').className = 'message';
+
+      startRound();
+    }
+
+    // Mode selection
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gameMode = btn.dataset.mode;
+        resetGame();
+      });
+    });
+
+    // Initialize
+    startRound();
+  </script>
+<script src="eai-header.js"></script>
+</body>
+</html>
