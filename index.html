@@ -4,86 +4,101 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>INEMA na MOSTRATEC</title>
-<meta name="description" content="INEMA na MOSTRATEC 2026: jogos para criar, soluções que vendem, robôs para montar e o seu futuro em imagem. Tudo aberto e gratuito, pelo QR Code.">
+<meta name="description" content="INEMA na MOSTRATEC 2026 (27 a 29/10, FENAC): jogos para criar, soluções que vendem, robôs para montar, desafios, desenho que ganha vida, braço SO-101 e o seu futuro em imagem. Tudo aberto e gratuito, pelo QR Code.">
 <meta name="theme-color" content="#0c0c10">
+<link rel="canonical" href="https://mostratec.inema.club/">
+<meta property="og:title" content="INEMA na MOSTRATEC 2026">
+<meta property="og:description" content="Aponte a câmera para o QR: jogos, soluções que vendem, robôs, desafios, desenho que ganha vida e o braço SO-101.">
+<meta property="og:image" content="https://mostratec.inema.club/assets/img/braco.webp">
 <link rel="stylesheet" href="assets/pagina.css">
 <style>
-.qrs{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
-.qrs .card{gap:10px}
-.qrs .quadro{display:none;background:#fff;border-radius:12px;padding:10px;width:140px}
-.qrs .quadro img{display:block;width:100%;height:auto}
-.qrs .breve{opacity:.7}
-.ico{width:34px;height:34px;color:var(--amb)}
-.braco{display:grid;gap:22px;grid-template-columns:minmax(0,1fr) auto;align-items:center;background:var(--card);border:1px solid var(--amb);border-radius:16px;padding:22px}
-.braco .quadro{background:#fff;border-radius:12px;padding:10px;width:150px}
-.braco .quadro img{display:block;width:100%}
-/* ?tv=1: tela para a TV do estande, com os QR grandes e sem rolagem */
-body.tv .topo,body.tv footer,body.tv .so-celular{display:none}
-body.tv .hero{padding:3vh 0 2vh}
-body.tv h1{font-size:4.2vw}
-body.tv .qrs{grid-template-columns:repeat(3,1fr);gap:2vw}
-body.tv .qrs .quadro{display:block;flex:none;width:9vw}
-body.tv .qrs .card{flex-direction:row;align-items:center;gap:1.4vw;padding:1.4vw}
-body.tv .qrs .card h3{font-size:1.5vw}
-body.tv .qrs .card p{font-size:1vw}
-body.tv .qrs .vai,body.tv .qrs .ico{display:none}
-body.tv .wrap{width:94vw}
-@media(max-width:640px){.braco{grid-template-columns:1fr}.braco .quadro{display:none}}
+.blocos{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));margin:8px 0 34px}
+.bloco{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;color:var(--txt);text-decoration:none;transition:border-color .2s,transform .2s}
+.bloco:hover{border-color:var(--amb);transform:translateY(-3px);color:var(--txt)}
+.bloco .foto{position:relative;aspect-ratio:16/10;background:var(--bg2)}
+.bloco .foto img{width:100%;height:100%;object-fit:cover;display:block}
+.bloco .tag{position:absolute;left:12px;top:12px;background:var(--amb);color:var(--amb-ink);font:700 12px/1 Sora,Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;border-radius:999px}
+.bloco .corpo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px 18px 20px}
+.bloco h3{font-size:22px;margin:0 0 6px}
+.bloco p{margin:0;color:var(--mut);font-size:15px;line-height:1.5}
+.bloco .vai{display:inline-block;margin-top:10px;color:var(--amb);font:600 14px Sora,Inter,sans-serif}
+.qr{background:#fff;border-radius:12px;padding:8px;width:118px;flex:none}
+.qr img{display:block;width:100%;height:auto}
+.servico .tag{background:var(--sky);color:#06131c}
+/* celular: quem já está no celular não precisa do QR */
+@media(max-width:640px){.qr{display:none}.bloco .corpo{grid-template-columns:1fr}}
+/* ?tv=1: TV do estande, os 7 blocos numa tela, QR grande */
+body.tv .topo,body.tv footer,body.tv .lead,body.tv .vai{display:none}
+body.tv .wrap{width:96vw}
+body.tv .hero{padding:1.8vh 0 1.6vh;display:flex;align-items:center;gap:2vw;flex-wrap:wrap}
+body.tv h1{font-size:2.5vw;margin:0}
+body.tv .chip{font-size:1vw}
+body.tv .blocos{grid-template-columns:repeat(4,1fr);gap:1.2vw;margin:0}
+body.tv .bloco .foto{aspect-ratio:auto;height:19vh}
+body.tv .bloco .corpo{padding:1vw 1.1vw;gap:1vw}
+body.tv .bloco h3{font-size:1.45vw}
+body.tv .bloco p{font-size:.92vw}
+body.tv .bloco .tag{font-size:.75vw}
+body.tv .qr{width:8.6vw;padding:.45vw}
+body.tv .bloco.estande{border-color:var(--amb)}
+.bloco.estande{display:none}
+body.tv .bloco.estande{display:flex}
 </style>
 </head>
 <body>
 <header class="topo"><div class="wrap">
   <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
-  <nav class="nav" aria-label="Estande"><a href="10-fabrica-de-jogos/">Jogos</a><a href="11-solucoes-praticas/">Soluções</a><a href="01-robo-que-anda/">Robôs</a><a href="06-avatar-foto-demo/quiz/">Seu futuro</a><a href="03-desafios/">Desafios</a></nav>
+  <nav class="nav" aria-label="Estande"><a href="10-fabrica-de-jogos/">Jogos</a><a href="11-solucoes-praticas/">Soluções</a><a href="01-robo-que-anda/">Robôs</a><a href="03-desafios/">Desafios</a><a href="https://desenho.inema.pro/">Desenho</a><a href="06-avatar-foto-demo/quiz/">Seu futuro</a></nav>
 </div></header>
 
 <main class="wrap">
   <section class="hero">
     <span class="chip">MOSTRATEC 2026 · 27 a 29 de outubro · FENAC</span>
     <h1>INEMA na MOSTRATEC: <em>crie</em>, monte e venda com IA.</h1>
-    <p class="lead so-celular">Escolha uma mesa, aponte a câmera para o QR e continue em casa. <b>Tudo aberto e gratuito</b>, sem cadastro.</p>
+    <p class="lead">Aponte a câmera para o QR de cada mesa e continue em casa. <b>Tudo aberto e gratuito</b>, sem cadastro.</p>
   </section>
 
-  <div class="qrs">
-    <a class="card" href="10-fabrica-de-jogos/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M5.5 12.5h3M15 12h.01M18 13h.01"/></svg>
-      <div class="quadro"><img src="assets/qr/jogos.svg" alt="QR da Fábrica de Jogos"></div>
-      <div><h3>Fábrica de Jogos</h3><p>8 jogos para jogar no celular e criar a sua versão com IA.</p></div>
-      <span class="vai">Jogar →</span></a>
-    <a class="card" href="11-solucoes-praticas/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/><rect x="9" y="9" width="6" height="6"/></svg>
-      <div class="quadro"><img src="assets/qr/solucoes.svg" alt="QR das Soluções que vendem"></div>
-      <div><h3>Soluções que vendem</h3><p>7 projetos de automação com IA para montar e vender: pet, horta, câmera, energia, água.</p></div>
-      <span class="vai">Ver os guias →</span></a>
-    <a class="card" href="01-robo-que-anda/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="2"/><path d="M12 8V4M9 13h.01M15 13h.01M8 18v3M16 18v3M2 12v3M22 12v3"/></svg>
-      <div class="quadro"><img src="assets/qr/robos.svg" alt="QR dos Robôs para montar"></div>
-      <div><h3>Robôs para montar</h3><p>Robô de papel que anda, assistente de voz e robô vigia. Monte, teste e melhore.</p></div>
-      <span class="vai">Montar →</span></a>
-    <a class="card" href="06-avatar-foto-demo/quiz/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 6.9H22l-6 4.5 2.3 7L12 16l-6.3 4.4 2.3-7-6-4.5h7.6z"/></svg>
-      <div class="quadro"><img src="assets/qr/futuro.svg" alt="QR do Seu futuro em imagem"></div>
-      <div><h3>Seu futuro em imagem</h3><p>6 perguntas rápidas e a imagem do seu futuro. Nada é enviado.</p></div>
-      <span class="vai">Descobrir →</span></a>
-    <a class="card" href="https://desenho.inema.pro/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.6 7.6"/><circle cx="11" cy="11" r="2"/></svg>
-      <div class="quadro"><img src="assets/qr/desenho.svg" alt="QR do Desenho que ganha vida"></div>
-      <div><h3>Desenho que ganha vida</h3><p>Desenhe no papel, fotografe e veja o seu personagem andar, pular e dançar na TV.</p></div>
-      <span class="vai">Mandar o meu →</span></a>
-    <a class="card" href="03-desafios/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-      <div class="quadro"><img src="assets/qr/desafios.svg" alt="QR dos Desafios para quem é bom"></div>
-      <div><h3>Desafios para quem é bom</h3><p>8 problemas de lógica, IA, ESP32 e o braço SO-101. Resposta conferida no site.</p></div>
-      <span class="vai">Resolver →</span></a>
+  <div class="blocos">
+    <a class="bloco" href="10-fabrica-de-jogos/">
+      <div class="foto"><img src="assets/img/jogos.webp" alt="Tela do jogo Roube o Ovo, da Fábrica de Jogos" loading="lazy"><span class="tag">Jogos</span></div>
+      <div class="corpo"><div><h3>Fábrica de Jogos</h3><p>8 jogos feitos com IA para jogar no celular e criar a sua versão.</p><span class="vai">Jogar →</span></div>
+        <div class="qr"><img src="assets/qr/jogos.svg" alt="QR da Fábrica de Jogos"></div></div></a>
+
+    <a class="bloco" href="11-solucoes-praticas/">
+      <div class="foto"><img src="assets/img/solucoes.webp" alt="Comedouro automático de pet montado com ESP32" loading="lazy"><span class="tag">Soluções</span></div>
+      <div class="corpo"><div><h3>Soluções que vendem</h3><p>7 projetos com ESP32 e IA para montar e vender: pet, horta, câmera, energia, água.</p><span class="vai">Ver os guias →</span></div>
+        <div class="qr"><img src="assets/qr/solucoes.svg" alt="QR das Soluções que vendem"></div></div></a>
+
+    <a class="bloco" href="01-robo-que-anda/">
+      <div class="foto"><img src="assets/img/robos.webp" alt="Robô vigia com câmera sobre a mesa" loading="lazy"><span class="tag">Robôs</span></div>
+      <div class="corpo"><div><h3>Robôs para montar</h3><p>Robô de papel que anda, assistente de voz e robô vigia.</p><span class="vai">Montar →</span></div>
+        <div class="qr"><img src="assets/qr/robos.svg" alt="QR dos Robôs para montar"></div></div></a>
+
+    <a class="bloco" href="https://inematds.github.io/robotica-so101/guia/" target="_blank" rel="noopener">
+      <div class="foto"><img src="assets/img/braco.webp" alt="Braço robô SO-101 e o seu gêmeo digital" loading="lazy"><span class="tag">Ao vivo</span></div>
+      <div class="corpo"><div><h3>Braço robô SO-101</h3><p>O braço da mesa e o seu gêmeo digital. Rode a simulação grátis em casa.</p><span class="vai">Abrir o guia →</span></div>
+        <div class="qr"><img src="assets/qr/braco.svg" alt="QR do guia do braço SO-101"></div></div></a>
+
+    <a class="bloco servico" href="https://desenho.inema.pro/">
+      <div class="foto"><img src="assets/img/desenho.webp" alt="Desenho feito no papel ganhando vida na TV" loading="lazy"><span class="tag">Na TV</span></div>
+      <div class="corpo"><div><h3>Desenho que ganha vida</h3><p>Desenhe no papel, fotografe e veja o seu personagem dançar na TV.</p><span class="vai">Mandar o meu →</span></div>
+        <div class="qr"><img src="assets/qr/desenho.svg" alt="QR do Desenho que ganha vida"></div></div></a>
+
+    <a class="bloco" href="03-desafios/">
+      <div class="foto"><img src="assets/img/desafios.webp" alt="Estudantes resolvendo um desafio diante do braço robô" loading="lazy"><span class="tag">Desafios</span></div>
+      <div class="corpo"><div><h3>Desafios para quem é bom</h3><p>8 problemas de lógica, IA, ESP32 e o braço SO-101. Resposta conferida no site.</p><span class="vai">Resolver →</span></div>
+        <div class="qr"><img src="assets/qr/desafios.svg" alt="QR dos Desafios para quem é bom"></div></div></a>
+
+    <a class="bloco" href="06-avatar-foto-demo/quiz/">
+      <div class="foto"><img src="assets/img/futuro.webp" alt="Imagem de futuro gerada pelo quiz" loading="lazy"><span class="tag">Quiz</span></div>
+      <div class="corpo"><div><h3>Seu futuro em imagem</h3><p>6 perguntas rápidas e a imagem do seu futuro. Nada é enviado.</p><span class="vai">Descobrir →</span></div>
+        <div class="qr"><img src="assets/qr/futuro.svg" alt="QR do Seu futuro em imagem"></div></div></a>
+
+    <a class="bloco estande" href="./">
+      <div class="foto"><img src="assets/img/estande.webp" alt="" loading="lazy"><span class="tag">Tudo aqui</span></div>
+      <div class="corpo"><div><h3>Leve tudo no celular</h3><p>mostratec.inema.club: todos os projetos num lugar só.</p></div>
+        <div class="qr"><img src="assets/qr/estande.svg" alt="QR desta página"></div></div></a>
   </div>
-
-  <section>
-    <div class="braco">
-      <div><p class="sec">Demonstração ao vivo</p><h2>O braço robô SO-101</h2><p>O braço da mesa tem um gêmeo digital: ele treina na simulação antes de pegar o objeto de verdade. Veja como funciona e rode a simulação grátis no seu computador.</p>
-        <div class="acoes"><a class="btn pri" href="https://inematds.github.io/robotica-so101/guia/" target="_blank" rel="noopener">Abrir o guia do SO-101</a></div></div>
-      <div class="quadro"><img src="assets/qr/braco.svg" alt="QR do guia do braço SO-101"></div>
-    </div>
-  </section>
 </main>
 <footer><div class="wrap">INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a> · <a href="https://eventos.inema.pro/mostratec/">página do evento</a></div></footer>
 <script>if(new URLSearchParams(location.search).get("tv")==="1")document.body.classList.add("tv");</script>
