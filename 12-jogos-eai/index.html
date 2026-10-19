@@ -3,43 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jogos do EAI</title>
-<meta name="description" content="Os 119 jogos do antigo EAI (arcade e educacionais) reunidos para revisão: jogue, veja o teste no celular e a avaliação de cada um.">
+<title>Jogos e Educação</title>
+<meta name="description" content="Os projetos antigos de jogos e educação do INEMA e os 119 jogos do EAI, reunidos para revisão um por um.">
 <link rel="stylesheet" href="../assets/pagina.css">
 <style>
-  .painel{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
-  .num{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
-  .num b{display:block;font:800 26px/1.1 Sora,sans-serif;color:var(--txt)}
-  .num span{font-size:13px;color:var(--mut)}
-  .num.ok b{color:var(--ok)} .num.at b{color:var(--warm)} .num.ap b{color:var(--amb)}
-  .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0 16px}
-  .filtros input,.filtros select{min-height:44px;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:15px Inter,sans-serif}
-  .filtros input{flex:1 1 220px}
-  .filtros select{flex:0 1 auto;max-width:100%}
-  .conta{color:var(--mut);font-size:14px;margin:0 0 12px}
-  .jogo{padding:0;overflow:hidden}
-  .jogo .capa{display:block;aspect-ratio:4/5;background:var(--bg2);border-bottom:1px solid var(--line);position:relative}
-  .jogo .capa img{width:100%;height:100%;object-fit:cover;display:block}
-  .jogo .capa .n{position:absolute;top:8px;left:8px;background:var(--bg);color:var(--amb);font:800 14px/1 Sora,sans-serif;border-radius:8px;padding:6px 9px}
-  .jogo .corpo{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
-  .jogo h3{margin:0;font-size:17px}
-  .jogo p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
-  .tag.at{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 45%,transparent)}
-  .tag.ap{color:var(--amb-ink);background:var(--amb);border-color:var(--amb)}
-  .tag.aj{color:var(--sky);border-color:color-mix(in srgb,var(--sky) 45%,transparent)}
-  .tag.fo{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
-  .obs{font-size:13px;color:var(--mut);border-left:2px solid var(--line);padding-left:8px}
-  .jogo .btn{margin-top:auto;justify-content:center}
-  .grade{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
-  @media (max-width:420px){.jogo .corpo{padding:10px 10px 12px}.jogo h3{font-size:15px}.jogo p{font-size:13px}}
+  .hero{padding:34px 0 10px}
+  .hero h1{font-size:clamp(30px,4.4vw,46px)}
+  .resumo{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 0;font-size:14px;color:var(--mut)}
+  .resumo b{color:var(--txt);font-family:Sora,sans-serif}
+  .resumo .ok b{color:var(--ok)} .resumo .ap b{color:var(--amb)}
+  .antigo{font-size:14px;color:var(--mut);margin:10px 0 0}
+
+  /* barra de filtros fixa */
+  .barra{position:sticky;top:56px;z-index:9;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0;margin:18px 0 6px}
+  .linha{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .barra input,.barra select{min-height:40px;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:14px Inter,sans-serif}
+  .barra input{flex:1 1 200px;min-width:0}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:var(--card);color:var(--mut);border:0;padding:0 14px;min-height:40px;font:600 14px Inter,sans-serif;cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button[aria-pressed=true]{background:var(--amb);color:var(--amb-ink)}
+  .cats{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:thin}
+  .cats a{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 11px;white-space:nowrap}
+  .cats a:hover{color:var(--txt);border-color:var(--amb)}
+  .cats a span{color:var(--amb);margin-left:4px}
+
+  /* grupos */
+  .area{margin:30px 0 4px;font-size:clamp(22px,3vw,28px)}
+  .area small{font:500 15px Inter,sans-serif;color:var(--mut);margin-left:8px}
+  .grupo{scroll-margin-top:150px;margin:18px 0 8px}
+  .grupo h3{display:flex;align-items:baseline;gap:8px;font-size:16px;color:var(--amb);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .grupo h3 span{font:500 13px Inter,sans-serif;color:var(--mut)}
+  .grade{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+
+  /* cartão compacto, todo clicável */
+  .jogo{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--txt);transition:border-color .15s,transform .15s}
+  .jogo:hover{border-color:var(--amb);transform:translateY(-2px);color:var(--txt)}
+  .capa{position:relative;aspect-ratio:4/3;background:var(--bg2);overflow:hidden}
+  .capa img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .n{position:absolute;top:6px;left:6px;background:var(--bg);color:var(--amb);font:800 13px/1 Sora,sans-serif;border-radius:7px;padding:5px 8px}
+  .sit{position:absolute;top:6px;right:6px;font:700 11px/1 Inter,sans-serif;border-radius:7px;padding:5px 7px;background:var(--bg);color:var(--mut)}
+  .sit.ap{background:var(--amb);color:var(--amb-ink)} .sit.aj{color:var(--sky)} .sit.fo{color:var(--bad)}
+  .corpo{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .corpo h4{margin:0;font:700 15px/1.25 Sora,sans-serif}
+  .corpo p{margin:0;font-size:13px;line-height:1.45;color:var(--mut);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px;font-size:12px;font-weight:600}
+  .selo{display:inline-flex;align-items:center;gap:4px;color:var(--mut)}
+  .selo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .selo.ok{color:var(--ok)} .selo.at{color:var(--warm)} .selo.rv{color:var(--sky)}
+  .obs{font-size:12px;color:var(--txt);border-left:2px solid var(--amb);padding-left:6px;margin-top:4px}
+  .grade.proj{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  .proj .capa{aspect-ratio:16/10}
+  .tile{width:100%;height:100%;display:grid;place-items:center;font:800 22px/1.2 Sora,sans-serif;color:var(--mut);background:repeating-linear-gradient(135deg,var(--bg2) 0 12px,var(--card) 12px 24px)}
+  .sit.no{color:var(--ok)} .sit.fa{color:var(--bad)} .sit.nu{color:var(--mut)}
+  .grupo.projs h3{color:var(--txt)}
+  .vazio{color:var(--mut);padding:30px 0}
   footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--mut);font-size:14px}
+
+  @media (max-width:600px){
+    .barra{position:static;margin-top:10px}
+    .barra select{flex:1 1 auto}
+    .grupo{scroll-margin-top:200px}
+    .grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .corpo{padding:8px 10px 10px}
+    .corpo h4{font-size:14px}
+    .corpo p{font-size:12px}
+    .seg button{padding:0 10px;font-size:13px}
+  }
 </style>
 </head>
 <body>
 <header class="topo">
   <div class="wrap">
-    <a class="marca" href="./">INEMA<b>.</b>JOGOS EAI</a>
+    <a class="marca" href="./">INEMA<b>.</b>JOGOS E EDUCAÇÃO</a>
     <nav class="nav" aria-label="MOSTRATEC">
       <a href="../">Estande</a>
       <a href="../10-fabrica-de-jogos/">Fábrica de Jogos</a>
@@ -49,87 +85,148 @@
 
 <main class="wrap">
   <section class="hero">
-    <span class="chip">Revisão · jogos do EAI</span>
-    <h1>Os jogos do <em>EAI</em>, um por um</h1>
-    <p class="lead">Os jogos arcade e educacionais do antigo EAI (dezembro de 2025) agora estão aqui. Todos passaram por um <b>teste automático no celular</b>. Agora cada um é avaliado e ajustado. Para falar de um jogo, use o <b>número</b> do cartão.</p>
-    <div class="painel" id="painel"></div>
+    <span class="chip">Revisão · projetos antigos</span>
+    <h1>Jogos e <em>educação</em>, um por um</h1>
+    <p class="lead">Os projetos de jogos e educação do INEMA (dezembro de 2025 a março de 2026) e os jogos do EAI, agrupados por tipo. Toque num cartão para abrir. Para falar de um item, use o <b>código</b>: <b>P1</b> a <b>P9</b> para os projetos, <b>#1</b> a <b>#119</b> para os jogos.</p>
+    <div class="resumo" id="resumo"></div>
+    <p class="antigo">Os jogos do EAI ficavam em <b>eai.inema.club</b> (hoje esse endereço abre o INEMA Aventura).</p>
   </section>
 
-  <div class="filtros">
-    <input id="busca" type="search" placeholder="Buscar por nome, matéria ou número" aria-label="Buscar">
-    <select id="fArea" aria-label="Área"><option value="">Todas as áreas</option><option>Arcade</option><option>Educacional</option></select>
-    <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option></select>
-    <select id="fSit" aria-label="Situação">
-      <option value="">Todas as situações</option>
-      <option value="a avaliar">A avaliar</option>
-      <option value="aprovado">Aprovados</option>
-      <option value="ajustar">A ajustar</option>
-      <option value="fora">Fora</option>
-      <option value="atencao">Teste com atenção</option>
-    </select>
+  <div class="barra">
+    <div class="linha">
+      <input id="busca" type="search" placeholder="Buscar nome, matéria, P3 ou #12" aria-label="Buscar">
+      <div class="seg" role="group" aria-label="Área">
+        <button data-area="" aria-pressed="true">Tudo</button>
+        <button data-area="Projetos" aria-pressed="false">Projetos</button>
+        <button data-area="Arcade" aria-pressed="false">Arcade</button>
+        <button data-area="Educacional" aria-pressed="false">Educacionais</button>
+      </div>
+      <select id="fSit" aria-label="Situação">
+        <option value="">Qualquer situação</option>
+        <option value="a avaliar">A avaliar</option>
+        <option value="aprovado">Aprovados</option>
+        <option value="ajustar">A ajustar</option>
+        <option value="fora">Fora</option>
+        <option value="revisado">Revisados</option>
+      </select>
+    </div>
+    <nav class="cats" id="cats" aria-label="Categorias"></nav>
   </div>
-  <p class="conta" id="conta"></p>
-  <div class="grade" id="grade"></div>
+
+  <div id="lista"></div>
 </main>
 
 <footer>
   <div class="wrap">
-    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="./">Jogos do EAI</a>
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="./">Jogos e educação</a>
   </div>
 </footer>
 
 <script src="dados.js"></script>
 <script>
 const J = window.JOGOS || [];
+const P = window.PROJETOS || [];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SIT = { "a avaliar": ["", "a avaliar"], aprovado: ["ap", "aprovado"], ajustar: ["aj", "a ajustar"], fora: ["fo", "fora"] };
+const SIT = { aprovado: ["ap", "aprovado"], ajustar: ["aj", "ajustar"], fora: ["fo", "fora"] };
+const AREAS = [["Arcade", "Arcade"], ["Educacional", "Educacionais"]];
+const idCat = (a, c) => "g-" + (a + "-" + c).toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-");
+let area = "";
 
-// Painel de números
+// Resumo em uma linha
 const conta = f => J.filter(f).length;
-$("painel").innerHTML = [
+$("resumo").innerHTML = [
+  ["", P.length, "projetos"],
   ["", J.length, "jogos"],
-  ["ok", conta(j => j.teste === "ok"), "teste ok no celular"],
-  ["at", conta(j => j.teste === "atencao"), "teste com atenção"],
+  ["", conta(j => j.area === "Arcade"), "arcade"],
+  ["", conta(j => j.area === "Educacional"), "educacionais"],
+  ["ok", conta(j => j.teste === "ok"), "com teste ok no celular"],
+  ["", conta(j => j.revisao), "revisados"],
   ["ap", conta(j => j.avaliacao === "aprovado"), "aprovados"],
-  ["", conta(j => j.avaliacao === "a avaliar"), "a avaliar"],
-].map(([c, n, t]) => `<div class="num ${c}"><b>${n}</b><span>${t}</span></div>`).join("");
-
-// Categorias no filtro
-[...new Set(J.map(j => j.categoria))].sort((a, b) => a.localeCompare(b, "pt")).forEach(c => {
-  const o = document.createElement("option"); o.textContent = c; $("fCat").appendChild(o);
-});
+].map(([c, n, t]) => `<span class="${c}"><b>${n}</b> ${t}</span>`).join("");
 
 function cartao(j) {
-  const [cls, rot] = SIT[j.avaliacao] || SIT["a avaliar"];
-  const teste = j.teste === "ok" ? `<span class="tag ok">teste ok</span>`
-    : `<span class="tag at" title="${esc(j.problemas.join("; "))}">atenção: ${esc(j.problemas.join("; "))}</span>`;
-  const extra = [j.idade && `${esc(j.idade)} anos`, j.serie && esc(j.serie)].filter(Boolean).join(" · ");
-  return `<article class="card jogo" id="j${j.n}">
-    <a class="capa" href="${esc(j.arquivo)}"><img src="${esc(j.capa)}" alt="Tela do jogo ${esc(j.titulo)}" loading="lazy"><span class="n">#${j.n}</span></a>
+  const [cls, rot] = SIT[j.avaliacao] || ["", ""];
+  const teste = j.teste === "ok" ? `<span class="selo ok">teste ok</span>`
+    : `<span class="selo at" title="${esc(j.problemas.join("; "))}">atenção</span>`;
+  const rev = j.revisao ? `<span class="selo rv" title="${esc(j.revisao)}">revisado</span>` : "";
+  const idade = j.idade ? `<span class="selo">${esc(j.idade)} anos</span>` : "";
+  return `<a class="jogo" id="j${j.n}" href="${esc(j.arquivo)}" title="${esc(j.descricao)}">
+    <div class="capa"><img src="${esc(j.capa)}" alt="" loading="lazy"><span class="n">#${j.n}</span>${rot ? `<span class="sit ${cls}">${rot}</span>` : ""}</div>
     <div class="corpo">
-      <h3>${esc(j.titulo)}</h3>
-      <div class="tags"><span class="tag">${esc(j.area)}</span><span class="tag">${esc(j.categoria)}</span>${extra ? `<span class="tag">${extra}</span>` : ""}</div>
+      <h4>${esc(j.titulo)}</h4>
       <p>${esc(j.descricao)}</p>
-      <div class="tags">${teste}<span class="tag ${cls}">${rot}</span></div>
       ${j.obs ? `<div class="obs">${esc(j.obs)}</div>` : ""}
-      ${j.revisao ? `<div class="obs">Revisão: ${esc(j.revisao)}</div>` : ""}
-      <a class="btn pri" href="${esc(j.arquivo)}">Jogar</a>
+      <div class="selos">${teste}${rev}${idade}</div>
     </div>
-  </article>`;
+  </a>`;
+}
+
+const PSIT = { "no ar": ["no", "no ar"], "fora": ["fa", "fora do ar"], "nunca publicado": ["nu", "nunca publicado"] };
+function cartaoProj(p) {
+  const [c, r] = PSIT[p.situacao] || ["", p.situacao];
+  const [ca, ra] = SIT[p.avaliacao] || ["", ""];
+  const fora = p.link.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+  const capa = p.capa ? `<img src="${esc(p.capa)}" alt="" loading="lazy">` : `<div class="tile">${esc(p.repo)}</div>`;
+  return `<a class="jogo" id="${p.id}" href="${esc(p.link)}"${fora}>
+    <div class="capa">${capa}<span class="n">${p.id}</span><span class="sit ${c}">${r}</span></div>
+    <div class="corpo">
+      <h4>${esc(p.nome)}</h4>
+      <p>${esc(p.descricao)}</p>
+      <div class="obs">${esc(p.nota)}</div>
+      ${p.obs ? `<div class="obs">${esc(p.obs)}</div>` : ""}
+      <div class="selos"><span class="selo">${esc(p.datas)}</span>${ra ? `<span class="selo rv">${ra}</span>` : ""}</div>
+    </div>
+  </a>`;
 }
 
 function filtra() {
   const q = $("busca").value.trim().toLowerCase().replace(/^#/, "");
-  const a = $("fArea").value, c = $("fCat").value, s = $("fSit").value;
+  const s = $("fSit").value;
   const lista = J.filter(j =>
-    (!a || j.area === a) && (!c || j.categoria === c) &&
-    (!s || (s === "atencao" ? j.teste === "atencao" : j.avaliacao === s)) &&
+    (!area || j.area === area) &&
+    (!s || (s === "revisado" ? !!j.revisao : j.avaliacao === s)) &&
     (!q || String(j.n) === q || [j.titulo, j.descricao, j.categoria, j.slug].join(" ").toLowerCase().includes(q)));
-  $("grade").innerHTML = lista.map(cartao).join("");
-  $("conta").textContent = `${lista.length} de ${J.length} jogos`;
+
+  const qp = q.toLowerCase();
+  const projs = (area && area !== "Projetos") || (s && s !== "a avaliar" && s !== "aprovado" && s !== "ajustar" && s !== "fora") ? [] :
+    P.filter(p => (!s || p.avaliacao === s) && (!q || p.id.toLowerCase() === qp || [p.nome, p.descricao, p.repo, p.grupo].join(" ").toLowerCase().includes(q)));
+  let html = "", cats = "";
+  if (projs.length) {
+    html += `<h2 class="area" id="projetos">Projetos<small>${projs.length} repositórios</small></h2>`;
+    cats += `<a href="#projetos">Projetos<span>${projs.length}</span></a>`;
+    const porG = {};
+    projs.forEach(p => (porG[p.grupo] ||= []).push(p));
+    Object.keys(porG).forEach(g => {
+      html += `<section class="grupo projs"><h3>${esc(g)} <span>${porG[g].length}</span></h3><div class="grade proj">${porG[g].map(cartaoProj).join("")}</div></section>`;
+    });
+  }
+  if (area === "Projetos") { $("lista").innerHTML = html || `<p class="vazio">Nenhum projeto com esse filtro.</p>`; $("cats").innerHTML = cats; return; }
+  if (/^p\d+$/.test(qp)) { $("lista").innerHTML = html || `<p class="vazio">Nada encontrado.</p>`; $("cats").innerHTML = cats; return; }
+  html += `<span id="jogos"></span>`;
+  for (const [a, nome] of AREAS) {
+    const daArea = lista.filter(j => j.area === a);
+    if (!daArea.length) continue;
+    html += `<h2 class="area">Jogos · ${nome}<small>${daArea.length} jogos</small></h2>`;
+    const porCat = {};
+    daArea.forEach(j => (porCat[j.categoria] ||= []).push(j));
+    Object.keys(porCat).sort((x, y) => porCat[y].length - porCat[x].length || x.localeCompare(y, "pt")).forEach(c => {
+      const id = idCat(a, c);
+      cats += `<a href="#${id}">${esc(c)}<span>${porCat[c].length}</span></a>`;
+      html += `<section class="grupo" id="${id}"><h3>${esc(c)} <span>${porCat[c].length}</span></h3><div class="grade">${porCat[c].map(cartao).join("")}</div></section>`;
+    });
+  }
+  $("lista").innerHTML = html || `<p class="vazio">Nenhum jogo com esse filtro.</p>`;
+  $("cats").innerHTML = cats;
 }
-["busca", "fArea", "fCat", "fSit"].forEach(id => $(id).addEventListener("input", filtra));
+
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  area = b.dataset.area;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  filtra();
+}));
+$("busca").addEventListener("input", filtra);
+$("fSit").addEventListener("input", filtra);
 filtra();
 </script>
 </body>

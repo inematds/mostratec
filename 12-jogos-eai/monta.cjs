@@ -11,7 +11,7 @@ const jogos = meta.lista.map((j, i) => ({
   n: i + 1,
   slug: j.slug, titulo: j.titulo, descricao: j.descricao,
   area: j.area === "ARCADE" ? "Arcade" : "Educacional",
-  categoria: j.categoria, idade: j.idade, serie: j.serie,
+  categoria: ({ Acao: "Ação", Estrategia: "Estratégia" })[j.categoria] || j.categoria, idade: j.idade, serie: j.serie,
   arquivo: "jogos/" + j.arquivo,
   capa: "capas/" + j.slug + ".jpg",
   teste: (status[j.slug] || {}).teste || "sem teste",
@@ -20,6 +20,8 @@ const jogos = meta.lista.map((j, i) => ({
   obs: (aval[j.slug] || {}).obs || "",
   revisao: (aval[j.slug] || {}).revisao || "",
 }));
-const saida = "// Gerado por monta.cjs — não editar à mão.\nwindow.JOGOS = " + JSON.stringify(jogos) + ";\n";
+const projetos = ler("projetos.json", []).map(p => ({ ...p,
+  avaliacao: (aval[p.id] || {}).situacao || "a avaliar", obs: (aval[p.id] || {}).obs || "", revisao: (aval[p.id] || {}).revisao || "" }));
+const saida = "// Gerado por monta.cjs — não editar à mão.\nwindow.JOGOS = " + JSON.stringify(jogos) + ";\nwindow.PROJETOS = " + JSON.stringify(projetos) + ";\n";
 fs.writeFileSync(path.join(__dirname, "dados.js"), saida);
-console.log(jogos.length, "jogos em dados.js");
+console.log(jogos.length, "jogos e", projetos.length, "projetos em dados.js");
