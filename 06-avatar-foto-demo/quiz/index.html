@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Seu futuro em imagem</title>
-<meta name="description" content="Responda 6 perguntas rápidas e veja o seu futuro em uma imagem. INEMA na MOSTRATEC 2026. Nada é enviado: tudo acontece no seu celular.">
+<meta name="description" content="Responda 7 perguntas rápidas e veja o seu futuro em uma imagem. INEMA na MOSTRATEC 2026. Nada é enviado: tudo acontece no seu celular.">
 <meta name="theme-color" content="#0c0c10">
 <link rel="stylesheet" href="../../assets/pagina.css">
 <style>
@@ -25,6 +25,11 @@ body{min-height:100vh}
 .opcao:hover,.opcao:focus-visible{border-color:var(--amb);outline:none}
 .opcao .letra{flex:none;width:34px;height:34px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);
   font:800 15px/32px Sora;text-align:center;color:var(--amb)}
+.opcoes.com-foto{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:760px){.opcoes.com-foto{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.com-foto .opcao{display:grid;grid-template-columns:auto 1fr;align-items:center;align-content:start;column-gap:10px;row-gap:10px;padding:0 12px 12px;overflow:hidden;font-size:15px}
+.com-foto .opcao img{grid-column:1/-1;display:block;width:calc(100% + 24px);margin:0 -12px;aspect-ratio:16/10;object-fit:cover;border-bottom:1px solid var(--line)}
+.com-foto .opcao .letra{width:28px;height:28px;font-size:13px;line-height:26px}
 .opcao.escolhida{border-color:var(--amb);background:color-mix(in srgb,var(--amb) 12%,var(--card))}
 .voltar{margin-top:18px;background:none;border:0;color:var(--mut);font:600 14px Inter;cursor:pointer;padding:8px 0}
 .gerando{min-height:60vh;display:grid;place-items:center;text-align:center}
@@ -79,9 +84,9 @@ body.tv .tela{display:none!important}
   <section class="tela ativa" id="t-inicio" aria-label="Início">
     <div class="inicio">
       <div>
-        <span class="chip">MOSTRATEC 2026 · 6 perguntas</span>
+        <span class="chip">MOSTRATEC 2026 · 7 perguntas</span>
         <h1>Qual é o <em>seu futuro</em>?</h1>
-        <p class="lead">Responda 6 perguntas rápidas, só tocando nas respostas. No fim aparece <b>a imagem do seu futuro</b>, o que você já tem de bom para chegar lá e uma missão para começar ainda esta semana.</p>
+        <p class="lead">Responda 7 perguntas rápidas, só tocando nas respostas. No fim aparece <b>a imagem do seu futuro</b>, o que você já tem de bom para chegar lá e uma missão para começar ainda esta semana.</p>
         <div class="acoes"><button class="btn pri" id="comecar" type="button">Começar</button><button class="btn" type="button" id="ver-todos">Ver os 8 futuros</button></div>
         <p class="privado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Nada é enviado: sem nome, sem foto, sem e-mail. Tudo acontece aqui no seu celular.</p>
       </div>
@@ -131,7 +136,7 @@ body.tv .tela{display:none!important}
     <span class="chip">INEMA na MOSTRATEC 2026</span>
     <h1>Qual é o <em>seu futuro</em>?</h1>
     <p class="lead" id="tv-texto"></p>
-    <div class="qr"><div class="quadro" id="tv-qr"></div><p>Aponte a câmera<span>6 perguntas · nada é enviado · grátis</span></p></div>
+    <div class="qr"><div class="quadro" id="tv-qr"></div><p>Aponte a câmera<span>7 perguntas · nada é enviado · grátis</span></p></div>
   </div>
 </div>
 
@@ -143,7 +148,7 @@ body.tv .tela{display:none!important}
    FUTUROS: cada resultado possível (a imagem fica em img/<id>.jpg).
    PERGUNTAS: cada resposta soma pontos para 1 ou 2 futuros.
    ============================================================ */
-const VERSAO = "0.1.0";
+const VERSAO = "0.2.0";
 const FUTUROS = {
   espaco:   { nome: "Exploração Espacial", texto: "Você quer ir aonde ninguém foi. Foguetes, satélites e bases em outros planetas precisam de gente curiosa e corajosa, que gosta de física e de um bom problema.",
               poderes: [["Curiosidade","pergunta o porquê de tudo"],["Coragem","topa o desconhecido"],["Cálculo","gosta de números que voam"]],
@@ -179,21 +184,34 @@ const FUTUROS = {
               curso: ["Robôs para montar","../../01-robo-que-anda/"] },
 };
 const PERGUNTAS = [
+  { p: "Depois da aula, o que você mais curte fazer?", r: [
+    ["Ler um livro", {mundos:2, vida:1}, "op/livro.webp"],
+    ["Cozinhar", {vida:2, inventor:1}, "op/cozinhar.webp"],
+    ["Fazer faxina", {agentes:2, robos:1}, "op/faxina.webp"],
+    ["Estudar algo pendente", {espaco:2, agentes:1}, "op/estudar.webp"],
+    ["Escutar música", {mundos:2, cidades:1}, "op/musica.webp"],
+    ["Estar com os amigos", {cidades:2, planeta:1}, "op/amigos.webp"] ] },
   { p: "Num sábado livre, você prefere…", r: [
     ["Montar ou consertar alguma coisa", {inventor:2, robos:1}],
     ["Jogar ou criar um jogo", {mundos:2, agentes:1}],
     ["Estar ao ar livre, na natureza", {planeta:2, espaco:1}],
     ["Ver um documentário de ciência", {vida:2, espaco:1}] ] },
   { p: "Na escola, o que mais prende você?", r: [
-    ["Física e matemática", {espaco:2, robos:1}],
-    ["Biologia e química", {vida:2, planeta:1}],
-    ["Arte, história e redação", {mundos:2, cidades:1}],
-    ["Computador e tecnologia", {agentes:2, inventor:1}] ] },
+    ["Física e matemática", {espaco:2, robos:1}, "op/esc-fisica.webp"],
+    ["Biologia e química", {vida:2, planeta:1}, "op/esc-biologia.webp"],
+    ["Arte, história e redação", {mundos:2, cidades:1}, "op/esc-arte.webp"],
+    ["Computador e tecnologia", {agentes:2, inventor:1}, "op/esc-computador.webp"],
+    ["Atividade física", {planeta:2, robos:1}, "op/esc-fisica-esporte.webp"],
+    ["Recreio", {cidades:2, mundos:1}, "op/esc-recreio.webp"],
+    ["Literatura e idiomas", {mundos:2, agentes:1}, "op/esc-literatura.webp"],
+    ["Geografia", {planeta:2, cidades:1}, "op/esc-geografia.webp"] ] },
   { p: "Um superpoder para o seu futuro:", r: [
-    ["Voar até outro planeta", {espaco:3}],
-    ["Construir qualquer máquina", {robos:2, inventor:1}],
-    ["Criar mundos com a mente", {mundos:3}],
-    ["Curar qualquer doença", {vida:3}] ] },
+    ["Voar até outro planeta", {espaco:3}, "op/pod-voar.webp"],
+    ["Construir qualquer máquina", {robos:2, inventor:1}, "op/pod-maquina.webp"],
+    ["Criar mundos com a mente", {mundos:3}, "op/pod-mundos.webp"],
+    ["Curar qualquer doença", {vida:3}, "op/pod-curar.webp"],
+    ["Ajudar os outros", {vida:2, cidades:1}, "op/pod-ajudar.webp"],
+    ["Defender seu país ou os amigos", {robos:2, agentes:1}, "op/pod-defender.webp"] ] },
   { p: "Qual problema você mais queria resolver?", r: [
     ["O clima e a falta de água", {planeta:3}],
     ["Cidades com trânsito e calor", {cidades:3}],
@@ -205,10 +223,13 @@ const PERGUNTAS = [
     ["Faz a parte prática", {robos:2, inventor:1}],
     ["Pesquisa e confere tudo", {vida:1, espaco:1, planeta:1}] ] },
   { p: "Que ferramenta você levaria para uma ilha?", r: [
-    ["Uma impressora 3D", {inventor:2, robos:1}],
-    ["Um telescópio", {espaco:2, planeta:1}],
-    ["Um notebook com IA", {agentes:2, mundos:1}],
-    ["Um caderno de desenho", {cidades:2, mundos:1}] ] },
+    ["Uma impressora 3D", {inventor:2, robos:1}, "op/ilha-impressora.webp"],
+    ["Um telescópio", {espaco:2, planeta:1}, "op/ilha-telescopio.webp"],
+    ["Um notebook com IA", {agentes:2, mundos:1}, "op/ilha-notebook.webp"],
+    ["Um caderno de desenho", {cidades:2, mundos:1}, "op/ilha-caderno.webp"],
+    ["Uma caixa de ferramentas", {inventor:2, robos:1}, "op/ilha-caixa.webp"],
+    ["Uma faca", {planeta:1, inventor:1, espaco:1}, "op/ilha-faca.webp"],
+    ["Sementes", {planeta:2, vida:1}, "op/ilha-sementes.webp"] ] },
 ];
 const FRASES_GERANDO = ["Juntando as suas respostas…", "Olhando para daqui a 10 anos…", "Achando o seu futuro…"];
 const ENDERECO = "https://inematds.github.io/mostratec/06-avatar-foto-demo/quiz/";
@@ -230,8 +251,9 @@ function desenhaPergunta(){
   $("conta").textContent = `Pergunta ${passo + 1} de ${PERGUNTAS.length}`;
   $("barra").style.width = (passo / PERGUNTAS.length * 100) + "%";
   $("pergunta").textContent = q.p;
+  $("opcoes").classList.toggle("com-foto", q.r.some(r => r[2]));
   $("opcoes").innerHTML = q.r.map((r, i) =>
-    `<button class="opcao${escolhas[passo] === i ? " escolhida" : ""}" type="button" data-i="${i}"><span class="letra">${"ABCD"[i]}</span>${r[0]}</button>`).join("");
+    `<button class="opcao${escolhas[passo] === i ? " escolhida" : ""}" type="button" data-i="${i}">${r[2] ? `<img src="${r[2]}" alt="" width="640" height="360">` : ""}<span class="letra">${"ABCDEFGH"[i]}</span>${r[0]}</button>`).join("");
   $("voltar").style.visibility = passo ? "visible" : "hidden";
 }
 $("opcoes").addEventListener("click", e => {
