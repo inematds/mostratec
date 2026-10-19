@@ -18,7 +18,7 @@ Decisão do Nei em 17/10/2026.
 | Soluções que vendem | página promocional + guias de cada solução | `11-solucoes-praticas/` |
 | Robôs para montar | robô que anda, assistente de voz, robô vigia | `01-robo-que-anda/` |
 | Seu futuro em imagem | perguntas rápidas → imagem de impacto | `06-avatar-foto-demo/` (versão sem foto) |
-| Desenho que ganha vida | upload do desenho → animação na tela (VPS, operador aprova) | `09-atracao/desenho-vivo/` (protótipo testado; falta escolher a VPS) |
+| Desenho que ganha vida | upload do desenho → animação na tela (operador aprova) | https://desenho.inema.pro (vps6) |
 | Desafios para quem é bom | 8 desafios (5 com o braço SO-101), resposta conferida no site | `03-desafios/` |
 | Braço SO-101 | guia do gêmeo digital | repo `robotica-so101` |
 
@@ -33,3 +33,8 @@ Decisão do Nei em 17/10/2026.
 - Desenho que ganha vida (`09`): roda numa VPS, com formulários online. Sem nome nem e-mail por padrão (público menor de idade; regra do projeto: nada de dado pessoal); no máximo um apelido.
 - Desafios para quem é bom: sim, bons desafios, incluindo desafios com o braço SO-101.
 - O braço do estande é o do repo `robotica-so101`.
+
+## Endereços (19/10/2026)
+
+- Página do estande (tudo num lugar só): https://mostratec.inema.club/ (GitHub Pages deste repo, arquivo `CNAME`; os links inematds.github.io/mostratec/… redirecionam).
+- Desenho que ganha vida: https://desenho.inema.pro/ (vps6/Hostinger; TV em `/tv`, operador em `/operador`, senha `DESENHO_OPERADOR_SENHA` no `wifi/.env`).
