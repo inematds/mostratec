@@ -3,7 +3,7 @@
 Modelo de referência: `jogos/roube-o-ovo/index.html`. Leia esse arquivo antes de começar.
 
 ## Público e objetivo
-- Adolescentes do ensino médio, além das crianças que passam no estande da MOSTRATEC (27 a 30/10/2026).
+- Adolescentes do ensino médio, além das crianças que passam no estande da MOSTRATEC (27 a 29/10/2026).
 - Objetivo: a pessoa joga, gosta e quer **criar a própria versão**. Todo jogo tem o botão "🛠️ Criar a minha versão".
 
 ## Regra do Nei (17/10): missões rápidas, níveis fáceis, crescer rápido

@@ -24,5 +24,12 @@ Decisão do Nei em 17/10/2026.
 
 ## Em aberto
 
-- Datas: o projeto usa 27–30/10; a página do eventos diz 27–29/10 (INEMA na feira). Confirmar.
+- ~~Datas~~ resolvido 19/10: INEMA no estande de 27 a 29/10 (a feira vai até 30, nós não).
 - Quantas TVs e quantas mesas (quantidade de cartões QR).
+
+## Decisões do Nei em 19/10/2026
+
+- Datas: 27 a 29/10 (a feira vai até 30, o INEMA não).
+- Desenho que ganha vida (`09`): roda numa VPS, com formulários online. Sem nome nem e-mail por padrão (público menor de idade; regra do projeto: nada de dado pessoal); no máximo um apelido.
+- Desafios para quem é bom: sim, bons desafios, incluindo desafios com o braço SO-101.
+- O braço do estande é o do repo `robotica-so101`.

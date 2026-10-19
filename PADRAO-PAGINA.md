@@ -20,7 +20,7 @@ Os jogos têm padrão próprio (`10-fabrica-de-jogos/PADRAO-JOGO.md`).
 - Celular primeiro (390 px sem rolagem lateral); também bonito em 1366 px.
 - `<title>` curto, `<meta name="description">`, `lang="pt-BR"`.
 - Robô em imagem gerada segue V12 (humanoide industrial/realista, nunca mascote). Nestas páginas, prefira diagrama SVG em vez de imagem gerada.
-- Datas da feira: 27 a 30 de outubro de 2026, FENAC, Novo Hamburgo/RS.
+- Datas do INEMA na feira: 27 a 29 de outubro de 2026, FENAC, Novo Hamburgo/RS (a Mostratec vai até 30, o INEMA não).
 - Rodapé: "INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no INEMA.CLUB" com link https://inema.club/?src=mostratec e link para a página-mãe da seção.
 
 ## Estrutura de uma página de orientação

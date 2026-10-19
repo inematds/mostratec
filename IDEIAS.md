@@ -1,4 +1,4 @@
-# Lista completa de ideias — MOSTRATEC 2026 (27 a 30/10)
+# Lista completa de ideias — MOSTRATEC 2026 (27 a 29/10)
 
 Consolidada em 16/10/2026: as ideias do documento original e as que surgiram na conversa.
 

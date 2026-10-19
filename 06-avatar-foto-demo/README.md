@@ -41,7 +41,7 @@ Esta demo **não** cumpre os requisitos abaixo, que vêm da seção de privacida
 - [ ] **Sem publicação automática.** Nenhum avatar de visitante vai para telão, redes sociais ou publicidade sem autorização específica.
 - [ ] **Sem reconhecimento facial.** Não identificar pessoas, não comparar rostos e não montar banco de rostos.
 - [ ] **Segurança.** Link de download não público e com prazo de validade, EXIF removido e nenhuma galeria coletiva por padrão.
-- [ ] **Revisão jurídica e técnica** do aviso de privacidade, do fluxo para menores e do processo de exclusão antes do evento (27 a 30/10/2026).
+- [ ] **Revisão jurídica e técnica** do aviso de privacidade, do fluxo para menores e do processo de exclusão antes do evento (27 a 29/10/2026).
 
 ## Direção do Nei (17/10/2026)
 

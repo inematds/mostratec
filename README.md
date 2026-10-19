@@ -1,6 +1,6 @@
 # mostratec
 
-Experiência INEMA.club na MOSTRATEC 2026 (27 a 30/10, Novo Hamburgo). Cada ideia fica numa pasta própria.
+Experiência INEMA.club na MOSTRATEC 2026 (27 a 29/10, Novo Hamburgo). Cada ideia fica numa pasta própria.
 
 | Pasta | Ideia | Estado |
 |---|---|---|
