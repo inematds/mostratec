@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desenhos que ganharam vida</title>
+<meta name="description" content="Os desenhos animados no estande INEMA na MOSTRATEC 2026: os últimos e os mais curtidos.">
+<link rel="stylesheet" href="/static/pagina.css">
+<style>
+  [hidden]{display:none!important}
+  .aviso{display:flex;gap:14px;align-items:center;background:color-mix(in srgb,var(--ok,#4ade80) 12%,var(--card));border:1px solid color-mix(in srgb,var(--ok,#4ade80) 45%,var(--line));border-radius:14px;padding:14px 16px;margin:0 0 18px}
+  .aviso svg{width:30px;height:30px;flex:none;color:var(--ok,#4ade80)}
+  .aviso b{display:block;font-size:17px}
+  .aviso span{color:var(--mut);font-size:15px}
+  .aviso a{white-space:nowrap}
+  .abas{display:flex;gap:8px;margin:6px 0 16px}
+  .aba{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--mut);font:700 15px Inter;cursor:pointer}
+  .aba[aria-selected=true]{background:var(--amb);border-color:var(--amb);color:var(--amb-ink)}
+  .lista{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .item{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .item a.ver{display:block;background:#f6f1e3}
+  .item img{display:block;width:100%;aspect-ratio:1;object-fit:contain}
+  .item .base{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px}
+  .item .nome{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .pos{color:var(--amb);font:800 13px Sora;margin-right:4px}
+  .curtir{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);font:700 15px Inter;cursor:pointer;flex:none}
+  .curtir svg{width:20px;height:20px}
+  .curtir[aria-pressed=true]{border-color:#f43f5e;color:#f43f5e}
+  .curtir[aria-pressed=true] svg{fill:currentColor}
+  .vazio{color:var(--mut);padding:24px 0}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap"><a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a><nav class="nav"><a href="/">Enviar desenho</a><a href="/galeria" aria-current="page">Desenhos</a></nav></div></header>
+<main class="wrap">
+  <section class="hero">
+    <span class="chip">Desenho que ganha vida</span>
+    <h1>Os desenhos que <em>ganharam vida</em></h1>
+    <p class="lead">Todos os personagens aprovados hoje no estande. Toque no coração para curtir os que você mais gostou.</p>
+  </section>
+
+  <div id="meus"></div>
+
+  <div class="abas" role="tablist" aria-label="Ordem da lista">
+    <button class="aba" role="tab" id="aba-ultimos" data-ordem="ultimos" aria-selected="true">Últimos</button>
+    <button class="aba" role="tab" id="aba-curtidos" data-ordem="curtidos" aria-selected="false">Mais curtidos</button>
+  </div>
+  <div class="lista" id="lista" role="tabpanel" aria-live="polite"></div>
+  <p class="vazio" id="vazio" hidden>Ainda não tem desenho aprovado. Que tal ser o primeiro?</p>
+
+  <div class="acoes"><a class="btn pri" href="/">Enviar um desenho</a><a class="btn" href="https://inema.club/?src=mostratec">Cursos grátis no INEMA.CLUB</a></div>
+</main>
+<footer><div class="wrap">INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a href="https://inema.club/?src=mostratec">INEMA.CLUB</a> · tudo é apagado no fim do dia</div></footer>
+<script>
+const $ = (x) => document.getElementById(x);
+const ler = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+// código aleatório deste celular, só para contar uma curtida por aparelho
+let aparelho = ler('dv-aparelho', '');
+if (!/^[A-Za-z0-9_-]{16,64}$/.test(aparelho)) {
+  const b = new Uint8Array(18); crypto.getRandomValues(b);
+  aparelho = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  guardar('dv-aparelho', aparelho);
+}
+let curtidos = new Set(ler('dv-curtidos', []));
+
+// desenho que acabou de ser enviado (vem de /?enviado) + os que este celular mandou hoje
+const novo = new URLSearchParams(location.search).get('enviado');
+let meus = ler('dv-meus', []).filter(x => x && Date.now() - x.t < 24 * 3600e3);
+if (novo && /^[A-Za-z0-9_-]{8,40}$/.test(novo) && !meus.some(x => x.id === novo)) meus.unshift({id: novo, t: Date.now()});
+meus = meus.slice(0, 3); guardar('dv-meus', meus);
+if (novo) history.replaceState(null, '', '/galeria');
+
+const OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>';
+const RODA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>';
+const CORACAO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.3C1.4 7.9 3.6 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.7-1.8 4.7-9.3 9.3-9.3 9.3z"/></svg>';
+
+async function verMeus() {
+  const caixa = $('meus'); const partes = [];
+  for (const x of meus) {
+    let j = null;
+    try { const r = await fetch('/api/d/' + encodeURIComponent(x.id), {cache: 'no-store'}); if (r.ok) j = await r.json(); } catch (e) {}
+    if (!j) continue;
+    const recente = x.id === novo;
+    let titulo, texto, icone = RODA;
+    if (j.estado === 'processando') { titulo = recente ? 'Desenho enviado!' : 'Seu desenho'; texto = 'Dando vida ao personagem... Ele aparece nesta lista quando a equipe aprovar.'; }
+    else if (j.estado === 'aguardando') { titulo = recente ? 'Desenho enviado!' : 'Seu desenho está pronto'; texto = 'A equipe do estande está conferindo' + (j.posicao ? ' (você é o ' + j.posicao + 'º da fila).' : '.') + ' Depois ele entra nesta lista.'; }
+    else if (j.estado === 'aprovado') { titulo = 'Seu desenho está na lista'; texto = 'Aprovado e na TV do estande. Peça para os amigos curtirem.'; icone = OK; }
+    else if (j.estado === 'erro') { titulo = 'Não achei o personagem'; texto = 'Tente de novo com traço mais forte, a folha inteira na foto e boa luz.'; icone = OK; }
+    else continue; // recusado ou retirado: não mostra
+    const a = '<a href="/d/' + encodeURIComponent(x.id) + '">' + (j.estado === 'aprovado' ? 'ver e baixar' : 'acompanhar') + '</a>';
+    partes.push('<div class="aviso" role="status">' + icone + '<div><b></b><span></span> ' + a + '</div></div>');
+    partes.push({titulo, texto});
+  }
+  const html = partes.filter(p => typeof p === 'string');
+  const txt = partes.filter(p => typeof p !== 'string');
+  caixa.innerHTML = html.join('');
+  caixa.querySelectorAll('.aviso').forEach((el, k) => { el.querySelector('b').textContent = txt[k].titulo; el.querySelector('span').textContent = txt[k].texto; });
+}
+
+let ordem = 'ultimos';
+async function verLista() {
+  let j;
+  try { const r = await fetch('/api/galeria?ordem=' + ordem, {cache: 'no-store'}); j = await r.json(); } catch (e) { return; }
+  const lista = $('lista'); lista.replaceChildren();
+  $('vazio').hidden = j.itens.length > 0;
+  j.itens.forEach((it, k) => {
+    const fig = document.createElement('figure'); fig.className = 'item';
+    const a = document.createElement('a'); a.className = 'ver'; a.href = '/d/' + encodeURIComponent(it.id);
+    const img = document.createElement('img'); img.loading = 'lazy';
+    const g = it.gifs || {}; img.src = g.dancar || g.andar || g.pular || Object.values(g)[0] || '';
+    img.alt = 'Desenho ' + (it.apelido || 'sem apelido') + ' animado';
+    a.append(img);
+    const base = document.createElement('div'); base.className = 'base';
+    const nome = document.createElement('span'); nome.className = 'nome';
+    if (ordem === 'curtidos' && it.curtidas > 0) { const p = document.createElement('span'); p.className = 'pos'; p.textContent = (k + 1) + 'º'; nome.append(p); }
+    nome.append(it.apelido || 'Sem apelido');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'curtir';
+    b.setAttribute('aria-pressed', curtidos.has(it.id)); b.setAttribute('aria-label', 'Curtir ' + (it.apelido || 'este desenho'));
+    b.innerHTML = CORACAO + '<span></span>'; b.querySelector('span').textContent = it.curtidas;
+    b.onclick = () => curtir(it.id, b);
+    base.append(nome, b); fig.append(a, base); lista.append(fig);
+  });
+}
+
+async function curtir(id, b) {
+  b.disabled = true;
+  try {
+    const r = await fetch('/api/d/' + encodeURIComponent(id) + '/curtir', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({aparelho})});
+    const j = await r.json();
+    if (r.ok) {
+      j.curtiu ? curtidos.add(id) : curtidos.delete(id); guardar('dv-curtidos', [...curtidos]);
+      b.setAttribute('aria-pressed', j.curtiu); b.querySelector('span').textContent = j.curtidas;
+    }
+  } catch (e) {}
+  b.disabled = false;
+}
+
+document.querySelectorAll('.aba').forEach(t => t.onclick = () => {
+  ordem = t.dataset.ordem;
+  document.querySelectorAll('.aba').forEach(x => x.setAttribute('aria-selected', x === t));
+  verLista();
+});
+
+verMeus(); verLista();
+setInterval(verMeus, 4000);
+setInterval(verLista, 15000);
+</script>
+</body>
+</html>

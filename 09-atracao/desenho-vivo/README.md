@@ -17,6 +17,7 @@ celular dela e, depois que a equipe aprova, na **TV do estande**.
 | Endereço | Para quem | O que faz |
 |---|---|---|
 | `/` | visitante (QR da mesa) | foto do desenho + apelido opcional + aviso de que vai para a TV |
+| `/galeria` | visitante | lista dos aprovados em duas abas, **Últimos** e **Mais curtidos**, com curtir (uma curtida por celular, por um código aleatório guardado no aparelho; tocar de novo desfaz). Depois de enviar, a pessoa vê "Desenho enviado!" e volta para cá, com um cartão do andamento do próprio desenho no topo |
 | `/d/<id>` | visitante | acompanha: processando → aguardando aprovação → animação com botão "baixar" |
 | `/tv` | TV do estande (tela cheia) | carrossel dos aprovados (andando, pulando, dançando), fila de miniaturas e QR "mande o seu" |
 | `/operador` | equipe (senha) | aprovar, recusar, tirar da TV, apagar um ou apagar tudo |

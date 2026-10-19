@@ -9,6 +9,7 @@ Variáveis de ambiente: ver README.md (seção "Configuração").
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import io
 import json
 import logging
@@ -252,6 +253,11 @@ def p_acompanhar(i: str):
     return pagina("acompanhar.html")
 
 
+@app.get("/galeria")
+def p_galeria():
+    return pagina("galeria.html")
+
+
 @app.get("/tv")
 def p_tv():
     return pagina("tv.html")
@@ -305,7 +311,8 @@ async def enviar(request: Request, foto: UploadFile = File(...), apelido: str = 
 
 
 def publico(m: dict) -> dict:
-    out = {"id": m["id"], "estado": m["estado"], "apelido": m.get("apelido", "")}
+    out = {"id": m["id"], "estado": m["estado"], "apelido": m.get("apelido", ""),
+           "curtidas": len(m.get("curtidores", []))}
     if m["estado"] == "aprovado":
         out["gifs"] = {mv: f"/arquivos/{m['id']}/{mv}.gif?v={int(m.get('aprovado_em', 0))}"
                        for mv in m.get("movimentos", [])}
@@ -342,6 +349,45 @@ def tv():
     aprovados = [m for m in todos() if m["estado"] == "aprovado"]
     aprovados.sort(key=lambda m: m.get("aprovado_em", 0), reverse=True)
     return {"itens": [publico(m) for m in aprovados[:TV_MAX]], "url": URL_PUBLICA + "/"}
+
+
+RE_APARELHO = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
+GALERIA_MAX = int(os.environ.get("GALERIA_MAX", "60"))
+
+
+@app.get("/api/galeria")
+def galeria(ordem: str = "ultimos"):
+    """Desenhos aprovados. ordem=ultimos (aprovados mais recentes) ou curtidos (mais curtidas)."""
+    aprovados = [m for m in todos() if m["estado"] == "aprovado"]
+    aprovados.sort(key=lambda m: m.get("aprovado_em", 0), reverse=True)
+    if ordem == "curtidos":
+        aprovados.sort(key=lambda m: len(m.get("curtidores", [])), reverse=True)  # estável: empate = mais recente
+    return {"itens": [publico(m) for m in aprovados[:GALERIA_MAX]]}
+
+
+@app.post("/api/d/{i}/curtir")
+async def curtir(i: str, request: Request):
+    """Uma curtida por aparelho (código aleatório guardado no celular, sem dado pessoal). Chamar de novo desfaz."""
+    try:
+        corpo = await request.json()
+    except Exception:  # noqa: BLE001
+        corpo = {}
+    aparelho = str(corpo.get("aparelho", ""))
+    if not RE_APARELHO.match(aparelho):
+        raise HTTPException(400, "Código do aparelho inválido.")
+    marca = hashlib.sha256(aparelho.encode()).hexdigest()[:16]
+    async with trava_meta:
+        m = ler_meta(i)
+        if m is None or m["estado"] != "aprovado":
+            raise HTTPException(404, "Desenho não encontrado.")
+        cur = m.setdefault("curtidores", [])
+        curtiu = marca not in cur
+        if curtiu:
+            cur.append(marca)
+        else:
+            cur.remove(marca)
+        gravar_meta(i, m)
+    return {"curtiu": curtiu, "curtidas": len(cur)}
 
 
 @app.get("/saude")

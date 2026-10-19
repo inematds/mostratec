@@ -58,7 +58,7 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
     res = {}
 
     # páginas públicas e proteção do operador
-    for p in ("/", "/tv", "/qr.png", "/saude"):
+    for p in ("/", "/tv", "/galeria", "/qr.png", "/saude"):
         assert c.get(p).status_code == 200, p
     assert c.get("/operador").status_code == 401
     assert c.get("/api/operador/fila", auth=httpx.BasicAuth("operador", "errada")).status_code == 401
@@ -86,6 +86,8 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
 
     # antes de aprovar: nada público
     assert c.get("/api/tv").json()["itens"] == []
+    assert c.get("/api/galeria").json()["itens"] == []
+    assert c.post(f"/api/d/{i}/curtir", json={"aparelho": "a" * 24}).status_code == 404, "curtiu antes de aprovar"
     assert c.get(f"/arquivos/{i}/andar.gif").status_code == 404
 
     fila = c.get("/api/operador/fila", auth=op).json()
@@ -119,10 +121,25 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
         res["gifs"][mv] = {"bytes": len(g.content), "quadros": im.n_frames, "tamanho": im.size}
     assert {"andar", "pular", "dancar"} <= set(res["gifs"]), res["gifs"].keys()
 
+    # galeria e curtidas: uma por aparelho, chamar de novo desfaz
+    gal = c.get("/api/galeria").json()["itens"]
+    assert [x["id"] for x in gal] == [i] and gal[0]["curtidas"] == 0, gal
+    assert c.post(f"/api/d/{i}/curtir", json={"aparelho": "curto"}).status_code == 400
+    assert c.post(f"/api/d/{i}/curtir", json={}).status_code == 400
+    r1 = c.post(f"/api/d/{i}/curtir", json={"aparelho": "A" * 24}).json()
+    r2 = c.post(f"/api/d/{i}/curtir", json={"aparelho": "B" * 24}).json()
+    assert r1 == {"curtiu": True, "curtidas": 1} and r2["curtidas"] == 2, (r1, r2)
+    r3 = c.post(f"/api/d/{i}/curtir", json={"aparelho": "A" * 24}).json()
+    assert r3 == {"curtiu": False, "curtidas": 1}, r3
+    assert c.get("/api/galeria?ordem=curtidos").json()["itens"][0]["curtidas"] == 1
+    assert "curtidores" not in json.dumps(c.get("/api/galeria").json()), "lista de aparelhos vazou"
+    res["curtidas"] = "ok"
+
     # tirar da TV
     assert c.post(f"/api/operador/{i}/retirar", auth=op).status_code == 200
     assert c.get("/api/tv").json()["itens"] == []
     assert c.get(f"/arquivos/{i}/andar.gif").status_code == 404
+    assert c.get("/api/galeria").json()["itens"] == [], "retirado continuou na galeria"
 
     # papel em branco: deve dar "erro" (sem personagem), não travar
     branco = io.BytesIO()

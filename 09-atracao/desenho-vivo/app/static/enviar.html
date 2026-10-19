@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<header class="topo"><div class="wrap"><a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a><nav class="nav"><a href="/" aria-current="page">Enviar desenho</a></nav></div></header>
+<header class="topo"><div class="wrap"><a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a><nav class="nav"><a href="/" aria-current="page">Enviar desenho</a><a href="/galeria">Desenhos</a></nav></div></header>
 <main class="wrap">
   <section class="hero">
     <span class="chip">MOSTRATEC 2026 · estande INEMA</span>
@@ -47,6 +47,7 @@
     <button class="btn pri" id="enviar" type="submit">Enviar desenho</button>
     <p id="msg" role="status"></p>
   </form>
+  <p><a href="/galeria">Ver os desenhos que já ganharam vida →</a></p>
 
   <section>
     <p class="sec">Dicas</p>
@@ -78,7 +79,8 @@ f.addEventListener('submit', async (e) => {
     const r = await fetch('/api/enviar', {method: 'POST', body: new FormData(f)});
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.erro || 'Não deu certo. Tente de novo.');
-    location.href = j.url;
+    b.textContent = 'Desenho enviado!'; msg.style.color = 'var(--ok,#4ade80)'; msg.textContent = 'Enviado! Voltando para a lista de desenhos...';
+    setTimeout(() => { location.href = '/galeria?enviado=' + encodeURIComponent(j.id); }, 1200);
   } catch (err) {
     msg.textContent = err.message; b.disabled = false; b.textContent = 'Enviar desenho';
   }
