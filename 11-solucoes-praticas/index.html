@@ -9,6 +9,8 @@
 <style>
   section{scroll-margin-top:70px}
   .fig svg{display:block;width:100%;max-width:620px;margin:0 auto}
+  .capa{display:block;width:100%;max-width:900px;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--line);margin:0 0 18px}
+  .card .foto{display:block;width:calc(100% + 40px);max-width:none;height:auto;aspect-ratio:16/9;object-fit:cover;margin:-20px -20px 10px;border-radius:13px 13px 0 0;border-bottom:1px solid var(--line)}
   .card .ico{width:40px;height:40px}
   .card h3{margin:4px 0 2px}
   .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -39,6 +41,7 @@
 <main class="wrap">
 
   <div class="hero">
+    <img class="capa" src="img/capa.webp" alt="Estudantes mostrando projetos de automação com ESP32 numa feira de ciências" width="1280" height="720">
     <span class="chip">MOSTRATEC 2026 · Soluções que vendem</span>
     <h1>Projetos de automação com IA que você <em>monta e consegue vender</em></h1>
     <p class="lead">Sete projetos com uma placa <b>ESP32</b>, sensores baratos e um painel no celular. Cada guia mostra o circuito, a lista de compras, o código, como testar e <b>quanto cobrar</b>. Você monta em casa ou na escola, sozinho ou em dupla.</p>
@@ -68,6 +71,7 @@
     <div class="grade">
 
       <a class="card" href="pet-automatico/">
+        <img class="foto" src="img/pet-automatico.webp" alt="Comedouro automático com balança e ESP32 ao lado de um gato" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="9" r="1.8"/><circle cx="9.5" cy="5.5" r="1.8"/><circle cx="14.5" cy="5.5" r="1.8"/><circle cx="18.5" cy="9" r="1.8"/><path d="M12 11c-3 0-6 4.5-6 7a2.5 2.5 0 0 0 3 2.4c1-.2 2-.6 3-.6s2 .4 3 .6A2.5 2.5 0 0 0 18 18c0-2.5-3-7-6-7z"/></svg>
         <h3>Pet automático</h3>
         <p>Solta a ração na hora certa, pesa o pote e avisa se o pet não comeu. Boia avisa quando a água acaba.</p>
@@ -76,6 +80,7 @@
       </a>
 
       <a class="card" href="irrigacao/">
+        <img class="foto" src="img/irrigacao.webp" alt="Sensor de umidade na terra da horta e bomba regando" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12c0-3 2-5 6-5 0 3-2 5-6 5z"/><path d="M12 14c0-2.5-1.7-4-5-4 0 2.5 1.7 4 5 4z"/><path d="M5 3.5s-1.5 1.7-1.5 2.8a1.5 1.5 0 0 0 3 0C6.5 5.2 5 3.5 5 3.5z"/></svg>
         <h3>Irrigação inteligente</h3>
         <p>Mede a umidade da terra, a luz e a temperatura. Liga a bomba só quando a planta precisa.</p>
@@ -84,6 +89,7 @@
       </a>
 
       <a class="card" href="nutrientes/">
+        <img class="foto" src="img/nutrientes.webp" alt="Sondas de TDS e pH no reservatório da hidroponia" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6.5L4.6 18.7A1.5 1.5 0 0 0 5.9 21h12.2a1.5 1.5 0 0 0 1.3-2.3L14 9.5V3"/><path d="M7.5 15h9"/></svg>
         <h3>Nutrientes da planta</h3>
         <p>Mede os sais da água (TDS/EC) e o pH da hidroponia. A IA explica em português o que corrigir.</p>
@@ -92,6 +98,7 @@
       </a>
 
       <a class="card" href="vigilancia/">
+        <img class="foto" src="img/vigilancia.webp" alt="Câmera ESP32-CAM no portão e computador detectando uma pessoa" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="12" rx="2.5"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13" r="3.5"/></svg>
         <h3>Vigilância com câmera</h3>
         <p>Detecta pessoa (não gato, não galho balançando) com IA rodando no seu computador e manda o alerta com foto.</p>
@@ -100,6 +107,7 @@
       </a>
 
       <a class="card" href="energia/">
+        <img class="foto" src="img/energia.webp" alt="Sensor de garra em volta de um fio no quadro de luz" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>
         <h3>Painel de energia</h3>
         <p>Mostra o consumo da casa em tempo real e em reais, com sensor de garra que não corta nenhum fio.</p>
@@ -108,6 +116,7 @@
       </a>
 
       <a class="card" href="agua/">
+        <img class="foto" src="img/agua.webp" alt="Caixa d'água com sensor de nível e sensor de fluxo no cano" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.2-6-11.2z"/><path d="M9 15.5a3 3 0 0 0 3 2.5"/></svg>
         <h3>Painel de água</h3>
         <p>Conta os litros que passam no cano, mede o nível da caixa d'água e acusa vazamento de madrugada.</p>
@@ -116,6 +125,7 @@
       </a>
 
       <a class="card" href="controle-casa/">
+        <img class="foto" src="img/controle-casa.webp" alt="ESP32 com relé e sensor de presença ligando luz e ventilador" width="1280" height="720" loading="lazy">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v11h14V9"/><path d="M10 20v-5h4v5"/></svg>
         <h3>Controle da casa ou da sala</h3>
         <p>Liga e desliga luz e ventilador pelo celular, por horário ou quando alguém entra. Aceita comando em texto.</p>

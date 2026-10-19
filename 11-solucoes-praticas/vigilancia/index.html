@@ -18,6 +18,8 @@
   .codigo pre{padding-top:48px}
   .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
   @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+  .foto-topo{display:block;width:100%;max-width:820px;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--line);margin:0 0 18px}
+  .ilu{margin:6px 0 18px;max-width:820px}.ilu img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--line)}.ilu figcaption{color:var(--mut);font-size:14px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -40,6 +42,7 @@
 <main class="wrap">
 
   <div class="hero">
+    <img class="foto-topo" src="../img/vigilancia.webp" alt="Câmera ESP32-CAM no portão e computador detectando uma pessoa" width="1280" height="720">
     <span class="chip">Solução 4 · Vigilância</span>
     <h1>Câmera que avisa <em>só quando aparece uma pessoa</em></h1>
     <p class="lead">A ESP32-CAM (ou uma webcam USB) manda a imagem pelo Wi-Fi. No seu computador, um modelo de IA chamado YOLO procura pessoas na imagem e ignora gato, carro e galho balançando. Quando alguém entra na zona que você marcou, ele salva a foto e avisa. Tudo roda na sua casa, sem nuvem.</p>
@@ -97,6 +100,7 @@
   <section id="pecas">
     <p class="sec">Peças</p>
     <h2>Lista de compras</h2>
+    <figure class="ilu"><img src="../img/vigilancia-pecas.webp" alt="Peças do projeto sobre a bancada" width="1280" height="720" loading="lazy"><figcaption>As peças do kit, antes de ligar qualquer fio.</figcaption></figure>
     <div class="tabela"><table>
       <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
       <tbody>
@@ -170,6 +174,7 @@
   <section id="passos">
     <p class="sec">Passo a passo</p>
     <h2>Da caixa ao primeiro alerta</h2>
+    <figure class="ilu"><img src="../img/vigilancia-montagem.webp" alt="Montagem do projeto" width="1280" height="720" loading="lazy"><figcaption>Montagem: primeiro na bancada, depois no lugar de verdade.</figcaption></figure>
     <ol class="passos">
       <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, o pacote "esp32" (Espressif). Escolha a placa "AI Thinker ESP32-CAM".</li>
       <li><b>Abra o exemplo pronto.</b> Em Arquivo › Exemplos › ESP32 › Camera, abra "CameraWebServer". No arquivo principal, deixe ativa só a linha <code>#define CAMERA_MODEL_AI_THINKER</code> e escreva o nome e a senha da sua rede.</li>
@@ -372,6 +377,7 @@ print(prompt)
   <section id="negocio">
     <p class="sec">Ficha de negócio</p>
     <h2>Como vender a câmera</h2>
+    <figure class="ilu"><img src="../img/vigilancia-uso.webp" alt="Projeto funcionando no dia a dia" width="1280" height="720" loading="lazy"><figcaption>Pronto e em uso: é isso que o cliente compra.</figcaption></figure>
     <div class="tabela"><table>
       <tbody>
         <tr><td><b>Quem compra</b></td><td>Comércio pequeno (depósito, fundos da loja), condomínio (portão, garagem), sítio e chácara (galpão, porteira)</td></tr>

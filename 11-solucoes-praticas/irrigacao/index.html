@@ -18,6 +18,8 @@
   .codigo pre{padding-top:48px}
   .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
   @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+  .foto-topo{display:block;width:100%;max-width:820px;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--line);margin:0 0 18px}
+  .ilu{margin:6px 0 18px;max-width:820px}.ilu img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--line)}.ilu figcaption{color:var(--mut);font-size:14px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -40,6 +42,7 @@
 <main class="wrap">
 
   <div class="hero">
+    <img class="foto-topo" src="../img/irrigacao.webp" alt="Sensor de umidade na terra da horta e bomba regando" width="1280" height="720">
     <span class="chip">Solução 2 · Irrigação</span>
     <h1>Irrigação que rega <em>só quando a terra pede</em></h1>
     <p class="lead">Um sensor mede a umidade da terra, o ESP32 decide e liga uma mini bomba por alguns segundos. O painel mostra no celular a umidade, a luz e a temperatura. Serve para a horta da escola, a varanda do vizinho e o pequeno produtor.</p>
@@ -95,6 +98,7 @@
   <section id="pecas">
     <p class="sec">Peças</p>
     <h2>Lista de compras</h2>
+    <figure class="ilu"><img src="../img/irrigacao-pecas.webp" alt="Peças do projeto sobre a bancada" width="1280" height="720" loading="lazy"><figcaption>As peças do kit, antes de ligar qualquer fio.</figcaption></figure>
     <div class="tabela"><table>
       <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
       <tbody>
@@ -193,6 +197,7 @@
   <section id="passos">
     <p class="sec">Passo a passo</p>
     <h2>Do pacote ao primeiro gole d'água</h2>
+    <figure class="ilu"><img src="../img/irrigacao-montagem.webp" alt="Montagem do projeto" width="1280" height="720" loading="lazy"><figcaption>Montagem: primeiro na bancada, depois no lugar de verdade.</figcaption></figure>
     <ol class="passos">
       <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2, depois em Gerenciador de Placas instale "esp32" (Espressif). Em Bibliotecas, instale "DHT sensor library" e "Adafruit Unified Sensor" (Adafruit) e "BH1750" (Christopher Laws).</li>
       <li><b>Teste a placa sozinha.</b> Ligue o ESP32 no USB, escolha a placa "ESP32 Dev Module" e a porta, e grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
@@ -402,6 +407,7 @@ print(prompt)
   <section id="negocio">
     <p class="sec">Ficha de negócio</p>
     <h2>Como vender a irrigação</h2>
+    <figure class="ilu"><img src="../img/irrigacao-uso.webp" alt="Projeto funcionando no dia a dia" width="1280" height="720" loading="lazy"><figcaption>Pronto e em uso: é isso que o cliente compra.</figcaption></figure>
     <div class="tabela"><table>
       <tbody>
         <tr><td><b>Quem compra</b></td><td>Horta escolar (rega nas férias e nos fins de semana), quem tem varanda com vasos, pequeno produtor de hortaliça e floricultura</td></tr>
