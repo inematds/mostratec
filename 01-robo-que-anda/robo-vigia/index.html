@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robô vigia · INEMA</title>
+<meta name="description" content="Robô vigia que patrulha sempre o mesmo circuito, desvia de obstáculos e volta para a rota, com câmera e detecção de pessoa no PC (YOLO local) e crachá ArUco no lugar de reconhecimento facial.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+.dg{display:block;width:100%;max-width:560px;margin:0 auto;height:auto}
+.dg text{fill:var(--txt);font:500 15px Inter,sans-serif}
+.dg .t{font:700 16px Sora,sans-serif}
+.dg .m{fill:var(--mut);font-size:14px}
+.dg .ac{fill:var(--amb)}
+.dg .rb{fill:var(--bad)}
+.dg .b{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.dg .bx{fill:var(--card);stroke:var(--amb);stroke-width:1.5}
+.dg .bad{fill:var(--card);stroke:var(--bad);stroke-width:1.8}
+.dg .s{fill:none;stroke:var(--amb);stroke-width:2}
+.dg .w{fill:none;stroke:var(--mut);stroke-width:1.8}
+.dg .l{fill:none;stroke:var(--mut);stroke-width:1.5;stroke-dasharray:5 4}
+.dg .linha{fill:none;stroke:var(--txt);stroke-width:7}
+.dg .des{fill:none;stroke:var(--amb);stroke-width:2;stroke-dasharray:6 4}
+.dg .marco{fill:none;stroke:var(--amb);stroke-width:4}
+.robo{border-top:1px solid var(--line);margin-top:30px}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Seção Robôs para montar">
+    <a href="../">Robôs para montar</a>
+    <a href="../robo-de-papel/">Robô de papel</a>
+    <a href="../assistente-de-voz/">Assistente de voz</a>
+    <a href="./" aria-current="page">Robô vigia</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Robôs para montar · visão local</span>
+  <h1>O robô vigia que <em>faz a ronda sozinho</em></h1>
+  <p class="lead">Ele percorre sempre o mesmo circuito, para quando algo bloqueia o caminho, contorna e volta para a rota. A câmera procura <b>pessoa desconhecida</b> na área e dispara um alerta. A detecção roda no seu computador, sem nuvem, e quem está autorizado é reconhecido pelo crachá, não pelo rosto.</p>
+  <div class="acoes">
+    <a class="btn pri" href="#como">Como funciona</a>
+    <a class="btn" href="#codigo">Ir para o código</a>
+  </div>
+</section>
+
+<section id="como">
+  <p class="sec">Como funciona</p>
+  <h2>Uma ronda, dois cérebros</h2>
+  <p class="ler">O <b>robô</b> (um ESP32 com dois motores) cuida do corpo: segue uma fita preta no chão, mede a distância até obstáculos e decide desviar. A <b>câmera</b> manda o vídeo por Wi-Fi para o <b>PC</b>, que roda o YOLO, um modelo de visão que diz "há uma pessoa aqui". Se a pessoa não mostrar um crachá autorizado, o PC manda o robô parar e apitar.</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 320" role="img" aria-labelledby="rota-t">
+      <title id="rota-t">Mapa visto de cima: circuito de fita preta com quatro marcos, um obstáculo no lado direito e o caminho de desvio tracejado que volta para a linha</title>
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect x="6" y="6" width="348" height="270" rx="8" class="l"/>
+      <rect x="50" y="46" width="230" height="190" rx="40" class="linha"/>
+      <path d="M38 62h24M268 62h24M38 220h24M268 220h24" class="marco"/>
+      <text x="22" y="40" class="ac t">A</text><text x="300" y="40" class="ac t">B</text>
+      <text x="300" y="258" class="ac t">C</text><text x="22" y="258" class="ac t">D</text>
+      <rect x="264" y="118" width="32" height="40" rx="4" class="bad"/>
+      <text x="256" y="143" text-anchor="end" class="m">caixa</text>
+      <path d="M280 200 C330 192 336 175 336 160 C336 120 330 92 280 82" class="des" marker-end="url(#ar)"/>
+      <rect x="150" y="226" width="30" height="20" rx="4" class="bx"/>
+      <path d="M190 236h40" class="s" marker-end="url(#ar)"/>
+      <text x="165" y="146" text-anchor="middle" class="t">área vigiada</text>
+      <text x="165" y="170" text-anchor="middle" class="m">fita preta no chão claro</text>
+      <text x="180" y="302" text-anchor="middle" class="m">tracejado amarelo: desvio · A–D: marcos</text>
+    </svg>
+    <figcaption>A rota é uma fita isolante preta. Faixas atravessadas (os marcos A, B, C, D) dizem ao robô em que trecho da ronda ele está.</figcaption>
+  </figure>
+
+  <h3>A máquina de estados do robô</h3>
+  <p class="ler">O robô está sempre em um estado e só muda quando um sensor manda. Isso deixa o código organizado e fácil de testar: você testa um estado de cada vez.</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 470" role="img" aria-labelledby="me-t">
+      <title id="me-t">Estados: patrulhando, imprevisto, desvio, volta à rota e alerta, com as condições de passagem entre eles</title>
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect x="80" y="10" width="200" height="50" rx="12" class="bx"/>
+      <text x="180" y="41" text-anchor="middle" class="t">PATRULHANDO</text>
+      <path d="M180 60V98" class="s" marker-end="url(#ar2)"/>
+      <text x="188" y="86" class="m">obstáculo &lt; 20 cm</text>
+      <rect x="80" y="100" width="200" height="60" rx="12" class="bx"/>
+      <text x="180" y="126" text-anchor="middle" class="t">IMPREVISTO</text>
+      <text x="180" y="147" text-anchor="middle" class="m">para e espera 3 s</text>
+      <path d="M80 130H30V35H76" class="s" marker-end="url(#ar2)"/>
+      <text x="36" y="80" class="m">liberou</text>
+      <path d="M180 160V198" class="s" marker-end="url(#ar2)"/>
+      <text x="188" y="186" class="m">ainda bloqueado</text>
+      <rect x="80" y="200" width="200" height="60" rx="12" class="bx"/>
+      <text x="180" y="226" text-anchor="middle" class="t">DESVIO</text>
+      <text x="180" y="247" text-anchor="middle" class="m">contorna pela direita</text>
+      <path d="M180 260V298" class="s" marker-end="url(#ar2)"/>
+      <rect x="80" y="300" width="200" height="60" rx="12" class="bx"/>
+      <text x="180" y="326" text-anchor="middle" class="t">VOLTA À ROTA</text>
+      <text x="180" y="347" text-anchor="middle" class="m">anda até achar a linha</text>
+      <path d="M280 330H330V35H284" class="s" marker-end="url(#ar2)"/>
+      <text x="346" y="200" class="m" transform="rotate(-90 346 200)" text-anchor="middle">achou a linha</text>
+      <path d="M180 360V398" class="s" marker-end="url(#ar2)"/>
+      <text x="188" y="386" class="m">5 s sem linha</text>
+      <rect x="80" y="400" width="200" height="60" rx="12" class="bad"/>
+      <text x="180" y="426" text-anchor="middle" class="t">ALERTA</text>
+      <text x="180" y="447" text-anchor="middle" class="m">para, apita, pede ajuda</text>
+    </svg>
+    <figcaption>O ALERTA também é ativado pelo PC quando a câmera vê pessoa sem autorização. Para sair dele, alguém libera o robô.</figcaption>
+  </figure>
+
+  <h3>A decisão da câmera (no PC)</h3>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 330" role="img" aria-labelledby="cam-t">
+      <title id="cam-t">Decisão da câmera: se há pessoa, confere crachá autorizado ou horário livre; se não, alerta</title>
+      <defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect x="60" y="10" width="240" height="54" rx="12" class="b"/>
+      <text x="180" y="34" text-anchor="middle" class="t">Quadro da câmera</text>
+      <text x="180" y="54" text-anchor="middle" class="m">YOLO procura pessoa</text>
+      <path d="M180 64V88" class="s" marker-end="url(#ar3)"/>
+      <rect x="90" y="90" width="180" height="46" rx="12" class="bx"/>
+      <text x="180" y="119" text-anchor="middle" class="t">Tem pessoa?</text>
+      <text x="282" y="110" class="m">não:</text><text x="282" y="128" class="m">segue</text>
+      <path d="M180 136V166" class="s" marker-end="url(#ar3)"/>
+      <text x="188" y="157" class="m">sim</text>
+      <rect x="30" y="168" width="300" height="62" rx="12" class="bx"/>
+      <text x="180" y="194" text-anchor="middle" class="t">Crachá autorizado</text>
+      <text x="180" y="216" text-anchor="middle" class="t">ou horário livre?</text>
+      <path d="M120 230L90 266" class="s" marker-end="url(#ar3)"/>
+      <path d="M240 230L270 266" class="s" marker-end="url(#ar3)"/>
+      <rect x="10" y="268" width="160" height="54" rx="12" class="b"/>
+      <text x="90" y="292" text-anchor="middle" class="t">sim</text>
+      <text x="90" y="312" text-anchor="middle" class="m">nada acontece</text>
+      <rect x="190" y="268" width="160" height="54" rx="12" class="bad"/>
+      <text x="270" y="292" text-anchor="middle" class="t rb">não: ALERTA</text>
+      <text x="270" y="312" text-anchor="middle" class="m">robô para e apita</text>
+    </svg>
+    <figcaption>O YOLO só diz "há uma pessoa", nunca "quem é". A autorização vem de um objeto (o crachá) ou do relógio.</figcaption>
+  </figure>
+</section>
+
+<section id="pecas">
+  <p class="sec">Peças</p>
+  <h2>Lista de compras</h2>
+  <div class="tabela"><table>
+    <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox. (out/2026, a conferir)</th></tr></thead>
+    <tbody>
+      <tr><td><b>ESP32 DevKit (30 ou 38 pinos)</b></td><td>Controla motores e sensores, recebe o alerta por Wi-Fi</td><td>R$ 35–50</td></tr>
+      <tr><td><b>Ponte H TB6612FNG</b></td><td>Liga os motores nos dois sentidos com controle de velocidade. Perde menos tensão que a L298N.</td><td>R$ 15–25</td></tr>
+      <tr><td><b>Chassi 2WD (2 motores TT, rodas, roda boba)</b></td><td>O corpo do robô</td><td>R$ 50–80</td></tr>
+      <tr><td><b>2 sensores IR TCRT5000 (módulo)</b></td><td>Enxergam a fita preta no chão</td><td>R$ 8–15 cada</td></tr>
+      <tr><td><b>Sensor ultrassônico HC-SR04 + resistores 1 kΩ e 2 kΩ</b></td><td>Mede a distância até obstáculos. Os resistores protegem o ESP32.</td><td>R$ 10–15</td></tr>
+      <tr><td><b>ESP32-CAM com base USB (ou celular velho)</b></td><td>Manda o vídeo para o PC</td><td>R$ 45–70</td></tr>
+      <tr><td><b>Suporte para 4 pilhas AA + pilhas</b></td><td>Energia dos motores (6 V)</td><td>R$ 25–40</td></tr>
+      <tr><td><b>Power bank USB</b></td><td>Energia do ESP32 e da câmera</td><td>o que você já tem</td></tr>
+      <tr><td><b>Buzzer ativo 3,3–5 V, fita isolante preta</b></td><td>Apito do alerta e a rota</td><td>R$ 8</td></tr>
+    </tbody>
+  </table></div>
+  <p class="dica"><b>Só tem L298N?</b> Funciona, mas ela "come" cerca de 2 V: com 6 V de pilhas, os motores recebem uns 4 V e ficam fracos. Nesse caso use 6 pilhas (9 V) ou troque pela TB6612FNG. No sensor de distância, um VL53L0X (laser ToF, 3,3 V) é alternativa mais precisa ao HC-SR04.</p>
+</section>
+
+<section id="ligacao">
+  <p class="sec">Ligação</p>
+  <h2>O circuito</h2>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 500" role="img" aria-labelledby="ci-t">
+      <title id="ci-t">Circuito: pilhas na ponte H, power bank no ESP32, ponte H nos motores, sensores IR, ultrassônico com divisor de tensão e buzzer no ESP32; ESP32-CAM manda vídeo ao PC por Wi-Fi</title>
+      <rect x="10" y="10" width="160" height="50" rx="10" class="b"/>
+      <text x="90" y="32" text-anchor="middle" class="t">Pilhas 4×AA</text>
+      <text x="90" y="51" text-anchor="middle" class="m">6 V, só motores</text>
+      <rect x="190" y="10" width="160" height="50" rx="10" class="b"/>
+      <text x="270" y="32" text-anchor="middle" class="t">Power bank</text>
+      <text x="270" y="51" text-anchor="middle" class="m">USB 5 V</text>
+      <path d="M90 60V100M270 60V100" class="w"/>
+      <text x="98" y="86" class="m">VM</text><text x="278" y="86" class="m">USB</text>
+      <rect x="10" y="100" width="160" height="70" rx="10" class="bx"/>
+      <text x="90" y="128" text-anchor="middle" class="t">TB6612FNG</text>
+      <text x="90" y="150" text-anchor="middle" class="m">ponte H</text>
+      <rect x="190" y="100" width="160" height="70" rx="10" class="bx"/>
+      <text x="270" y="128" text-anchor="middle" class="t">ESP32</text>
+      <text x="270" y="150" text-anchor="middle" class="m">cérebro do robô</text>
+      <path d="M170 135H190" class="s"/>
+      <path d="M90 170V200" class="w"/>
+      <rect x="10" y="200" width="160" height="60" rx="10" class="b"/>
+      <text x="90" y="225" text-anchor="middle" class="t">Motores E e D</text>
+      <text x="90" y="246" text-anchor="middle" class="m">AO1/AO2 · BO1/BO2</text>
+      <path d="M200 170V445M200 225H210M200 315H210M200 420H210" class="w"/>
+      <rect x="210" y="195" width="140" height="60" rx="10" class="b"/>
+      <text x="280" y="220" text-anchor="middle" class="t">2× IR</text>
+      <text x="280" y="242" text-anchor="middle" class="m">DO → 34 e 35</text>
+      <rect x="210" y="270" width="140" height="125" rx="10" class="b"/>
+      <text x="280" y="294" text-anchor="middle" class="t">HC-SR04</text>
+      <text x="220" y="316" class="m">VCC → 5V</text>
+      <text x="220" y="334" class="m">TRIG → 18</text>
+      <text x="220" y="352" class="m">ECHO → 1 kΩ → 19</text>
+      <text x="220" y="370" class="m">19 → 2 kΩ → GND</text>
+      <rect x="210" y="405" width="140" height="40" rx="10" class="b"/>
+      <text x="280" y="430" text-anchor="middle" class="m">Buzzer → 23</text>
+      <rect x="10" y="290" width="160" height="60" rx="10" class="b"/>
+      <text x="90" y="315" text-anchor="middle" class="t">ESP32-CAM</text>
+      <text x="90" y="336" text-anchor="middle" class="m">5 V próprio</text>
+      <path d="M90 350V390" class="l"/>
+      <text x="98" y="376" class="m">Wi-Fi</text>
+      <rect x="10" y="390" width="160" height="56" rx="10" class="bx"/>
+      <text x="90" y="414" text-anchor="middle" class="t">PC com YOLO</text>
+      <text x="90" y="434" text-anchor="middle" class="m">manda o alerta</text>
+      <text x="180" y="484" text-anchor="middle" class="m">GND de pilhas, ponte H e ESP32 ligados juntos</text>
+    </svg>
+    <figcaption>O ECHO do HC-SR04 sai em 5 V. O divisor de 1 kΩ e 2 kΩ baixa para cerca de 3,3 V, o limite do ESP32.</figcaption>
+  </figure>
+  <div class="tabela"><table>
+    <thead><tr><th>TB6612FNG</th><th>Liga em</th><th>TB6612FNG</th><th>Liga em</th></tr></thead>
+    <tbody>
+      <tr><td><b>AIN1</b></td><td>GPIO 25</td><td><b>BIN1</b></td><td>GPIO 14</td></tr>
+      <tr><td><b>AIN2</b></td><td>GPIO 26</td><td><b>BIN2</b></td><td>GPIO 32</td></tr>
+      <tr><td><b>PWMA</b></td><td>GPIO 27</td><td><b>PWMB</b></td><td>GPIO 13</td></tr>
+      <tr><td><b>STBY</b></td><td>GPIO 33</td><td><b>VCC</b></td><td>3V3 do ESP32</td></tr>
+      <tr><td><b>VM</b></td><td>+ das pilhas (6 V)</td><td><b>GND</b></td><td>− das pilhas e GND do ESP32</td></tr>
+      <tr><td><b>AO1, AO2</b></td><td>motor esquerdo</td><td><b>BO1, BO2</b></td><td>motor direito</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="passos">
+  <p class="sec">Passo a passo</p>
+  <h2>Montando a ronda</h2>
+  <ol class="passos">
+    <li><b>Monte o chassi</b> e teste cada motor sozinho com o código. Se um girar ao contrário, inverta os dois fios dele.</li>
+    <li><b>Fixe os sensores IR</b> na frente, a 1 cm do chão, separados por uns 3 cm (a fita fica entre eles).</li>
+    <li><b>Cole a rota</b> com fita isolante de 19 mm em chão claro. Curvas largas (raio de 30 cm ou mais) e 4 faixas atravessadas como marcos.</li>
+    <li><b>Ajuste o potenciômetro</b> de cada módulo IR até o LED dele mudar ao passar da fita para o chão.</li>
+    <li><b>Prenda o HC-SR04</b> na frente, olhando reto, a uns 8 cm do chão.</li>
+    <li><b>Grave o exemplo CameraWebServer</b> na ESP32-CAM (Arduino IDE: Exemplos › ESP32 › Camera) e anote o endereço do vídeo, por exemplo <code>http://192.168.0.41:81/stream</code>.</li>
+    <li><b>Imprima os crachás</b> ArUco (dicionário 4×4, números 7 e 12, por exemplo) em 8 × 8 cm. Quem é da casa usa o crachá à vista. Para gerar a imagem de cada crachá, rode no PC:
+<pre><code>import cv2
+d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+for n in (7, 12):
+    cv2.imwrite(f"cracha{n}.png", cv2.aruco.generateImageMarker(d, n, 400))</code></pre></li>
+    <li><b>Rode o programa do PC</b> e faça a primeira ronda com você mesmo, sem crachá, para ver o alerta.</li>
+  </ol>
+</section>
+
+<section id="codigo">
+  <p class="sec">Código</p>
+  <h2>O robô (Arduino, ESP32)</h2>
+<pre><code>// Robô vigia - ESP32 + TB6612FNG + 2 IR + HC-SR04 + buzzer
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include "segredos.h"   // WIFI_NOME e WIFI_SENHA (não vai para o GitHub)
+
+const int AIN1 = 25, AIN2 = 26, PWMA = 27;   // motor esquerdo
+const int BIN1 = 14, BIN2 = 32, PWMB = 13;   // motor direito
+const int STBY = 33, IR_ESQ = 34, IR_DIR = 35;
+const int TRIG = 18, ECHO = 19, BUZZER = 23;
+
+enum Estado { PATRULHA, IMPREVISTO, DESVIO, VOLTA_LINHA, ALERTA };
+Estado estado = PATRULHA;
+unsigned long desde = 0;                     // quando entrou no estado
+WebServer servidor(80);
+
+void mudar(Estado e) { estado = e; desde = millis(); }
+
+void motores(int esq, int dir) {             // de -255 a 255
+  digitalWrite(AIN1, esq &gt; 0); digitalWrite(AIN2, esq &lt; 0);
+  analogWrite(PWMA, abs(esq));
+  digitalWrite(BIN1, dir &gt; 0); digitalWrite(BIN2, dir &lt; 0);
+  analogWrite(PWMB, abs(dir));
+}
+
+float distanciaCm() {
+  digitalWrite(TRIG, HIGH); delayMicroseconds(10); digitalWrite(TRIG, LOW);
+  long us = pulseIn(ECHO, HIGH, 25000);      // espera no máximo 25 ms
+  return us == 0 ? 999 : us / 58.0;          // 0 = nada à frente
+}
+
+void setup() {
+  int saidas[] = {AIN1, AIN2, PWMA, BIN1, BIN2, PWMB, STBY, TRIG, BUZZER};
+  for (int p : saidas) pinMode(p, OUTPUT);
+  pinMode(IR_ESQ, INPUT); pinMode(IR_DIR, INPUT); pinMode(ECHO, INPUT);
+  digitalWrite(STBY, HIGH);                  // acorda a ponte H
+  WiFi.begin(WIFI_NOME, WIFI_SENHA);
+  servidor.on("/alerta", [] { mudar(ALERTA); servidor.send(200, "text/plain", "ok"); });
+  servidor.on("/libera", [] { digitalWrite(BUZZER, LOW); mudar(PATRULHA);
+                              servidor.send(200, "text/plain", "ok"); });
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+  bool esq = digitalRead(IR_ESQ), dir = digitalRead(IR_DIR); // HIGH = fita preta
+  float d = distanciaCm();
+  unsigned long t = millis() - desde;
+
+  switch (estado) {
+    case PATRULHA:
+      if (d &lt; 20) { motores(0, 0); mudar(IMPREVISTO); }
+      else if (esq &amp;&amp; !dir) motores(60, 160);    // fita à esquerda: vira à esquerda
+      else if (dir &amp;&amp; !esq) motores(160, 60);    // fita à direita: vira à direita
+      else motores(150, 150);                    // reto (ou passando num marco)
+      break;
+    case IMPREVISTO:                             // pode ser alguém passando
+      if (d &gt; 30) mudar(PATRULHA);
+      else if (t &gt; 3000) mudar(DESVIO);
+      break;
+    case DESVIO:                                 // contorna pela direita
+      if (t &lt; 500) motores(160, -160);           // gira ~90° à direita
+      else if (t &lt; 1700) motores(150, 150);      // afasta da rota
+      else if (t &lt; 2200) motores(-160, 160);     // gira ~90° à esquerda
+      else if (t &lt; 3600) motores(150, 150);      // passa ao lado do obstáculo
+      else if (t &lt; 4100) motores(-160, 160);     // aponta de volta para a rota
+      else mudar(VOLTA_LINHA);
+      break;
+    case VOLTA_LINHA:
+      motores(140, 140);
+      if (esq || dir) { motores(160, -160); delay(250); mudar(PATRULHA); }
+      else if (t &gt; 5000) { motores(0, 0); mudar(ALERTA); }  // perdido
+      break;
+    case ALERTA:                                 // parado e apitando
+      motores(0, 0);
+      digitalWrite(BUZZER, (millis() / 300) % 2);
+      break;
+  }
+}</code></pre>
+  <p class="dica">Os tempos do DESVIO (500, 1700, 2200…) dependem dos seus motores, das pilhas e do chão. Meça quanto tempo seu robô leva para girar 90° e ajuste. Esse é um ótimo item para o caderno de testes.</p>
+
+  <h2>O PC (Python, YOLO local)</h2>
+<pre><code># vigia_pc.py - olha a câmera e avisa se há pessoa sem autorização.
+# pip install ultralytics opencv-contrib-python requests
+import cv2, time, datetime, requests
+from ultralytics import YOLO
+
+CAMERA = "http://192.168.0.41:81/stream"  # ESP32-CAM (ou app de câmera do celular)
+ROBO = "http://192.168.0.40"              # endereço do robô na rede da casa
+CRACHAS = {7, 12}                         # números ArUco autorizados
+HORARIO_LIVRE = range(7, 19)              # das 7h às 18h59 não há alerta
+
+modelo = YOLO("yolo11n.pt")               # modelo pequeno, roda no PC, sem nuvem
+leitor = cv2.aruco.ArucoDetector(
+    cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50))
+cam = cv2.VideoCapture(CAMERA)
+ultimo = 0
+
+while True:
+    ok, quadro = cam.read()
+    if not ok:
+        time.sleep(1)
+        continue
+    if datetime.datetime.now().hour in HORARIO_LIVRE:
+        continue
+    pessoas = modelo(quadro, classes=[0], conf=0.5, verbose=False)[0].boxes
+    if len(pessoas) == 0:                 # classe 0 = pessoa
+        continue
+    cinza = cv2.cvtColor(quadro, cv2.COLOR_BGR2GRAY)
+    _, ids, _ = leitor.detectMarkers(cinza)
+    autorizado = ids is not None and any(int(i) in CRACHAS for i in ids.flatten())
+    if not autorizado and time.time() - ultimo &gt; 30:  # 1 alerta a cada 30 s
+        ultimo = time.time()
+        requests.get(ROBO + "/alerta", timeout=2)
+        print(time.strftime("%H:%M:%S"), "ALERTA: pessoa sem crachá na área")
+    # Nenhuma imagem é salva. O quadro some a cada volta do laço.</code></pre>
+  <p class="ler">Para receber o alerta com foto no celular, painel e zonas proibidas, use a página de <a href="../../11-solucoes-praticas/vigilancia/">vigilância com câmera (S4)</a>: ela usa a mesma ideia de detecção local.</p>
+</section>
+
+<section id="autorizado">
+  <p class="sec">Quem é autorizado</p>
+  <h2>Crachá e relógio, não rosto</h2>
+  <p class="ler">Seria tentador usar reconhecimento facial para saber quem é da casa. Este projeto não usa, por três motivos:</p>
+  <ul class="ler">
+    <li><b>É dado sensível.</b> A LGPD (Lei 13.709/2018, art. 5º, II, e art. 11) trata dado biométrico, como o rosto, como dado pessoal sensível. Exige consentimento específico e um cuidado que um projeto de feira não consegue garantir.</li>
+    <li><b>Visitantes não concordaram.</b> Cadastrar e reconhecer o rosto de quem passa pela casa ou pelo estande, sem pedir, é invasivo.</li>
+    <li><b>Crachá é simples e reversível.</b> O marcador ArUco identifica o crachá, não o corpo da pessoa. Perdeu? Tira o número da lista e imprime outro. Nada biométrico fica guardado.</li>
+  </ul>
+  <p class="ler">A outra regra é o <b>horário permitido</b>: durante o dia, quando a família circula, o robô patrulha mas não alerta. Você pode combinar as duas: fora do horário, só quem está com crachá passa sem alerta.</p>
+</section>
+
+<section id="testar">
+  <p class="sec">Teste e melhore</p>
+  <h2>Checklist e erros comuns</h2>
+  <ul class="ler">
+    <li>Quantas voltas completas ele dá sem sair da fita? (meta da v1: 3 voltas)</li>
+    <li>Com uma caixa no caminho, em quantas de 5 tentativas ele contorna e volta para a linha?</li>
+    <li>Em 10 passagens sem crachá, quantos alertas certos? Em 10 com crachá, quantos alertas falsos?</li>
+    <li>Quanto tempo entre a pessoa entrar na câmera e o robô apitar?</li>
+  </ul>
+  <div class="tabela"><table>
+    <thead><tr><th>O que acontece</th><th>Causa provável</th><th>O que mudar</th></tr></thead>
+    <tbody>
+      <tr><td><b>Sai da fita nas curvas</b></td><td>Rápido demais ou curva fechada</td><td>Baixe a velocidade (150 → 110) ou alargue a curva</td></tr>
+      <tr><td><b>Vira para o lado errado</b></td><td>Seu módulo IR dá LOW na fita preta</td><td>Inverta a leitura: <code>!digitalRead(...)</code></td></tr>
+      <tr><td><b>ESP32 reinicia quando os motores ligam</b></td><td>Motores puxando da mesma fonte ou sem GND comum</td><td>Motores só nas pilhas; GND comum entre tudo</td></tr>
+      <tr><td><b>Distância sempre 999</b></td><td>ECHO sem divisor ou fios trocados</td><td>Confira TRIG 18, ECHO 19 e os resistores</td></tr>
+      <tr><td><b>ESP32-CAM reinicia sem parar</b></td><td>Fonte fraca</td><td>5 V com 2 A, cabo curto; não puxe do 3V3</td></tr>
+      <tr><td><b>Não volta para a rota após o desvio</b></td><td>Tempos de giro errados</td><td>Meça o giro de 90° e ajuste; aumente o tempo do VOLTA_LINHA</td></tr>
+      <tr><td><b>Erro "cv2 não tem aruco"</b></td><td>O ultralytics instalou o <code>opencv-python</code>, que briga com o contrib</td><td><code>pip uninstall opencv-python</code> e reinstale <code>opencv-contrib-python</code></td></tr>
+      <tr><td><b>Alerta com crachá à vista</b></td><td>Crachá pequeno, longe ou torto</td><td>Imprima maior (10 cm) e com borda branca</td></tr>
+    </tbody>
+  </table></div>
+  <p class="teste"><b>Registre a versão 1 → versão 2</b> no <a href="../#caderno">caderno de testes</a>. Exemplo: "v1: 1 volta e saiu na curva B · baixei para 110 · v2: 3 voltas, 2/5 desvios". Na versão 3, troque o tempo fixo do desvio por encoders nas rodas (distância real) ou um segundo sensor de distância apontado para o lado.</p>
+</section>
+
+<section id="seguranca">
+  <p class="sec">Segurança e privacidade</p>
+  <h2>Antes de ligar a câmera</h2>
+  <div class="alerta"><b>Câmera exige aviso.</b> Coloque uma placa "área monitorada por câmera" e conte para todos da casa. Aponte só para dentro da sua casa ou da área do projeto, nunca para a rua ou o vizinho. Na feira, nada de gravar ou publicar o rosto de visitantes.</div>
+  <ul class="ler">
+    <li><b>Motores:</b> mantenha dedos, cabelo e cabos longe das rodas. Teste com o robô suspenso antes de pôr no chão.</li>
+    <li><b>Energia:</b> pilhas AA e power bank. Nada ligado na tomada dentro do robô. Se usar bateria Li-ion (18650), só com placa de proteção, nunca carregue sem ninguém olhando e não deixe bateria solta junto de moedas ou chaves.</li>
+    <li><b>ESP32-CAM esquenta:</b> deixe espaço para o ar circular.</li>
+    <li><b>Rede da casa:</b> os comandos <code>/alerta</code> e <code>/libera</code> funcionam só dentro da rede local. Não abra portas do roteador para a internet.</li>
+  </ul>
+</section>
+
+<section id="alem">
+  <p class="sec">Para ir além</p>
+  <h2>Próximos passos e cursos</h2>
+  <ul class="ler">
+    <li>Mapa de verdade: com LiDAR e ROS 2, o robô monta o mapa e navega sem fita. Está na trilha 4 do curso <a class="clube" href="https://inematds.github.io/robot/">Robótica do Zero ao Expert</a>.</li>
+    <li>Câmera e YOLO a fundo: trilha 3 do mesmo curso (Raspberry Pi, OpenCV, YOLO).</li>
+    <li>Modelos que veem e agem: curso <a class="clube" href="https://inematds.github.io/vla/">VLA: visão, linguagem e ação</a>.</li>
+    <li>Fale com o vigia: junte com o <a href="../assistente-de-voz/">assistente de voz</a> ("vigia, começa a ronda").</li>
+  </ul>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 30 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Robôs para montar</a>
+</div></footer>
+</body>
+</html>

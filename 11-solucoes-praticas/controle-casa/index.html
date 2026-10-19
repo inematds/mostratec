@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle da casa</title>
+<meta name="description" content="Guia para montar um controle de luz e ventilador com ESP32: botões no celular, horário, sensor de presença PIR e comando em texto com IA. Tudo em 12 V. Peças, ligação, código e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/" aria-current="page">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 7 · Controle da casa</span>
+    <h1>Luz e ventilador que <em>desligam sozinhos</em> quando a sala esvazia</h1>
+    <p class="lead">Um ESP32 com dois relés liga e desliga uma luz e um ventilador pelo celular, por horário ou quando alguém entra. Um sensor de presença apaga a luz depois de 10 minutos sem ninguém. Com IA, você manda "desliga tudo da sala" em texto ou por voz.</p>
+    <div class="tags"><span class="tag">Kit R$ 70–120</span><span class="tag">Dificuldade: fácil</span><span class="tag">Cargas só em 12 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#codigo">Ver o código</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>Três jeitos de ligar, um jeito de desligar</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 392" role="img" aria-label="Fluxo do controle: botão no celular, horário e sensor de presença chegam ao ESP32, que aciona os relés da luz e do ventilador">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="10" y="10" width="120" height="74" rx="12"/>
+          <rect x="140" y="10" width="120" height="74" rx="12"/>
+          <rect x="270" y="10" width="120" height="74" rx="12"/>
+          <rect x="20" y="130" width="360" height="82" rx="12"/>
+          <rect x="20" y="258" width="170" height="74" rx="12"/>
+          <rect x="210" y="258" width="170" height="74" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M70 84v40"/><path d="M63 117l7 7 7-7"/>
+          <path d="M200 84v40"/><path d="M193 117l7 7 7-7"/>
+          <path d="M330 84v40"/><path d="M323 117l7 7 7-7"/>
+          <path d="M105 212v40"/><path d="M98 245l7 7 7-7"/>
+          <path d="M295 212v40"/><path d="M288 245l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="16" fill="var(--txt)" text-anchor="middle">
+          <text x="70" y="40">Celular</text>
+          <text x="200" y="40">Horário</text>
+          <text x="330" y="40">Presença</text>
+          <text x="200" y="158">ESP32 decide</text>
+          <text x="105" y="286">Relé 1</text>
+          <text x="295" y="286">Relé 2</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="70" y="64">botões</text>
+          <text x="200" y="64">22 h apaga</text>
+          <text x="330" y="64">sensor PIR</text>
+          <text x="200" y="182">guarda o estado de cada</text>
+          <text x="200" y="200">canal e responde o painel</text>
+          <text x="105" y="310">luz (fita LED)</text>
+          <text x="295" y="310">ventilador</text>
+          <text x="200" y="370">tudo em 12 V, com fonte pronta</text>
+        </g>
+      </svg>
+      <figcaption>O horário vem da internet (NTP), então o ESP32 não precisa de relógio. Os 10 minutos e as 22 h são pontos de partida: ajuste depois dos testes.</figcaption>
+    </figure>
+    <p class="ler">O ESP32 cria uma página com botões que abre no celular, na mesma rede Wi-Fi. Cada relé é uma chave controlada pelo ESP32: fecha o contato e a fita de LED ou o ventilador liga. O sensor PIR percebe o calor de uma pessoa se mexendo. Enquanto houver movimento, a luz fica acesa; depois de 10 minutos parados, ela apaga. Às 22 h, tudo desliga, mesmo que alguém tenha esquecido.</p>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi</td><td>R$ 28–40</td></tr>
+        <tr><td><b>Módulo relé 2 canais</b> 5 V com optoacoplador</td><td>Liga e desliga as duas cargas. Compre um que aceite sinal de 3,3 V</td><td>R$ 8–14</td></tr>
+        <tr><td><b>Sensor de presença PIR</b> HC-SR501</td><td>Percebe pessoa se mexendo, até uns 5 m</td><td>R$ 7–12</td></tr>
+        <tr><td><b>Fonte 12 V 1 A</b> com plugue P4</td><td>Alimenta a fita e o ventilador</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Fita de LED 12 V</b> (50 cm)</td><td>A "luz da sala" do projeto</td><td>R$ 6–12</td></tr>
+        <tr><td><b>Cooler 12 V</b> (8 cm, de computador)</td><td>O "ventilador" do projeto</td><td>R$ 6–10</td></tr>
+        <tr><td><b>Protoboard, jumpers, borne P4</b></td><td>Ligações sem solda</td><td>R$ 8–12</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 75–120</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui caixa de acabamento.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito, pino por pino</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 530" role="img" aria-label="Diagrama de ligação: GPIO 26 no IN1 do relé, GPIO 25 no IN2, GPIO 27 na saída do PIR; a fonte de 12 V passa pelos contatos dos relés até a fita de LED e o cooler">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="124" height="270" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="70" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="122" y="88">VIN 5V</text>
+          <text x="122" y="118">GND</text>
+          <text x="122" y="168">GPIO 26</text>
+          <text x="122" y="208">GPIO 25</text>
+          <text x="122" y="268">GPIO 27</text>
+        </g>
+        <!-- sinais -->
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M132 163H206" stroke="var(--sky)"/>
+          <path d="M132 203H206" stroke="var(--ok)"/>
+          <path d="M132 263H206" stroke="var(--warm)"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="132" cy="163" r="4"/><circle cx="132" cy="203" r="4"/><circle cx="132" cy="263" r="4"/></g>
+        <!-- componentes -->
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="206" y="136" width="186" height="90" rx="10"/>
+          <rect x="206" y="236" width="186" height="62" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">
+          <text x="216" y="160">Relé 2 canais</text>
+          <text x="216" y="260">PIR · OUT</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="216" y="184">IN1 (cima) · IN2</text>
+          <text x="216" y="208">VCC no VIN · GND</text>
+          <text x="216" y="284">VCC no VIN · GND</text>
+        </g>
+        <!-- cargas -->
+        <text x="8" y="336" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Lado das cargas (12 V, contatos do relé)</text>
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="8" y="356" width="104" height="110" rx="10"/>
+          <rect x="145" y="356" width="104" height="48" rx="10"/>
+          <rect x="145" y="418" width="104" height="48" rx="10"/>
+          <rect x="278" y="356" width="104" height="48" rx="10"/>
+          <rect x="278" y="418" width="104" height="48" rx="10"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--txt)" text-anchor="middle">
+          <text x="60" y="404">Fonte</text><text x="60" y="424">12 V</text>
+          <text x="197" y="377">K1</text><text x="197" y="396" fill="var(--mut)">COM · NO</text>
+          <text x="197" y="439">K2</text><text x="197" y="458" fill="var(--mut)">COM · NO</text>
+          <text x="330" y="385">Fita LED</text>
+          <text x="330" y="447">Cooler</text>
+        </g>
+        <g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M112 380h33" stroke="var(--bad)"/>
+          <path d="M126 380v62h19" stroke="var(--bad)"/>
+          <path d="M249 380h29" stroke="var(--bad)"/>
+          <path d="M249 442h29" stroke="var(--bad)"/>
+          <path d="M60 466v32h332V380h-10M392 442h-10" stroke="var(--mut)"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="120" y="520">− da fonte volta direto nas cargas</text>
+        </g>
+      </svg>
+      <figcaption>Fio vermelho: + da fonte 12 V → COM de K1 e de K2; NO de K1 → + da fita; NO de K2 → + do cooler. Fio cinza: − da fonte → − da fita e − do cooler. Os 12 V nunca passam pelo ESP32.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Componente</th><th>Pino do componente</th><th>Liga no ESP32</th></tr></thead>
+      <tbody>
+        <tr><td><b>Relé 2 canais</b></td><td>VCC · GND · IN1 · IN2</td><td>VIN (5 V do USB) · GND · <b>GPIO 26</b> · <b>GPIO 25</b></td></tr>
+        <tr><td><b>PIR HC-SR501</b></td><td>VCC · OUT · GND</td><td>VIN · <b>GPIO 27</b> · GND (a saída já é 3,3 V, liga direto)</td></tr>
+        <tr><td><b>Fita e cooler</b></td><td>+ e −</td><td>Nada no ESP32: só nos contatos COM/NO dos relés e na fonte 12 V</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Por que não os pinos 0, 2, 12 e 15?</b> Eles decidem como o ESP32 liga. Um relé neles pode clicar sozinho no boot ou travar a placa. O 25, o 26 e o 27 não têm esse problema.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Do pacote ao primeiro clique</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, instale "esp32" (Espressif). Este projeto não precisa de biblioteca extra: <code>WiFi</code>, <code>WebServer</code> e o relógio já vêm com a placa.</li>
+      <li><b>Teste a placa sozinha.</b> Escolha "ESP32 Dev Module" e a porta, e grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
+      <li><b>Ligue o relé, sem as cargas.</b> Siga a tabela. Grave o código e aperte os botões no painel: o LED de cada canal do relé acende e você ouve o clique.</li>
+      <li><b>Ligue o PIR.</b> Gire o trimpot de tempo (Tx) todo para a esquerda, o mínimo, e deixe o jumper em H. Espere 1 minuto depois de ligar: é o tempo de o sensor estabilizar.</li>
+      <li><b>Ligue as cargas de 12 V.</b> Fonte desligada da tomada. Faça a ligação do desenho de baixo, confira o + e o − e só então ligue a fonte.</li>
+      <li><b>Abra o painel.</b> O Monitor Serial (115200) mostra o IP (ex.: 192.168.0.50). Digite no navegador do celular, na mesma rede Wi-Fi.</li>
+      <li><b>Teste o horário.</b> Troque <code>HORA_DESLIGA</code> para a hora atual + 1 minuto, grave e veja tudo desligar sozinho. Depois volte para 22.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque o nome e a senha da rede e grave. No painel, cada canal tem um botão liga e um desliga. O canal 0 quer dizer "todos".</p>
+<pre><code>// Controle da casa — ESP32, Arduino IDE
+// Sem bibliotecas extras.
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;time.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 26: relé canal 1 (luz, fita LED)
+// GPIO 25: relé canal 2 (ventilador)
+const int RELE[2] = {26, 25};
+const char* NOME[2] = {"Luz", "Ventilador"};
+// GPIO 27: saída (OUT) do sensor PIR
+const int PINO_PIR = 27;
+
+// A maioria dos relés liga com LOW.
+// Se o seu ligar com HIGH, troque os dois.
+const int LIGA = LOW, DESLIGA = HIGH;
+
+// apaga a luz após 10 min sem movimento
+const unsigned long SEM_GENTE_MS =
+  10UL * 60 * 1000;
+// hora em que tudo desliga
+const int HORA_DESLIGA = 22;
+
+WebServer servidor(80);
+bool ligado[2] = {false, false};
+unsigned long ultimoMovimento = 0;
+int diaDesligou = -1;
+
+void aciona(int c, bool liga) {
+  ligado[c] = liga;
+  digitalWrite(RELE[c], liga ? LIGA : DESLIGA);
+}
+
+// lê ?c= e confere: 0 = todos, 1 ou 2
+int canal() {
+  int c = servidor.arg("c").toInt();
+  if (c &lt; 0 || c &gt; 2) return -1;
+  return c;
+}
+
+void comando(bool liga) {
+  int c = canal();
+  if (c &lt; 0) {
+    servidor.send(400, "text/plain", "canal?");
+    return;
+  }
+  for (int i = 0; i &lt; 2; i++) {
+    if (c == 0 || c == i + 1) aciona(i, liga);
+  }
+  // volta para o painel
+  servidor.sendHeader("Location", "/");
+  servidor.send(303);
+}
+void rotaLiga()    { comando(true); }
+void rotaDesliga() { comando(false); }
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"luz\":";
+  j += ligado[0] ? "true" : "false";
+  j += ",\"ventilador\":";
+  j += ligado[1] ? "true" : "false";
+  unsigned long s =
+    (millis() - ultimoMovimento) / 1000;
+  j += ",\"sem_movimento_s\":" + String(s);
+  j += "}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página com botões para o celular
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;h2&gt;Sala&lt;/h2&gt;";
+  for (int i = 0; i &lt; 2; i++) {
+    String n = String(i + 1);
+    h += "&lt;p&gt;" + String(NOME[i]) + ": ";
+    h += ligado[i] ? "ligado" : "desligado";
+    h += "&lt;br&gt;&lt;a href=/liga?c=" + n;
+    h += "&gt;Liga&lt;/a&gt; | &lt;a href=/desliga?c=";
+    h += n + "&gt;Desliga&lt;/a&gt;&lt;/p&gt;";
+  }
+  h += "&lt;p&gt;&lt;a href=/desliga?c=0&gt;";
+  h += "Desligar tudo&lt;/a&gt;&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+void setup() {
+  Serial.begin(115200);
+  for (int i = 0; i &lt; 2; i++) {
+    // relé desligado antes de virar saída
+    digitalWrite(RELE[i], DESLIGA);
+    pinMode(RELE[i], OUTPUT);
+  }
+  pinMode(PINO_PIR, INPUT);
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  // relógio pela internet, fuso -3 h
+  configTime(-3 * 3600, 0, "pool.ntp.org");
+  servidor.on("/", painel);
+  servidor.on("/liga", rotaLiga);
+  servidor.on("/desliga", rotaDesliga);
+  servidor.on("/dados", dados);
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+
+  // presença: movimento acende a luz
+  if (digitalRead(PINO_PIR) == HIGH) {
+    ultimoMovimento = millis();
+    if (!ligado[0]) aciona(0, true);
+  }
+  // 10 min sem ninguém: apaga a luz
+  unsigned long parado =
+    millis() - ultimoMovimento;
+  if (ligado[0] &amp;&amp; parado &gt; SEM_GENTE_MS) {
+    aciona(0, false);
+  }
+
+  // horário: às 22 h desliga tudo, 1 vez/dia
+  struct tm t;
+  if (getLocalTime(&amp;t, 10) &amp;&amp;
+      t.tm_hour == HORA_DESLIGA &amp;&amp;
+      t.tm_mday != diaDesligou) {
+    aciona(0, false);
+    aciona(1, false);
+    diaDesligou = t.tm_mday;
+  }
+}</code></pre>
+    <div class="dica"><b>Versão 1 tem um furo de propósito.</b> Depois das 22 h, se alguém passar na frente do PIR, a luz acende de novo. Na versão 2, faça a presença só valer entre 6 h e 22 h. É um bom primeiro ajuste para anotar no caderno de testes.</div>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Comando em texto</h3><p>Você escreve "desliga tudo da sala" ou "liga só o ventilador". A IA traduz a frase para um comando curto que o ESP32 entende.</p></div>
+      <div class="card"><h3>Comando por voz</h3><p>Use o ditado do teclado do celular ou do computador: a fala vira texto e o resto é igual ao comando em texto.</p></div>
+      <div class="card"><h3>Lista fechada de ações</h3><p>A IA só sugere. O script confere se a resposta é "liga" ou "desliga" e se o canal existe. Qualquer outra coisa é recusada.</p></div>
+    </div>
+    <p class="ler">Script em Python, rodando no computador na mesma rede. Na versão 1, você mesmo cola o pedido no chat da IA e cola a resposta de volta. Funciona sem chave nenhuma.</p>
+<pre><code># comando.py — frase em português vira
+# comando para o ESP32
+import json, urllib.request
+
+# troque pelo IP do seu ESP32
+ESP = "http://192.168.0.50"
+CANAIS = {0: "todos", 1: "luz da sala",
+          2: "ventilador"}
+ACOES = {"liga", "desliga"}
+
+def perguntar_ia(prompt):
+    # Versão 1: cole o prompt no chat da IA
+    # e cole aqui a resposta.
+    # Versão 2: troque pela biblioteca do
+    # serviço que você usa, com a SUA chave
+    # numa variável de ambiente (nunca no
+    # código), ou por um modelo local no PC.
+    print(prompt)
+    return input("Resposta da IA: ")
+
+frase = input("Comando: ")
+prompt = (
+    "Você controla uma sala. Canais: "
+    + json.dumps(CANAIS, ensure_ascii=False)
+    + '. Responda SÓ um JSON assim: '
+    '{"canal": 1, "acao": "desliga"}. '
+    "acao é liga ou desliga. Comando: "
+    + frase
+)
+resposta = perguntar_ia(prompt)
+
+# confere ANTES de acionar
+try:
+    cmd = json.loads(resposta)
+    c, a = int(cmd["canal"]), cmd["acao"]
+except Exception:
+    c, a = -1, ""
+if a in ACOES and c in CANAIS:
+    urllib.request.urlopen(f"{ESP}/{a}?c={c}")
+    print("Feito:", a, CANAIS[c])
+else:
+    print("Comando recusado:", resposta)</code></pre>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>Ao ligar a placa, nenhum relé clica sozinho.</li>
+        <li>Cada botão do painel liga e desliga o canal certo; "Desligar tudo" apaga os dois.</li>
+        <li>Passando a mão na frente do PIR, a luz acende; parado por 10 min, apaga.</li>
+        <li>Com <code>HORA_DESLIGA</code> na hora atual, tudo desliga e não volta a desligar no mesmo dia.</li>
+        <li>O script de IA recusa uma resposta inventada, como canal 5 ou "pisca".</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Relé fica ligado direto</b></td><td>Relé liga com HIGH, não com LOW</td><td>Troque <code>LIGA</code> e <code>DESLIGA</code> no código</td></tr>
+        <tr><td><b>Relé não clica, só o LED acende fraco</b></td><td>Módulo não aceita sinal de 3,3 V</td><td>Use um módulo que aceite 3,3 V, ou com jumper de nível alto/baixo</td></tr>
+        <tr><td><b>Luz acende sozinha toda hora</b></td><td>PIR aquecendo, sensível demais ou mirando janela e ar-condicionado</td><td>Espere 1 min ao ligar, baixe o trimpot de sensibilidade (Sx) e mude a mira</td></tr>
+        <tr><td><b>Desligar às 22 h não funciona</b></td><td>Sem internet, o relógio não acerta</td><td>Confira o Wi-Fi; imprima a hora no Monitor Serial com <code>Serial.println(&amp;t, "%H:%M")</code></td></tr>
+        <tr><td><b>Cooler não gira</b></td><td>+ e − invertidos ou fio no NC em vez do NO</td><td>Confira as cores e use o borne NO de cada relé</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. Depois de uma semana na sala, você sabe quantas horas a luz ficaria acesa à toa, e isso vira argumento de venda.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Botões, PIR com 10 min, desliga às 22 h</td><td>Luz acendeu às 23 h quando o gato passou</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td>Presença só vale entre 6 h e 22 h</td><td>Noite toda apagada</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Contar quantos minutos cada canal ficou ligado no dia</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Tomada não entra no kit</h2>
+    <div class="alerta"><b>No kit, só 12 V.</b> Relé ligado em lâmpada ou aparelho de tomada (127/220 V), em portão eletrônico ou dentro do quadro de energia: só um eletricista ou adulto responsável faz, com a energia desligada e tudo em caixa fechada. Módulo de relé barato não é feito para carga alta, como chuveiro, aquecedor ou ar-condicionado. Desligue a fonte de 12 V da tomada antes de mexer nos fios.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender o controle</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Escola com sala que fica com luz e ventilador ligados depois da aula, pequeno comércio que esquece a vitrine acesa, vizinho que quer apagar a luz da garagem pelo celular</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 70–120 (lista acima, a conferir)</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 200–350 o controle montado, testado, em caixa (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>1 a 2 horas para configurar o Wi-Fi, os horários e ensinar o painel. A ligação na rede de 127/220 V é do eletricista do cliente</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 10–25 por mês: ajuste de horários, relatório de horas ligadas e comando por texto (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Mostre a conta: potência (W) × horas ligadas à toa por dia × 30 ÷ 1000 = kWh no mês; × tarifa da conta de luz do cliente (R$/kWh). Ex.: 400 W × 2 h × 30 = 24 kWh por mês, vezes a tarifa</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Meça antes de prometer.</b> Deixe o controle uma semana na sala só registrando o PIR, sem desligar nada. As horas sem ninguém com a luz acesa são o número que você mostra ao diretor.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender como o modelo transforma uma frase em comando, comece pelo curso <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Para usar um agente de IA que ajuda a escrever e corrigir o código, siga para o <a href="https://inematds.github.io/oswork-quick/" target="_blank" rel="noopener">OSWork</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../agua/">← Painel de água</a>
+      <a class="btn" href="../">Todas as soluções →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

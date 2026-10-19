@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Irrigação inteligente</title>
+<meta name="description" content="Guia para montar uma irrigação com ESP32 que rega só quando a terra pede: sensor de umidade capacitivo, DHT22, BH1750, relé e mini bomba 5 V. Peças, ligação, código, IA e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/" aria-current="page">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 2 · Irrigação</span>
+    <h1>Irrigação que rega <em>só quando a terra pede</em></h1>
+    <p class="lead">Um sensor mede a umidade da terra, o ESP32 decide e liga uma mini bomba por alguns segundos. O painel mostra no celular a umidade, a luz e a temperatura. Serve para a horta da escola, a varanda do vizinho e o pequeno produtor.</p>
+    <div class="tags"><span class="tag">Kit R$ 100–160</span><span class="tag">Dificuldade: fácil</span><span class="tag">Tudo em 3,3 V e 5 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#codigo">Ver o código</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>Mede, decide, rega, mostra</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 400" role="img" aria-label="Fluxo da irrigação: o sensor mede a umidade, o ESP32 compara com o limite, liga a bomba por 5 segundos e espera 30 minutos; o painel mostra tudo no celular">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="20" y="10" width="360" height="62" rx="12"/>
+          <rect x="20" y="110" width="360" height="82" rx="12"/>
+          <rect x="20" y="230" width="170" height="74" rx="12"/>
+          <rect x="210" y="230" width="170" height="74" rx="12"/>
+          <rect x="20" y="334" width="360" height="56" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 72v32"/><path d="M193 97l7 7 7-7"/>
+          <path d="M105 192v32"/><path d="M98 217l7 7 7-7"/>
+          <path d="M295 192v32"/><path d="M288 217l7 7 7-7"/>
+          <path d="M200 304v24"/><path d="M193 321l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="17" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="36">Sensores medem</text>
+          <text x="200" y="136">ESP32 decide</text>
+          <text x="105" y="256">Terra seca</text>
+          <text x="295" y="256">Terra úmida</text>
+          <text x="200" y="368">Painel no celular</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="200" y="58">umidade da terra, luz, ar</text>
+          <text x="200" y="160">umidade abaixo de 35%?</text>
+          <text x="200" y="180">regou há mais de 30 min?</text>
+          <text x="105" y="280">bomba liga 5 s</text>
+          <text x="295" y="280">não faz nada</text>
+          <text x="200" y="384" font-size="15">números e quantas regas</text>
+        </g>
+      </svg>
+      <figcaption>Os limites (35%, 5 s, 30 min) são pontos de partida. Você ajusta para cada planta depois dos testes.</figcaption>
+    </figure>
+    <p class="ler">O sensor capacitivo devolve um número que cai quando a terra fica molhada. O ESP32 lê esse número a cada 2 segundos e transforma em porcentagem. Se a terra estiver seca e a última rega já tiver acontecido há mais de 30 minutos, ele liga o relé, que liga a bomba. A espera entre regas dá tempo para a água descer até o sensor, senão a bomba encharca o vaso.</p>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi</td><td>R$ 30–45</td></tr>
+        <tr><td><b>Sensor de umidade de solo capacitivo</b> v1.2</td><td>Mede a umidade sem enferrujar (o resistivo, de garfo, corrói em semanas)</td><td>R$ 7–12</td></tr>
+        <tr><td><b>DHT22</b> (AM2302)</td><td>Temperatura e umidade do ar</td><td>R$ 18–28</td></tr>
+        <tr><td><b>BH1750</b> (módulo GY-302)</td><td>Quantidade de luz, em lux</td><td>R$ 8–14</td></tr>
+        <tr><td><b>Módulo relé 1 canal</b> 5 V com optoacoplador</td><td>Liga a bomba. Compre um que aceite sinal de 3,3 V</td><td>R$ 6–10</td></tr>
+        <tr><td><b>Mini bomba submersa 5 V</b> + 1 m de mangueira</td><td>Leva a água do pote para o vaso</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Fonte 5 V 2 A</b> (carregador de celular serve)</td><td>Alimenta a bomba</td><td>R$ 0–20</td></tr>
+        <tr><td><b>Protoboard, jumpers, resistor 10 kΩ</b></td><td>Ligações sem solda</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 100–160</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui vaso, pote de água nem caixa de acabamento.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito, pino por pino</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 560" role="img" aria-label="Diagrama de ligação: GPIO 34 no sinal do sensor de solo, GPIO 4 no DHT22, GPIO 21 e GPIO 22 no BH1750, GPIO 26 no relé; a bomba é ligada pela fonte de 5 V através do contato do relé">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="124" height="400" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="70" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="122" y="88">3V3</text>
+          <text x="122" y="118">GND</text>
+          <text x="122" y="148">VIN 5V</text>
+          <text x="122" y="198">GPIO 34</text>
+          <text x="122" y="268">GPIO 4</text>
+          <text x="122" y="328">GPIO 21</text>
+          <text x="122" y="358">GPIO 22</text>
+          <text x="122" y="408">GPIO 26</text>
+        </g>
+        <!-- sinais -->
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M132 193H206" stroke="var(--sky)"/>
+          <path d="M132 263H206" stroke="var(--ok)"/>
+          <path d="M132 323H206" stroke="var(--warm)"/>
+          <path d="M132 353H206" stroke="var(--amb2)"/>
+          <path d="M132 403H206" stroke="var(--bad)"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="132" cy="193" r="4"/><circle cx="132" cy="263" r="4"/><circle cx="132" cy="323" r="4"/><circle cx="132" cy="353" r="4"/><circle cx="132" cy="403" r="4"/></g>
+        <!-- componentes -->
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="206" y="160" width="186" height="62" rx="10"/>
+          <rect x="206" y="232" width="186" height="62" rx="10"/>
+          <rect x="206" y="304" width="186" height="62" rx="10"/>
+          <rect x="206" y="376" width="186" height="62" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">
+          <text x="216" y="184">Solo · AOUT</text>
+          <text x="216" y="256">DHT22 · DATA</text>
+          <text x="216" y="328">BH1750 · SDA SCL</text>
+          <text x="216" y="400">Relé · IN</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="216" y="208">VCC 3V3 · GND</text>
+          <text x="216" y="280">3V3 · GND · 10k</text>
+          <text x="216" y="352">VCC 3V3 · GND</text>
+          <text x="216" y="424">VCC no VIN · GND</text>
+        </g>
+        <!-- bomba -->
+        <text x="8" y="470" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Lado da bomba (contato do relé)</text>
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="8" y="488" width="110" height="56" rx="10"/>
+          <rect x="145" y="488" width="110" height="56" rx="10"/>
+          <rect x="282" y="488" width="110" height="56" rx="10"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--txt)" text-anchor="middle">
+          <text x="63" y="512">Fonte 5 V</text><text x="63" y="532" fill="var(--mut)">+ e −</text>
+          <text x="200" y="512">Relé</text><text x="200" y="532" fill="var(--mut)">COM · NO</text>
+          <text x="337" y="512">Bomba</text><text x="337" y="532" fill="var(--mut)">+ e −</text>
+        </g>
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M118 506h27" stroke="var(--bad)"/>
+          <path d="M255 506h27" stroke="var(--bad)"/>
+          <path d="M63 544v10h274v-10" stroke="var(--mut)"/>
+        </g>
+      </svg>
+      <figcaption>Fio de cima: + da fonte → COM do relé; NO do relé → + da bomba. Fio de baixo: − da bomba → − da fonte. A bomba não passa pelo ESP32.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Componente</th><th>Pino do componente</th><th>Liga no ESP32</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sensor de solo</b></td><td>VCC · GND · AOUT</td><td>3V3 · GND · <b>GPIO 34</b></td></tr>
+        <tr><td><b>DHT22</b></td><td>VCC · GND · DATA</td><td>3V3 · GND · <b>GPIO 4</b> (resistor 10 kΩ entre DATA e 3V3; módulo com placa já traz)</td></tr>
+        <tr><td><b>BH1750</b></td><td>VCC · GND · SDA · SCL · ADDR</td><td>3V3 · GND · <b>GPIO 21</b> · <b>GPIO 22</b> · ADDR solto (endereço 0x23)</td></tr>
+        <tr><td><b>Relé</b></td><td>VCC · GND · IN</td><td>VIN (5 V do USB) · GND · <b>GPIO 26</b></td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Por que GPIO 34 no sensor de solo?</b> Com o Wi-Fi ligado, só os pinos 32 a 39 leem sinal analógico direito no ESP32. O 34 é só de entrada, perfeito para sensor.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Do pacote ao primeiro gole d'água</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2, depois em Gerenciador de Placas instale "esp32" (Espressif). Em Bibliotecas, instale "DHT sensor library" e "Adafruit Unified Sensor" (Adafruit) e "BH1750" (Christopher Laws).</li>
+      <li><b>Teste a placa sozinha.</b> Ligue o ESP32 no USB, escolha a placa "ESP32 Dev Module" e a porta, e grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
+      <li><b>Ligue os sensores, sem a bomba.</b> Siga a tabela acima. Confira duas vezes: 3V3 nos sensores, nunca o VIN.</li>
+      <li><b>Calibre o sensor de solo.</b> Grave o código, abra o Monitor Serial (115200) e anote o valor "bruto" com o sensor no ar (seco) e dentro de um copo d'água até a linha marcada (molhado). Troque os números de <code>SECO</code> e <code>MOLHADO</code>.</li>
+      <li><b>Ligue o relé e teste com um LED</b> no lugar da bomba. Quando a terra estiver seca, o relé tem que clicar por 5 segundos.</li>
+      <li><b>Coloque a bomba.</b> Bomba dentro de um pote com água, mangueira no vaso, fonte de 5 V pelo contato do relé. Deixe o ESP32 e a protoboard numa caixa, acima da água.</li>
+      <li><b>Abra o painel.</b> O Monitor Serial mostra o IP (ex.: 192.168.0.50). Digite esse IP no navegador do celular, na mesma rede Wi-Fi.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque o nome e a senha da rede, calibre <code>SECO</code> e <code>MOLHADO</code> e grave. O painel atualiza sozinho a cada 5 segundos.</p>
+<pre><code>// Irrigação inteligente — ESP32, Arduino IDE
+// Bibliotecas: "DHT sensor library" e
+// "Adafruit Unified Sensor" (Adafruit),
+// "BH1750" (Christopher Laws)
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;DHT.h&gt;
+#include &lt;BH1750.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 34: sensor de solo (AOUT)
+const int PINO_SOLO = 34;
+// GPIO 4: DHT22 (DATA)
+const int PINO_DHT = 4;
+// GPIO 26: relé da bomba (IN)
+const int PINO_RELE = 26;
+// BH1750: SDA no GPIO 21, SCL no GPIO 22
+
+// A maioria dos relés liga com LOW.
+// Se o seu ligar com HIGH, troque os dois.
+const int LIGA = LOW, DESLIGA = HIGH;
+
+// Calibre: sensor no ar (SECO) e na água
+int SECO = 3300, MOLHADO = 1400;
+// % de umidade que dispara a rega
+const int REGAR_ABAIXO = 35;
+// bomba ligada 5 s; espera 30 min
+const unsigned long REGA_MS = 5000;
+const unsigned long ESPERA_MS = 30UL * 60 * 1000;
+
+DHT dht(PINO_DHT, DHT22);
+BH1750 luz;
+WebServer servidor(80);
+int umidade = 0, regas = 0;
+float tempAr = NAN, umAr = NAN, lux = 0;
+unsigned long ultimaRega = 0, ultimaLeitura = 0;
+bool jaRegou = false;
+
+void ler() {
+  int bruto = analogRead(PINO_SOLO);
+  int pct = map(bruto, SECO, MOLHADO, 0, 100);
+  umidade = constrain(pct, 0, 100);
+  tempAr = dht.readTemperature();
+  umAr = dht.readHumidity();
+  lux = luz.readLightLevel();
+  Serial.printf("bruto=%d umidade=%d%%\n",
+                bruto, umidade);
+}
+
+void regar() {
+  digitalWrite(PINO_RELE, LIGA);
+  // versão 1: trava 5 s enquanto rega
+  delay(REGA_MS);
+  digitalWrite(PINO_RELE, DESLIGA);
+  ultimaRega = millis();
+  jaRegou = true;
+  regas++;
+}
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"umidade\":" + String(umidade);
+  j += ",\"temp\":" + String(tempAr, 1);
+  j += ",\"umidade_ar\":" + String(umAr, 0);
+  j += ",\"lux\":" + String(lux, 0);
+  j += ",\"regas\":" + String(regas) + "}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página que abre no celular (5 em 5 s)
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;meta http-equiv=refresh content=5&gt;";
+  h += "&lt;h2&gt;Horta&lt;/h2&gt;&lt;p&gt;Terra: " + String(umidade);
+  h += "%&lt;br&gt;Ar: " + String(tempAr, 1) + " C";
+  h += "&lt;br&gt;Luz: " + String(lux, 0) + " lux";
+  h += "&lt;br&gt;Regas: " + String(regas) + "&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+void setup() {
+  Serial.begin(115200);
+  // bomba desligada antes de virar saída
+  digitalWrite(PINO_RELE, DESLIGA);
+  pinMode(PINO_RELE, OUTPUT);
+  dht.begin();
+  Wire.begin(21, 22);
+  luz.begin();
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  servidor.on("/", painel);
+  servidor.on("/dados", dados);
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+  if (millis() - ultimaLeitura &lt; 2000) return;
+  ultimaLeitura = millis();
+  ler();
+  bool passou = millis() - ultimaRega &gt; ESPERA_MS;
+  bool podeRegar = !jaRegou || passou;
+  if (umidade &lt; REGAR_ABAIXO &amp;&amp; podeRegar) regar();
+}</code></pre>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Não regar antes da chuva</h3><p>O Open-Meteo dá a previsão de graça, sem cadastro. Na versão 2, o ESP32 consulta a chance de chuva das próximas horas e pula a rega se passar de 70%.</p></div>
+      <div class="card"><h3>Pergunte à horta</h3><p>Um script no seu computador lê os dados do ESP32 e manda para um modelo de IA com a sua pergunta: "a planta está recebendo luz suficiente?".</p></div>
+      <div class="card"><h3>Foto da folha</h3><p>Tire uma foto e mande a um modelo que entende imagem. Ele sugere "parece falta de água" ou "parece fungo". É um palpite: confirme com o professor de biologia.</p></div>
+    </div>
+    <p class="ler">Previsão para Novo Hamburgo (troque latitude e longitude pela sua cidade):</p>
+<pre><code>https://api.open-meteo.com/v1/forecast?latitude=-29.68&amp;longitude=-51.13&amp;hourly=precipitation_probability&amp;forecast_days=1</code></pre>
+    <p class="ler">Script de pergunta, em Python, rodando no computador na mesma rede:</p>
+<pre><code># pergunta.py — roda no computador,
+# na mesma rede do ESP32
+import json, urllib.request
+
+# troque pelo IP do seu ESP32
+URL = "http://192.168.0.50/dados"
+dados = json.load(urllib.request.urlopen(URL))
+pergunta = input("Pergunta: ")
+prompt = (
+    "Você ajuda a cuidar de uma horta escolar. "
+    "Leitura dos sensores agora: "
+    + json.dumps(dados) + ". "
+    "umidade = % da terra, temp = °C, "
+    "lux = luz. Responda em português, "
+    "em até 3 frases: " + pergunta
+)
+print(prompt)
+# Mande o prompt ao modelo que você usa:
+# - cole no chat do serviço de IA; ou
+# - use a biblioteca oficial do serviço,
+#   com a SUA chave numa variável de
+#   ambiente (nunca escrita no código); ou
+# - rode um modelo local no PC, sem chave.</code></pre>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>No ar, a umidade marca perto de 0%; no copo d'água, perto de 100%.</li>
+        <li>O relé clica e desliga sozinho depois de 5 s.</li>
+        <li>Depois de regar, a bomba espera 30 min mesmo com a terra ainda seca.</li>
+        <li>O painel abre no celular e os números mudam quando você sopra no DHT22.</li>
+        <li>Fio da bomba molhado não encosta em nada do ESP32.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Umidade sempre 0% ou 100%</b></td><td><code>SECO</code> e <code>MOLHADO</code> trocados ou sem calibrar</td><td>Refaça a calibração e confira se o seco é o número maior</td></tr>
+        <tr><td><b>Leitura do solo pula muito</b></td><td>Sensor no pino errado (ADC2) ou fio solto</td><td>Use o GPIO 34; faça a média de 10 leituras na versão 2</td></tr>
+        <tr><td><b>DHT22 dá "nan"</b></td><td>Falta o resistor de 10 kΩ ou leitura rápida demais</td><td>Coloque o resistor; o DHT22 só lê a cada 2 s</td></tr>
+        <tr><td><b>ESP32 reinicia quando a bomba liga</b></td><td>Bomba puxando energia da placa</td><td>Bomba sempre na fonte separada, pelo contato do relé</td></tr>
+        <tr><td><b>Relé fica ligado direto</b></td><td>Relé liga com HIGH, não com LOW</td><td>Troque <code>LIGA</code> e <code>DESLIGA</code> no código</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. Depois de uma semana você sabe o limite certo para aquela planta, e isso vira argumento de venda.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Limite 35%, rega 5 s</td><td>Vaso encharcou: regou 3 vezes seguidas</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td>Espera de 30 min entre regas</td><td>Uma rega por dia, terra entre 40% e 60%</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Pula a rega se a chance de chuva passar de 70%</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Água e eletrônica</h2>
+    <div class="alerta"><b>Use só bomba de 5 V.</b> Bomba de tomada (127/220 V) ou relé ligado em aparelho de tomada: só um adulto ou professor faz, com a energia desligada e caixa fechada. Mantenha o ESP32 e a protoboard numa caixa, acima e longe da água, e desligue a fonte antes de mexer na mangueira.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender a irrigação</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Horta escolar (rega nas férias e nos fins de semana), quem tem varanda com vasos, pequeno produtor de hortaliça e floricultura</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 100–160 (lista acima, a conferir)</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 250–400 o aparelho montado, testado, em caixa (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>1 a 2 horas para instalar, calibrar com a terra do cliente e ensinar a ler o painel</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 15–30 por mês: ajuste dos limites, previsão do tempo e relatório da semana (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Meça: litros por rega = vazão da bomba (L/min) × minutos ligada. Compare uma semana de rega fixa com uma semana de rega pelo sensor e mostre a diferença ao cliente</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Mais de um vaso?</b> Um ESP32 lê vários sensores (GPIO 32, 33, 35, 36, 39) e comanda vários relés. Para uma horta escolar inteira, venda por canteiro.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender o que o modelo de IA faz com os dados, comece pelo curso <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Para controlar motores e sensores com mais precisão, siga para <a href="https://inematds.github.io/robot/" target="_blank" rel="noopener">Robótica</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../pet-automatico/">← Pet automático</a>
+      <a class="btn" href="../nutrientes/">Nutrientes →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

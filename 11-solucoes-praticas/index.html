@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Soluções que vendem</title>
+<meta name="description" content="Sete projetos de automação com ESP32 e IA que você monta sozinho e consegue vender: pet, irrigação, nutrientes, câmera, energia, água e casa. Guias com peças, ligação, código e ficha de negócio.">
+<link rel="stylesheet" href="../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:620px;margin:0 auto}
+  .card .ico{width:40px;height:40px}
+  .card h3{margin:4px 0 2px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .meta .tag b{color:var(--amb);font-weight:700}
+  .quem{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .quem .card h3{font-size:17px}
+  .conta{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--txt);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:var(--ler);overflow-x:auto}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="./">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="pet-automatico/">Pet</a>
+      <a href="irrigacao/">Irrigação</a>
+      <a href="nutrientes/">Nutrientes</a>
+      <a href="vigilancia/">Câmera</a>
+      <a href="energia/">Energia</a>
+      <a href="agua/">Água</a>
+      <a href="controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">MOSTRATEC 2026 · Soluções que vendem</span>
+    <h1>Projetos de automação com IA que você <em>monta e consegue vender</em></h1>
+    <p class="lead">Sete projetos com uma placa <b>ESP32</b>, sensores baratos e um painel no celular. Cada guia mostra o circuito, a lista de compras, o código, como testar e <b>quanto cobrar</b>. Você monta em casa ou na escola, sozinho ou em dupla.</p>
+    <div class="acoes">
+      <a class="btn pri" href="#solucoes">Ver as 7 soluções</a>
+      <a class="btn" href="#vender">Como vender</a>
+    </div>
+  </div>
+
+  <section id="dinheiro">
+    <p class="sec">Por que dá dinheiro</p>
+    <h2>Tem gente perto de você pagando para resolver isso</h2>
+    <p class="ler">Os problemas são pequenos e se repetem toda semana: o pet que fica sozinho no feriado, a horta que seca, a conta de luz que subiu e ninguém sabe por quê. Quem resolve com um aparelho que custa menos de R$ 200 e mostra o resultado no celular tem o que vender.</p>
+    <div class="quem">
+      <div class="card"><h3>Vizinhos</h3><p>Painel de energia e de água, aviso de caixa d'água baixa, luz que acende sozinha.</p></div>
+      <div class="card"><h3>Pet shops e donos de pet</h3><p>Comedouro automático com aviso de "não comeu hoje" para quem viaja ou trabalha fora.</p></div>
+      <div class="card"><h3>Hortas escolares</h3><p>Irrigação que rega só quando a terra pede, mesmo no fim de semana e nas férias.</p></div>
+      <div class="card"><h3>Pequenos produtores</h3><p>Hidroponia com medida de sais e pH, irrigação e controle de bomba por horário.</p></div>
+      <div class="card"><h3>Condomínios e lojas</h3><p>Câmera que avisa só quando aparece uma pessoa, consumo de água por bloco, vazamento de madrugada.</p></div>
+    </div>
+  </section>
+
+  <section id="solucoes">
+    <p class="sec">O catálogo</p>
+    <h2>As 7 soluções</h2>
+    <p class="ler">Custo do kit = só a parte eletrônica, em preços aproximados de loja online brasileira em outubro de 2026 (a conferir antes de comprar). Câmera IP, computador e caixa de acabamento ficam de fora.</p>
+    <div class="grade">
+
+      <a class="card" href="pet-automatico/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="9" r="1.8"/><circle cx="9.5" cy="5.5" r="1.8"/><circle cx="14.5" cy="5.5" r="1.8"/><circle cx="18.5" cy="9" r="1.8"/><path d="M12 11c-3 0-6 4.5-6 7a2.5 2.5 0 0 0 3 2.4c1-.2 2-.6 3-.6s2 .4 3 .6A2.5 2.5 0 0 0 18 18c0-2.5-3-7-6-7z"/></svg>
+        <h3>Pet automático</h3>
+        <p>Solta a ração na hora certa, pesa o pote e avisa se o pet não comeu. Boia avisa quando a água acaba.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 120–200</b></span><span class="tag">Dificuldade: média</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="irrigacao/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12c0-3 2-5 6-5 0 3-2 5-6 5z"/><path d="M12 14c0-2.5-1.7-4-5-4 0 2.5 1.7 4 5 4z"/><path d="M5 3.5s-1.5 1.7-1.5 2.8a1.5 1.5 0 0 0 3 0C6.5 5.2 5 3.5 5 3.5z"/></svg>
+        <h3>Irrigação inteligente</h3>
+        <p>Mede a umidade da terra, a luz e a temperatura. Liga a bomba só quando a planta precisa.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 100–160</b></span><span class="tag">Dificuldade: fácil</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="nutrientes/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6.5L4.6 18.7A1.5 1.5 0 0 0 5.9 21h12.2a1.5 1.5 0 0 0 1.3-2.3L14 9.5V3"/><path d="M7.5 15h9"/></svg>
+        <h3>Nutrientes da planta</h3>
+        <p>Mede os sais da água (TDS/EC) e o pH da hidroponia. A IA explica em português o que corrigir.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 150–300</b></span><span class="tag">Dificuldade: média</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="vigilancia/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="12" rx="2.5"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <h3>Vigilância com câmera</h3>
+        <p>Detecta pessoa (não gato, não galho balançando) com IA rodando no seu computador e manda o alerta com foto.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 60–150</b> por câmera</span><span class="tag">Dificuldade: média</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="energia/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+        <h3>Painel de energia</h3>
+        <p>Mostra o consumo da casa em tempo real e em reais, com sensor de garra que não corta nenhum fio.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 80–150</b></span><span class="tag">Dificuldade: média</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="agua/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.2-6-11.2z"/><path d="M9 15.5a3 3 0 0 0 3 2.5"/></svg>
+        <h3>Painel de água</h3>
+        <p>Conta os litros que passam no cano, mede o nível da caixa d'água e acusa vazamento de madrugada.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 80–140</b></span><span class="tag">Dificuldade: média</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+      <a class="card" href="controle-casa/">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v11h14V9"/><path d="M10 20v-5h4v5"/></svg>
+        <h3>Controle da casa ou da sala</h3>
+        <p>Liga e desliga luz e ventilador pelo celular, por horário ou quando alguém entra. Aceita comando em texto.</p>
+        <div class="meta"><span class="tag">Kit <b>R$ 70–120</b></span><span class="tag">Dificuldade: fácil</span></div>
+        <span class="vai">Abrir o guia →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section id="base">
+    <p class="sec">A base é sempre a mesma</p>
+    <h2>Aprenda uma vez, use nos sete projetos</h2>
+    <p class="ler">Todo projeto tem quatro partes. Quando você monta o primeiro, já sabe a maior parte do segundo: muda o sensor e algumas linhas do código.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 400 330" role="img" aria-label="Fluxo: sensores ligados ao ESP32, que manda os dados pelo Wi-Fi para o painel no celular; a IA lê os dados e responde perguntas">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="10" y="20" width="170" height="80" rx="12"/>
+          <rect x="220" y="20" width="170" height="80" rx="12"/>
+          <rect x="10" y="220" width="170" height="80" rx="12"/>
+          <rect x="220" y="220" width="170" height="80" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M180 60h34"/><path d="M206 53l8 7-8 7"/>
+          <path d="M305 100v114"/><path d="M298 206l7 8 7-8"/>
+          <path d="M220 260h-34"/><path d="M194 253l-8 7 8 7"/>
+          <path d="M95 220V106"/><path d="M88 114l7-8 7 8"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="18" fill="var(--txt)" text-anchor="middle">
+          <text x="95" y="54">Sensores</text>
+          <text x="305" y="54">ESP32</text>
+          <text x="305" y="254">Painel</text>
+          <text x="95" y="254">IA</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="95" y="80">peso, umidade, luz</text>
+          <text x="305" y="80">lê e decide, Wi-Fi</text>
+          <text x="305" y="280">gráfico no celular</text>
+          <text x="95" y="280">entende e responde</text>
+          <text x="318" y="162" text-anchor="start">dados</text>
+          <text x="82" y="162" text-anchor="end">pergunta</text>
+        </g>
+      </svg>
+      <figcaption>Sensor mede, o ESP32 lê e decide, o painel mostra no celular, a IA olha os dados e responde em português.</figcaption>
+    </figure>
+    <div class="grade">
+      <div class="card"><h3>ESP32</h3><p>Placa com Wi-Fi, na faixa de R$ 35 a R$ 55 (a conferir). Programa na Arduino IDE, liga no cabo USB do computador.</p></div>
+      <div class="card"><h3>Sensores e atuadores</h3><p>Sensor mede (peso, umidade, corrente). Atuador age (servo, relé, bomba). Tudo em 3,3 V a 12 V.</p></div>
+      <div class="card"><h3>Painel</h3><p>O próprio ESP32 mostra os números numa página que abre no celular, na mesma rede Wi-Fi. Depois dá para usar o Home Assistant.</p></div>
+      <div class="card"><h3>IA</h3><p>Lê os dados e responde perguntas como "quanto gastei de água esta semana?". Roda com a sua conta num serviço de IA ou num modelo local no PC.</p></div>
+    </div>
+  </section>
+
+  <section id="vender">
+    <p class="sec">Como vender</p>
+    <h2>A ficha de negócio: quatro números</h2>
+    <p class="ler">Cada guia tem uma ficha pronta. A lógica é a mesma em todas: você cobra pelo aparelho, pela instalação e, se quiser, por mês pelo painel e pelos alertas.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Item</th><th>O que é</th><th>Como calcular</th></tr></thead>
+      <tbody>
+        <tr><td><b>Custo do kit</b></td><td>O que você paga nas peças</td><td>Some a lista de compras do guia, com frete</td></tr>
+        <tr><td><b>Preço do aparelho</b></td><td>O que o cliente paga pelo aparelho montado</td><td>Sugestão: de 2 a 3 vezes o custo do kit</td></tr>
+        <tr><td><b>Instalação</b></td><td>Seu tempo para instalar, configurar e ensinar</td><td>Horas de trabalho × o valor da sua hora</td></tr>
+        <tr><td><b>Assinatura</b></td><td>Painel, alertas e ajuste mensal (opcional)</td><td>Valor baixo por mês, cobrado só se você der suporte de verdade</td></tr>
+      </tbody>
+    </table></div>
+    <p class="conta">Exemplo: kit R$ 130 → preço R$ 330<br>+ instalação 2 h × R$ 30 = R$ 60<br>Cliente paga R$ 390. Você fica com R$ 260<br>para o seu tempo de montagem e a margem.</p>
+    <div class="dica"><b>O argumento que vende é medido.</b> Instale na sua casa primeiro e anote um resultado de verdade: "o painel de água mostrou 18 litros às 3 h da manhã, era a descarga vazando". Um número da sua casa convence mais do que qualquer folheto.</div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Três regras que valem para todos</h2>
+    <div class="alerta"><b>Tomada (127/220 V) mata.</b> No kit de vocês, nada liga na tomada: tudo funciona de 3,3 V a 12 V, com fonte pronta. No painel de energia, o sensor de garra (SCT-013) só abraça o fio, sem cortar. Medidor PZEM, relé ligado em aparelho de tomada ou mexer no quadro de energia: <b>só um adulto ou professor faz</b>, com a energia desligada e tudo em caixa fechada.</div>
+    <div class="alerta"><b>Água e eletrônica separadas.</b> Bomba e sensores de água em 5 V. A placa fica numa caixa, acima e longe da água.</div>
+    <div class="alerta"><b>Câmera tem regra.</b> Avise com placa que o lugar tem câmera. Não grave nem publique o rosto de ninguém sem permissão, e apague as imagens que não forem necessárias.</div>
+  </section>
+
+  <section id="cursos">
+    <p class="sec">Para ir além</p>
+    <h2>Continue nos cursos abertos do INEMA.CLUB</h2>
+    <p class="ler">Os cursos são gratuitos e abertos. Use para entender a IA que entra nos projetos e para dar o próximo passo com robótica.</p>
+    <div class="grade">
+      <a class="card" href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener"><h3>IA do zero</h3><p>O que um modelo de IA faz, como pedir e como conferir a resposta.</p><span class="vai">Abrir curso →</span></a>
+      <a class="card" href="https://inematds.github.io/robot/" target="_blank" rel="noopener"><h3>Robótica</h3><p>Sensores, motores e controle: o mesmo raciocínio dos projetos, num robô.</p><span class="vai">Abrir curso →</span></a>
+      <a class="card" href="https://inematds.github.io/vla/" target="_blank" rel="noopener"><h3>Visão e ação (VLA)</h3><p>Modelos que veem pela câmera e decidem o que fazer.</p><span class="vai">Abrir curso →</span></a>
+      <a class="card" href="https://inematds.github.io/oswork-quick/" target="_blank" rel="noopener"><h3>OSWork</h3><p>Use um agente de IA no terminal para ajudar a escrever e corrigir o código.</p><span class="vai">Abrir curso →</span></a>
+    </div>
+    <div class="acoes"><a class="btn pri" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">Todos os cursos no INEMA.CLUB</a></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · 27 a 30 de outubro, FENAC, Novo Hamburgo/RS · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="./">Soluções que vendem</a>
+  </div>
+</footer>
+</body>
+</html>

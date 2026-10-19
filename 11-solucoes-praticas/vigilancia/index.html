@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilância com câmera</title>
+<meta name="description" content="Guia para montar uma câmera que avisa só quando aparece uma pessoa: ESP32-CAM ou webcam USB e detecção YOLO rodando no seu computador, sem nuvem. Peças, ligação, código Python, privacidade e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/" aria-current="page">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 4 · Vigilância</span>
+    <h1>Câmera que avisa <em>só quando aparece uma pessoa</em></h1>
+    <p class="lead">A ESP32-CAM (ou uma webcam USB) manda a imagem pelo Wi-Fi. No seu computador, um modelo de IA chamado YOLO procura pessoas na imagem e ignora gato, carro e galho balançando. Quando alguém entra na zona que você marcou, ele salva a foto e avisa. Tudo roda na sua casa, sem nuvem.</p>
+    <div class="tags"><span class="tag">Kit R$ 60–150 por câmera</span><span class="tag">Dificuldade: média</span><span class="tag">Precisa de um computador</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#seguranca">Regras de privacidade</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#seguranca">Privacidade</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <div class="alerta"><b>Câmera tem regra.</b> Coloque uma placa avisando que o lugar tem câmera. Não aponte para a rua, para a casa do vizinho nem para banheiro e quarto. Não grave nem publique o rosto de ninguém sem permissão, e apague as fotos no fim do dia. As regras completas estão em <a href="#seguranca">Privacidade</a>.</div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>A câmera filma, o computador decide</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 420" role="img" aria-label="Fluxo da vigilância: a câmera manda a imagem pelo Wi-Fi para o computador; o YOLO procura pessoa na zona; se a pessoa aparece em 5 quadros seguidos, o sistema salva a foto e avisa; se não, continua olhando">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="20" y="10" width="360" height="62" rx="12"/>
+          <rect x="20" y="110" width="360" height="62" rx="12"/>
+          <rect x="20" y="210" width="360" height="82" rx="12"/>
+          <rect x="20" y="330" width="170" height="74" rx="12"/>
+          <rect x="210" y="330" width="170" height="74" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 72v32"/><path d="M193 97l7 7 7-7"/>
+          <path d="M200 172v32"/><path d="M193 197l7 7 7-7"/>
+          <path d="M105 292v32"/><path d="M98 317l7 7 7-7"/>
+          <path d="M295 292v32"/><path d="M288 317l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="17" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="36">Câmera filma</text>
+          <text x="200" y="136">Computador roda o YOLO</text>
+          <text x="200" y="236">Tem pessoa na zona?</text>
+          <text x="105" y="356">Sim</text>
+          <text x="295" y="356">Não</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="200" y="58">ESP32-CAM ou webcam, pelo Wi-Fi</text>
+          <text x="200" y="158">procura pessoas em cada quadro</text>
+          <text x="200" y="260">centro da pessoa dentro da área</text>
+          <text x="200" y="280">em 5 quadros seguidos?</text>
+          <text x="105" y="380">salva foto e avisa</text>
+          <text x="295" y="380">continua olhando</text>
+        </g>
+      </svg>
+      <figcaption>Os números (5 quadros, 60 s entre alertas, confiança 0,5) são pontos de partida. Você ajusta depois dos testes.</figcaption>
+    </figure>
+    <p class="ler">Um sensor de movimento comum dispara com qualquer coisa que esquenta ou mexe. O YOLO foi treinado para reconhecer objetos e devolve uma caixa em volta de cada pessoa que encontra. O programa só considera a pessoa que está dentro da zona que você marcou, e só dispara se ela continuar lá por alguns quadros. Isso corta a maioria dos alarmes falsos.</p>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32-CAM AI-Thinker</b> com câmera OV2640</td><td>Filma e manda a imagem pelo Wi-Fi</td><td>R$ 40–70</td></tr>
+        <tr><td><b>Placa ESP32-CAM-MB</b> ou <b>adaptador FTDI</b> (FT232RL)</td><td>Grava o programa na ESP32-CAM pelo USB</td><td>R$ 15–30</td></tr>
+        <tr><td><b>Fonte 5 V de pelo menos 1 A</b> (carregador de celular serve)</td><td>Alimenta a câmera. Fonte fraca é a causa nº 1 de travamento</td><td>R$ 0–30</td></tr>
+        <tr><td><b>Jumpers fêmea-fêmea</b></td><td>Ligação com o FTDI</td><td>R$ 5–10</td></tr>
+        <tr><td><b>Total por câmera</b></td><td></td><td><b>R$ 60–150</b></td></tr>
+        <tr><td><b>Alternativa:</b> webcam USB</td><td>Ligada direto no computador, sem ESP32-CAM</td><td>R$ 60–120</td></tr>
+        <tr><td><b>Computador ou mini PC</b></td><td>Roda o YOLO. Qualquer notebook recente serve para começar</td><td>fora do kit</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui caixa de acabamento nem suporte de parede.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>Gravar o programa na ESP32-CAM</h2>
+    <p class="ler">A ESP32-CAM não tem entrada USB. Para gravar o programa, você liga um adaptador FTDI nos pinos da placa. Depois de gravada, ela só precisa de 5 V e GND.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 400 380" role="img" aria-label="Ligação do adaptador FTDI na ESP32-CAM: VCC 5V no 5V, GND no GND, TX no U0R (GPIO 3), RX no U0T (GPIO 1); IO0 (GPIO 0) ligado ao GND só durante a gravação">
+        <!-- FTDI -->
+        <rect x="8" y="20" width="120" height="250" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="68" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">FTDI</text>
+        <text x="68" y="68" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">jumper em 5V</text>
+        <!-- ESP32-CAM -->
+        <rect x="232" y="20" width="160" height="300" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="312" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32-CAM</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)">
+          <text x="118" y="108" text-anchor="end">VCC</text>
+          <text x="118" y="158" text-anchor="end">GND</text>
+          <text x="118" y="208" text-anchor="end">TX</text>
+          <text x="118" y="258" text-anchor="end">RX</text>
+          <text x="242" y="108">5V</text>
+          <text x="242" y="158">GND</text>
+          <text x="242" y="208">U0R · GPIO 3</text>
+          <text x="242" y="258">U0T · GPIO 1</text>
+          <text x="242" y="308">IO0 · GPIO 0</text>
+        </g>
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M128 103H232" stroke="var(--bad)"/>
+          <path d="M128 153H232" stroke="var(--mut)"/>
+          <path d="M128 203H232" stroke="var(--sky)"/>
+          <path d="M128 253H232" stroke="var(--ok)"/>
+          <path d="M376 303h10V153h-10" stroke="var(--amb)" stroke-dasharray="6 5"/>
+        </g>
+        <g fill="var(--amb)">
+          <circle cx="128" cy="103" r="4"/><circle cx="128" cy="153" r="4"/><circle cx="128" cy="203" r="4"/><circle cx="128" cy="253" r="4"/>
+          <circle cx="232" cy="103" r="4"/><circle cx="232" cy="153" r="4"/><circle cx="232" cy="203" r="4"/><circle cx="232" cy="253" r="4"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="8" y="352">Tracejado: IO0 no GND só para gravar.</text>
+          <text x="8" y="372">Tire o fio e aperte RST para rodar.</text>
+        </g>
+      </svg>
+      <figcaption>Os fios cruzam: TX do adaptador vai no U0R (recebe) da câmera e RX vai no U0T (envia).</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Adaptador FTDI</th><th>ESP32-CAM</th><th>Quando</th></tr></thead>
+      <tbody>
+        <tr><td><b>VCC</b> (jumper em 5 V)</td><td><b>5V</b></td><td>sempre</td></tr>
+        <tr><td><b>GND</b></td><td><b>GND</b></td><td>sempre</td></tr>
+        <tr><td><b>TX</b></td><td><b>U0R</b> (GPIO 3)</td><td>só para gravar</td></tr>
+        <tr><td><b>RX</b></td><td><b>U0T</b> (GPIO 1)</td><td>só para gravar</td></tr>
+        <tr><td>fio entre <b>IO0</b> (GPIO 0) e <b>GND</b> da câmera</td><td></td><td>só durante a gravação</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Caminho mais fácil:</b> a placa ESP32-CAM-MB encaixa embaixo da câmera, tem entrada USB e botão IO0. Você não liga fio nenhum: segura IO0, aperta RST e grava.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Da caixa ao primeiro alerta</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, o pacote "esp32" (Espressif). Escolha a placa "AI Thinker ESP32-CAM".</li>
+      <li><b>Abra o exemplo pronto.</b> Em Arquivo › Exemplos › ESP32 › Camera, abra "CameraWebServer". No arquivo principal, deixe ativa só a linha <code>#define CAMERA_MODEL_AI_THINKER</code> e escreva o nome e a senha da sua rede.</li>
+      <li><b>Grave.</b> Ligue o FTDI como no diagrama, com IO0 no GND. Aperte RST, clique em Carregar e espere o "Done uploading". Tire o fio do IO0 e aperte RST de novo.</li>
+      <li><b>Ache o endereço.</b> No Monitor Serial (115200) aparece "Camera Ready! Use http://192.168.0.60". Abra no navegador, clique em Start Stream e ajuste a resolução (VGA é um bom começo).</li>
+      <li><b>Feche o navegador.</b> A ESP32-CAM manda o vídeo para um cliente por vez. O endereço do vídeo é o mesmo IP com <code>:81/stream</code> no fim.</li>
+      <li><b>Prepare o Python no computador.</b> Instale o Python 3 e rode <code>pip install ultralytics opencv-python</code>. Na primeira execução o programa baixa o modelo <code>yolov8n.pt</code> (cerca de 6 MB). Depois disso a detecção roda sem internet.</li>
+      <li><b>Rode o vigia.</b> Troque o IP no código, rode <code>python vigia.py</code> e passe na frente da câmera. A janela mostra a zona em vermelho e a caixa em volta de você. Aperte Q para sair.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Python + YOLO no computador</h2>
+    <p class="ler">Salve como <code>vigia.py</code>. A zona é marcada em frações da imagem (0 a 1), então funciona em qualquer resolução. Para usar webcam USB, troque <code>FONTE</code> por <code>0</code>.</p>
+<pre><code># vigia.py — avisa quando aparece pessoa
+# Instale com:
+# pip install ultralytics opencv-python
+import os, time
+from datetime import datetime
+import cv2
+from ultralytics import YOLO
+
+# ESP32-CAM pelo Wi-Fi (troque o IP)
+FONTE = "http://192.168.0.60:81/stream"
+# webcam USB: FONTE = 0
+
+# Zona: (esquerda, topo, direita,
+# base)
+# em frações da imagem, de 0 a 1
+ZONA = (0.2, 0.2, 0.9, 1.0)
+# quadros seguidos com pessoa
+QUADROS = 5
+# segundos mínimos entre dois alertas
+INTERVALO = 60
+PASTA = "alertas"
+
+os.makedirs(PASTA, exist_ok=True)
+# baixa o modelo na 1ª vez; roda local
+modelo = YOLO("yolov8n.pt")
+cam = cv2.VideoCapture(FONTE)
+seguidos, ultimo = 0, 0.0
+
+
+def na_zona(caixa, larg, alt):
+    # o centro da pessoa está na zona?
+    x1, y1, x2, y2 = caixa
+    cx = (x1 + x2) / 2 / larg
+    cy = (y1 + y2) / 2 / alt
+    e, t, d, b = ZONA
+    return e &lt;= cx &lt;= d and t &lt;= cy &lt;= b
+
+
+def avisar(foto):
+    # Para o celular, use um bot SEU.
+    # Leia o token com os.environ,
+    # nunca escreva o token aqui.
+    print("ALERTA: pessoa", foto)
+
+
+while True:
+    ok, quadro = cam.read()
+    if not ok:
+        # caiu: espera e reconecta
+        time.sleep(2)
+        cam = cv2.VideoCapture(FONTE)
+        continue
+    alt, larg = quadro.shape[:2]
+    # classe 0 = pessoa; confiança 0,5
+    res = modelo(quadro, classes=[0],
+                 conf=0.5,
+                 verbose=False)[0]
+    caixas = res.boxes.xyxy.tolist()
+    achou = any(na_zona(c, larg, alt)
+                for c in caixas)
+    if achou:
+        seguidos += 1
+    else:
+        seguidos = 0
+
+    tela = res.plot()
+    e, t, d, b = ZONA
+    p1 = (int(e * larg), int(t * alt))
+    p2 = (int(d * larg), int(b * alt))
+    # zona em vermelho
+    cv2.rectangle(tela, p1, p2,
+                  (0, 0, 255), 2)
+
+    agora = time.time()
+    espera = agora - ultimo &gt; INTERVALO
+    if seguidos &gt;= QUADROS and espera:
+        ultimo = agora
+        # nome = AAAAMMDD-HHMMSS
+        f_ = "%Y%m%d-%H%M%S"
+        nome = datetime.now().strftime(f_)
+        foto = f"{PASTA}/{nome}.jpg"
+        cv2.imwrite(foto, tela)
+        # registro para o resumo do dia
+        reg = PASTA + "/registro.csv"
+        with open(reg, "a") as f:
+            f.write(nome + "\n")
+        avisar(foto)
+
+    cv2.imshow("vigia", tela)
+    if cv2.waitKey(1) == ord("q"):
+        break
+
+cam.release()
+cv2.destroyAllWindows()</code></pre>
+    <p class="ler">Limpeza do fim do dia. Agende para rodar às 23h59 (cron no Linux e no Mac, Agendador de Tarefas no Windows):</p>
+<pre><code># limpa.py — apaga as fotos do dia
+import glob, os
+
+for f in glob.glob("alertas/*.jpg"):
+    os.remove(f)
+print("fotos apagadas")</code></pre>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Detecção de pessoa, local</h3><p>O YOLO roda no seu computador. A imagem não sai da sua rede e você não paga nada por mês.</p></div>
+      <div class="card"><h3>Zonas proibidas</h3><p>Você marca a área que importa (portão, porta dos fundos, depósito). Quem passa na calçada fora da zona não dispara alerta.</p></div>
+      <div class="card"><h3>Resumo do dia</h3><p>Um script conta os alertas por hora e pede a um modelo de IA um resumo em português: "três alertas, todos entre 7 h e 8 h, horário de entrega".</p></div>
+    </div>
+    <p class="ler">Resumo do dia. Só os números saem do programa, nunca as fotos:</p>
+<pre><code># resumo.py — alertas por hora, em texto
+import collections, datetime
+
+hoje = datetime.date.today()
+hoje = hoje.strftime("%Y%m%d")
+por_hora = collections.Counter()
+for linha in open("alertas/registro.csv"):
+    nome = linha.strip()
+    if nome.startswith(hoje):
+        # nome = AAAAMMDD-HHMMSS
+        por_hora[nome[9:11] + "h"] += 1
+
+prompt = (
+    "Alertas de pessoa por hora, hoje: "
+    + str(dict(sorted(por_hora.items())))
+    + ". Escreva um resumo do dia em "
+    "português, em até 4 frases, e aponte "
+    "horários fora do comum."
+)
+print(prompt)
+# Mande só este texto ao modelo:
+# - de preferência um modelo local no PC,
+#   sem chave nenhuma; ou
+# - o serviço de IA da sua conta, com a
+#   SUA chave numa variável de ambiente.
+# Nunca envie as fotos para fora.</code></pre>
+    <div class="alerta"><b>Chave e token são como senha.</b> Nunca escreva chave de IA ou token de bot dentro do código nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>Você entra na zona e o alerta sai uma vez só, com a foto na pasta <code>alertas</code>.</li>
+        <li>Você fica parado na zona e o segundo alerta só sai depois de 60 s.</li>
+        <li>Um gato, um carro ou uma árvore na imagem não disparam nada.</li>
+        <li>Quem passa fora da zona vermelha não dispara nada.</li>
+        <li>O <code>limpa.py</code> apaga as fotos e a placa de aviso está visível.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>"Brownout detector was triggered"</b></td><td>Fonte fraca ou cabo fino e comprido</td><td>Fonte 5 V de pelo menos 1 A, cabo curto, ligada no pino 5V (não no 3V3)</td></tr>
+        <tr><td><b>"Failed to connect" ao gravar</b></td><td>IO0 sem ligar no GND, ou TX e RX sem cruzar</td><td>Ligue IO0 no GND, aperte RST, confira TX → U0R e RX → U0T</td></tr>
+        <tr><td><b>Python não abre o vídeo</b></td><td>Navegador ainda aberto no stream</td><td>Feche a aba: a câmera atende um cliente por vez</td></tr>
+        <tr><td><b>Imagem lenta, poucos quadros</b></td><td>Resolução alta ou computador fraco</td><td>Baixe para VGA ou QVGA na página da câmera</td></tr>
+        <tr><td><b>Alerta com foto de cartaz ou TV</b></td><td>O YOLO vê pessoa em imagem também</td><td>Tire a TV da zona ou suba <code>conf</code> para 0,6</td></tr>
+        <tr><td><b>Não detecta nada à noite</b></td><td>A ESP32-CAM não enxerga no escuro</td><td>Deixe uma luz acesa na área ou use câmera com infravermelho</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. Conte alarmes falsos e alarmes perdidos: esse número é o seu argumento de venda.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Imagem inteira, 1 quadro basta</td><td>Alerta com cada pessoa que passou na calçada</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td>Zona só no portão, 5 quadros seguidos</td><td>Só alertas de quem entrou de verdade</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Resumo do dia com IA</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Privacidade e segurança</p>
+    <h2>Regras da câmera</h2>
+    <div class="alerta"><b>Avise e peça permissão.</b> Coloque uma placa "ambiente com câmera" bem visível. Instale só onde o dono do lugar autorizou, e conte para quem mora ou trabalha ali.</div>
+    <div class="alerta"><b>Aponte só para o que é do cliente.</b> Nada de rua, casa do vizinho, banheiro, quarto ou vestiário. Use a zona para olhar só o portão ou a porta.</div>
+    <div class="alerta"><b>Não guarde, não publique.</b> Não grave vídeo contínuo, não poste foto de ninguém e não mande imagem para fora da rede. Rode o <code>limpa.py</code> todo dia. A LGPD (Lei Geral de Proteção de Dados) trata imagem de rosto como dado pessoal, e quem instala responde pelo uso.</div>
+    <div class="alerta"><b>Eletricidade.</b> A câmera usa 5 V de um carregador. Puxar fio da tomada, mexer no quadro ou ligar sirene de 127/220 V: só um adulto ou professor faz, com a energia desligada.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender a câmera</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Comércio pequeno (depósito, fundos da loja), condomínio (portão, garagem), sítio e chácara (galpão, porteira)</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 60–150 por câmera (lista acima, a conferir). O computador pode ser um notebook antigo do cliente</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 200–350 por câmera instalada e configurada (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>2 a 3 horas: instalar, marcar as zonas com o cliente, configurar o alerta e a limpeza diária</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 20–40 por mês: ajuste das zonas, manutenção e resumo semanal (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Sem mensalidade de nuvem e menos alarme falso. Prove: deixe um sensor de movimento comum e a câmera com YOLO lado a lado por uma semana e conte os alertas falsos de cada um</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Mais de uma câmera?</b> O mesmo computador lê várias câmeras. Rode um <code>vigia.py</code> para cada uma, com IP e pasta diferentes, e venda por ponto vigiado.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender como um modelo enxerga e decide, siga o curso <a href="https://inematds.github.io/vla/" target="_blank" rel="noopener">Visão e ação (VLA)</a>. Para a base de IA, comece pelo <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../nutrientes/">← Nutrientes</a>
+      <a class="btn" href="../energia/">Painel de energia →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

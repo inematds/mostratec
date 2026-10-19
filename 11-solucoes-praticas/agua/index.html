@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel de água</title>
+<meta name="description" content="Guia para montar um painel de água com ESP32: sensor de vazão YF-S201 conta os litros, sensor ultrassônico mede o nível da caixa d'água e o painel acusa vazamento de madrugada. Peças, ligação, código, IA e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/" aria-current="page">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 6 · Água</span>
+    <h1>Painel de água que <em>acha o vazamento de madrugada</em></h1>
+    <p class="lead">Um sensor no cano conta cada litro que passa e outro, na tampa da caixa d'água, mede o nível. O ESP32 mostra no celular quantos litros a casa gastou hoje e avisa quando a água corre às 3 h da manhã, hora em que ninguém usa. Serve para vizinhos, condomínios e sítios com caixa d'água.</p>
+    <div class="tags"><span class="tag">Kit R$ 80–140</span><span class="tag">Dificuldade: média</span><span class="tag">Tudo em 3,3 V e 5 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#codigo">Ver o código</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>Conta litros, mede a caixa, avisa</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 430" role="img" aria-label="Caixa d'água com o sensor ultrassônico na tampa medindo a distância até a água; na saída da caixa, o sensor de vazão no cano conta os litros; os dois ligam no ESP32, que mostra litros, nível e alertas no celular">
+        <!-- caixa d'água -->
+        <path d="M30 70h150v150a10 10 0 0 1-10 10H40a10 10 0 0 1-10-10z" fill="none" stroke="var(--line)" stroke-width="2.4"/>
+        <path d="M22 70h166" stroke="var(--txt)" stroke-width="3" stroke-linecap="round"/>
+        <rect x="88" y="52" width="34" height="18" rx="4" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <path d="M32 140h146v80a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8z" fill="color-mix(in srgb,var(--sky) 22%,transparent)"/>
+        <path d="M32 140h146" stroke="var(--sky)" stroke-width="2"/>
+        <g stroke="var(--amb)" stroke-width="2" fill="none" stroke-linecap="round">
+          <path d="M105 74v60"/><path d="M99 127l6 7 6-7"/>
+        </g>
+        <text x="113" y="108" font-family="Inter,sans-serif" font-size="15" fill="var(--amb)">distância</text>
+        <text x="105" y="40" text-anchor="middle" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Ultrassônico na tampa</text>
+        <text x="105" y="190" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--txt)">caixa d'água</text>
+        <!-- cano de saída -->
+        <path d="M105 230v40h80" fill="none" stroke="var(--sky)" stroke-width="6" stroke-linecap="round"/>
+        <rect x="185" y="258" width="56" height="24" rx="6" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <path d="M241 270h40" stroke="var(--sky)" stroke-width="6" stroke-linecap="round"/>
+        <text x="213" y="305" text-anchor="middle" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Sensor de vazão</text>
+        <text x="213" y="324" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">450 pulsos = 1 litro</text>
+        <text x="300" y="275" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">para a casa</text>
+        <!-- ESP32 e painel -->
+        <rect x="230" y="70" width="160" height="70" rx="12" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="310" y="98" text-anchor="middle" font-family="Sora,sans-serif" font-weight="700" font-size="17" fill="var(--txt)">ESP32</text>
+        <text x="310" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">conta e compara</text>
+        <rect x="230" y="170" width="160" height="70" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="310" y="198" text-anchor="middle" font-family="Sora,sans-serif" font-weight="700" font-size="17" fill="var(--txt)">Painel</text>
+        <text x="310" y="222" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">litros, nível, alerta</text>
+        <g fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="5 5">
+          <path d="M122 61h108"/><path d="M213 258v-120h17"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M310 140v24"/><path d="M303 157l7 7 7-7"/>
+        </g>
+        <!-- regras -->
+        <rect x="10" y="350" width="380" height="72" rx="12" fill="none" stroke="var(--line)" stroke-width="2"/>
+        <text x="200" y="378" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--txt)">Água correndo de 2 h a 5 h por 10 min: vazamento</text>
+        <text x="200" y="404" text-anchor="middle" font-family="Inter,sans-serif" font-size="15" fill="var(--txt)">Caixa abaixo de 20%: alerta de caixa baixa</text>
+      </svg>
+      <figcaption>Os limites (10 minutos, 20%) são pontos de partida. Ajuste para a casa depois de uma semana de testes.</figcaption>
+    </figure>
+    <p class="ler">O sensor de vazão tem uma hélice com um ímã: cada volta gera um pulso, e o YF-S201 dá cerca de 450 pulsos por litro. O ESP32 conta os pulsos e calcula os litros do dia e a vazão em litros por minuto. Na tampa, o sensor ultrassônico mede a distância até a água como um morcego: manda um som e cronometra o eco. Água vazia = distância grande. De madrugada quase ninguém abre torneira, então água correndo por muito tempo nessa hora quase sempre é descarga ou cano vazando.</p>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi</td><td>R$ 30–40</td></tr>
+        <tr><td><b>Sensor de vazão YF-S201</b> (rosca 1/2")</td><td>Conta os litros que passam no cano</td><td>R$ 25–35</td></tr>
+        <tr><td><b>Sensor ultrassônico HC-SR04</b></td><td>Mede a distância até a água. Bom para o teste na bancada</td><td>R$ 8–12</td></tr>
+        <tr><td><b>Resistores 10 kΩ e 20 kΩ</b> (2 de cada)</td><td>Dois divisores que baixam o sinal de 5 V para 3,3 V. Sem 20 kΩ, use dois de 10 kΩ em série</td><td>R$ 1–3</td></tr>
+        <tr><td><b>Adaptadores de rosca 1/2"</b> e fita veda-rosca</td><td>Encaixam o sensor de vazão no cano</td><td>R$ 5–10</td></tr>
+        <tr><td><b>Caixa plástica com tampa</b></td><td>Protege o ESP32 da umidade</td><td>R$ 8–15</td></tr>
+        <tr><td><b>Fonte 5 V</b> (carregador de celular serve) + cabo USB</td><td>Alimenta o ESP32 e os sensores</td><td>R$ 0–15</td></tr>
+        <tr><td><b>Protoboard e jumpers</b></td><td>Ligações sem solda</td><td>R$ 10–15</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 80–140</b></td></tr>
+        <tr><td><b>Opcional: JSN-SR04T</b></td><td>Ultrassônico à prova d'água, para ficar na caixa de vez. Troca o HC-SR04, mesmos pinos</td><td>R$ 35–55</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui cano, conexões extras nem o trabalho de encanador.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito, pino por pino</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 470" role="img" aria-label="Diagrama de ligação: o sinal do YF-S201 passa por um divisor de 10k e 20k e chega no GPIO 27; o TRIG do ultrassônico liga direto no GPIO 19; o ECHO passa por outro divisor de 10k e 20k e chega no GPIO 18; os dois sensores recebem 5 V do VIN">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="120" height="390" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="68" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="118" y="90">VIN 5V</text>
+          <text x="118" y="120">GND</text>
+          <text x="118" y="185">GPIO 27</text>
+          <text x="118" y="285">GPIO 19</text>
+          <text x="118" y="345">GPIO 18</text>
+        </g>
+        <!-- fios de sinal -->
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <!-- vazão: sensor -> 10k -> nó -> GPIO 27 -->
+          <path d="M262 180H241" stroke="var(--warm)"/>
+          <path d="M205 180H128" stroke="var(--warm)"/>
+          <path d="M170 196V180" stroke="var(--warm)"/>
+          <path d="M170 230v12" stroke="var(--mut)"/>
+          <!-- trig direto -->
+          <path d="M128 280H262" stroke="var(--ok)"/>
+          <!-- echo: sensor -> 10k -> nó -> GPIO 18 -->
+          <path d="M262 340H241" stroke="var(--sky)"/>
+          <path d="M205 340H128" stroke="var(--sky)"/>
+          <path d="M170 356V340" stroke="var(--sky)"/>
+          <path d="M170 390v12" stroke="var(--mut)"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="128" cy="180" r="4"/><circle cx="128" cy="280" r="4"/><circle cx="128" cy="340" r="4"/><circle cx="170" cy="180" r="3.5"/><circle cx="170" cy="340" r="3.5"/></g>
+        <!-- resistores -->
+        <g fill="var(--bg)" stroke="var(--txt)" stroke-width="1.8">
+          <rect x="205" y="172" width="36" height="16" rx="3"/>
+          <rect x="162" y="196" width="16" height="34" rx="3"/>
+          <rect x="205" y="332" width="36" height="16" rx="3"/>
+          <rect x="162" y="356" width="16" height="34" rx="3"/>
+        </g>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)">
+          <text x="203" y="164">10k</text>
+          <text x="184" y="219">20k</text>
+          <text x="203" y="324">10k</text>
+          <text x="184" y="379">20k</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="170" y="260">GND</text>
+          <text x="170" y="422">GND</text>
+        </g>
+        <!-- sensores -->
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="262" y="140" width="130" height="80" rx="10"/>
+          <rect x="262" y="250" width="130" height="120" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">
+          <text x="272" y="164">YF-S201</text>
+          <text x="272" y="274">Ultrassônico</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="272" y="186">sinal (amarelo)</text>
+          <text x="272" y="208">5V verm. · GND</text>
+          <text x="272" y="296">TRIG</text>
+          <text x="272" y="345">ECHO</text>
+          <text x="272" y="318">VCC 5V · GND</text>
+        </g>
+        <text x="8" y="456" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">VCC dos dois sensores no VIN; GND tudo junto.</text>
+      </svg>
+      <figcaption>Os dois sensores trabalham em 5 V e devolvem sinal de 5 V. O divisor (10 kΩ em cima, 20 kΩ para o GND) entrega cerca de 3,3 V ao pino, o máximo que o ESP32 aguenta. O TRIG vai direto: 3,3 V já basta para ele.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Componente</th><th>Pino do componente</th><th>Liga no ESP32</th></tr></thead>
+      <tbody>
+        <tr><td><b>YF-S201</b></td><td>Vermelho · preto · amarelo</td><td>VIN (5 V) · GND · 10 kΩ → nó → <b>GPIO 27</b>; do nó, 20 kΩ ao GND</td></tr>
+        <tr><td><b>Ultrassônico</b> (HC-SR04 ou JSN-SR04T)</td><td>VCC · GND · TRIG · ECHO</td><td>VIN (5 V) · GND · <b>GPIO 19</b> · 10 kΩ → nó → <b>GPIO 18</b>; do nó, 20 kΩ ao GND</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Por que o divisor?</b> Os pinos do ESP32 aguentam até 3,3 V. Um sinal de 5 V direto no pino pode queimar a placa aos poucos. A conta: 5 V × 20k ÷ (10k + 20k) = 3,3 V.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Da bancada à caixa d'água</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, no Gerenciador de Placas, "esp32" (Espressif). Este projeto não precisa de biblioteca extra.</li>
+      <li><b>Teste a placa sozinha.</b> Ligue o ESP32 no USB, escolha "ESP32 Dev Module" e a porta, e grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
+      <li><b>Monte os divisores na protoboard.</b> Siga a tabela. Antes de ligar no pino, meça com multímetro: no nó tem que dar perto de 3,3 V quando o sinal está em 5 V.</li>
+      <li><b>Teste o nível na bancada.</b> Grave o código, abra o Monitor Serial (115200) e aponte o ultrassônico para a mesa a 30 cm e a 60 cm. A distância tem que acompanhar.</li>
+      <li><b>Calibre o sensor de vazão com um balde.</b> Ligue o sensor numa mangueira, respeitando a seta do corpo (sentido da água). Encha um balde de 10 litros e compare com os litros do painel. Se der 9 litros, ajuste <code>PULSOS_LITRO</code> na mesma proporção.</li>
+      <li><b>Instale na casa, com um adulto.</b> O lugar certo é a saída da caixa d'água, antes de chegar nas torneiras. Feche o registro, corte o cano ou use uma conexão pronta, rosqueie o sensor com veda-rosca e a seta no sentido da água. Abra o registro e procure vazamento na rosca.</li>
+      <li><b>Coloque o ultrassônico na tampa da caixa,</b> virado para baixo, longe da boia e da entrada de água. Meça com trena a distância da tampa até a água com a caixa cheia e anote em <code>ALTURA_CHEIA</code>; até o fundo, em <code>ALTURA_VAZIA</code>.</li>
+      <li><b>Abra o painel.</b> O Monitor Serial mostra o IP (ex.: 192.168.0.50). Digite no navegador do celular, na mesma rede Wi-Fi.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque o nome e a senha da rede, as alturas da sua caixa e grave. O relógio vem da internet (NTP), no horário de Brasília, para o ESP32 saber o que é madrugada.</p>
+<pre><code>// Painel de água — ESP32, Arduino IDE
+// Sem biblioteca extra: WiFi, WebServer
+// e time.h já vêm com a placa ESP32
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;time.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 27: sinal do YF-S201 (pelo divisor)
+const int PINO_VAZAO = 27;
+// GPIO 19: TRIG do ultrassônico
+const int PINO_TRIG = 19;
+// GPIO 18: ECHO do ultrassônico (divisor)
+const int PINO_ECHO = 18;
+
+// YF-S201: cerca de 450 pulsos por litro.
+// Ajuste depois do teste do balde.
+float PULSOS_LITRO = 450.0;
+// Distância da tampa até a água, em cm,
+// com a caixa vazia e com a caixa cheia
+const float ALTURA_VAZIA = 120.0;
+const float ALTURA_CHEIA = 20.0;
+// Vazão de madrugada que conta como
+// vazamento (L/min) e por quanto tempo (s)
+const float LIMITE_LMIN = 0.2;
+const int TEMPO_VAZAMENTO = 600;
+// Caixa baixa abaixo de 20%
+const int NIVEL_BAIXO = 20;
+
+volatile unsigned long pulsos = 0;
+unsigned long pulsosAntes = 0;
+unsigned long ultimoSegundo = 0;
+float litrosHoje = 0, vazao = 0;
+int nivel = 0, segundosCorrendo = 0;
+int diaAtual = -1;
+bool vazamento = false, caixaBaixa = false;
+WebServer servidor(80);
+
+// Roda sozinha a cada pulso da hélice.
+// IRAM_ATTR deixa a função na memória rápida.
+void IRAM_ATTR contaPulso() {
+  pulsos++;
+}
+
+// Mede a distância até a água, em cm
+float medirDistancia() {
+  digitalWrite(PINO_TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PINO_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PINO_TRIG, LOW);
+  // espera o eco por até 30 ms
+  unsigned long us = pulseIn(PINO_ECHO, HIGH, 30000);
+  if (us == 0) return -1;
+  // som: 0,0343 cm por microssegundo, ida e volta
+  return us * 0.0343 / 2;
+}
+
+void medirNivel() {
+  float d = medirDistancia();
+  if (d &lt; 0) return;
+  float faixa = ALTURA_VAZIA - ALTURA_CHEIA;
+  float pct = (ALTURA_VAZIA - d) / faixa * 100;
+  nivel = constrain((int)pct, 0, 100);
+  caixaBaixa = nivel &lt; NIVEL_BAIXO;
+}
+
+void medirVazao() {
+  // copia o contador sem a interrupção mexer
+  noInterrupts();
+  unsigned long p = pulsos;
+  interrupts();
+  unsigned long novos = p - pulsosAntes;
+  pulsosAntes = p;
+  float litros = novos / PULSOS_LITRO;
+  litrosHoje += litros;
+  // litros em 1 s × 60 = litros por minuto
+  vazao = litros * 60;
+}
+
+void conferirHora() {
+  struct tm t;
+  if (!getLocalTime(&amp;t, 10)) return;
+  // virou o dia: zera os litros
+  if (t.tm_mday != diaAtual) {
+    diaAtual = t.tm_mday;
+    litrosHoje = 0;
+  }
+  bool madrugada = t.tm_hour &gt;= 2 &amp;&amp; t.tm_hour &lt; 5;
+  if (madrugada &amp;&amp; vazao &gt; LIMITE_LMIN) {
+    segundosCorrendo++;
+  } else {
+    segundosCorrendo = 0;
+  }
+  if (segundosCorrendo &gt; TEMPO_VAZAMENTO) {
+    vazamento = true;
+  }
+}
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"litros_hoje\":" + String(litrosHoje, 1);
+  j += ",\"vazao_lmin\":" + String(vazao, 2);
+  j += ",\"nivel\":" + String(nivel);
+  j += ",\"vazamento\":" + String(vazamento ? "true" : "false");
+  j += ",\"caixa_baixa\":" + String(caixaBaixa ? "true" : "false");
+  j += "}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página que abre no celular (5 em 5 s)
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;meta http-equiv=refresh content=5&gt;";
+  h += "&lt;h2&gt;Água&lt;/h2&gt;&lt;p&gt;Hoje: " + String(litrosHoje, 1);
+  h += " L&lt;br&gt;Agora: " + String(vazao, 1) + " L/min";
+  h += "&lt;br&gt;Caixa: " + String(nivel) + "%&lt;/p&gt;";
+  if (vazamento) h += "&lt;p&gt;&lt;b&gt;ALERTA: vazamento&lt;/b&gt;&lt;/p&gt;";
+  if (caixaBaixa) h += "&lt;p&gt;&lt;b&gt;ALERTA: caixa baixa&lt;/b&gt;&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+// /zera: apaga o alerta depois do conserto
+void zera() {
+  vazamento = false;
+  servidor.send(200, "text/plain", "ok");
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PINO_TRIG, OUTPUT);
+  pinMode(PINO_ECHO, INPUT);
+  pinMode(PINO_VAZAO, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PINO_VAZAO),
+                  contaPulso, FALLING);
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  // horário de Brasília: UTC -3 h
+  configTime(-3 * 3600, 0, "pool.ntp.org");
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  servidor.on("/", painel);
+  servidor.on("/dados", dados);
+  servidor.on("/zera", zera);
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+  if (millis() - ultimoSegundo &lt; 1000) return;
+  ultimoSegundo = millis();
+  medirVazao();
+  medirNivel();
+  conferirHora();
+  Serial.printf("hoje=%.1f L vazao=%.2f nivel=%d%%\n",
+                litrosHoje, vazao, nivel);
+}</code></pre>
+    <div class="dica"><b>Limite da versão 1:</b> os litros do dia ficam na memória e zeram se o ESP32 reiniciar ou faltar luz. Na versão 2, guarde o total na memória flash (biblioteca Preferences, que já vem com a placa) ou deixe o script do computador registrar o histórico.</div>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Quanto gastei esta semana?</h3><p>Um script no computador guarda os litros de cada hora num arquivo. A IA lê o histórico e responde em português, com o dia que mais gastou.</p></div>
+      <div class="card"><h3>Vazamento explicado</h3><p>Quando o alerta acende, a IA olha o horário e a vazão e sugere onde procurar: "fluxo baixo e constante parece descarga; fluxo alto parece cano".</p></div>
+      <div class="card"><h3>Comparar dias</h3><p>"Domingo gastou o dobro de segunda, o que mudou?" A IA cruza os horários de pico e aponta banho longo, máquina de lavar ou mangueira.</p></div>
+    </div>
+    <p class="ler">Script em Python, rodando no computador na mesma rede. Rode <code>python agua_ia.py guarda</code> e deixe aberto; depois <code>python agua_ia.py pergunta</code>.</p>
+<pre><code># agua_ia.py — roda no computador,
+# na mesma rede do ESP32
+import csv, json, sys, time
+import urllib.request
+from datetime import datetime
+
+# troque pelo IP do seu ESP32
+URL = "http://192.168.0.50/dados"
+ARQ = "agua.csv"
+
+def guarda():
+    # uma linha por hora: data, litros, nível
+    while True:
+        d = json.load(urllib.request.urlopen(URL))
+        agora = datetime.now().strftime("%Y-%m-%d %H:00")
+        with open(ARQ, "a", newline="") as f:
+            csv.writer(f).writerow(
+                [agora, d["litros_hoje"], d["nivel"]])
+        time.sleep(3600)
+
+def pergunta():
+    # últimas 7 x 24 linhas = uma semana
+    linhas = open(ARQ).read().splitlines()[-168:]
+    q = input("Pergunta: ")
+    prompt = (
+        "Você analisa o consumo de água de uma casa. "
+        "Cada linha: data e hora, litros do dia "
+        "até aquela hora, nível da caixa em %.\n"
+        + "\n".join(linhas)
+        + "\nResponda em português, em até 4 frases: "
+        + q
+    )
+    print(prompt)
+    # Mande o prompt ao modelo que você usa:
+    # - cole no chat do serviço de IA; ou
+    # - use a biblioteca oficial do serviço,
+    #   com a SUA chave numa variável de
+    #   ambiente (nunca escrita no código); ou
+    # - rode um modelo local no PC, sem chave.
+
+if sys.argv[1:] == ["guarda"]:
+    guarda()
+else:
+    pergunta()</code></pre>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>No nó de cada divisor, o multímetro marca no máximo 3,3 V.</li>
+        <li>O teste do balde de 10 litros dá entre 9,5 e 10,5 litros no painel.</li>
+        <li>Com a torneira fechada, a vazão marca 0 L/min.</li>
+        <li>Aproximando a mão do ultrassônico, o nível sobe; afastando, desce.</li>
+        <li>A rosca do sensor de vazão não pinga depois de 1 hora com o registro aberto.</li>
+        <li>Para testar o alerta sem esperar a madrugada, mude por um dia as horas 2 e 5 no código para a hora atual e deixe uma torneira pingando.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Litros sempre zero</b></td><td>Sensor com a seta ao contrário ou fio amarelo solto</td><td>Confira a seta no sentido da água e o divisor até o GPIO 27</td></tr>
+        <tr><td><b>Litros a mais ou a menos</b></td><td>Cada sensor varia um pouco</td><td>Refaça o teste do balde e ajuste <code>PULSOS_LITRO</code></td></tr>
+        <tr><td><b>Nível pula ou dá 0%</b></td><td>Eco batendo na parede, na boia ou condensação no sensor</td><td>Centralize o sensor, afaste da boia; na caixa, use o JSN-SR04T</td></tr>
+        <tr><td><b>Alerta de vazamento sem vazamento</b></td><td>Alguém usou água de madrugada ou a caixa enchendo pela boia</td><td>Sensor na saída da caixa, não na entrada; aumente <code>TEMPO_VAZAMENTO</code></td></tr>
+        <tr><td><b>Litros zeram do nada</b></td><td>ESP32 reiniciou (queda de luz, fonte fraca)</td><td>Fonte de 5 V boa; na versão 2, salve o total na flash</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. O registro da primeira semana vira o argumento de venda.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>450 pulsos por litro, de fábrica</td><td>Balde de 10 L marcou 9,2 L</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td><code>PULSOS_LITRO</code> = 414</td><td>Balde marcou 10,0 L</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Total do dia salvo na flash</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Água, cano e altura</h2>
+    <div class="alerta"><b>Encanamento e caixa d'água: com um adulto.</b> Cortar cano, mexer no registro ou subir na caixa d'água só com adulto ou encanador. Feche o registro antes de instalar o sensor de vazão. Escada e telhado: nunca sozinho.</div>
+    <div class="alerta"><b>Eletrônica longe da água.</b> Tudo aqui funciona em 5 V, pelo carregador de celular. Deixe o ESP32 numa caixa fechada, acima do cano e longe de respingos, e passe os fios do sensor por baixo, para a água escorrer sem entrar na caixa.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender o painel de água</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Vizinho com conta de água alta, condomínio (um painel por bloco ou por caixa), sítio com caixa d'água ou poço, escola</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 80–140 (lista acima, a conferir); mais R$ 35–55 se usar o JSN-SR04T</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 250–380 o aparelho montado, calibrado e em caixa (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>2 a 3 horas para instalar com o encanador ou o responsável pela casa, calibrar com o balde e ensinar a ler o painel</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 15–25 por mês: histórico, relatório da semana e aviso de vazamento (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Meça na casa do cliente: litros por hora entre 2 h e 5 h × 24 × 30 = litros perdidos por mês. Divida por 1.000 para ter m³ e multiplique pela tarifa da conta de água dele (a conferir)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Exemplo de conta para mostrar ao cliente:</b> se o painel mostrar 6 litros por hora de madrugada, são 6 × 24 × 30 = 4.320 litros por mês, ou 4,3 m³ que a casa paga sem usar. Faça a conta com o número que o painel mediu de verdade.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender como o modelo de IA lê o histórico e por que às vezes erra, comece pelo curso <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Para usar um agente de IA que ajuda a escrever e corrigir o código, siga para o <a href="https://inematds.github.io/oswork-quick/" target="_blank" rel="noopener">OSWork</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../energia/">← Painel de energia</a>
+      <a class="btn" href="../controle-casa/">Controle da casa →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

@@ -1,3 +1,14 @@
+Páginas publicadas: index.html + 7 guias (17/10/2026)
+- `index.html` — página promocional "Soluções que vendem"
+- `pet-automatico/index.html` — S1 Pet automático
+- `irrigacao/index.html` — S2 Irrigação inteligente
+- `nutrientes/index.html` — S3 Nutrientes da planta / hidroponia
+- `vigilancia/index.html` — S4 Vigilância com câmera
+- `energia/index.html` — S5 Painel de energia
+- `agua/index.html` — S6 Painel de água
+- `controle-casa/index.html` — S7 Controle da casa/sala
+- `testa.cjs` — teste Playwright (390 e 1366 px); screenshots em `shots/`
+
 # 11 — Soluções práticas para vender (linha 2 da MOSTRATEC)
 
 Proposta de 17/10/2026. Projetos de automação de verdade que um aluno do ensino médio **monta, apresenta na feira e consegue vender** para vizinhos, escolas, pet shops e pequenos produtores. A IA entra para **entender os dados** e **conversar** com o sistema, não só para ligar e desligar.

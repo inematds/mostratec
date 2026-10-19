@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel de energia</title>
+<meta name="description" content="Guia para montar um painel de energia com ESP32 e sensor de garra SCT-013, que mostra o consumo da casa em tempo real e em reais sem cortar nenhum fio. Peças, ligação, código, IA, segurança e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  .conta{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--txt);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;max-width:var(--ler)}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/" aria-current="page">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 5 · Energia</span>
+    <h1>O consumo da casa <em>em tempo real e em reais</em></h1>
+    <p class="lead">Uma garra abraça o fio de energia e mede a corrente sem cortar nada. O ESP32 calcula quantos watts a casa está puxando, soma os kWh do mês e mostra em reais no celular. Serve para o vizinho que levou susto com a conta e para o pequeno comércio que quer saber onde está o gasto.</p>
+    <div class="tags"><span class="tag">Kit R$ 80–150</span><span class="tag">Dificuldade: média</span><span class="tag">Kit em 3,3 V e 5 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#seguranca">Leia a segurança</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#seguranca">Segurança</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <div class="alerta"><b>Antes de tudo: tomada e quadro de energia (127/220 V) matam.</b> Você monta e programa só a parte de baixa tensão (ESP32, resistores, sensor). Colocar a garra no fio da casa é trabalho de eletricista ou de um adulto que saiba fazer, com a energia desligada. Veja a seção <a href="#seguranca">Segurança</a>.</div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>A garra sente o campo do fio</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 400" role="img" aria-label="Fluxo do painel de energia: a garra mede a corrente do fio, o ESP32 calcula a corrente eficaz, multiplica pela tensão da casa, soma os kWh e mostra em reais no celular">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="20" y="10" width="360" height="62" rx="12"/>
+          <rect x="20" y="110" width="360" height="82" rx="12"/>
+          <rect x="20" y="230" width="360" height="74" rx="12"/>
+          <rect x="20" y="334" width="360" height="56" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 72v32"/><path d="M193 97l7 7 7-7"/>
+          <path d="M200 192v32"/><path d="M193 217l7 7 7-7"/>
+          <path d="M200 304v24"/><path d="M193 321l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="17" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="36">Garra no fio</text>
+          <text x="200" y="136">ESP32 mede a onda</text>
+          <text x="200" y="256">Watts e kWh</text>
+          <text x="200" y="368">Painel no celular</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="200" y="58">corrente vira tensão pequena</text>
+          <text x="200" y="160">2000 leituras seguidas</text>
+          <text x="200" y="180">corrente eficaz (RMS)</text>
+          <text x="200" y="280">amperes × tensão da casa</text>
+          <text x="200" y="384">watts agora, kWh, R$</text>
+        </g>
+      </svg>
+      <figcaption>O ESP32 não toca na tomada. Ele só lê a tensão pequena que a garra gera, de no máximo 1 V.</figcaption>
+    </figure>
+    <p class="ler">A corrente que passa num fio cria um campo magnético em volta dele. A garra SCT-013 é um transformador em forma de pregador: ela transforma esse campo numa tensão pequena, de até 1 V quando passam 30 A. Como a corrente de casa é alternada, essa tensão sobe e desce 60 vezes por segundo. O ESP32 lê 2000 vezes seguidas, calcula a média do "tamanho" da onda (o valor RMS) e multiplica pela tensão da sua casa.</p>
+    <div class="dica"><b>O número é uma estimativa.</b> O ESP32 mede só a corrente e usa a tensão nominal (127 V ou 220 V). Isso dá a potência aparente, sem o fator de potência de motores e fontes. Para geladeira, ventilador e computador, o número sai um pouco acima do real. Para chuveiro, ferro e chaleira, fica bem perto.</div>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi</td><td>R$ 30–45</td></tr>
+        <tr><td><b>Sensor de garra SCT-013-030</b> (saída em tensão, 1 V = 30 A)</td><td>Mede a corrente sem cortar o fio. Compre o "030", que já tem o resistor de carga dentro</td><td>R$ 35–60</td></tr>
+        <tr><td><b>Conector P2 fêmea</b> (jack 3,5 mm)</td><td>Recebe o plugue do sensor</td><td>R$ 3–6</td></tr>
+        <tr><td><b>2 resistores 10 kΩ + capacitor 10 µF</b></td><td>Levantam a onda até o meio da faixa do ESP32 (1,65 V)</td><td>R$ 2–5</td></tr>
+        <tr><td><b>Protoboard e jumpers</b></td><td>Ligações sem solda</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Carregador 5 V + cabo USB</b></td><td>Alimenta o ESP32</td><td>R$ 0–20</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 80–150</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui caixa de acabamento nem o serviço do eletricista.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito de polarização</h2>
+    <p class="ler">A onda da garra vai de −1 V a +1 V, e o ESP32 só lê de 0 a 3,3 V. Dois resistores iguais criam um "meio" em 1,65 V. Um fio do sensor vai nesse meio; o outro vai no GPIO 34. Assim a onda passa a subir e descer em volta de 1,65 V, sempre dentro da faixa.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 400 420" role="img" aria-label="Diagrama: 3V3 do ESP32 ligado a um resistor de 10 quilo-ohms até o ponto do meio; outro resistor de 10 quilo-ohms do meio ao GND; capacitor de 10 microfarads do meio ao GND; um fio do sensor SCT-013 no meio e o outro no GPIO 34">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="110" height="380" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="63" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="110" y="80">3V3</text>
+          <text x="110" y="300">GND</text>
+          <text x="110" y="370">GPIO 34</text>
+        </g>
+        <g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <!-- 3V3 até R1 -->
+          <path d="M118 75H190V95" stroke="var(--bad)"/>
+          <!-- R1 → meio → R2 -->
+          <path d="M190 145V195" stroke="var(--amb)"/>
+          <!-- R2 até GND -->
+          <path d="M190 245V295" stroke="var(--mut)"/>
+          <path d="M118 295H270" stroke="var(--mut)"/>
+          <!-- capacitor -->
+          <path d="M190 170H270V198" stroke="var(--amb)"/>
+          <path d="M270 210V295" stroke="var(--mut)"/>
+          <!-- sensor no meio -->
+          <path d="M270 170H300" stroke="var(--amb)"/>
+          <!-- sensor no GPIO 34 -->
+          <path d="M118 365H346V232" stroke="var(--sky)"/>
+        </g>
+        <!-- resistores -->
+        <g fill="var(--bg)" stroke="var(--txt)" stroke-width="2">
+          <rect x="180" y="95" width="20" height="50" rx="3"/>
+          <rect x="180" y="195" width="20" height="50" rx="3"/>
+        </g>
+        <!-- placas do capacitor -->
+        <g stroke="var(--txt)" stroke-width="3" stroke-linecap="round">
+          <path d="M256 198h28"/><path d="M256 210h28"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="118" cy="75" r="4"/><circle cx="118" cy="295" r="4"/><circle cx="118" cy="365" r="4"/><circle cx="190" cy="170" r="5"/><circle cx="270" cy="170" r="4"/><circle cx="270" cy="295" r="4"/></g>
+        <!-- sensor -->
+        <rect x="300" y="110" width="92" height="122" rx="10" fill="var(--bg)" stroke="var(--line)" stroke-width="2"/>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)" text-anchor="middle">
+          <text x="346" y="138">SCT-013</text>
+          <text x="346" y="158">-030</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="346" y="200" text-anchor="middle">plugue P2</text>
+          <text x="206" y="125">R1 10 kΩ</text>
+          <text x="206" y="225">R2</text>
+          <text x="206" y="243">10 kΩ</text>
+          <text x="282" y="262">C 10 µF</text>
+          <text x="128" y="162">meio</text>
+          <text x="128" y="182" fill="var(--amb)">1,65 V</text>
+          <text x="128" y="355">fio 2 do sensor</text>
+          <text x="222" y="162" fill="var(--amb)">fio 1</text>
+        </g>
+      </svg>
+      <figcaption>Capacitor eletrolítico: a perna maior (+) vai no meio, a menor (−, faixa clara) no GND. O ESP32 fica ligado no USB.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Ligação</th><th>De</th><th>Para</th></tr></thead>
+      <tbody>
+        <tr><td><b>R1 10 kΩ</b></td><td>3V3 do ESP32</td><td>ponto do meio</td></tr>
+        <tr><td><b>R2 10 kΩ</b></td><td>ponto do meio</td><td>GND do ESP32</td></tr>
+        <tr><td><b>Capacitor 10 µF</b></td><td>+ no ponto do meio</td><td>− no GND</td></tr>
+        <tr><td><b>Sensor, fio 1</b></td><td>um terminal do conector P2</td><td>ponto do meio</td></tr>
+        <tr><td><b>Sensor, fio 2</b></td><td>outro terminal do conector P2</td><td><b>GPIO 34</b></td></tr>
+      </tbody>
+    </table></div>
+    <figure class="fig">
+      <svg viewBox="0 0 400 210" role="img" aria-label="Garra em volta de um fio só mede a corrente; garra em volta do cabo inteiro, com ida e volta juntas, marca zero">
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="16" text-anchor="middle">
+          <text x="100" y="26" fill="var(--ok)">Certo: um fio só</text>
+          <text x="300" y="26" fill="var(--bad)">Errado: cabo inteiro</text>
+        </g>
+        <g fill="none" stroke-width="3" stroke-linecap="round">
+          <path d="M80 50v110" stroke="var(--bad)"/>
+          <path d="M130 50v110" stroke="var(--sky)"/>
+          <path d="M282 50v110" stroke="var(--bad)"/>
+          <path d="M318 50v110" stroke="var(--sky)"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="5">
+          <ellipse cx="80" cy="105" rx="22" ry="12"/>
+          <ellipse cx="300" cy="105" rx="40" ry="14"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="100" y="185">a garra abraça a fase</text>
+          <text x="300" y="185">ida e volta se anulam: 0 A</text>
+        </g>
+      </svg>
+      <figcaption>A corrente que vai por um fio volta pelo outro. Com os dois dentro da garra, os campos se cancelam e o painel marca zero.</figcaption>
+    </figure>
+    <div class="dica"><b>Por que GPIO 34?</b> Com o Wi-Fi ligado, só os pinos 32 a 39 leem sinal analógico direito no ESP32. O 34 é só de entrada, bom para sensor.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Do pacote ao primeiro gráfico</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, o pacote "esp32" (Espressif). Este projeto não precisa de biblioteca extra.</li>
+      <li><b>Teste a placa sozinha.</b> Escolha "ESP32 Dev Module" e a porta, e grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
+      <li><b>Monte a polarização na protoboard.</b> R1, R2 e o capacitor, como no diagrama. Com um multímetro, meça entre o meio e o GND: tem que dar perto de 1,65 V.</li>
+      <li><b>Ligue o conector P2</b> no meio e no GPIO 34, encaixe o plugue do sensor e grave o código. Sem a garra em nenhum fio, o Monitor Serial (115200) tem que mostrar 0,00 A.</li>
+      <li><b>Peça a um adulto para colocar a garra.</b> No quadro de energia (eletricista, energia desligada) ou num adaptador separador de fios comprado pronto. Você só observa e anota.</li>
+      <li><b>Calibre com um aparelho conhecido.</b> Ligue só um aparelho resistivo de potência escrita na etiqueta, como uma chaleira de 1200 W. Faça <code>CALIBRA = potência da etiqueta ÷ potência medida</code> e grave de novo.</li>
+      <li><b>Abra o painel.</b> Digite no navegador do celular o IP que aparece no Monitor Serial, na mesma rede Wi-Fi.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque a rede, a tensão da sua casa e a tarifa. A tarifa em R$ por kWh, com impostos, está na sua conta de luz. O painel atualiza a cada 5 segundos.</p>
+<pre><code>// Painel de energia — ESP32, Arduino IDE
+// Sensor: SCT-013-030 (1 V na saída = 30 A)
+// Não precisa de biblioteca extra.
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 34: garra, pelo circuito do meio
+const int PINO_GARRA = 34;
+// tensão da sua casa: 127 ou 220
+const float TENSAO = 127.0;
+// R$ por kWh: a conferir na sua conta
+const float TARIFA = 0.95;
+// SCT-013-030: 1 V = 30 A
+const float A_POR_VOLT = 30.0;
+// ajuste com um aparelho conhecido
+float CALIBRA = 1.0;
+// abaixo disso é ruído: conta como zero
+const float RUIDO_A = 0.15;
+
+const int N = 2000;
+int amostra[N];
+WebServer servidor(80);
+float amperes = 0, watts = 0, kwh = 0;
+unsigned long ultima = 0;
+
+float lerAmperes() {
+  // 1) lê 2000 vezes (cerca de 2 ondas)
+  long soma = 0;
+  for (int i = 0; i &lt; N; i++) {
+    amostra[i] = analogRead(PINO_GARRA);
+    soma += amostra[i];
+  }
+  // 2) a média é o "meio" (1,65 V)
+  float media = soma / (float)N;
+  // 3) RMS: raiz da média dos quadrados
+  double quad = 0;
+  for (int i = 0; i &lt; N; i++) {
+    float d = amostra[i] - media;
+    quad += d * d;
+  }
+  float rms = sqrt(quad / N);
+  // 4) de leitura (0–4095) para volts
+  float vrms = rms * 3.3 / 4095.0;
+  float a = vrms * A_POR_VOLT * CALIBRA;
+  return a &lt; RUIDO_A ? 0 : a;
+}
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"amperes\":" + String(amperes, 2);
+  j += ",\"watts\":" + String(watts, 0);
+  j += ",\"kwh\":" + String(kwh, 3);
+  j += ",\"reais\":" + String(kwh * TARIFA, 2);
+  j += "}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página que abre no celular
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;meta http-equiv=refresh content=5&gt;";
+  h += "&lt;h2&gt;Energia&lt;/h2&gt;&lt;p&gt;Agora: ";
+  h += String(watts, 0) + " W&lt;br&gt;Somado: ";
+  h += String(kwh, 2) + " kWh&lt;br&gt;Custo: R$ ";
+  h += String(kwh * TARIFA, 2) + "&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  servidor.on("/", painel);
+  servidor.on("/dados", dados);
+  servidor.begin();
+  ultima = millis();
+}
+
+void loop() {
+  servidor.handleClient();
+  if (millis() - ultima &lt; 1000) return;
+  // horas desde a última medida
+  float horas = (millis() - ultima) / 3600000.0;
+  ultima = millis();
+  amperes = lerAmperes();
+  // potência aparente estimada
+  watts = amperes * TENSAO;
+  kwh += watts * horas / 1000.0;
+  Serial.printf("%.2f A  %.0f W  %.3f kWh\n",
+                amperes, watts, kwh);
+}</code></pre>
+    <div class="dica"><b>Os kWh zeram se o ESP32 desligar.</b> Na versão 2, guarde o total na memória da placa (biblioteca Preferences, que já vem no pacote esp32) a cada 10 minutos.</div>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Qual aparelho mais gasta?</h3><p>Ligue um aparelho por vez e anote o degrau no gráfico: "chuveiro +5400 W". Com a lista e o registro do dia, a IA aponta o que mais pesou e em que horário.</p></div>
+      <div class="card"><h3>Consumo fora do normal</h3><p>O script guarda a média e o desvio de cada hora do dia. Se a leitura passar da média + 2 desvios, ele avisa: "às 3 h a casa está puxando 900 W, o normal é 150 W".</p></div>
+      <div class="card"><h3>Previsão da conta</h3><p>kWh até hoje ÷ dias medidos × dias do mês × tarifa. A IA explica o resultado em português e sugere onde cortar.</p></div>
+    </div>
+    <p class="ler">Script em Python, rodando no computador na mesma rede. Ele registra uma leitura por minuto num arquivo CSV e, quando você pede, monta a pergunta para a IA:</p>
+<pre><code># energia.py — roda no computador,
+# na mesma rede do ESP32
+import csv, json, time, statistics
+import urllib.request
+from datetime import datetime
+
+# troque pelo IP do seu ESP32
+URL = "http://192.168.0.51/dados"
+ARQ = "energia.csv"
+
+def ler():
+    return json.load(urllib.request.urlopen(URL))
+
+def registrar(minutos):
+    for _ in range(minutos):
+        d = ler()
+        agora = datetime.now()
+        t = agora.isoformat(timespec="minutes")
+        with open(ARQ, "a", newline="") as f:
+            csv.writer(f).writerow([t, d["watts"]])
+        time.sleep(60)
+
+def fora_do_normal(watts, hora):
+    # média e desvio desta hora do dia
+    h = f"{hora:02d}"
+    v = [float(l[1])
+         for l in csv.reader(open(ARQ))
+         if l[0][11:13] == h]
+    if len(v) &lt; 30:
+        # ainda pouco histórico
+        return False
+    m = statistics.mean(v)
+    s = statistics.stdev(v)
+    return watts &gt; m + 2 * s
+
+def pergunta_para_ia(texto):
+    d = json.dumps(ler())
+    return (
+        "Você analisa a energia de uma "
+        "casa. Leitura agora: " + d +
+        ". Tensão 127 V, potência "
+        "estimada, sem fator de "
+        "potência. Responda em "
+        "português, em até 4 frases: "
+        + texto)
+
+# registrar(60): grava uma hora
+# fora_do_normal(w, hora): avisa
+q = "qual aparelho mais gasta?"
+print(pergunta_para_ia(q))
+# Mande o prompt ao modelo que usa:
+# - cole no chat do serviço de IA;
+# - use a biblioteca oficial dele,
+#   com a SUA chave numa variável
+#   de ambiente (nunca no código);
+# - ou rode um modelo local no PC,
+#   sem chave.</code></pre>
+    <p class="ler">Exemplo de conta para mostrar ao cliente, feita com os números dele:</p>
+    <p class="conta">Chuveiro 5500 W × 0,5 h por dia<br>× 30 dias<br>= 82,5 kWh por mês<br>× tarifa da sua conta (R$ por kWh)<br>= quanto o chuveiro custa no mês</p>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>Entre o meio e o GND o multímetro mostra perto de 1,65 V.</li>
+        <li>Com a garra fora de qualquer fio, o painel marca 0 A.</li>
+        <li>Com a chaleira de 1200 W ligada, o painel marca de 1100 a 1300 W depois da calibração.</li>
+        <li>Ao desligar a chaleira, o valor volta ao consumo de antes em poucos segundos.</li>
+        <li>Os kWh sobem devagar e o custo em R$ bate com a conta feita à mão.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Marca 0 A com aparelho ligado</b></td><td>Garra em volta do cabo inteiro (ida e volta juntas)</td><td>O adulto passa a garra em um fio só, a fase</td></tr>
+        <tr><td><b>Marca 0,3 A sem nada ligado</b></td><td>Ruído do ADC ou falta o capacitor</td><td>Coloque o capacitor de 10 µF; suba <code>RUIDO_A</code> para 0,3</td></tr>
+        <tr><td><b>Valor pula muito ou fica sempre alto</b></td><td>Sensor num pino ADC2 ou meio fora de 1,65 V</td><td>Use o GPIO 34; confira os dois resistores de 10 kΩ</td></tr>
+        <tr><td><b>Potência com quase o dobro do certo</b></td><td>Tensão errada no código</td><td>Confira se a casa é 127 V ou 220 V e troque <code>TENSAO</code></td></tr>
+        <tr><td><b>Leitura enorme e sem sentido</b></td><td>Comprou o SCT-013-100 (saída em corrente, sem resistor de carga)</td><td>Use o SCT-013-030, que sai em tensão</td></tr>
+        <tr><td><b>Marca 0 num aparelho de pilha ou USB</b></td><td>A garra só mede corrente alternada</td><td>Normal: corrente contínua não aparece</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Anote numa linha cada mudança e o resultado. A lista de aparelhos com o degrau de cada um vira o relatório que você entrega ao cliente.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Sem calibração</td><td>Chaleira de 1200 W marcou 1380 W</td></tr>
+        <tr><td>20/10</td><td><b>v2</b></td><td><code>CALIBRA = 1200 ÷ 1380 = 0,87</code></td><td>Chaleira marca 1210 W</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Guarda os kWh na memória (Preferences)</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Quem faz o quê</h2>
+    <div class="alerta"><b>Você não abre o quadro de energia nem mexe em tomada.</b> A sua parte é o ESP32, os resistores, o capacitor e o sensor, tudo em 3,3 V e 5 V pelo USB. Colocar a garra no fio da casa é trabalho de eletricista ou de um adulto que saiba fazer, com o disjuntor desligado, sem fio desencapado e com a tampa do quadro fechada de novo.</div>
+    <div class="alerta"><b>Demonstração na escola ou na feira:</b> use um adaptador separador de fios para alicate amperímetro, comprado pronto. Um adulto liga o adaptador na tomada e o aparelho nele; você só encaixa a garra no laço de fio isolado do adaptador. Nunca descasque nem separe os fios de uma extensão.</div>
+    <div class="alerta"><b>Versão com adulto, fora do kit.</b> O medidor PZEM-004T mede tensão, corrente e fator de potência de verdade, mas liga direto na rede de 127/220 V. Ele e qualquer relé ligado na tomada só entram com eletricista ou professor, com a energia desligada e tudo em caixa fechada.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender o painel de energia</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Vizinho que levou susto com a conta, pequeno comércio com freezer e forno (padaria, lanchonete), escola que quer medir a sala de informática</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 80–150 (lista acima, a conferir)</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 250–380 o aparelho montado, calibrado, em caixa (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>1 hora para configurar e ensinar o painel. A garra no quadro é com eletricista: combine o serviço dele à parte ou faça parceria</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 15–30 por mês: relatório da semana, alerta de consumo fora do normal e previsão da conta (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Meça antes e depois: ligue os aparelhos um a um, mostre o degrau de cada um em watts e faça a conta do mês com a tarifa da conta do cliente</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Comece pela sua casa.</b> Uma semana de gráfico da sua casa, com o horário do chuveiro e da geladeira, mostra ao cliente o que ele vai receber.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender o que o modelo de IA faz com os dados, comece pelo curso <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Para ter ajuda de um agente de IA ao escrever e corrigir o código, siga para o <a href="https://inematds.github.io/oswork-quick/" target="_blank" rel="noopener">OSWork</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../vigilancia/">← Vigilância</a>
+      <a class="btn" href="../agua/">Água →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

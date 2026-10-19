@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robô de papel que anda · INEMA</title>
+<meta name="description" content="Três protótipos de robô de papel sem motor: andarilho de rampa, corredor da mesa vibratória e rolador com moeda. Molde com medidas, física, variáveis para testar e campeonato na escola.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+.dg{display:block;width:100%;max-width:560px;margin:0 auto;height:auto}
+.dg text{fill:var(--txt);font:500 15px Inter,sans-serif}
+.dg .t{font:700 16px Sora,sans-serif}
+.dg .m{fill:var(--mut);font-size:14px}
+.dg .ac{fill:var(--amb)}
+.dg .cut{fill:var(--card);stroke:var(--txt);stroke-width:1.6}
+.dg .fold{fill:none;stroke:var(--amb);stroke-width:1.6;stroke-dasharray:6 4}
+.dg .cola{fill:color-mix(in srgb,var(--amb) 18%,var(--card));stroke:var(--txt);stroke-width:1.2}
+.dg .fora{fill:none;stroke:var(--bad);stroke-width:1.2;stroke-dasharray:3 3}
+.dg .s{fill:none;stroke:var(--amb);stroke-width:2}
+.dg .ln{fill:none;stroke:var(--mut);stroke-width:1.5}
+.dg .fx{fill:var(--card);stroke:var(--mut);stroke-width:1.5}
+.dg .moeda{fill:color-mix(in srgb,var(--amb) 30%,var(--card));stroke:var(--amb);stroke-width:1.5}
+.dg .ponto{fill:var(--mut)}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--mut);margin:8px 0 0}
+.leg span{display:inline-flex;align-items:center;gap:6px}
+.robo{border-top:1px solid var(--line);margin-top:30px}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Seção Robôs para montar">
+    <a href="../">Robôs para montar</a>
+    <a href="./" aria-current="page">Robô de papel</a>
+    <a href="../assistente-de-voz/">Assistente de voz</a>
+    <a href="../robo-vigia/">Robô vigia</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Robôs para montar · sem motor</span>
+  <h1>O robô de papel <em>que anda</em></h1>
+  <p class="lead">Três protótipos que se movem sem motor, sem pilha e sem código: um anda descendo a rampa, outro corre numa mesa que vibra e o terceiro desce aos trancos com uma moeda dentro. Você recorta, monta, mede quanto ele anda e melhora o molde até ele <b>ganhar a corrida</b>.</p>
+  <div class="acoes">
+    <a class="btn pri" href="#b">Começar pelo B (mais fácil)</a>
+    <a class="btn" href="#campeonato">Campeonato na escola</a>
+  </div>
+</section>
+
+<section id="como">
+  <p class="sec">Como funciona</p>
+  <h2>Três jeitos de transformar energia em passo</h2>
+  <div class="grade">
+    <a class="card" href="#a"><h3>A. Andarilho de rampa</h3><p>A gravidade puxa o robô rampa abaixo. Ele balança de um lado para o outro e, a cada balanço, a perna solta vai para a frente.</p><span class="vai">Ver o A →</span></a>
+    <a class="card" href="#b"><h3>B. Corredor da mesa vibratória</h3><p>A mesa vibra e as pernas inclinadas para trás transformam a tremida em passo para a frente. Movimento quase garantido.</p><span class="vai">Ver o B →</span></a>
+    <a class="card" href="#c"><h3>C. Rolador com moeda</h3><p>Uma moeda fora do centro faz o prisma rolar, parar e tombar de novo. Funciona sempre, é o plano de reserva.</p><span class="vai">Ver o C →</span></a>
+  </div>
+</section>
+
+<section id="pecas">
+  <p class="sec">Peças</p>
+  <h2>Material para os três</h2>
+  <div class="tabela"><table>
+    <thead><tr><th>Item</th><th>Para que serve</th><th>Preço aprox. (out/2026, a conferir)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Papel 180 g (A4)</b></td><td>Corpo e pernas. Mais firme que sulfite, ainda dobra bem.</td><td>R$ 0,50 a folha</td></tr>
+      <tr><td><b>Régua, lápis, transferidor</b></td><td>Medir o molde e o ângulo das pernas</td><td>R$ 5–10</td></tr>
+      <tr><td><b>Tesoura sem ponta e cola branca ou bastão</b></td><td>Recortar e colar as abas</td><td>R$ 8–15</td></tr>
+      <tr><td><b>Moedas (R$ 0,05 a R$ 1)</b></td><td>Lastro: muda o peso e o centro de massa</td><td>o que tiver no bolso</td></tr>
+      <tr><td><b>Palito de churrasco</b></td><td>Eixo das pernas do robô A</td><td>R$ 3 o pacote</td></tr>
+      <tr><td><b>Tábua ou papelão grosso (60 cm)</b></td><td>Rampa do A e do C, pista do B</td><td>reaproveitado</td></tr>
+      <tr><td><b>Caixa de som com grave (opcional)</b></td><td>Faz a pista do B vibrar</td><td>a que já tiver</td></tr>
+    </tbody>
+  </table></div>
+  <p class="dica"><b>Como ler os moldes:</b> o desenho na tela é referência, não está em escala. Passe as medidas para o papel 180 g com régua. Linha cheia é corte, linha tracejada amarela é dobra, área amarelada é aba de cola.</p>
+</section>
+
+<!-- ================= A ================= -->
+<section id="a" class="robo">
+  <p class="sec">Protótipo A</p>
+  <h2>Andarilho de rampa</h2>
+  <h3>O princípio físico</h3>
+  <p class="ler">O robô tem a sola curva, como o pé de uma cadeira de balanço visto de frente. Quando ele inclina para a direita, o pé esquerdo sai do chão. Como as pernas giram soltas num eixo, a perna no ar funciona como um <b>pêndulo</b>: a gravidade a puxa para baixo e, como o chão está inclinado, ela cai um pouco à frente. Ele balança para o outro lado e repete. A energia vem da altura da rampa (energia potencial virando movimento).</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 230" role="img" aria-labelledby="fa-t">
+      <title id="fa-t">De frente o robô balança na sola curva; de lado a perna solta cai para a frente na rampa</title>
+      <text x="90" y="22" text-anchor="middle" class="t">De frente</text>
+      <g transform="rotate(-10 90 170)">
+        <rect x="62" y="70" width="56" height="44" rx="4" class="fx"/>
+        <line x1="62" y1="80" x2="118" y2="80" class="ln"/>
+        <rect x="52" y="78" width="10" height="80" class="fx"/><rect x="118" y="78" width="10" height="80" class="fx"/>
+        <path d="M44 158 Q90 182 136 158" class="s"/>
+      </g>
+      <line x1="20" y1="178" x2="160" y2="178" class="ln"/>
+      <text x="90" y="205" text-anchor="middle" class="m">sola curva: balança</text>
+      <text x="270" y="22" text-anchor="middle" class="t">De lado</text>
+      <line x1="190" y1="140" x2="350" y2="185" class="ln"/>
+      <rect x="236" y="64" width="64" height="40" rx="4" class="fx"/>
+      <circle cx="268" cy="72" r="4" class="moeda"/>
+      <line x1="268" y1="72" x2="260" y2="160" class="ln" stroke-width="3"/>
+      <line x1="268" y1="72" x2="292" y2="158" class="s" stroke-width="3"/>
+      <path d="M300 132 q14 -6 18 -20" class="s"/>
+      <text x="270" y="205" text-anchor="middle" class="m">perna no ar cai à frente</text>
+    </svg>
+    <figcaption>Dois movimentos juntos: balanço de lado (sola curva) e pêndulo para a frente (perna solta no eixo).</figcaption>
+  </figure>
+
+  <h3>O molde</h3>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 330" role="img" aria-labelledby="ma-t">
+      <title id="ma-t">Molde do andarilho: caixa do corpo de 6 por 4 por 3 centímetros, duas pernas de 2 por 8,5 centímetros e seis solas em meia-lua</title>
+      <text x="122" y="24" text-anchor="middle" class="t">Corpo</text>
+      <!-- abas -->
+      <polygon points="14,90 22,78 60,78 68,90" class="cola"/><polygon points="14,162 22,174 60,174 68,162" class="cola"/>
+      <polygon points="176,90 184,78 222,78 230,90" class="cola"/><polygon points="176,162 184,174 222,174 230,162" class="cola"/>
+      <rect x="68" y="36" width="108" height="54" class="cut"/>
+      <rect x="14" y="90" width="54" height="72" class="cut"/>
+      <rect x="68" y="90" width="108" height="72" class="cut"/>
+      <rect x="176" y="90" width="54" height="72" class="cut"/>
+      <rect x="68" y="162" width="108" height="54" class="cut"/>
+      <rect x="68" y="216" width="108" height="72" class="cut"/>
+      <path d="M68 90H176M68 162H176M68 90V162M176 90V162M68 216H176" class="fold"/>
+      <circle cx="122" cy="72" r="3" class="ac"/><circle cx="122" cy="180" r="3" class="ac"/>
+      <text x="122" y="60" text-anchor="middle" class="m">lado 6×3</text>
+      <text x="122" y="131" text-anchor="middle">topo 6×4</text>
+      <text x="41" y="131" text-anchor="middle" class="m">3×4</text><text x="203" y="131" text-anchor="middle" class="m">3×4</text>
+      <text x="122" y="203" text-anchor="middle" class="m">lado 6×3</text>
+      <circle cx="122" cy="243" r="18" class="moeda"/>
+      <text x="122" y="281" text-anchor="middle" class="m">fundo + moeda</text>
+      <text x="293" y="24" text-anchor="middle" class="t">Perna ×2</text>
+      <rect x="250" y="36" width="36" height="153" class="cut"/><rect x="300" y="36" width="36" height="153" class="cut"/>
+      <path d="M250 63H286M300 63H336M250 162H286M300 162H336" class="fold"/>
+      <text x="293" y="210" text-anchor="middle" class="m">2 × 8,5</text>
+      <text x="268" y="180" text-anchor="middle" class="m">pé</text><text x="318" y="180" text-anchor="middle" class="m">pé</text>
+      <path d="M250 242 A18 11 0 0 1 286 242 Z" class="cut"/><path d="M300 242 A18 11 0 0 1 336 242 Z" class="cut"/>
+      <text x="293" y="262" text-anchor="middle" class="m">sola ×6</text>
+      <text x="293" y="280" text-anchor="middle" class="m">2 × 0,6</text>
+      <text x="180" y="316" text-anchor="middle" class="m">furo do eixo: ponto amarelo, 1 cm abaixo do topo</text>
+    </svg>
+    <div class="leg"><span>medidas em cm</span><span>linha cheia: cortar</span><span>tracejado: dobrar</span><span>amarelado: aba de cola</span></div>
+    <figcaption>As pernas têm uma faixa de 1,5 cm no alto (vira a luva que gira no palito) e 1,5 cm embaixo (vira o pé).</figcaption>
+  </figure>
+
+  <h3>Passo a passo</h3>
+  <ol class="passos">
+    <li><b>Recorte e dobre o corpo.</b> Cole as abas das pontas por dentro. Antes de fechar, cole a moeda no centro do fundo, por dentro.</li>
+    <li><b>Fure os dois lados</b> no ponto amarelo com a ponta do palito. O furo precisa ficar um pouco folgado.</li>
+    <li><b>Faça as pernas.</b> Enrole a faixa de cima de cada perna em volta do palito e cole o papel nele mesmo, não no palito. A perna tem que girar solta.</li>
+    <li><b>Dobre o pé</b> de cada perna para a frente, em 90°, e cole embaixo dele 3 meias-luas empilhadas, com a curva para baixo e atravessada (de dentro para fora do robô).</li>
+    <li><b>Monte:</b> passe o palito por uma perna, pelo corpo e pela outra perna. Corte o que sobrar do palito deixando 0,5 cm de cada lado e trave com um pingo de cola.</li>
+    <li><b>Teste na rampa</b> a 5°. Solte o robô parado, com as duas pernas juntas, e meça a distância que ele andou antes de parar ou cair.</li>
+  </ol>
+  <div class="tabela"><table>
+    <thead><tr><th>Inclinação</th><th>Altura da ponta (tábua de 60 cm)</th><th>O que esperar</th></tr></thead>
+    <tbody>
+      <tr><td><b>3°</b></td><td>3 cm</td><td>Pouca energia, ele tende a parar</td></tr>
+      <tr><td><b>5°</b></td><td>5 cm</td><td>Bom ponto de partida</td></tr>
+      <tr><td><b>8°</b></td><td>8 cm</td><td>Mais rápido, risco de escorregar</td></tr>
+      <tr><td><b>10°</b></td><td>10,5 cm</td><td>Costuma escorregar ou tombar para a frente</td></tr>
+    </tbody>
+  </table></div>
+  <p class="dica"><b>Conta rápida:</b> para ângulos pequenos, cada grau numa tábua de 60 cm é cerca de 1 cm de altura (altura = 60 × seno do ângulo). Forre a rampa com EVA ou papel áspero para o pé não deslizar.</p>
+</section>
+
+<!-- ================= B ================= -->
+<section id="b" class="robo">
+  <p class="sec">Protótipo B · recomendado</p>
+  <h2>Corredor da mesa vibratória</h2>
+  <h3>O princípio físico</h3>
+  <p class="ler">É o mesmo princípio do <b>bristlebot</b>, aquele robozinho feito com a cabeça de uma escova de dentes. Quando a pista sobe, ela empurra as pernas inclinadas; as pernas flexionam e a ponta escorrega um pouquinho para a frente. Quando a pista desce, o robô fica quase sem peso e a perna volta ao lugar sem voltar o corpo. São dezenas de micropassos por segundo, sempre no sentido para onde as pernas apontam.</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 210" role="img" aria-labelledby="fb-t">
+      <title id="fb-t">Vista de lado: corpo sobre pernas inclinadas para trás; a pista vibra para cima e para baixo e o robô anda para a frente</title>
+      <defs><marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect x="120" y="60" width="150" height="26" rx="4" class="fx"/>
+      <line x1="138" y1="86" x2="156" y2="140" class="ln" stroke-width="3"/><line x1="252" y1="86" x2="270" y2="140" class="ln" stroke-width="3"/>
+      <path d="M252 86 V140" class="fold"/>
+      <path d="M252 116 A 30 30 0 0 0 261.5 114.5" class="s"/>
+      <text x="214" y="124" class="ac">20°</text>
+      <rect x="30" y="140" width="300" height="12" class="fx"/>
+      <path d="M50 186 V160" class="s" marker-start="url(#arb)" marker-end="url(#arb)"/>
+      <text x="64" y="182" class="m">pista vibra</text>
+      <path d="M120 40 H40" class="s" marker-end="url(#arb)"/>
+      <text x="130" y="44" class="t ac">anda para a frente</text>
+      <text x="140" y="190" class="m">pés atrás do quadril</text>
+    </svg>
+    <figcaption>Os pés ficam atrás do quadril (pernas inclinadas para trás) e o robô anda para a frente, no sentido da placa.</figcaption>
+  </figure>
+
+  <h3>O molde</h3>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 320" role="img" aria-labelledby="mb-t">
+      <title id="mb-t">Molde do corredor: corpo de 6 por 4 centímetros, quatro pernas de 1 por 2,5 centímetros e uma placa de 2 por 2 na frente</title>
+      <rect x="70" y="10" width="30" height="75" class="cut"/><rect x="220" y="10" width="30" height="75" class="cut"/>
+      <rect x="100" y="10" width="120" height="75" class="fora"/>
+      <rect x="70" y="205" width="30" height="75" class="cut"/><rect x="220" y="205" width="30" height="75" class="cut"/>
+      <rect x="100" y="205" width="120" height="75" class="fora"/>
+      <rect x="70" y="85" width="180" height="120" class="cut"/>
+      <rect x="10" y="115" width="60" height="60" class="cut"/>
+      <path d="M70 85H250M70 205H250M70 115V175" class="fold"/>
+      <text x="160" y="42" text-anchor="middle" class="m">recortar fora</text>
+      <text x="160" y="62" text-anchor="middle" class="m">(4 pernas 1 × 2,5)</text>
+      <text x="160" y="140" text-anchor="middle">corpo 6 × 4</text>
+      <text x="160" y="162" text-anchor="middle" class="m">frente ←</text>
+      <text x="40" y="150" text-anchor="middle" class="m">placa</text>
+      <text x="160" y="248" text-anchor="middle" class="m">recortar fora</text>
+      <text x="290" y="50" class="m">2,5 cm</text><text x="290" y="150" class="m">4 cm</text><text x="290" y="245" class="m">2,5 cm</text>
+      <text x="160" y="306" text-anchor="middle" class="m">largura total do corpo: 6 cm · placa 2 × 2</text>
+    </svg>
+    <div class="leg"><span>medidas em cm</span><span>vermelho tracejado: retirar</span><span>tracejado amarelo: dobrar</span></div>
+    <figcaption>Corpo, pernas e placa saem de uma peça só. Na placa você escreve o número do seu robô para a corrida.</figcaption>
+  </figure>
+
+  <h3>Passo a passo</h3>
+  <ol class="passos">
+    <li><b>Recorte o contorno</b> e retire as duas áreas entre as pernas.</li>
+    <li><b>Dobre as 4 pernas para baixo</b> (90°) e a placa para cima.</li>
+    <li><b>Incline todas as pernas para trás</b> até 20° com o transferidor. As quatro precisam ficar iguais.</li>
+    <li><b>Dobre 3 mm da ponta de cada perna</b> para trás. Esse pezinho escorrega melhor para a frente do que para trás.</li>
+    <li><b>Coloque na pista</b> e faça vibrar: tábua sobre uma caixa de som tocando grave, ou batidas ritmadas com a mão na mesa.</li>
+    <li><b>Meça</b> o tempo para andar 30 cm. Faça 3 vezes e anote a média.</li>
+  </ol>
+</section>
+
+<!-- ================= C ================= -->
+<section id="c" class="robo">
+  <p class="sec">Protótipo C · reserva</p>
+  <h2>Rolador com moeda</h2>
+  <h3>O princípio físico</h3>
+  <p class="ler">Um prisma de papel rola fácil numa rampa. Com uma moeda colada perto de uma das faces, o <b>centro de massa</b> sai do meio. Em parte da volta a moeda está subindo e o rolador freia; quando ela passa do topo, a gravidade a puxa para baixo e ele tomba de uma vez. O resultado é um movimento aos trancos, que parece um robô cambaleando.</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 200" role="img" aria-labelledby="fc-t">
+      <title id="fc-t">Prisma triangular na rampa com a moeda fora do centro; a gravidade puxa a moeda e o prisma tomba</title>
+      <defs><marker id="arc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <line x1="20" y1="80" x2="340" y2="170" class="ln"/>
+      <polygon points="120,108 196,129 140,50" class="fx"/>
+      <circle cx="152" cy="98" r="3" class="ponto"/>
+      <circle cx="176" cy="114" r="9" class="moeda"/>
+      <path d="M176 126 V170" class="s" marker-end="url(#arc)"/>
+      <text x="186" y="164" class="m">gravidade</text>
+      <path d="M200 70 A 50 50 0 0 1 228 108" class="s" marker-end="url(#arc)"/>
+      <text x="236" y="80" class="ac">tomba</text>
+      <text x="40" y="40" class="m">centro do prisma</text>
+      <path d="M100 46 L148 94" class="ln"/>
+    </svg>
+    <figcaption>Quanto mais longe do centro estiver a moeda, mais forte o tranco.</figcaption>
+  </figure>
+
+  <h3>O molde</h3>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 345" role="img" aria-labelledby="mc-t">
+      <title id="mc-t">Molde do rolador: três faces de 3 por 8 centímetros, uma aba de 1 centímetro e duas tampas triangulares de 3 centímetros</title>
+      <polygon points="95,70 170,70 132.5,5" class="cut"/><polygon points="95,270 170,270 132.5,335" class="cut"/>
+      <rect x="20" y="70" width="75" height="200" class="cut"/>
+      <rect x="95" y="70" width="75" height="200" class="cut"/>
+      <rect x="170" y="70" width="75" height="200" class="cut"/>
+      <rect x="245" y="70" width="25" height="200" class="cola"/>
+      <path d="M95 70V270M170 70V270M245 70V270M95 70H170M95 270H170" class="fold"/>
+      <circle cx="57.5" cy="232" r="27" class="moeda"/>
+      <text x="57.5" y="237" text-anchor="middle" class="m">moeda</text>
+      <text x="57.5" y="140" text-anchor="middle">face 1</text>
+      <text x="132.5" y="140" text-anchor="middle">face 2</text>
+      <text x="207.5" y="140" text-anchor="middle">face 3</text>
+      <text x="57.5" y="62" text-anchor="middle" class="m">3 cm</text>
+      <text x="172" y="36" class="m">tampa</text>
+      <text x="300" y="175" class="m">8 cm</text>
+      <text x="280" y="62" class="m">aba 1</text>
+      <text x="230" y="320" class="m">tampa: triângulo</text>
+      <text x="230" y="338" class="m">de lado 3 cm</text>
+    </svg>
+    <div class="leg"><span>medidas em cm</span><span>moeda: 1,5 cm da ponta, por dentro da face 1</span></div>
+    <figcaption>Prenda as tampas com fita adesiva fina se a cola não segurar.</figcaption>
+  </figure>
+  <h3>Passo a passo</h3>
+  <ol class="passos">
+    <li><b>Recorte e vinque</b> todas as dobras com a régua.</li>
+    <li><b>Cole a moeda</b> por dentro da face 1, perto de uma ponta.</li>
+    <li><b>Feche o prisma</b> colando a aba por dentro da face 1 e depois as duas tampas.</li>
+    <li><b>Solte na rampa</b> a 8° e conte quantos trancos ele dá em 50 cm.</li>
+  </ol>
+</section>
+
+<section id="testar">
+  <p class="sec">Teste e melhore</p>
+  <h2>Variáveis para testar</h2>
+  <p class="ler">Mude uma variável por vez e anote no caderno de testes. Assim você descobre qual delas faz o robô andar mais.</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Variável</th><th>Robô</th><th>Valores para comparar</th><th>O que medir</th></tr></thead>
+    <tbody>
+      <tr><td><b>Ângulo das pernas</b></td><td>B</td><td>10°, 20°, 30°</td><td>Tempo para 30 cm</td></tr>
+      <tr><td><b>Inclinação da rampa</b></td><td>A, C</td><td>3°, 5°, 8°, 10°</td><td>Distância até parar</td></tr>
+      <tr><td><b>Peso (moedas)</b></td><td>A, B, C</td><td>0, 1, 2 moedas; moeda na frente ou atrás</td><td>Distância ou tempo</td></tr>
+      <tr><td><b>Tipo de papel</b></td><td>A, B</td><td>sulfite 75 g, 120 g, 180 g, cartolina</td><td>Se as pernas aguentam o peso</td></tr>
+      <tr><td><b>Curva da sola</b></td><td>A</td><td>meia-lua de 0,4, 0,6 e 1 cm de altura</td><td>Quantos passos ele dá</td></tr>
+      <tr><td><b>Superfície</b></td><td>A, B</td><td>madeira lisa, EVA, papel áspero</td><td>Se escorrega ou anda</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Erros prováveis e o que mudar</h3>
+  <div class="tabela"><table>
+    <thead><tr><th>O que acontece</th><th>Causa provável</th><th>O que mudar na versão 2</th></tr></thead>
+    <tbody>
+      <tr><td><b>A escorrega sem dar passo</b></td><td>Rampa inclinada demais ou sola lisa</td><td>Baixe para 5° e forre a rampa com EVA</td></tr>
+      <tr><td><b>A não balança</b></td><td>Sola reta ou pernas presas no eixo</td><td>Aumente a curva da sola; alargue a luva</td></tr>
+      <tr><td><b>A tomba de lado</b></td><td>Centro de massa alto</td><td>Moeda mais baixa, no fundo; pernas mais afastadas</td></tr>
+      <tr><td><b>B gira em círculo</b></td><td>Pernas de um lado com ângulo diferente</td><td>Meça as 4 pernas com o transferidor e iguale</td></tr>
+      <tr><td><b>B anda para trás</b></td><td>Pernas inclinadas para a frente</td><td>Incline para o outro lado</td></tr>
+      <tr><td><b>B desaba</b></td><td>Papel mole ou robô pesado</td><td>Papel mais grosso ou pernas dobradas em dobro</td></tr>
+      <tr><td><b>C rola liso, sem tranco</b></td><td>Moeda perto do centro ou leve demais</td><td>Moeda maior, mais perto de uma face</td></tr>
+    </tbody>
+  </table></div>
+  <p class="teste"><b>Registre a versão 1 → versão 2.</b> Use o <a href="../#caderno">caderno de testes</a>: data, versão, o que mudou, resultado em número e próximo ajuste. Tire uma foto de cada versão.</p>
+  <div class="alerta"><b>Segurança.</b> Use tesoura sem ponta. Estilete só com um adulto e uma base de corte. Na pista do B, deixe a caixa de som num volume confortável: o grave precisa fazer a tábua vibrar, não machucar o ouvido.</div>
+</section>
+
+<section id="campeonato">
+  <p class="sec">Campeonato na escola</p>
+  <h2>A corrida dos robôs de papel</h2>
+  <p class="ler">Uma corrida transforma os testes em competição e mostra qual ideia funciona melhor. Sugestão de regras para a turma:</p>
+  <ol class="passos">
+    <li><b>Mesmo material para todos:</b> uma folha A4 de 180 g, até 2 moedas, sem motor e sem pilha.</li>
+    <li><b>Pista igual:</b> 50 cm de tábua sobre a mesma caixa de som, no mesmo volume (categoria B), ou a mesma rampa a 5° (categoria A).</li>
+    <li><b>Três baterias</b> por robô. Vale o melhor tempo. Robô que sai da pista volta para o início.</li>
+    <li><b>Entre as baterias</b> a equipe pode mudar uma coisa só, e precisa anotar no caderno o que mudou.</li>
+    <li><b>Prêmios:</b> mais rápido, mais reto, maior melhora entre a versão 1 e a final, e melhor caderno de testes.</li>
+  </ol>
+  <p class="dica">O prêmio de maior melhora é o mais importante. Ele mostra quem entendeu a física, não quem teve sorte no primeiro corte.</p>
+</section>
+
+<section id="alem">
+  <p class="sec">Para ir além</p>
+  <h2>Inspiração e próximos passos</h2>
+  <p class="ler">Estes projetos usam os mesmos princípios e ajudam a ter novas ideias de forma e de perna:</p>
+  <ul class="ler">
+    <li><a href="https://makercamp.make.co/projects/make-a-paper-walking-robot-dog/">Make: paper walking robot dog</a> (em inglês)</li>
+    <li><a href="https://www.ontariosciencecentre.ca/media/1697/dinosaurrampwalker.pdf">Ontario Science Centre: dinosaur ramp walker</a> (PDF em inglês)</li>
+    <li><a href="https://instructables.com/Gravity-Powered-Robot-Walker">Instructables: gravity-powered robot walker</a> (em inglês)</li>
+  </ul>
+  <p class="ler">Quando quiser colocar motor, sensor e IA, siga para o <a href="../assistente-de-voz/">assistente de voz</a> ou o <a href="../robo-vigia/">robô vigia</a>, e para o curso aberto <a class="clube" href="https://inematds.github.io/robot/">Robótica do Zero ao Expert</a> do INEMA.CLUB.</p>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 30 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Robôs para montar</a>
+</div></footer>
+</body>
+</html>

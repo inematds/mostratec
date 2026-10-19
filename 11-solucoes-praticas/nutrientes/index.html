@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nutrientes da planta</title>
+<meta name="description" content="Guia para montar um medidor de nutrientes para hidroponia com ESP32: sensor TDS/EC, sensor de pH PH-4502C e DS18B20. Peças, ligação com divisor de tensão, calibração, código, IA e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/" aria-current="page">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 3 · Nutrientes</span>
+    <h1>Saiba o que falta na água <em>da sua hidroponia</em></h1>
+    <p class="lead">Duas sondas medem os sais dissolvidos (TDS/EC) e o pH da solução nutritiva. O ESP32 corrige a leitura pela temperatura e mostra no celular se está dentro da faixa. A IA explica em português o que ajustar. Serve para quem cultiva alface, rúcula ou morango em hidroponia.</p>
+    <div class="tags"><span class="tag">Kit R$ 150–300</span><span class="tag">Dificuldade: média</span><span class="tag">Tudo em 3,3 V e 5 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#codigo">Ver o código</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>Mede, corrige, compara, explica</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 400" role="img" aria-label="Fluxo do medidor: as sondas medem sais, pH e temperatura; o ESP32 corrige pela temperatura e compara com a faixa da cultura; o painel e a IA dizem o que corrigir">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="20" y="10" width="360" height="62" rx="12"/>
+          <rect x="20" y="110" width="360" height="82" rx="12"/>
+          <rect x="20" y="230" width="170" height="74" rx="12"/>
+          <rect x="210" y="230" width="170" height="74" rx="12"/>
+          <rect x="20" y="334" width="360" height="56" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 72v32"/><path d="M193 97l7 7 7-7"/>
+          <path d="M105 192v32"/><path d="M98 217l7 7 7-7"/>
+          <path d="M295 192v32"/><path d="M288 217l7 7 7-7"/>
+          <path d="M200 304v24"/><path d="M193 321l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="17" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="36">Sondas na água</text>
+          <text x="200" y="136">ESP32 calcula</text>
+          <text x="105" y="256">Dentro da faixa</text>
+          <text x="295" y="256">Fora da faixa</text>
+          <text x="200" y="368">Painel e IA</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="200" y="58">sais (TDS), pH, temperatura</text>
+          <text x="200" y="160">corrige o TDS pela temperatura</text>
+          <text x="200" y="180">EC e pH contra a faixa da cultura</text>
+          <text x="105" y="280">mostra "ok"</text>
+          <text x="295" y="280">"pH alto", "EC baixo"</text>
+          <text x="200" y="384">o que fazer, em português</text>
+        </g>
+      </svg>
+      <figcaption>As faixas de cada cultura ficam no código. Você troca quando mudar de planta.</figcaption>
+    </figure>
+    <p class="ler">A planta na hidroponia come o que está dissolvido na água. O sensor TDS mede quantos sais tem ali: mais sais, mais corrente passa entre os dois pinos da sonda. Como a água quente conduz mais, o DS18B20 mede a temperatura e o código corrige a conta para 25 °C. A sonda de pH mede se a água está ácida ou básica; fora da faixa, a raiz não consegue absorver parte dos nutrientes mesmo com eles na água.</p>
+    <div class="dica"><b>Por que não um sensor NPK?</b> O sensor NPK de solo de verdade custa mais de R$ 300 e dá leituras imprecisas. EC e pH são o que produtor de hidroponia mede no dia a dia, e dá para conferir com uma caneta medidora. É o projeto mais honesto para mostrar e vender.</div>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi</td><td>R$ 30–45</td></tr>
+        <tr><td><b>Sensor TDS</b> (Gravity, DFRobot ou genérico, com sonda)</td><td>Mede os sais dissolvidos; dele sai o EC</td><td>R$ 25–60</td></tr>
+        <tr><td><b>Sensor de pH PH-4502C</b> com sonda BNC</td><td>Mede se a água está ácida ou básica</td><td>R$ 70–130</td></tr>
+        <tr><td><b>DS18B20</b> à prova d'água (com cabo)</td><td>Temperatura da água, para corrigir o TDS</td><td>R$ 10–18</td></tr>
+        <tr><td><b>Solução tampão pH 4,00 e pH 6,86</b> (sachês)</td><td>Calibrar a sonda de pH</td><td>R$ 10–25</td></tr>
+        <tr><td><b>Resistores 3× 10 kΩ e 1× 4,7 kΩ</b>, protoboard e jumpers</td><td>Divisor de tensão do pH (dois de 10 kΩ em série fazem 20 kΩ) e pull-up do DS18B20</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 150–300</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. Não inclui o sistema de hidroponia nem caixa de acabamento. O ESP32 liga no cabo USB de um carregador de celular.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito, pino por pino</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 560" role="img" aria-label="Diagrama de ligação: GPIO 35 no sinal do sensor TDS, GPIO 4 no DS18B20 com resistor de 4,7 k para o 3V3, GPIO 32 no meio de um divisor de tensão de 10 k e 20 k ligado na saída Po do módulo de pH alimentado em 5 V">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="124" height="330" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="70" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="122" y="88">3V3</text>
+          <text x="122" y="118">GND</text>
+          <text x="122" y="148">VIN 5V</text>
+          <text x="122" y="198">GPIO 35</text>
+          <text x="122" y="268">GPIO 4</text>
+          <text x="122" y="330">GPIO 32</text>
+        </g>
+        <!-- sinais -->
+        <g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M132 193H206" stroke="var(--sky)"/>
+          <path d="M132 263H206" stroke="var(--ok)"/>
+          <path d="M132 325H170V395" stroke="var(--warm)"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="132" cy="193" r="4"/><circle cx="132" cy="263" r="4"/><circle cx="132" cy="325" r="4"/></g>
+        <!-- componentes -->
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="206" y="160" width="186" height="62" rx="10"/>
+          <rect x="206" y="232" width="186" height="62" rx="10"/>
+          <rect x="206" y="440" width="186" height="62" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">
+          <text x="216" y="184">TDS · A</text>
+          <text x="216" y="256">DS18B20 · DATA</text>
+          <text x="216" y="464">pH 4502C · Po</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="216" y="208">VCC 3V3 · GND</text>
+          <text x="216" y="280">3V3 · GND · 4,7k</text>
+          <text x="216" y="488">VCC no VIN · GND</text>
+        </g>
+        <!-- divisor de tensão -->
+        <text x="206" y="370" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Divisor de tensão</text>
+        <text x="206" y="392" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">5 V do Po vira 3,3 V</text>
+        <g fill="none" stroke="var(--warm)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <!-- nó até R1 (10k) até o Po -->
+          <path d="M170 395V415"/>
+          <path d="M170 455V471H206"/>
+          <!-- nó até R2 (20k) até o GND -->
+          <path d="M170 395H90V415"/>
+          <path d="M90 455V480"/>
+        </g>
+        <g fill="var(--bg)" stroke="var(--txt)" stroke-width="2">
+          <rect x="162" y="415" width="16" height="40" rx="3"/>
+          <rect x="82" y="415" width="16" height="40" rx="3"/>
+        </g>
+        <circle cx="170" cy="395" r="4.5" fill="var(--amb)"/>
+        <g stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round">
+          <path d="M76 480h28"/><path d="M82 488h16"/><path d="M87 496h6"/>
+        </g>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)">
+          <text x="154" y="440" text-anchor="end">10k</text>
+          <text x="74" y="440" text-anchor="end">20k</text>
+          <text x="90" y="520" text-anchor="middle" fill="var(--mut)">GND</text>
+        </g>
+        <text x="8" y="548" font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">tensão no GPIO 32 = Po × 20k ÷ 30k</text>
+      </svg>
+      <figcaption>O módulo de pH funciona em 5 V e o Po pode passar de 3,3 V. O divisor (10 kΩ em cima, 20 kΩ embaixo) entrega dois terços da tensão ao ESP32. No código, multiplique por 1,5 para voltar ao valor real.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Componente</th><th>Pino do componente</th><th>Liga no ESP32</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sensor TDS</b></td><td>+ (VCC) · − (GND) · A</td><td>3V3 · GND · <b>GPIO 35</b></td></tr>
+        <tr><td><b>DS18B20</b></td><td>vermelho (VCC) · preto (GND) · amarelo (DATA)</td><td>3V3 · GND · <b>GPIO 4</b> (resistor 4,7 kΩ entre DATA e 3V3)</td></tr>
+        <tr><td><b>pH PH-4502C</b></td><td>V+ · G · Po</td><td>VIN (5 V do USB) · GND · Po → 10 kΩ → <b>GPIO 32</b>, e 20 kΩ do GPIO 32 ao GND</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Por que GPIO 35 e GPIO 32?</b> Com o Wi-Fi ligado, só os pinos 32 a 39 leem sinal analógico direito no ESP32. O DS18B20 é digital, por isso pode ficar no GPIO 4.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Da caixa à primeira leitura confiável</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, "esp32" (Espressif). Em Bibliotecas, instale "OneWire" e "DallasTemperature" (Miles Burton).</li>
+      <li><b>Teste a placa sozinha.</b> Escolha "ESP32 Dev Module" e a porta, grave o exemplo Blink. Se não gravar, segure o botão BOOT quando aparecer "Connecting...".</li>
+      <li><b>Ligue o DS18B20 e o TDS.</b> Siga a tabela. Grave o código e confira no Monitor Serial (115200) se a temperatura da água aparece. Se der −127, falta o resistor de 4,7 kΩ ou o fio amarelo está solto.</li>
+      <li><b>Monte o divisor do pH na protoboard</b> antes de ligar o módulo. Para testar, ligue a ponta de cima do divisor (onde vai o Po) no VIN e meça o meio com multímetro: tem que marcar perto de 3,3&nbsp;V. Depois troque o VIN pelo fio do Po.</li>
+      <li><b>Calibre o pH.</b> Lave a sonda em água destilada, coloque no tampão 6,86, espere 1 minuto e anote a tensão "pH V=" do Monitor Serial. Lave de novo, faça o mesmo no tampão 4,00. Troque <code>V_PH7</code> e <code>V_PH4</code> no código e grave.</li>
+      <li><b>Confira o TDS.</b> Se tiver uma caneta medidora de TDS/EC, meça a mesma água e compare. Se a diferença for constante, ajuste o fator <code>K_TDS</code>.</li>
+      <li><b>Meça a solução nutritiva, uma sonda de cada vez.</b> Primeiro o TDS, tire a sonda, depois o pH. Abra o IP do Monitor Serial no celular, na mesma rede Wi-Fi.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque o nome e a senha da rede e as duas tensões de calibração. A faixa da cultura fica nas quatro linhas de <code>EC_MIN</code> a <code>PH_MAX</code>.</p>
+<pre><code>// Nutrientes (TDS/EC + pH) — ESP32
+// Bibliotecas: "OneWire" e
+// "DallasTemperature" (Miles Burton)
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;OneWire.h&gt;
+#include &lt;DallasTemperature.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 35: sinal A do sensor TDS
+const int PINO_TDS = 35;
+// GPIO 32: pH, no meio do divisor
+const int PINO_PH = 32;
+// GPIO 4: DS18B20 (4,7k para o 3V3)
+const int PINO_TEMP = 4;
+
+// Calibração do pH: tensão do Po (já
+// multiplicada por 1,5) em cada tampão
+float V_PH7 = 2.50;  // tampão 6,86
+float V_PH4 = 3.05;  // tampão 4,00
+// Ajuste fino do TDS (1.0 = sem ajuste)
+float K_TDS = 1.0;
+
+// Faixa de referência comum da alface.
+// Confira para a sua cultura.
+const float EC_MIN = 1.2, EC_MAX = 1.8;
+const float PH_MIN = 5.5, PH_MAX = 6.5;
+
+OneWire fio(PINO_TEMP);
+DallasTemperature termo(&amp;fio);
+WebServer servidor(80);
+float temp = 25, tds = 0, ec = 0, ph = 7;
+String aviso = "medindo";
+unsigned long ultima = 0;
+
+// média de 20 leituras, em volts
+float volts(int pino) {
+  long soma = 0;
+  for (int i = 0; i &lt; 20; i++) {
+    soma += analogReadMilliVolts(pino);
+    delay(10);
+  }
+  return soma / 20.0 / 1000.0;
+}
+
+void ler() {
+  termo.requestTemperatures();
+  float t = termo.getTempCByIndex(0);
+  // -127 = sensor desligado: usa 25 °C
+  temp = (t &lt; -100) ? 25 : t;
+
+  // TDS: corrige para 25 °C (fórmula
+  // do fabricante DFRobot)
+  float coef = 1.0 + 0.02 * (temp - 25.0);
+  float v = volts(PINO_TDS) / coef;
+  tds = (133.42 * v * v * v
+       - 255.86 * v * v
+       + 857.39 * v) * 0.5 * K_TDS;
+  // EC em mS/cm (ppm = EC µS/cm x 0,5)
+  ec = tds * 2.0 / 1000.0;
+
+  // pH: reta entre os dois tampões
+  float vph = volts(PINO_PH) * 1.5;
+  float a = (6.86 - 4.00) / (V_PH7 - V_PH4);
+  ph = 6.86 + (vph - V_PH7) * a;
+
+  aviso = "";
+  if (ph &lt; PH_MIN) aviso += "pH baixo ";
+  if (ph &gt; PH_MAX) aviso += "pH alto ";
+  if (ec &lt; EC_MIN) aviso += "EC baixo";
+  if (ec &gt; EC_MAX) aviso += "EC alto";
+  if (aviso == "") aviso = "ok";
+  Serial.printf("T=%.1f TDS=%.0f pH V=%.3f\n",
+                temp, tds, vph);
+}
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"temp\":" + String(temp, 1);
+  j += ",\"tds_ppm\":" + String(tds, 0);
+  j += ",\"ec_ms\":" + String(ec, 2);
+  j += ",\"ph\":" + String(ph, 2);
+  j += ",\"aviso\":\"" + aviso + "\"}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página que abre no celular
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;meta http-equiv=refresh content=5&gt;";
+  h += "&lt;h2&gt;Hidroponia&lt;/h2&gt;&lt;p&gt;EC: " + String(ec, 2);
+  h += " mS/cm&lt;br&gt;pH: " + String(ph, 2);
+  h += "&lt;br&gt;Água: " + String(temp, 1) + " C";
+  h += "&lt;br&gt;&lt;b&gt;" + aviso + "&lt;/b&gt;&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+void setup() {
+  Serial.begin(115200);
+  termo.begin();
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  servidor.on("/", painel);
+  servidor.on("/dados", dados);
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+  if (millis() - ultima &lt; 3000) return;
+  ultima = millis();
+  ler();
+}</code></pre>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Explica o que corrigir</h3><p>Recebe EC, pH, temperatura e a cultura, e responde: "o pH está em 7,1; acima da faixa da alface. Adicione redutor de pH aos poucos e meça de novo em 30 minutos".</p></div>
+      <div class="card"><h3>Lê a semana</h3><p>Na versão 2, guarde uma leitura por hora. A IA aponta o padrão: "o EC cai rápido depois do meio-dia, as plantas estão bebendo mais água do que sais".</p></div>
+      <div class="card"><h3>Explica para o cliente</h3><p>Transforma os números num recado curto em português para o produtor, que não precisa saber o que é µS/cm.</p></div>
+    </div>
+    <p class="ler">Script de pergunta, em Python, rodando no computador na mesma rede:</p>
+<pre><code># pergunta.py — roda no computador,
+# na mesma rede do ESP32
+import json, urllib.request
+
+# troque pelo IP do seu ESP32
+URL = "http://192.168.0.50/dados"
+dados = json.load(urllib.request.urlopen(URL))
+cultura = input("Cultura (ex.: alface): ")
+prompt = (
+    "Você ajuda um pequeno produtor de "
+    "hidroponia. Cultura: " + cultura + ". "
+    "Leitura agora: " + json.dumps(dados) + ". "
+    "ec_ms = EC em mS/cm, temp = °C da água. "
+    "Diga em português, em até 4 frases, se "
+    "EC e pH estão bons para essa cultura e "
+    "o que corrigir, um passo de cada vez."
+)
+print(prompt)
+# Mande o prompt ao modelo que você usa:
+# - cole no chat do serviço de IA; ou
+# - use a biblioteca oficial do serviço,
+#   com a SUA chave numa variável de
+#   ambiente (nunca escrita no código); ou
+# - rode um modelo local no PC, sem chave.</code></pre>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu. E confira a resposta: a IA pode errar a faixa de uma cultura, por isso a faixa que vale é a que está no seu código.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de mostrar para alguém</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>A temperatura da água aparece e muda quando você segura a sonda na mão.</li>
+        <li>No tampão 6,86 o pH marca entre 6,7 e 7,0; no tampão 4,00, entre 3,9 e 4,1.</li>
+        <li>Água da torneira dá TDS baixo; a solução nutritiva dá bem mais.</li>
+        <li>O TDS bate com uma caneta medidora (se tiver) com diferença pequena e constante.</li>
+        <li>O aviso muda para "pH alto" quando você mede uma água fora da faixa.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>pH e TDS mudam quando as duas sondas estão na água</b></td><td>Uma sonda interfere na outra pela água</td><td>Meça uma de cada vez: tire uma sonda, ou na versão 2 ligue e desligue a alimentação de cada sensor</td></tr>
+        <tr><td><b>pH não sai do lugar ou anda devagar</b></td><td>Sonda de pH secou ou ficou guardada sem a tampa com líquido</td><td>Deixe a sonda de molho na solução de armazenamento (KCl) e recalibre</td></tr>
+        <tr><td><b>pH com valor absurdo (12, −3)</b></td><td>Sem calibrar, ou esqueceu de multiplicar por 1,5 a tensão do divisor</td><td>Refaça a calibração com os dois tampões e confira <code>V_PH7</code> e <code>V_PH4</code></td></tr>
+        <tr><td><b>Temperatura −127</b></td><td>Falta o resistor de 4,7 kΩ ou fio solto</td><td>Coloque o resistor entre DATA e 3V3</td></tr>
+        <tr><td><b>Leitura analógica pula muito</b></td><td>Sensor em pino ADC2 ou fio longo solto</td><td>Use GPIO 32 a 39; o código já faz média de 20 leituras</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. A sonda de pH muda com o tempo; com o caderno você sabe de quanto em quanto tempo recalibrar.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Duas sondas juntas na água</td><td>pH oscilando entre 5,8 e 6,9</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td>Uma sonda de cada vez</td><td>pH parado em 6,2</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Leitura por hora guardada e enviada à IA</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Água, eletrônica e produto químico</h2>
+    <div class="alerta"><b>Tudo em 5 V, longe da água.</b> O ESP32 e a protoboard ficam numa caixa, acima da solução. Só as sondas entram na água. Desligue o USB antes de mexer nos fios.</div>
+    <div class="alerta"><b>Ácido e base só com adulto.</b> Solução tampão, solução de armazenamento e os produtos que sobem ou baixam o pH (ácido e base) irritam pele e olhos. Use luva e óculos, faça a correção só com um adulto ou professor, nunca prove nem cheire a solução e guarde tudo fora do alcance de crianças.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender o medidor de nutrientes</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Pequeno produtor de hidroponia, escola com horta hidropônica, loja de aquarismo e hidroponia que quer demonstrar ou revender</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 150–300 (lista acima, a conferir)</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 400–650 o aparelho montado, calibrado, em caixa (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>2 horas para instalar, calibrar com os tampões no local, ajustar a faixa da cultura e ensinar a ler o painel</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 20–40 por mês: recalibração do pH, relatório da semana e explicação da IA (sugestão). A sonda de pH se desgasta com o uso; deixe a troca prevista no preço</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Faça a conta com o cliente: quantos pés tem uma bancada × preço de venda de cada pé = quanto ele perde se o pH sair da faixa e ninguém perceber. O aparelho mede o tempo todo, a caneta só quando alguém lembra</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Mais de um reservatório?</b> Um ESP32 lê vários sensores nos pinos 33, 34, 36 e 39. Para um produtor com várias bancadas, venda um aparelho por reservatório.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender o que o modelo de IA faz com os dados, comece pelo curso <a href="https://inematds.github.io/ia-do-zero-curso/" target="_blank" rel="noopener">IA do zero</a>. Para controlar bombas dosadoras e sensores com mais precisão, siga para <a href="https://inematds.github.io/robot/" target="_blank" rel="noopener">Robótica</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../irrigacao/">← Irrigação</a>
+      <a class="btn" href="../vigilancia/">Vigilância →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pet automático</title>
+<meta name="description" content="Guia para montar um comedouro com ESP32 que serve a ração na hora certa, pesa o pote e avisa se o pet não comeu: servo, célula de carga com HX711 e boia de água. Peças, ligação, código, IA e ficha de negócio.">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<style>
+  section{scroll-margin-top:70px}
+  .fig svg{display:block;width:100%;max-width:560px;margin:0 auto}
+  .indice{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+  .indice a{text-decoration:none}
+  .teste ul{margin:6px 0 0;padding-left:20px}
+  .teste li{margin:4px 0}
+  .vizinhas{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .codigo{position:relative}
+  .codigo pre{padding-top:48px}
+  .copiar{position:absolute;top:8px;right:8px;min-height:34px;padding:0 12px;font-size:13px}
+  @media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:14px 12px}}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../">INEMA<b>.</b>SOLUÇÕES</a>
+    <nav class="nav" aria-label="Soluções">
+      <a href="../pet-automatico/" aria-current="page">Pet</a>
+      <a href="../irrigacao/">Irrigação</a>
+      <a href="../nutrientes/">Nutrientes</a>
+      <a href="../vigilancia/">Câmera</a>
+      <a href="../energia/">Energia</a>
+      <a href="../agua/">Água</a>
+      <a href="../controle-casa/">Casa</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="chip">Solução 1 · Pet automático</span>
+    <h1>Comedouro que serve na hora e <em>avisa se o pet não comeu</em></h1>
+    <p class="lead">Um servo abre a portinhola da ração nos horários que você escolhe. Uma balança embaixo do pote mede quanto o pet comeu, e uma boia avisa quando a água acaba. Serve para quem trabalha fora, viaja no feriado ou cuida de vários animais.</p>
+    <div class="tags"><span class="tag">Kit R$ 120–200</span><span class="tag">Dificuldade: média</span><span class="tag">Tudo em 3,3 V e 5 V</span></div>
+    <div class="acoes">
+      <a class="btn pri" href="#pecas">Lista de compras</a>
+      <a class="btn" href="#codigo">Ver o código</a>
+    </div>
+    <nav class="indice" aria-label="Nesta página">
+      <a class="tag" href="#como">Como funciona</a><a class="tag" href="#pecas">Peças</a><a class="tag" href="#ligacao">Ligação</a><a class="tag" href="#passos">Passo a passo</a><a class="tag" href="#codigo">Código</a><a class="tag" href="#ia">IA</a><a class="tag" href="#teste">Teste</a><a class="tag" href="#negocio">Ficha de negócio</a>
+    </nav>
+  </div>
+
+  <section id="como">
+    <p class="sec">Como funciona</p>
+    <h2>Serve, pesa, confere, avisa</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 420" role="img" aria-label="Fluxo do comedouro: na hora da refeição o servo abre a portinhola, a balança pesa o pote, três horas depois o ESP32 confere quanto sumiu e avisa se o pet não comeu; o painel mostra tudo no celular">
+        <g fill="none" stroke="var(--line)" stroke-width="2">
+          <rect x="20" y="10" width="360" height="62" rx="12"/>
+          <rect x="20" y="110" width="360" height="62" rx="12"/>
+          <rect x="20" y="210" width="360" height="62" rx="12"/>
+          <rect x="20" y="310" width="170" height="74" rx="12"/>
+          <rect x="210" y="310" width="170" height="74" rx="12"/>
+        </g>
+        <g fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 72v32"/><path d="M193 97l7 7 7-7"/>
+          <path d="M200 172v32"/><path d="M193 197l7 7 7-7"/>
+          <path d="M105 272v32"/><path d="M98 297l7 7 7-7"/>
+          <path d="M295 272v32"/><path d="M288 297l7 7 7-7"/>
+        </g>
+        <g font-family="Sora,Inter,sans-serif" font-weight="700" font-size="17" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="36">Hora da refeição</text>
+          <text x="200" y="136">Servo abre a portinhola</text>
+          <text x="200" y="236">3 horas depois</text>
+          <text x="105" y="336">Comeu</text>
+          <text x="295" y="336">Não comeu</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)" text-anchor="middle">
+          <text x="200" y="58">7 h e 18 h, pelo relógio da internet</text>
+          <text x="200" y="158">0,6 s; a balança pesa o pote</text>
+          <text x="200" y="258">o peso caiu pelo menos 10 g?</text>
+          <text x="105" y="360">soma no dia</text>
+          <text x="295" y="360">alerta no painel</text>
+          <text x="200" y="408">A boia avisa a qualquer hora se a água baixar.</text>
+        </g>
+      </svg>
+      <figcaption>Horários, tempo de abertura (0,6 s), espera (3 h) e mínimo (10 g) são pontos de partida. Ajuste depois dos testes com a ração e o pet de verdade.</figcaption>
+    </figure>
+    <p class="ler">O ESP32 pega a hora certa da internet. Na hora da refeição, gira o servo, que abre a portinhola de um reservatório (uma garrafa PET de boca para baixo serve) e solta a ração no pote. O pote fica em cima de uma célula de carga, uma barrinha de metal que entorta um pouco com o peso; o módulo HX711 transforma essa deformação em gramas. Três horas depois, o ESP32 compara o peso: se quase nada sumiu, marca "não comeu".</p>
+  </section>
+
+  <section id="pecas">
+    <p class="sec">Peças</p>
+    <h2>Lista de compras</h2>
+    <div class="tabela"><table>
+      <thead><tr><th>Peça</th><th>Para que serve</th><th>Preço aprox.</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b> (30 pinos)</td><td>O cérebro, com Wi-Fi e relógio pela internet</td><td>R$ 35–45</td></tr>
+        <tr><td><b>Servo MG90S</b> (engrenagem de metal)</td><td>Abre e fecha a portinhola. O SG90, de plástico, quebra com ração dura</td><td>R$ 18–25</td></tr>
+        <tr><td><b>Célula de carga 1 kg + módulo HX711</b></td><td>A balança embaixo do pote</td><td>R$ 18–28</td></tr>
+        <tr><td><b>Sensor de nível tipo boia</b> (chave boia)</td><td>Avisa quando a água do bebedouro baixa</td><td>R$ 12–18</td></tr>
+        <tr><td><b>Capacitor 470 µF</b> 16 V</td><td>Segura o pico de energia do servo</td><td>R$ 2–3</td></tr>
+        <tr><td><b>Fonte 5 V 2 A</b> com cabo USB</td><td>Alimenta o ESP32 e o servo</td><td>R$ 10–20</td></tr>
+        <tr><td><b>Protoboard, jumpers</b></td><td>Ligações sem solda</td><td>R$ 12–20</td></tr>
+        <tr><td><b>Comedouro</b>: garrafa PET, pote, MDF ou caixa, parafusos</td><td>Reservatório, portinhola e base da balança</td><td>R$ 15–40</td></tr>
+        <tr><td><b>Total</b></td><td></td><td><b>R$ 120–200</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler" style="color:var(--mut);font-size:15px">Preços aproximados de loja online brasileira em outubro de 2026, a conferir antes de comprar. A câmera opcional (ESP32-CAM, seção de IA) não entra nesse total.</p>
+  </section>
+
+  <section id="ligacao">
+    <p class="sec">Ligação</p>
+    <h2>O circuito, pino por pino</h2>
+    <figure class="fig">
+      <svg viewBox="0 0 400 600" role="img" aria-label="Diagrama de ligação: GPIO 16 no DT e GPIO 17 no SCK do HX711, GPIO 18 no sinal do servo, GPIO 27 na boia; a célula de carga liga no HX711 por quatro fios">
+        <!-- ESP32 -->
+        <rect x="8" y="20" width="124" height="400" rx="10" fill="var(--card)" stroke="var(--amb)" stroke-width="2"/>
+        <text x="70" y="48" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="18" fill="var(--txt)">ESP32</text>
+        <g font-family="JetBrains Mono,monospace" font-size="15" fill="var(--txt)" text-anchor="end">
+          <text x="122" y="88">3V3</text>
+          <text x="122" y="118">GND</text>
+          <text x="122" y="148">VIN 5V</text>
+          <text x="122" y="198">GPIO 16</text>
+          <text x="122" y="228">GPIO 17</text>
+          <text x="122" y="298">GPIO 18</text>
+          <text x="122" y="378">GPIO 27</text>
+        </g>
+        <!-- sinais -->
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M132 193H206" stroke="var(--sky)"/>
+          <path d="M132 223H206" stroke="var(--ok)"/>
+          <path d="M132 293H206" stroke="var(--warm)"/>
+          <path d="M132 373H206" stroke="var(--amb2)"/>
+        </g>
+        <g fill="var(--amb)"><circle cx="132" cy="193" r="4"/><circle cx="132" cy="223" r="4"/><circle cx="132" cy="293" r="4"/><circle cx="132" cy="373" r="4"/></g>
+        <!-- componentes -->
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="206" y="170" width="186" height="76" rx="10"/>
+          <rect x="206" y="262" width="186" height="76" rx="10"/>
+          <rect x="206" y="350" width="186" height="62" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">
+          <text x="216" y="194">HX711 · DT · SCK</text>
+          <text x="216" y="286">Servo · sinal</text>
+          <text x="216" y="374">Boia · fio 1</text>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--mut)">
+          <text x="216" y="216">VCC 3V3 · GND</text>
+          <text x="216" y="236">DT no 16, SCK no 17</text>
+          <text x="216" y="308">+ no VIN · − no GND</text>
+          <text x="216" y="328">470 µF entre + e −</text>
+          <text x="216" y="398">fio 2 no GND</text>
+        </g>
+        <!-- célula de carga -->
+        <text x="8" y="462" font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)">Célula de carga → HX711 (4 fios)</text>
+        <g fill="var(--bg)" stroke="var(--line)" stroke-width="2">
+          <rect x="8" y="480" width="120" height="108" rx="10"/>
+          <rect x="272" y="480" width="120" height="108" rx="10"/>
+        </g>
+        <g font-family="Sora,sans-serif" font-weight="700" font-size="15" fill="var(--txt)" text-anchor="middle">
+          <text x="68" y="540">Célula</text>
+          <text x="332" y="540">HX711</text>
+        </g>
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <path d="M128 494H272" stroke="var(--bad)"/>
+          <path d="M128 518H272" stroke="var(--mut)"/>
+          <path d="M128 550H272" stroke="var(--txt)"/>
+          <path d="M128 574H272" stroke="var(--ok)"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="15" fill="var(--txt)" text-anchor="middle">
+          <text x="200" y="489">vermelho → E+</text>
+          <text x="200" y="513">preto → E−</text>
+          <text x="200" y="545">branco → A−</text>
+          <text x="200" y="569">verde → A+</text>
+        </g>
+      </svg>
+      <figcaption>O servo puxa um pico de energia quando gira. O capacitor de 470 µF, ligado entre o + e o − do servo (perna mais curta no −), evita que o ESP32 reinicie.</figcaption>
+    </figure>
+    <div class="tabela"><table>
+      <thead><tr><th>Componente</th><th>Pino do componente</th><th>Liga no ESP32</th></tr></thead>
+      <tbody>
+        <tr><td><b>HX711</b></td><td>VCC · GND · DT · SCK</td><td>3V3 · GND · <b>GPIO 16</b> · <b>GPIO 17</b></td></tr>
+        <tr><td><b>Servo MG90S</b></td><td>+ (vermelho) · − (marrom) · sinal (laranja)</td><td>VIN (5 V do USB) · GND · <b>GPIO 18</b></td></tr>
+        <tr><td><b>Boia</b></td><td>fio 1 · fio 2 (tanto faz a ordem)</td><td><b>GPIO 27</b> · GND</td></tr>
+        <tr><td><b>Célula de carga</b></td><td>vermelho · preto · branco · verde</td><td>No HX711: E+ · E− · A− · A+</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Por que a boia não precisa de resistor?</b> O código liga o resistor interno do GPIO 27 (<code>INPUT_PULLUP</code>). Com a boia fechada, o pino lê LOW; aberta, lê HIGH. Os pinos 34 a 39 não têm esse resistor, por isso a boia não vai neles.</div>
+  </section>
+
+  <section id="passos">
+    <p class="sec">Passo a passo</p>
+    <h2>Da garrafa PET ao primeiro aviso</h2>
+    <ol class="passos">
+      <li><b>Prepare a Arduino IDE.</b> Instale a Arduino IDE 2 e, em Gerenciador de Placas, "esp32" (Espressif). Em Bibliotecas, instale "ESP32Servo" (Kevin Harrington) e "HX711" (Bogdan Necula).</li>
+      <li><b>Monte a balança.</b> Parafuse a célula de carga entre duas tábuas: uma ponta presa na base, a outra presa no prato onde fica o pote. A seta gravada na célula aponta para baixo, no sentido do peso.</li>
+      <li><b>Ligue o HX711 e calibre.</b> Grave o código com <code>FATOR = 1.0</code> e o pote vazio no prato. No Monitor Serial (115200) aparece um número grande. Ponha um objeto de peso conhecido (pese na balança de cozinha, por exemplo 200 g) e anote o número. <code>FATOR = número ÷ gramas</code>. Troque no código e grave de novo.</li>
+      <li><b>Monte a portinhola.</b> Corte uma lâmina de plástico ou MDF que tampe a boca da garrafa e prenda no braço do servo. Em 0° fica fechada, em 90° abre.</li>
+      <li><b>Ligue o servo com o capacitor</b> e teste: o servo tem que girar só na hora da refeição. Para testar sem esperar, mude um horário de <code>REFEICOES</code> para a hora atual.</li>
+      <li><b>Ajuste a porção.</b> Encha o reservatório e veja quantos gramas caem em cada abertura. Aumente ou diminua <code>ABRE_MS</code> até chegar na porção que o veterinário indicou.</li>
+      <li><b>Instale a boia</b> no bebedouro, na altura mínima de água, e confira no painel: água baixa aparece como "BAIXA".</li>
+      <li><b>Abra o painel.</b> O Monitor Serial mostra o IP (ex.: 192.168.0.50). Digite no navegador do celular, na mesma rede Wi-Fi.</li>
+    </ol>
+  </section>
+
+  <section id="codigo">
+    <p class="sec">Código</p>
+    <h2>Arduino IDE para ESP32</h2>
+    <p class="ler">Troque o nome e a senha da rede, coloque o seu <code>FATOR</code> e os horários. Ligue o ESP32 sempre com o pote vazio no prato: ele zera a balança ao ligar.</p>
+<pre><code>// Pet automático — ESP32, Arduino IDE
+// Bibliotecas: "ESP32Servo" (Kevin
+// Harrington) e "HX711" (Bogdan Necula)
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;ESP32Servo.h&gt;
+#include &lt;HX711.h&gt;
+#include &lt;time.h&gt;
+
+const char* REDE  = "NOME_DA_REDE";
+const char* SENHA = "SENHA_DA_REDE";
+
+// GPIO 18: sinal do servo (portinhola)
+const int PINO_SERVO = 18;
+// GPIO 16: DT do HX711
+const int PINO_DT = 16;
+// GPIO 17: SCK do HX711
+const int PINO_SCK = 17;
+// GPIO 27: boia (outro fio no GND)
+const int PINO_BOIA = 27;
+
+// Calibração: comece com 1.0
+// FATOR = número lido / gramas do peso
+float FATOR = 1.0;
+
+// horas das refeições (horário de Brasília)
+const int N_REF = 2;
+const int REFEICOES[N_REF] = {7, 18};
+// tempo com a portinhola aberta
+const int ABRE_MS = 600;
+// confere 3 h depois de servir
+const unsigned long CONFERE_MS =
+  3UL * 3600 * 1000;
+// sumiu menos que isso = "não comeu"
+const float MINIMO_G = 10;
+
+Servo porta;
+HX711 balanca;
+WebServer servidor(80);
+float peso = 0, servido = 0;
+float comidoHoje = 0;
+bool jaServiu[N_REF];
+bool aguaOk = true, naoComeu = false;
+bool conferir = false;
+unsigned long horaServiu = 0;
+unsigned long ultimaLeitura = 0;
+int diaAtual = -1, refeicoes = 0;
+
+float lerPeso() {
+  if (!balanca.is_ready()) return peso;
+  // média de 5 leituras
+  return balanca.get_units(5);
+}
+
+void servir() {
+  // abre, espera, fecha
+  porta.write(90);
+  delay(ABRE_MS);
+  porta.write(0);
+  // ração assenta no pote
+  delay(2000);
+  servido = lerPeso();
+  horaServiu = millis();
+  conferir = true;
+  naoComeu = false;
+  refeicoes++;
+}
+
+// /dados: JSON para o painel e para a IA
+void dados() {
+  String j = "{\"peso\":" + String(peso, 0);
+  j += ",\"servido\":" + String(servido, 0);
+  j += ",\"comido_hoje\":" +
+       String(comidoHoje, 0);
+  j += ",\"refeicoes\":" + String(refeicoes);
+  j += ",\"agua_ok\":";
+  j += aguaOk ? "true" : "false";
+  j += ",\"nao_comeu\":";
+  j += naoComeu ? "true" : "false";
+  j += "}";
+  servidor.send(200, "application/json", j);
+}
+
+// /: página que abre no celular (5 em 5 s)
+void painel() {
+  String h = "&lt;meta name=viewport "
+    "content='width=device-width'&gt;"
+    "&lt;meta http-equiv=refresh content=5&gt;";
+  h += "&lt;h2&gt;Comedouro&lt;/h2&gt;&lt;p&gt;No pote: ";
+  h += String(peso, 0) + " g";
+  h += "&lt;br&gt;Comeu hoje: ";
+  h += String(comidoHoje, 0) + " g";
+  h += "&lt;br&gt;Água: ";
+  h += aguaOk ? "ok" : "BAIXA";
+  if (naoComeu) h += "&lt;br&gt;&lt;b&gt;NÃO COMEU&lt;/b&gt;";
+  h += "&lt;/p&gt;";
+  servidor.send(200, "text/html", h);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PINO_BOIA, INPUT_PULLUP);
+  porta.setPeriodHertz(50);
+  porta.attach(PINO_SERVO, 500, 2400);
+  // começa fechada
+  porta.write(0);
+  balanca.begin(PINO_DT, PINO_SCK);
+  balanca.set_scale(FATOR);
+  // zera com o pote vazio no prato
+  balanca.tare();
+  WiFi.begin(REDE, SENHA);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  // relógio pela internet, fuso -3 h
+  configTime(-3 * 3600, 0, "pool.ntp.org");
+  Serial.print("\nPainel em http://");
+  Serial.println(WiFi.localIP());
+  servidor.on("/", painel);
+  servidor.on("/dados", dados);
+  servidor.begin();
+}
+
+void loop() {
+  servidor.handleClient();
+  if (millis() - ultimaLeitura &lt; 2000) return;
+  ultimaLeitura = millis();
+  peso = lerPeso();
+  // boia fechada (LOW) = água no nível
+  aguaOk = digitalRead(PINO_BOIA) == LOW;
+  Serial.printf("peso=%.1f agua=%d\n",
+                peso, aguaOk);
+
+  struct tm t;
+  if (!getLocalTime(&amp;t, 10)) return;
+  // virou o dia: zera a contagem
+  if (t.tm_yday != diaAtual) {
+    diaAtual = t.tm_yday;
+    comidoHoje = 0;
+    refeicoes = 0;
+    for (int i = 0; i &lt; N_REF; i++)
+      jaServiu[i] = false;
+  }
+  for (int i = 0; i &lt; N_REF; i++) {
+    if (t.tm_hour == REFEICOES[i] &amp;&amp;
+        !jaServiu[i]) {
+      jaServiu[i] = true;
+      servir();
+    }
+  }
+  bool passou =
+    millis() - horaServiu &gt; CONFERE_MS;
+  if (conferir &amp;&amp; passou) {
+    conferir = false;
+    float comeu = servido - peso;
+    if (comeu &gt; 0) comidoHoje += comeu;
+    naoComeu = comeu &lt; MINIMO_G;
+  }
+}</code></pre>
+  </section>
+
+  <section id="ia">
+    <p class="sec">A camada de IA</p>
+    <h2>O que a IA faz neste projeto</h2>
+    <div class="grade">
+      <div class="card"><h3>Aviso de "não comeu"</h3><p>A regra simples já está no código. Na versão 2, guarde os gramas de cada dia e peça à IA para comparar com a média: "hoje ele comeu 40% menos que na semana". Mudança de apetite é motivo para ir ao veterinário.</p></div>
+      <div class="card"><h3>Resumo do dia</h3><p>Um script no computador lê os dados do ESP32 e pede a um modelo de IA um resumo curto para mandar ao dono que está viajando.</p></div>
+      <div class="card"><h3>Câmera que reconhece o pet</h3><p>Opcional: uma ESP32-CAM tira foto quando o peso muda. Um modelo de visão diz se foi o gato, o cachorro ou nenhum animal. Com dois pets, você descobre quem comeu.</p></div>
+    </div>
+    <p class="ler">Script de resumo, em Python, rodando no computador na mesma rede:</p>
+<pre><code># resumo.py — roda no computador,
+# na mesma rede do ESP32
+import json, urllib.request
+
+# troque pelo IP do seu ESP32
+URL = "http://192.168.0.50/dados"
+dados = json.load(urllib.request.urlopen(URL))
+prompt = (
+    "Você ajuda a cuidar de um gato. "
+    "Dados do comedouro hoje: "
+    + json.dumps(dados) + ". "
+    "peso = gramas no pote agora, "
+    "servido = gramas logo após servir, "
+    "comido_hoje = gramas comidas no dia, "
+    "agua_ok = bebedouro com água. "
+    "Escreva em português, em até 3 frases, "
+    "um resumo para o dono que está viajando."
+)
+print(prompt)
+# Mande o prompt ao modelo que você usa:
+# - cole no chat do serviço de IA; ou
+# - use a biblioteca oficial do serviço,
+#   com a SUA chave numa variável de
+#   ambiente (nunca escrita no código); ou
+# - rode um modelo local no PC, sem chave.</code></pre>
+    <div class="alerta"><b>Chave de IA é como senha.</b> Nunca escreva a chave dentro do código do ESP32 nem em arquivo que vai para o GitHub. Guarde numa variável de ambiente do computador e siga a documentação do serviço que você escolheu.</div>
+    <div class="alerta"><b>Câmera tem regra.</b> Aponte a câmera só para o comedouro, de cima para baixo, sem pegar o rosto de quem passa. Avise as pessoas da casa que há câmera, não publique as fotos e apague as que não precisar no fim do dia.</div>
+  </section>
+
+  <section id="teste">
+    <p class="sec">Teste e melhore</p>
+    <h2>Confira antes de deixar o pet com ele</h2>
+    <div class="teste"><b>Checklist</b>
+      <ul>
+        <li>Com o pote vazio, o painel marca perto de 0 g; com o peso conhecido, marca o peso certo (erro de até 5 g).</li>
+        <li>O servo abre e fecha só no horário, e a portinhola fecha de verdade (sem ração escorrendo).</li>
+        <li>Cada abertura solta sempre mais ou menos a mesma porção. Teste 5 vezes e anote.</li>
+        <li>Tirando a ração do pote com a mão, o painel não mostra "NÃO COMEU" na conferência.</li>
+        <li>Tirando a água, aparece "BAIXA" em até 2 segundos.</li>
+        <li>Uma semana inteira com você em casa antes do primeiro feriado.</li>
+      </ul>
+    </div>
+    <div class="tabela"><table>
+      <thead><tr><th>Erro comum</th><th>Causa provável</th><th>Como resolver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Peso negativo ou que sobe sozinho</b></td><td>Balança zerada com o pote cheio, ou célula montada ao contrário</td><td>Ligue com o pote vazio; confira a seta da célula e os parafusos</td></tr>
+        <tr><td><b>Peso sempre 0</b></td><td>DT e SCK trocados, ou fio da célula solto</td><td>DT no GPIO 16, SCK no GPIO 17; confira as 4 cores no HX711</td></tr>
+        <tr><td><b>ESP32 reinicia quando o servo gira</b></td><td>Pico de energia do servo</td><td>Capacitor de 470 µF no servo e fonte de 2 A</td></tr>
+        <tr><td><b>Ração trava na portinhola</b></td><td>Grão grande, boca estreita ou abertura curta</td><td>Boca mais larga, rampa inclinada, aumente <code>ABRE_MS</code></td></tr>
+        <tr><td><b>Serve na hora errada</b></td><td>Fuso horário ou ESP32 sem internet ao ligar</td><td>Confira o <code>-3 * 3600</code>; o relógio só funciona depois de pegar a hora da internet</td></tr>
+        <tr><td><b>Água "BAIXA" com o pote cheio</b></td><td>Boia montada ao contrário</td><td>Vire a boia ou troque <code>LOW</code> por <code>HIGH</code> na linha da boia</td></tr>
+      </tbody>
+    </table></div>
+    <p class="ler"><b>Caderno de testes.</b> Cada vez que mudar alguma coisa, anote numa linha. A tabela da porção certa para cada ração vira argumento de venda.</p>
+    <div class="tabela"><table>
+      <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>20/10</td><td><b>v1</b></td><td>Abertura de 0,6 s</td><td>Caíram 15 g, pouco para um gato adulto</td></tr>
+        <tr><td>21/10</td><td><b>v2</b></td><td>Abertura de 1,2 s e rampa no funil</td><td>Caíram de 38 g a 44 g em 5 testes</td></tr>
+        <tr><td>…</td><td><b>v3</b></td><td>Comparar o dia com a média da semana</td><td>Anote aqui</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="seguranca">
+    <p class="sec">Segurança</p>
+    <h2>Pet, peça que mexe e fio</h2>
+    <div class="alerta"><b>O pet não pode alcançar fio nem peça móvel.</b> O servo e a portinhola ficam dentro da caixa, longe da pata e do focinho; o pet só alcança o pote. Passe os fios por dentro da caixa ou por um tubo espiral: cachorro e gato roem cabo. Use só a fonte de 5 V pronta, nunca fio de tomada emendado.</div>
+    <div class="alerta"><b>O aparelho não substitui uma pessoa.</b> Ração pode travar e Wi-Fi pode cair. Deixe sempre uma reserva de água, peça a alguém para passar a cada um ou dois dias e não use o comedouro como única fonte de comida em viagem longa.</div>
+  </section>
+
+  <section id="negocio">
+    <p class="sec">Ficha de negócio</p>
+    <h2>Como vender o pet automático</h2>
+    <div class="tabela"><table>
+      <tbody>
+        <tr><td><b>Quem compra</b></td><td>Dono de pet que trabalha fora ou viaja no feriado, pet shop que revende com a marca da loja, hotelzinho e creche de pet (vários comedouros num painel só)</td></tr>
+        <tr><td><b>Custo do kit</b></td><td>R$ 120–200 (lista acima, a conferir)</td></tr>
+        <tr><td><b>Preço sugerido</b></td><td>R$ 300–450 o comedouro montado, calibrado e testado (sugestão)</td></tr>
+        <tr><td><b>Mão de obra</b></td><td>1 hora para instalar, calibrar a porção com a ração do cliente, programar os horários e ensinar o painel</td></tr>
+        <tr><td><b>Assinatura opcional</b></td><td>R$ 10–20 por mês: alertas, resumo da semana e ajuste da porção (sugestão)</td></tr>
+        <tr><td><b>Argumento de economia</b></td><td>Mostre o número: custo da ração por dia = gramas comidas × preço do quilo ÷ 1000. Compare com o preço de uma visita de cuidador no feriado (pergunte o valor na sua cidade)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="dica"><b>Venda para o pet shop.</b> Um pet shop que revende ganha um produto com a marca dele, e você ganha vários clientes de uma vez. Leve um comedouro funcionando e o caderno de testes com as porções medidas.</div>
+  </section>
+
+  <section id="alem">
+    <p class="sec">Para ir além</p>
+    <h2>Próximos passos</h2>
+    <p class="ler">Para entender como um modelo reconhece o pet numa foto, siga o curso <a href="https://inematds.github.io/vla/" target="_blank" rel="noopener">Visão e ação (VLA)</a>. Para controlar servos e sensores com mais precisão, veja <a href="https://inematds.github.io/robot/" target="_blank" rel="noopener">Robótica</a>. Todos os cursos são abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a>.</p>
+    <div class="vizinhas">
+      <a class="btn" href="../">← Todas as soluções</a>
+      <a class="btn" href="../irrigacao/">Irrigação →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec" target="_blank" rel="noopener">INEMA.CLUB</a> · <a href="../">Soluções que vendem</a>
+  </div>
+</footer>
+<script>
+  // botão "Copiar" em cada bloco de código
+  document.querySelectorAll('pre').forEach(function (pre) {
+    var caixa = document.createElement('div'); caixa.className = 'codigo';
+    pre.parentNode.insertBefore(caixa, pre); caixa.appendChild(pre);
+    var b = document.createElement('button'); b.className = 'btn copiar'; b.type = 'button'; b.textContent = 'Copiar';
+    b.onclick = function () {
+      var t = pre.innerText;
+      try { navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copiado'; }, function () { b.textContent = 'Selecione e copie'; }); }
+      catch (e) { b.textContent = 'Selecione e copie'; }
+      setTimeout(function () { b.textContent = 'Copiar'; }, 2000);
+    };
+    caixa.appendChild(b);
+  });
+</script>
+</body>
+</html>

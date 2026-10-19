@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robôs para montar · INEMA</title>
+<meta name="description" content="Três protótipos de robô para você montar, testar e melhorar: robô de papel que anda, assistente de voz com IA e robô vigia. INEMA na MOSTRATEC 2026.">
+<link rel="stylesheet" href="../assets/pagina.css">
+<style>
+.dg{display:block;width:100%;max-width:560px;margin:0 auto;height:auto}
+.dg text{fill:var(--txt);font:500 15px Inter,sans-serif}
+.dg .t{font:700 16px Sora,sans-serif}
+.dg .m{fill:var(--mut);font-size:14px}
+.dg .ac{fill:var(--amb)}
+.dg .b{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.dg .bx{fill:var(--card);stroke:var(--amb);stroke-width:1.5}
+.dg .s{fill:none;stroke:var(--amb);stroke-width:2}
+.dg .l{fill:none;stroke:var(--mut);stroke-width:1.5;stroke-dasharray:5 4}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nivel{font-size:14px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Seção Robôs para montar">
+    <a href="./" aria-current="page">Robôs para montar</a>
+    <a href="robo-de-papel/">Robô de papel</a>
+    <a href="assistente-de-voz/">Assistente de voz</a>
+    <a href="robo-vigia/">Robô vigia</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">MOSTRATEC 2026 · Robôs para montar</span>
+  <h1>Três robôs para você <em>montar, testar e melhorar</em></h1>
+  <p class="lead">Aqui estão três protótipos explicados do começo ao fim: um <b>robô de papel que anda</b>, um <b>assistente de voz com IA</b> e um <b>robô vigia</b> que patrulha sozinho. Nós mostramos como fazer. Você monta, testa, anota o que não deu certo e faz a versão 2.</p>
+  <div class="acoes">
+    <a class="btn pri" href="#robos">Escolher um robô</a>
+    <a class="btn" href="#metodo">Como funciona o método</a>
+  </div>
+</section>
+
+<section id="robos">
+  <p class="sec">Os três robôs</p>
+  <h2>Do papel ao robô com câmera</h2>
+  <p class="ler">Comece pelo que cabe no seu tempo e no seu bolso. O robô de papel custa quase nada e fica pronto numa tarde. Os outros dois usam placa ESP32 ou Raspberry Pi e pedem uma semana de testes.</p>
+  <div class="grade">
+    <a class="card" href="robo-de-papel/">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="8" rx="1"/><path d="M9 11l-2 9M15 11l2 9M3 21h18"/></svg>
+      <h3>Robô de papel que anda</h3>
+      <p>Três mecanismos sem motor: o andarilho de rampa, o corredor da mesa vibratória e o rolador com moeda. Molde com medidas, física explicada e ideia de campeonato na escola.</p>
+      <div class="tags"><span class="tag">papel 180 g</span><span class="tag">física</span><span class="tag">R$ 5–15</span></div>
+      <span class="nivel">Nível: iniciante · 1 tarde</span>
+      <span class="vai">Abrir o robô de papel →</span>
+    </a>
+    <a class="card" href="assistente-de-voz/">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>
+      <h3>Assistente de voz da casa</h3>
+      <p>Você fala, ele entende e responde, tipo Alexa, ligado a um modelo de IA (ChatGPT, Claude, Gemini ou um modelo local). Versão com ESP32-S3 e versão tudo em um no Raspberry Pi.</p>
+      <div class="tags"><span class="tag">ESP32-S3</span><span class="tag">IA</span><span class="tag">R$ 120–900</span></div>
+      <span class="nivel">Nível: intermediário · 1 semana</span>
+      <span class="vai">Abrir o assistente →</span>
+    </a>
+    <a class="card" href="robo-vigia/">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="9" rx="2"/><circle cx="8" cy="19" r="2"/><circle cx="16" cy="19" r="2"/><rect x="9" y="3" width="6" height="5" rx="1"/><circle cx="12" cy="5.5" r="1"/></svg>
+      <h3>Robô vigia</h3>
+      <p>Percorre sempre o mesmo circuito, desvia de obstáculos e volta para a rota. A câmera procura pessoa desconhecida na área e manda um alerta, sem reconhecimento facial.</p>
+      <div class="tags"><span class="tag">ESP32</span><span class="tag">visão local</span><span class="tag">R$ 200–300</span></div>
+      <span class="nivel">Nível: intermediário · 1–2 semanas</span>
+      <span class="vai">Abrir o robô vigia →</span>
+    </a>
+  </div>
+  <p class="dica"><b>São protótipos teóricos.</b> As páginas trazem o desenho, a física, as peças e o código para você começar. Nenhuma versão 1 sai perfeita, e é aí que o projeto fica bom: o que falhou vira a próxima melhoria.</p>
+</section>
+
+<section id="metodo">
+  <p class="sec">O método</p>
+  <h2>Monte, teste, <em>melhore</em></h2>
+  <p class="ler">Todo engenheiro trabalha assim. Você monta a versão 1, testa com uma medida clara (quantos centímetros andou, quantos segundos levou, quantas vezes acertou), anota o resultado e muda <b>uma coisa só</b> antes da próxima volta. Mudando uma coisa por vez, você sabe o que causou a melhora.</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 360 380" role="img" aria-labelledby="ciclo-t">
+      <title id="ciclo-t">Ciclo monte, teste, registre e melhore, voltando para a versão seguinte</title>
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ac" d="M0 0L10 5L0 10z"/></marker></defs>
+      <circle cx="180" cy="190" r="118" class="l"/>
+      <rect x="110" y="20" width="140" height="62" rx="12" class="bx"/>
+      <text x="180" y="47" text-anchor="middle" class="t">1. Monte</text>
+      <text x="180" y="68" text-anchor="middle" class="m">versão 1</text>
+      <rect x="226" y="160" width="128" height="62" rx="12" class="bx"/>
+      <text x="290" y="187" text-anchor="middle" class="t">2. Teste</text>
+      <text x="290" y="208" text-anchor="middle" class="m">meça um número</text>
+      <rect x="110" y="298" width="140" height="62" rx="12" class="bx"/>
+      <text x="180" y="325" text-anchor="middle" class="t">3. Registre</text>
+      <text x="180" y="346" text-anchor="middle" class="m">caderno de testes</text>
+      <rect x="6" y="160" width="128" height="62" rx="12" class="bx"/>
+      <text x="70" y="187" text-anchor="middle" class="t">4. Melhore</text>
+      <text x="70" y="208" text-anchor="middle" class="m">mude 1 coisa</text>
+      <path class="s" d="M252 74 Q292 104 294 152" marker-end="url(#ar)"/>
+      <path class="s" d="M294 230 Q290 280 256 310" marker-end="url(#ar)"/>
+      <path class="s" d="M106 310 Q72 284 68 230" marker-end="url(#ar)"/>
+      <path class="s" d="M68 152 Q70 102 106 72" marker-end="url(#ar)"/>
+      <text x="180" y="184" text-anchor="middle" class="t ac">versão 2,</text>
+      <text x="180" y="206" text-anchor="middle" class="t ac">versão 3…</text>
+    </svg>
+    <figcaption>Cada volta no ciclo gera uma nova versão. O caderno de testes guarda o caminho que você fez, e ele é a melhor parte da apresentação na feira.</figcaption>
+  </figure>
+  <ol class="passos">
+    <li><b>Monte a versão 1</b> exatamente como a página mostra. Não tente melhorar antes de testar.</li>
+    <li><b>Teste com um número.</b> "Andou bem" não serve. "Andou 42 cm em 10 s" serve. Repita 3 vezes e use a média.</li>
+    <li><b>Registre</b> no caderno: o que você mudou, o resultado e o que suspeita que atrapalhou.</li>
+    <li><b>Melhore uma coisa só</b> (o ângulo da perna, o peso, o código de uma função) e volte ao passo 2.</li>
+  </ol>
+</section>
+
+<section id="caderno">
+  <p class="sec">Caderno de testes</p>
+  <h2>O modelo para copiar</h2>
+  <p class="ler">Use um caderno de papel, uma planilha ou um arquivo de texto no repositório do projeto. O formato é o mesmo para os três robôs. A primeira linha abaixo é um exemplo preenchido.</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th><th>Resultado (número)</th><th>Próximo ajuste</th></tr></thead>
+    <tbody>
+      <tr><td><b>18/10</b></td><td>v1</td><td>Molde original, pernas a 15°</td><td>Andou 12 cm em 10 s, girou para a esquerda</td><td>Conferir se as pernas da esquerda estão mais curtas</td></tr>
+      <tr><td><b>19/10</b></td><td>v2</td><td>Pernas igualadas, ângulo 15°</td><td>Andou 31 cm em 10 s, reto</td><td>Testar ângulo 25°</td></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p class="teste"><b>Dica de feira:</b> leve o caderno para a apresentação. Banca de avaliação gosta de ver o erro da versão 1 e como você chegou à versão 3. Foto ou vídeo curto de cada teste ajuda a provar o resultado.</p>
+</section>
+
+<section id="cursos">
+  <p class="sec">Para ir além</p>
+  <h2>Cursos abertos do <span class="clube">INEMA.CLUB</span></h2>
+  <p class="ler">Gostou de robótica? Estes cursos são gratuitos e continuam de onde estas páginas param.</p>
+  <div class="grade">
+    <a class="card" href="https://inematds.github.io/robotica-so101/guia/">
+      <h3>Braço robótico SO-101</h3>
+      <p>O braço que você vê funcionando no estande. O guia mostra o gêmeo de simulação dele: pegar e soltar objetos na física antes de mexer no braço real.</p>
+      <span class="vai">Abrir o guia →</span>
+    </a>
+    <a class="card" href="https://inematds.github.io/robot/">
+      <h3>Robótica do Zero ao Expert</h3>
+      <p>Do primeiro LED no ESP32 ao rover que desvia de obstáculos, seguidor de linha com PID, YOLO, voz local e robô assistente.</p>
+      <span class="vai">Abrir o curso →</span>
+    </a>
+    <a class="card" href="https://inematds.github.io/HG1/">
+      <h3>Academia de Humanoides</h3>
+      <p>Robôs humanoides do zero ao avançado: corpo, equilíbrio, sensores e controle.</p>
+      <span class="vai">Abrir o curso →</span>
+    </a>
+    <a class="card" href="https://inematds.github.io/vla/">
+      <h3>VLA: visão, linguagem e ação</h3>
+      <p>Os modelos que olham pela câmera, entendem uma ordem em texto e movem o robô.</p>
+      <span class="vai">Abrir o curso →</span>
+    </a>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 30 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="./">Robôs para montar</a>
+</div></footer>
+</body>
+</html>
