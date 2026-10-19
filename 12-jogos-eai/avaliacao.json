@@ -34,5 +34,8 @@
  },
  "quebra-cabecas-logica": {
   "revisao": "menu em 1 coluna no celular (19/10)"
+ },
+ "P6": {
+  "revisao": "v1.2.0 (19/10): leitor e editores funcionam no celular, tela de Fim, erro React corrigido; relatório REVISAO-2026-10.md no repo"
  }
 }

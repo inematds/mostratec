@@ -175,7 +175,8 @@ function cartaoProj(p) {
       <p>${esc(p.descricao)}</p>
       <div class="obs">${esc(p.nota)}</div>
       ${p.obs ? `<div class="obs">${esc(p.obs)}</div>` : ""}
-      <div class="selos"><span class="selo">${esc(p.datas)}</span>${ra ? `<span class="selo rv">${ra}</span>` : ""}</div>
+      ${p.revisao ? `<div class="obs">Revisão: ${esc(p.revisao)}</div>` : ""}
+      <div class="selos"><span class="selo">${esc(p.datas)}</span>${p.revisao ? `<span class="selo rv">revisado</span>` : ""}${ra ? `<span class="selo rv">${ra}</span>` : ""}</div>
     </div>
   </a>`;
 }
