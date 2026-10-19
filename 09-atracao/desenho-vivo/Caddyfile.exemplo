@@ -1,0 +1,11 @@
+# /etc/caddy/Caddyfile — troque o domínio (sugestão: desenho.inema.pro)
+desenho.inema.pro {
+	encode gzip
+	request_body {
+		max_size 12MB
+	}
+	reverse_proxy 127.0.0.1:8000
+	log {
+		output discard
+	}
+}

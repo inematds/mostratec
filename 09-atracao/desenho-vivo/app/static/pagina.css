@@ -1,0 +1,90 @@
+/* Estilo comum das páginas de orientação da MOSTRATEC (INEMA, linha guia "dark âmbar").
+   Tokens do ~/projetos/inema-design/DESIGN.md §2. Não usar cor solta: só as variáveis. */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+
+:root{
+  --bg:#0c0c10; --bg2:#14141b; --card:#16161e; --line:#272730;
+  --txt:#e9e9ee; --mut:#9a9aa6; --amb:#FACC15; --amb-ink:#1a1206; --amb2:#f0c070;
+  --sky:#38bdf8; --ok:#7CE0C6; --warm:#F2B45C; --bad:#F0918A;
+  --max:1160px; --ler:70ch;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 Inter,system-ui,sans-serif}
+a{color:var(--amb)} a:hover{color:var(--amb2)}
+img,svg{max-width:100%;height:auto}
+h1,h2,h3,h4,.nav,.btn,.chip{font-family:Sora,Inter,sans-serif}
+h1{font-size:clamp(32px,5vw,54px);line-height:1.06;letter-spacing:-.02em;margin:0 0 14px;font-weight:800}
+h1 em,h2 em{font-style:normal;color:var(--amb)}
+h2{font-size:clamp(24px,3.2vw,34px);line-height:1.15;letter-spacing:-.015em;margin:0 0 12px}
+h3{font-size:19px;line-height:1.3;margin:0 0 8px}
+p{margin:0 0 14px}
+.wrap{width:min(var(--max),calc(100% - 32px));margin:0 auto}
+.ler{max-width:var(--ler)}
+
+/* topo fixo com a marca */
+.topo{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topo .wrap{display:flex;align-items:center;gap:14px;min-height:56px;flex-wrap:wrap}
+.marca{font-family:Sora;font-weight:800;color:var(--txt);text-decoration:none;letter-spacing:.02em}
+.marca b{color:var(--amb)}
+.nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;font-size:14px}
+.nav a{color:var(--mut);text-decoration:none;padding:6px 10px;border-radius:10px}
+.nav a:hover,.nav a[aria-current]{color:var(--txt);background:var(--bg2)}
+
+/* hero */
+.hero{padding:44px 0 26px}
+.chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amb);border:1px solid color-mix(in srgb,var(--amb) 45%,transparent);border-radius:999px;padding:4px 12px;margin-bottom:14px}
+.lead{font-size:18px;color:var(--mut);max-width:var(--ler)}
+.lead b{color:var(--txt)}
+.acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-weight:700;font-size:15px;text-decoration:none}
+.btn:hover{border-color:var(--amb);color:var(--txt)}
+.btn.pri{background:var(--amb);border-color:var(--amb);color:var(--amb-ink)}
+.btn.pri:hover{filter:brightness(1.06);color:var(--amb-ink)}
+
+/* seções e cartões */
+section{padding:42px 0 6px}
+.sec{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amb);margin:0 0 8px;font-family:Sora}
+.grade{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+a.card{color:inherit;text-decoration:none} a.card:hover{border-color:var(--amb)}
+.card p{color:var(--mut);margin:0;font-size:15px}
+.card .vai{margin-top:auto;padding-top:8px;color:var(--amb);font-weight:700;font-size:14px}
+.card .ico{width:34px;height:34px;color:var(--amb)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font-size:12px;font-weight:600;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+
+/* figura / diagrama SVG */
+.fig{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;margin:10px 0 18px}
+.fig figcaption{color:var(--mut);font-size:14px;margin-top:10px}
+
+/* passos numerados */
+ol.passos{list-style:none;counter-reset:p;padding:0;margin:0 0 18px;max-width:var(--ler)}
+ol.passos>li{counter-increment:p;position:relative;padding:0 0 16px 52px}
+ol.passos>li::before{content:counter(p);position:absolute;left:0;top:0;width:36px;height:36px;border-radius:12px;background:var(--amb);color:var(--amb-ink);font:800 16px/36px Sora;text-align:center}
+ol.passos>li b{color:var(--txt)}
+
+/* tabela */
+.tabela{overflow-x:auto;border:1px solid var(--line);border-radius:14px;margin:8px 0 18px}
+table{width:100%;border-collapse:collapse;font-size:15px;min-width:520px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+thead th{border-top:0;background:var(--bg2);font:700 12px Sora;letter-spacing:.08em;text-transform:uppercase;color:var(--amb)}
+td{color:var(--mut)} td b{color:var(--txt)}
+
+/* caixas */
+.dica,.alerta,.teste{border-radius:12px;padding:14px 16px;margin:12px 0 18px;max-width:var(--ler);font-size:15px}
+.dica{background:var(--bg2);border-left:3px solid var(--amb)}
+.alerta{background:color-mix(in srgb,var(--bad) 10%,var(--bg));border-left:3px solid var(--bad)}
+.alerta b:first-child{color:var(--bad)}
+.teste{background:var(--card);border:1px dashed var(--line)}
+code,pre{font-family:"JetBrains Mono",monospace;font-size:14px}
+pre{background:#08080b;border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;line-height:1.5}
+:not(pre)>code{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+
+/* rodapé */
+footer{margin-top:56px;border-top:1px solid var(--line);padding:22px 0 40px;color:var(--mut);font-size:14px}
+footer a{color:var(--sky)}
+.clube{color:var(--sky);font-weight:700}
+
+@media(max-width:640px){.nav{margin-left:0;font-size:13px}.hero{padding-top:28px}.lead{font-size:17px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}

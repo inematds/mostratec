@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desenho que ganha vida</title>
+<meta name="description" content="Fotografe o seu desenho e veja o personagem andar, pular e dançar na TV do estande INEMA na MOSTRATEC 2026.">
+<link rel="stylesheet" href="/static/pagina.css">
+<style>
+  [hidden]{display:none!important}
+  .form{display:grid;gap:16px;max-width:520px}
+  .foto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;border:2px dashed var(--line);border-radius:14px;background:var(--card);color:var(--mut);text-align:center;padding:16px;cursor:pointer}
+  .foto svg{width:40px;height:40px;color:var(--amb)}
+  .foto img{max-height:260px;border-radius:10px}
+  .foto input{position:absolute;width:1px;height:1px;opacity:0}
+  label.campo{display:grid;gap:6px;font-weight:600}
+  label.campo small{font-weight:400;color:var(--mut)}
+  input[type=text]{min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);padding:0 12px;font:inherit}
+  .aceite{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+  .aceite input{width:22px;height:22px;margin-top:2px;accent-color:var(--amb)}
+  .btn[disabled]{opacity:.5}
+  #msg{min-height:24px;color:var(--bad)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap"><a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a><nav class="nav"><a href="/" aria-current="page">Enviar desenho</a></nav></div></header>
+<main class="wrap">
+  <section class="hero">
+    <span class="chip">MOSTRATEC 2026 · estande INEMA</span>
+    <h1>Seu desenho <em>ganha vida</em></h1>
+    <p class="lead">Desenhe um personagem com braços e pernas, tire uma foto <b>só do papel</b> e mande aqui. Em menos de um minuto ele aparece andando, pulando e dançando na TV do estande e neste celular.</p>
+  </section>
+
+  <div class="alerta"><b>Antes de enviar:</b> o desenho aparece <b>em público, na TV do estande</b>, depois que a equipe aprova. Não escreva seu nome no papel e não fotografe pessoas. Tudo é <b>apagado no fim do dia</b> (no máximo em 24 horas). Não pedimos nome, e-mail nem telefone.</div>
+
+  <form class="form" id="form">
+    <label class="foto" id="area">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      <span id="rotulo"><b>Toque para fotografar o desenho</b><br>folha inteira, de cima, com boa luz</span>
+      <input type="file" name="foto" id="foto" accept="image/jpeg,image/png,image/webp" capture="environment" required>
+    </label>
+    <label class="campo">Apelido (opcional)
+      <input type="text" name="apelido" maxlength="20" autocomplete="off" placeholder="ex.: Robô Trovão">
+      <small>Aparece embaixo do desenho na TV. Use um apelido, nunca seu nome completo.</small>
+    </label>
+    <label class="aceite"><input type="checkbox" name="aceite" value="1" required> Entendi que o desenho aparece na TV do estande e é apagado no fim do dia.</label>
+    <button class="btn pri" id="enviar" type="submit">Enviar desenho</button>
+    <p id="msg" role="status"></p>
+  </form>
+
+  <section>
+    <p class="sec">Dicas</p>
+    <h2>Para dar certo</h2>
+    <ol class="passos">
+      <li><b>Corpo inteiro e tudo ligado.</b> De frente, como um boneco em pé, com braços e pernas afastados do corpo. A cabeça, os braços e as pernas encostam no corpo: parte solta pode sumir na animação.</li>
+      <li><b>Traço forte.</b> Canetinha escura no contorno. Lápis fraco some na foto.</li>
+      <li><b>Só o papel.</b> Folha branca, sem outros desenhos em volta, foto de cima.</li>
+    </ol>
+  </section>
+</main>
+<footer><div class="wrap">INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a href="https://inema.club/?src=mostratec">INEMA.CLUB</a></div></footer>
+<script>
+const f = document.getElementById('form'), inp = document.getElementById('foto'), msg = document.getElementById('msg');
+const MAX = 10 * 1024 * 1024;
+inp.addEventListener('change', () => {
+  const a = inp.files[0]; if (!a) return;
+  const r = document.getElementById('rotulo');
+  const img = document.createElement('img'); img.alt = 'Prévia do desenho'; img.src = URL.createObjectURL(a);
+  r.replaceChildren(img, Object.assign(document.createElement('span'), {textContent: 'Toque para trocar a foto'}));
+});
+f.addEventListener('submit', async (e) => {
+  e.preventDefault(); msg.textContent = '';
+  const a = inp.files[0];
+  if (!a) { msg.textContent = 'Escolha a foto do desenho.'; return; }
+  if (a.size > MAX) { msg.textContent = 'Foto grande demais (máximo 10 MB).'; return; }
+  const b = document.getElementById('enviar'); b.disabled = true; b.textContent = 'Enviando...';
+  try {
+    const r = await fetch('/api/enviar', {method: 'POST', body: new FormData(f)});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.erro || 'Não deu certo. Tente de novo.');
+    location.href = j.url;
+  } catch (err) {
+    msg.textContent = err.message; b.disabled = false; b.textContent = 'Enviar desenho';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+"""Teste de ponta a ponta do Desenho Vivo.
+
+Sobe o servidor de verdade (uvicorn) numa porta livre com uma pasta de dados
+temporária, gera uma foto de desenho, envia, confere que nada vai para a TV antes da
+aprovação, aprova como operador e confere que os GIFs animados saem.
+
+Uso:
+  python tests/test_e2e.py                 # motor leve
+  MOTOR=ad MOTOR_AD_URL=http://127.0.0.1:5000 python tests/test_e2e.py
+  URL_BASE=http://127.0.0.1:8000 OPERADOR_SENHA=... python tests/test_e2e.py  # contra um serviço já no ar (ex.: docker compose)
+Também roda com pytest.
+"""
+from __future__ import annotations
+
+import io
+import json
+import os
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+import httpx
+from PIL import Image
+
+AQUI = Path(__file__).resolve().parent
+RAIZ = AQUI.parent
+sys.path.insert(0, str(AQUI))
+from gerar_desenho import salvar  # noqa: E402
+
+
+def porta_livre() -> int:
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
+
+def esperar(cond, segundos, passo=0.5, msg="tempo esgotado"):
+    fim = time.time() + segundos
+    while time.time() < fim:
+        v = cond()
+        if v:
+            return v
+        time.sleep(passo)
+    raise AssertionError(msg)
+
+
+def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
+    tmp = Path(tempfile.mkdtemp())
+    foto = tmp / "desenho.jpg"
+    salvar(str(foto))
+    c = httpx.Client(base_url=base, timeout=30)
+    op = httpx.BasicAuth("operador", senha)
+    res = {}
+
+    # páginas públicas e proteção do operador
+    for p in ("/", "/tv", "/qr.png", "/saude"):
+        assert c.get(p).status_code == 200, p
+    assert c.get("/operador").status_code == 401
+    assert c.get("/api/operador/fila", auth=httpx.BasicAuth("operador", "errada")).status_code == 401
+
+    # rejeições
+    r = c.post("/api/enviar", files={"foto": ("x.jpg", b"isto nao e imagem", "image/jpeg")}, data={"aceite": "1"})
+    assert r.status_code == 415, r.text
+    r = c.post("/api/enviar", files={"foto": ("x.jpg", foto.read_bytes(), "image/jpeg")})
+    assert r.status_code == 400, "sem aceite deveria recusar"
+    grande = b"\xff\xd8" + os.urandom(11 * 1024 * 1024)
+    r = c.post("/api/enviar", files={"foto": ("g.jpg", grande, "image/jpeg")}, data={"aceite": "1"})
+    assert r.status_code == 413, r.status_code
+
+    # envio
+    t0 = time.time()
+    r = c.post("/api/enviar", files={"foto": ("desenho.jpg", foto.read_bytes(), "image/jpeg")},
+               data={"aceite": "1", "apelido": "Robô <b>Trovão</b> com nome muito comprido"})
+    assert r.status_code == 200, r.text
+    i = r.json()["id"]
+    st = esperar(lambda: (lambda j: j if j["estado"] != "processando" else None)(c.get(f"/api/d/{i}").json()),
+                 400 if motor == "ad" else 60, msg="processamento não terminou")
+    res["tempo_processamento_s"] = round(time.time() - t0, 2)
+    assert st["estado"] == "aguardando", st
+    assert "gifs" not in st
+
+    # antes de aprovar: nada público
+    assert c.get("/api/tv").json()["itens"] == []
+    assert c.get(f"/arquivos/{i}/andar.gif").status_code == 404
+
+    fila = c.get("/api/operador/fila", auth=op).json()
+    item = next(x for x in fila["itens"] if x["id"] == i)
+    res["motor_usado"] = item["motor"]
+    res["tempo_servidor_s"] = item["tempo_s"]
+    res["tempos_ad"] = item.get("tempos_ad")
+    res["aviso"] = item.get("aviso")
+    assert "<" not in item["apelido"] and 0 < len(item["apelido"]) <= 20, item["apelido"]
+    if motor == "ad":
+        assert item["motor"] == "ad", f"esperava motor ad, veio {item['motor']} ({item.get('aviso')})"
+
+    # foto guardada sem EXIF (o original tinha GPS)
+    fj = c.get(f"/operador/arquivo/{i}/foto.jpg", auth=op)
+    assert fj.status_code == 200
+    assert len(Image.open(io.BytesIO(fj.content)).getexif()) == 0, "EXIF/GPS não foi removido"
+
+    # aprova
+    assert c.post(f"/api/operador/{i}/aprovar", auth=op).status_code == 200
+    st = c.get(f"/api/d/{i}").json()
+    assert st["estado"] == "aprovado" and st["gifs"], st
+    tv = c.get("/api/tv").json()
+    assert [x["id"] for x in tv["itens"]] == [i]
+    res["gifs"] = {}
+    for mv, url in st["gifs"].items():
+        g = c.get(url)
+        assert g.status_code == 200 and g.headers["content-type"] == "image/gif", (mv, g.status_code)
+        im = Image.open(io.BytesIO(g.content))
+        assert im.n_frames >= 10, f"{mv}: só {im.n_frames} quadros"
+        assert len(g.content) > 20_000, f"{mv}: GIF pequeno demais"
+        res["gifs"][mv] = {"bytes": len(g.content), "quadros": im.n_frames, "tamanho": im.size}
+    assert {"andar", "pular", "dancar"} <= set(res["gifs"]), res["gifs"].keys()
+
+    # tirar da TV
+    assert c.post(f"/api/operador/{i}/retirar", auth=op).status_code == 200
+    assert c.get("/api/tv").json()["itens"] == []
+    assert c.get(f"/arquivos/{i}/andar.gif").status_code == 404
+
+    # papel em branco: deve dar "erro" (sem personagem), não travar
+    branco = io.BytesIO()
+    Image.new("RGB", (900, 1200), (240, 240, 235)).save(branco, "JPEG")
+    r = c.post("/api/enviar", files={"foto": ("b.jpg", branco.getvalue(), "image/jpeg")}, data={"aceite": "1"})
+    j2 = r.json()["id"]
+    st2 = esperar(lambda: (lambda j: j if j["estado"] != "processando" else None)(c.get(f"/api/d/{j2}").json()),
+                  400 if motor == "ad" else 60)
+    assert st2["estado"] == "erro", st2
+
+    # limpeza (só quando a pasta de dados é local)
+    if dados is not None:
+        meta = dados / i / "meta.json"
+        m = json.loads(meta.read_text())
+        m["criado"] -= 25 * 3600
+        meta.write_text(json.dumps(m))
+        sys.path.insert(0, str(RAIZ / "app"))
+        os.environ["DADOS"] = str(dados)
+        os.environ.setdefault("OPERADOR_SENHA", senha)
+        import main  # noqa: PLC0415
+        assert main.limpar_velhos() >= 1
+        assert not (dados / i).exists(), "limpeza de 24 h não apagou"
+        assert (dados / j2).exists(), "limpeza apagou desenho novo"
+        res["limpeza_24h"] = "ok"
+    return res
+
+
+def test_e2e():
+    base = os.environ.get("URL_BASE")
+    motor = os.environ.get("MOTOR", "leve")
+    if base:
+        print(json.dumps(rodar(base, os.environ["OPERADOR_SENHA"], None, motor), ensure_ascii=False, indent=1))
+        return
+    dados = Path(tempfile.mkdtemp(prefix="dv-dados-"))
+    porta = porta_livre()
+    senha = "teste-" + str(porta)
+    env = dict(os.environ, DADOS=str(dados), OPERADOR_SENHA=senha, MOTOR=motor,
+               URL_PUBLICA=f"http://127.0.0.1:{porta}")
+    proc = subprocess.Popen([sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(porta),
+                             "--no-access-log"], cwd=RAIZ / "app", env=env)
+    try:
+        base = f"http://127.0.0.1:{porta}"
+        esperar(lambda: _ok(base), 30, msg="servidor não subiu")
+        res = rodar(base, senha, dados, motor)
+        print(json.dumps(res, ensure_ascii=False, indent=1))
+    finally:
+        proc.terminate()
+        proc.wait(10)
+
+
+def _ok(base):
+    try:
+        return httpx.get(base + "/saude", timeout=2).status_code == 200
+    except httpx.HTTPError:
+        return False
+
+
+if __name__ == "__main__":
+    test_e2e()
+    print("OK: teste de ponta a ponta passou")

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desenho Vivo · operador</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/static/pagina.css">
+<style>
+  [hidden]{display:none!important}
+  .barra{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0}
+  .lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
+  .item.aguardando{border-color:var(--amb)}
+  .vis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .vis img{width:100%;aspect-ratio:1;object-fit:contain;background:#f6f1e3;border-radius:8px}
+  .meta{font-size:13px;color:var(--mut)}
+  .meta b{color:var(--txt)}
+  .estado{font:700 12px Sora;letter-spacing:.1em;text-transform:uppercase}
+  .estado.aguardando{color:var(--amb)} .estado.aprovado{color:var(--ok)} .estado.recusado,.estado.erro,.estado.retirado{color:var(--bad)}
+  .bts{display:flex;flex-wrap:wrap;gap:8px}
+  .bts .btn{min-height:40px;font-size:14px;padding:0 12px}
+  .filtro button[aria-pressed=true]{border-color:var(--amb);color:var(--amb)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap"><a class="marca" href="/operador">INEMA<b>.</b> operador</a><nav class="nav"><a href="/tv" target="_blank">Abrir TV</a><a href="/" target="_blank">Página de envio</a></nav></div></header>
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <span class="chip">Desenho que ganha vida</span>
+    <h1>Fila de aprovação</h1>
+    <p class="lead" id="resumo">Carregando...</p>
+  </section>
+  <div class="barra filtro">
+    <button class="btn" data-f="aguardando" aria-pressed="true">Aguardando</button>
+    <button class="btn" data-f="aprovado" aria-pressed="false">Na TV</button>
+    <button class="btn" data-f="todos" aria-pressed="false">Todos</button>
+    <span style="flex:1"></span>
+    <button class="btn" id="tudo">Apagar tudo agora</button>
+  </div>
+  <div class="dica">Aprove só desenhos de personagem. Recuse foto de pessoa, nome escrito, palavrão ou qualquer coisa que não deva ir para a TV. Na dúvida, recuse.</div>
+  <div class="lista" id="lista"></div>
+</main>
+<script>
+let filtro = 'aguardando';
+const $ = (x) => document.getElementById(x);
+const quando = (t) => new Date(t * 1000).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+async function acao(id, a) {
+  const r = await fetch('/api/operador/' + id + '/' + a, {method: 'POST'});
+  if (!r.ok) alert((await r.json()).erro || 'falhou');
+  carregar();
+}
+function bt(txt, fn, pri) { const b = document.createElement('button'); b.className = 'btn' + (pri ? ' pri' : ''); b.textContent = txt; b.onclick = fn; return b; }
+async function carregar() {
+  const j = await (await fetch('/api/operador/fila', {cache: 'no-store'})).json();
+  const cont = {}; j.itens.forEach(i => cont[i.estado] = (cont[i.estado] || 0) + 1);
+  $('resumo').textContent = `Motor: ${j.motor} · aguardando ${cont.aguardando || 0} · processando ${cont.processando || 0} · na TV ${cont.aprovado || 0} · apaga com ${j.retencao_horas} h` + (j.apagar_tudo_as ? ` e todo dia às ${j.apagar_tudo_as}` : '');
+  const L = $('lista'); L.replaceChildren();
+  for (const i of j.itens.filter(i => filtro === 'todos' || i.estado === filtro)) {
+    const c = document.createElement('article'); c.className = 'item ' + i.estado;
+    const vis = document.createElement('div'); vis.className = 'vis';
+    const f = document.createElement('img'); f.src = i.foto; f.alt = 'foto enviada'; f.loading = 'lazy'; vis.append(f);
+    const g = document.createElement('img'); g.alt = 'animação'; g.src = i.gifs.andar || Object.values(i.gifs)[0] || ''; if (g.src) vis.append(g);
+    const m = document.createElement('div'); m.className = 'meta';
+    const est = document.createElement('div'); est.className = 'estado ' + i.estado; est.textContent = i.estado;
+    const ap = document.createElement('div'); ap.append('Apelido: ', Object.assign(document.createElement('b'), {textContent: i.apelido || '(sem)'}));
+    const inf = document.createElement('div'); inf.textContent = `${quando(i.criado)} · motor ${i.motor || '-'} · ${i.tempo_s ?? '-'} s` + (i.aviso ? ' · ' + i.aviso : '') + (i.erro ? ' · ' + i.erro : '');
+    m.append(est, ap, inf);
+    const bts = document.createElement('div'); bts.className = 'bts';
+    if (['aguardando', 'recusado', 'retirado'].includes(i.estado)) bts.append(bt('Aprovar', () => acao(i.id, 'aprovar'), true));
+    if (i.estado === 'aguardando') bts.append(bt('Recusar', () => acao(i.id, 'recusar')));
+    if (i.estado === 'aprovado') bts.append(bt('Tirar da TV', () => acao(i.id, 'retirar')));
+    if (i.motor === 'ad' || i.estado === 'erro') bts.append(bt('Refazer no leve', () => acao(i.id, 'leve')));
+    bts.append(bt('Apagar', () => confirm('Apagar este desenho?') && acao(i.id, 'apagar')));
+    c.append(vis, m, bts); L.append(c);
+  }
+  if (!L.children.length) L.append(Object.assign(document.createElement('p'), {textContent: 'Nada aqui por enquanto.', className: 'meta'}));
+}
+document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+  filtro = b.dataset.f; document.querySelectorAll('[data-f]').forEach(x => x.setAttribute('aria-pressed', x === b)); carregar();
+});
+$('tudo').onclick = async () => { if (confirm('Apagar TODOS os desenhos agora? Não tem volta.')) { await fetch('/api/operador/apagar-tudo', {method: 'POST'}); carregar(); } };
+carregar(); setInterval(carregar, 4000);
+</script>
+</body>
+</html>

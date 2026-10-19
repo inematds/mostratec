@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seu desenho vivo</title>
+<meta name="description" content="Acompanhe o seu desenho animado no estande INEMA na MOSTRATEC 2026.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/static/pagina.css">
+<style>
+  [hidden]{display:none!important}
+  .palco{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:18px 0}
+  .palco figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+  .palco img{width:100%;border-radius:10px;display:block;background:#f6f1e3}
+  .palco figcaption{color:var(--mut);font-size:14px;margin-top:6px}
+  .espera{display:flex;gap:14px;align-items:center;font-size:18px}
+  .roda{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--amb);border-radius:50%;animation:g 1s linear infinite;flex:none}
+  @keyframes g{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap"><a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a><nav class="nav"><a href="/">Enviar outro</a></nav></div></header>
+<main class="wrap">
+  <section class="hero">
+    <span class="chip">Desenho que ganha vida</span>
+    <h1 id="titulo">Recebemos seu desenho</h1>
+    <div class="espera" id="espera"><span class="roda" aria-hidden="true"></span><span id="estado">Dando vida ao personagem...</span></div>
+  </section>
+  <div class="palco" id="palco" hidden></div>
+  <div class="dica" id="dica">Pode deixar esta página aberta. Ela atualiza sozinha. Guarde o link se quiser ver de novo hoje: amanhã ele não existe mais.</div>
+  <div class="acoes"><a class="btn" href="/">Enviar outro desenho</a><a class="btn pri" href="https://inema.club/?src=mostratec">Cursos grátis no INEMA.CLUB</a></div>
+</main>
+<footer><div class="wrap">INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a href="https://inema.club/?src=mostratec">INEMA.CLUB</a> · tudo é apagado no fim do dia</div></footer>
+<script>
+const id = location.pathname.split('/').pop();
+const NOMES = {andar: 'andando', pular: 'pulando', dancar: 'dançando'};
+const $ = (x) => document.getElementById(x);
+let fim = false;
+async function ver() {
+  try {
+    const r = await fetch('/api/d/' + encodeURIComponent(id), {cache: 'no-store'});
+    const j = await r.json();
+    if (!r.ok) { mostrar('Não encontrei este desenho', j.erro || 'Ele pode já ter sido apagado.', true); return; }
+    if (j.estado === 'processando') $('estado').textContent = 'Dando vida ao personagem...';
+    else if (j.estado === 'aguardando') $('estado').textContent = 'Pronto! A equipe do estande está conferindo' + (j.posicao ? ' (você é o ' + j.posicao + 'º da fila).' : '.');
+    else if (j.estado === 'aprovado') {
+      $('titulo').textContent = j.apelido ? j.apelido + ' ganhou vida' : 'Seu desenho ganhou vida';
+      $('espera').hidden = true;
+      const p = $('palco'); p.hidden = false; p.replaceChildren();
+      for (const [mv, url] of Object.entries(j.gifs || {})) {
+        const fig = document.createElement('figure');
+        const img = document.createElement('img'); img.src = url; img.alt = 'Seu personagem ' + (NOMES[mv] || mv);
+        const cap = document.createElement('figcaption');
+        const a = document.createElement('a'); a.href = url; a.download = 'desenho-' + mv + '.gif'; a.textContent = (NOMES[mv] || mv) + ' · baixar';
+        cap.append(a); fig.append(img, cap); p.append(fig);
+      }
+      $('dica').textContent = 'Olhe para a TV do estande: seu personagem está lá. Para guardar, toque em "baixar" (o link some no fim do dia).';
+      fim = true;
+    } else if (j.estado === 'recusado' || j.estado === 'retirado') mostrar('Esse não foi para a TV', 'A equipe não aprovou este desenho. Que tal fazer outro?', true);
+    else if (j.estado === 'erro') mostrar('Não achei o personagem', 'Tente de novo com traço mais forte, a folha inteira na foto e boa luz.', true);
+  } catch (e) { $('estado').textContent = 'Sem conexão, tentando de novo...'; }
+  if (!fim) setTimeout(ver, 3000);
+}
+function mostrar(t, s, parar) { $('titulo').textContent = t; $('estado').textContent = s; document.querySelector('.roda').hidden = true; if (parar) fim = true; }
+ver();
+</script>
+</body>
+</html>

@@ -5,6 +5,9 @@ Um quiz no celular sozinho não forma fila. Fila se forma quando: (1) a pessoa *
 ## Propostas
 
 ### A. "Seu desenho ganha vida" (recomendada)
+
+> **Protótipo pronto em [`desenho-vivo/`](desenho-vivo/README.md)** (19/10/2026): roda numa VPS, formulário online, fila do operador, motor leve + Animated Drawings (MIT) plugável, limpeza automática em 24 h. Licença do AD conferida: MIT.
+
 - A pessoa desenha um robô ou personagem no papel, sobre uma mesa com canetinhas.
 - Uma câmera fotografa **o desenho** (não o rosto). Em menos de 1 minuto, o desenho aparece **andando, pulando e acenando** no telão, dentro de uma "cidade do futuro" coletiva que vai enchendo ao longo do dia.
 - Motor: [Animated Drawings](https://github.com/facebookresearch/AnimatedDrawings), código aberto da Meta, roda local na GPU. A licença ainda precisa ser conferida.

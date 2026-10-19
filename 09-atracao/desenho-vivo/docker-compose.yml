@@ -1,0 +1,45 @@
+# Desenho Vivo — "Desenho que ganha vida" (INEMA na MOSTRATEC 2026)
+#
+# Só o motor leve (padrão, roda em qualquer VPS pequena):
+#   OPERADOR_SENHA=... docker compose up -d --build
+# Com o Animated Drawings (precisa de mais CPU/RAM, ver README):
+#   OPERADOR_SENHA=... MOTOR=ad docker compose --profile ad up -d --build
+services:
+  app:
+    build: .
+    image: desenho-vivo-app
+    restart: unless-stopped
+    environment:
+      OPERADOR_SENHA: ${OPERADOR_SENHA:?defina OPERADOR_SENHA}
+      URL_PUBLICA: ${URL_PUBLICA:-http://localhost:8000}
+      MOTOR: ${MOTOR:-leve}
+      MOTOR_AD_URL: http://motor-ad:5000
+      MOTOR_AD_TIMEOUT: ${MOTOR_AD_TIMEOUT:-90}
+      RETENCAO_HORAS: ${RETENCAO_HORAS:-24}
+      APAGAR_TUDO_AS: ${APAGAR_TUDO_AS:-23:30}
+      MAX_MB: ${MAX_MB:-10}
+      TZ: America/Sao_Paulo
+    volumes:
+      - dados:/dados
+    ports:
+      - "127.0.0.1:${PORTA:-8000}:8000"   # só localhost: o Caddy é quem fala com a internet
+    mem_limit: 1g
+    cpus: 2
+
+  motor-ad:
+    profiles: ["ad"]
+    build:
+      context: ./motor-ad
+      args:
+        MAX_JOBS: ${MAX_JOBS:-4}   # VPS com 4 GB: MAX_JOBS=2 (compilação do mmcv)
+    image: desenho-vivo-motor-ad
+    restart: unless-stopped
+    mem_limit: ${MOTOR_AD_MEM:-6g}
+    cpus: ${MOTOR_AD_CPUS:-4}
+    environment:
+      TS_THREADS: ${MOTOR_AD_CPUS:-4}
+      RENDER_PARALELO: ${RENDER_PARALELO:-3}   # VPS de 4 GB: 1 (menos memória, mais lento)
+    # sem "ports": só o app fala com ele, pela rede interna do compose
+
+volumes:
+  dados:
