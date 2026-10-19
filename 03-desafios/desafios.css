@@ -1,0 +1,63 @@
+/* Desafios para quem é bom: complemento do ../assets/pagina.css. Só variáveis, nada de cor solta. */
+section{scroll-margin-top:70px}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nivel{font-size:14px;color:var(--mut)}
+.estrelas{color:var(--amb);letter-spacing:.1em}
+
+/* diagramas */
+.dg{display:block;width:100%;max-width:560px;margin:0 auto;height:auto}
+.dg text{fill:var(--txt);font:500 15px Inter,sans-serif}
+.dg .t{font:700 16px Sora,sans-serif}
+.dg .m{fill:var(--mut);font-size:14px}
+.dg .ac{fill:var(--amb)}
+.dg .b{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.dg .bx{fill:var(--card);stroke:var(--amb);stroke-width:1.5}
+.dg .s{fill:none;stroke:var(--amb);stroke-width:2}
+.dg .g{fill:none;stroke:var(--txt);stroke-width:7;stroke-linecap:round}
+.dg .l{fill:none;stroke:var(--mut);stroke-width:1.5;stroke-dasharray:5 4}
+.dg .j{fill:var(--bg);stroke:var(--amb);stroke-width:2}
+.dg .mesa{stroke:var(--mut);stroke-width:2}
+
+/* enunciado */
+.enun{max-width:var(--ler)}
+.regras{max-width:var(--ler);padding-left:20px}
+.regras li{margin-bottom:6px}
+.cartas{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));max-width:860px;margin:8px 0 18px}
+.carta{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--mut)}
+.carta .let{flex:none;width:32px;height:32px;border-radius:10px;background:var(--amb);color:var(--amb-ink);font:800 16px/32px Sora;text-align:center}
+
+/* formulário de resposta */
+.resolver{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:var(--ler)}
+.resolver.acertou{border-color:var(--ok)}
+.campos{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:16px}
+.campos label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--mut);font-weight:600}
+.campos input{font:600 18px "JetBrains Mono",monospace;color:var(--txt);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:48px;width:100%}
+.campos input:focus{outline:2px solid var(--amb);outline-offset:1px;border-color:var(--amb)}
+.resolver .btn{cursor:pointer}
+.retorno{margin:14px 0 0;font-weight:600;min-height:1.6em}
+.retorno.ok{color:var(--ok)}
+.retorno.erro{color:var(--bad)}
+.formato{font-size:14px;color:var(--mut);margin:0 0 14px}
+
+/* dicas */
+.dicas{list-style:none;padding:0;margin:0 0 14px;max-width:var(--ler)}
+.dicas li{background:var(--bg2);border-left:3px solid var(--amb);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:15px}
+.dicas li::before{content:"Dica " counter(list-item) " · ";color:var(--amb);font-weight:700;font-family:Sora}
+.mais-dica{cursor:pointer}
+.mais-dica:disabled{opacity:.5;cursor:default}
+
+/* explicação, só depois de acertar */
+#explicacao{border-top:1px solid var(--line);margin-top:30px}
+.exp{max-width:var(--ler)}
+.exp ul{padding-left:20px}
+
+/* lista e placar */
+#placar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;max-width:var(--ler)}
+#placar .num{font:800 22px Sora;color:var(--amb)}
+#placar .barra{flex:1 1 160px;height:8px;background:var(--bg2);border-radius:999px;overflow:hidden}
+#placar .barra i{display:block;height:100%;width:0;background:var(--amb)}
+#placar button{cursor:pointer;min-height:38px;font-size:13px}
+.card.feito{border-color:var(--ok)}
+.card .selo{display:none;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ok)}
+.card.feito .selo{display:inline}
+@media(max-width:640px){table{min-width:0;font-size:14px}th,td{padding:8px 10px}}

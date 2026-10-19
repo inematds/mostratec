@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>O índice traiçoeiro · Desafios</title>
+<meta name="description" content="Desafio de lógica: siga oito linhas de Python e descubra o número que sai no fim. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../frase-provavel/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 1 · Lógica · ★★</span>
+  <h1>O índice <em>traiçoeiro</em></h1>
+  <p class="lead">Um sensor manda oito leituras. O código soma só as que <b>subiram</b> em relação à anterior. Rode o código de cabeça, sem computador, e diga qual número ele imprime.</p>
+</section>
+
+<section>
+  <p class="sec">O código</p>
+<pre><code>v = [7, 1, 4, 1, 5, 9, 2, 6]   # leituras do sensor
+s = 0
+for i in range(len(v)):        # i vai de 0 a 7
+    if v[i] &gt; v[i - 1]:        # subiu em relação à anterior?
+        s += v[i]
+print(s)</code></pre>
+  <p class="enun">É Python 3 comum. Não tem erro de digitação nem truque de formatação: o programa roda e imprime um número inteiro.</p>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="indice-traicoeiro" autocomplete="off">
+    <div class="campos">
+      <label>O que o <code>print(s)</code> mostra?<input data-tipo="numero" inputmode="numeric" placeholder="número inteiro"></label>
+    </div>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Monte uma tabela com quatro colunas: <code>i</code>, <code>v[i]</code>, <code>v[i - 1]</code> e o valor de <code>s</code> depois da linha.</li>
+    <li hidden>O laço começa em <code>i = 0</code>. Quanto vale <code>i - 1</code> nessa primeira volta?</li>
+    <li hidden>Em Python, <code>v[-1]</code> não dá erro. Teste no seu celular, num app de Python, ou procure "índice negativo em Python".</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Por que dá esse número</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">Lógica de laço é a base de todo firmware de robô. Pratique com projetos de verdade no curso <a href="https://inematds.github.io/ia-do-zero-curso/">IA do zero</a> e nos guias de <a href="../../11-solucoes-praticas/">Soluções que vendem</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../frase-provavel/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"626435f33faf4c6ac2958968919b14edf6a180969ed74e79758d61bcb6ec67cb","iv":"0XWGvvOAiHKrQZ3k","exp":"kUAHH6YJ6FEvIOZP2Y1tnGDQtt3utIWmPoPEjrLtMF9iDvraLpkqRghKnb/C5JgjhsGfkce1IuHb6YANC0efGeU5bSOfnfIqNUvgM788IVvg/EZnHdzUAnsMrs2MkYUn6NYdovqXNUPN/A4U7wCvDRQpPCselIyYxPPe7wyr/lmGPuK6O5ph8J0WlR7IEMEzSfYB/H5m+mRD53GgSf4K59ZiKAND567bR42JGMbWBXztP1pYo9aouOAAGNmRfXIopOZ7WFrBO+HJzlGj2iB5Jpz7Bq6ADCMm/KOOqllr2hGmZ/pJKGOtNy6hjC8N1K/AybWuSQ5LJ/ZFQXHIW4OoHxhJgqF8K+uCWnpagLxV0iSYntQth6m0OEsBkMCiidQxmKdCncGlAyNyEOAAMqhA8ckPkB6K+UabRL+6428B06/2TOX3+guFsOEk6gFCINU7kCMlZGsG4/yxiL2nBb+x8r0zInKskXRfPC5fhPp39Zb+zmPE2F/l7m5rfXjzXjeSnxCTSUm37YS9yOrF1cpQlmhkR4E7FBYHXpH7pCtkZHCFCTiYGAyBjd2v4CUVgnfoRQO3NevZ9teITpUt8rnBwnj4VMHXVlTvMcDjA1woljOjtocVpOhYI+GjsDjgEejJv1mJOFpMrIjiniCLlul4IWoumUN6W/8C5PU//iIqYRXvQkhA/wgDyhRS0T9h/1U1JMLLsDTurB6SH6C4THMmd6HAOfrGOW3s8oigqsv9ABHCsXakD4oX+hpXeYYlir7u02VvFT6EzbDpmZ2X7TxgJvDfwDDZqb03GS7GyJeKYevosWaTl/ZPrcPYNiFi1hT6jy63DT5H84sXVgAB+90KsBhtXwA7lr0mus0Cp2F7QSBR09kQ6yUarOiSh+N/HqK90Cqspi+J7PD/+qcQfcv4EaTHrli0pc4dtkS6dCF6LiaPlfB8RjSqaUSqt4ZS1Sxf/IuvyLBr+yDJVASgVXNfGNjBq8X5m1nGP2eIhuzZs2DtU4jq2bmcqjSohDd3aODSXJzTQ/yLuFFfJGyE7f8ZQ+b2O7UrNSyXuc5J0d2d8bs+tcnOEPafX64BdQf4cOpRV/Zv9dgKLGK0URXI6POSCodoiJuwHLrv8Eki0h/BvZeHaLlLvwir1gu/dAmsfASjc8TFV1VMi7oe0S7dn80Eb8gxzUFAsDwyGm4NF+MpAxCGiMC7me3YJkbWM5SKJwKsxog+Ra+tx+84llk/HuJnkqUxLDUC80tRjEZDc7ctfvKGx3ivVlViD9FhCiuzEUuFBiXrl2MIY1bGfl5eigSmZD20+8FMgzATjU5ku1lVe8zKKKddm0gS57eJeBwsuJ6jsK6w1WT9gMr6XxuAJFSsZBZjQxKwFDtH6ANbgBPImbH1KFFzzHH2xkLHqMhmDoq5V3o5ot2YZ+DnLN05No+7zUeSh+zyZmHeq/r/KfxZu7l3EuNDyL7xYWvixHDszRyow35TAMdXeRKYcrYd2kPu3sEJ8Rxf0vdSzdq6myRRc5rceqKst/PUnJgQfuhLeLiXGiTnCnygFvI0ataAh2gu/4TwI/j+/SswPg6Gom8LMUoYXlIKmo2TPfLwTF2nVgGVbDZyayyJ1OVUA0K2QXqXTQodzZMqKqLbS8npn24qpNUF5WEBwoXdnYs8Vf/louavVWJMU4SBCFM2SzsfrIM7ptux2Pw7HB2GIlXOcVNgkESFm1WUhps+touSNTzlTtj5dVC1PjEvQGKEkvgnyxiyLN/H+KnQ8hlxr+B6qyglc+pNgZp9Nk0YFLzlKJneovUlGwcrNH3R0iipr3zWWH3DWbim"}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A frase mais provável · Desafios</title>
+<meta name="description" content="Desafio de IA: um modelo de linguagem escolhe palavra por palavra. Escolher sempre a melhor palavra dá a melhor frase? INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../sensor-solo/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 2 · IA · ★★</span>
+  <h1>A frase <em>mais provável</em></h1>
+  <p class="lead">Um modelo de linguagem não escreve a frase inteira de uma vez: ele escolhe a próxima palavra, depois a próxima. Aqui está um modelo minúsculo que completa "O robô..." com <b>duas</b> escolhas. Descubra o que ele escreve e se dava para fazer melhor.</p>
+</section>
+
+<section>
+  <p class="sec">As probabilidades do modelo</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 330" role="img" aria-label="Árvore de probabilidades. Depois de O robô: pegou 50 por cento, caiu 30 por cento, parou 20 por cento. Depois de pegou: o cubo 40, a bola 35, o copo 25. Depois de caiu: feio 80, de lado 20. Depois de parou: sozinho 60, longe 40.">
+      <path class="l" d="M84 165 C100 165 104 60 118 60M84 165H118M84 165 C100 165 104 280 118 280"/>
+      <path class="l" d="M212 60 C230 60 232 22 248 22M212 60H248M212 60 C230 60 232 98 248 98M212 180 C230 180 232 160 248 160M212 180 C230 180 232 200 248 200M212 280 C230 280 232 262 248 262M212 280 C230 280 232 302 248 302"/>
+      <rect class="bx" x="4" y="145" width="80" height="40" rx="10"/><text class="t" x="44" y="171" text-anchor="middle">O robô</text>
+      <rect class="b" x="118" y="42" width="94" height="36" rx="10"/><text x="165" y="66" text-anchor="middle">pegou <tspan class="ac">50%</tspan></text>
+      <rect class="b" x="118" y="162" width="94" height="36" rx="10"/><text x="165" y="186" text-anchor="middle">caiu <tspan class="ac">30%</tspan></text>
+      <rect class="b" x="118" y="262" width="94" height="36" rx="10"/><text x="165" y="286" text-anchor="middle">parou <tspan class="ac">20%</tspan></text>
+      <rect class="b" x="248" y="6" width="148" height="32" rx="9"/><text x="322" y="27" text-anchor="middle">o cubo <tspan class="ac">40%</tspan></text>
+      <rect class="b" x="248" y="44" width="148" height="32" rx="9"/><text x="322" y="65" text-anchor="middle">a bola <tspan class="ac">35%</tspan></text>
+      <rect class="b" x="248" y="82" width="148" height="32" rx="9"/><text x="322" y="103" text-anchor="middle">o copo <tspan class="ac">25%</tspan></text>
+      <rect class="b" x="248" y="144" width="148" height="32" rx="9"/><text x="322" y="165" text-anchor="middle">feio <tspan class="ac">80%</tspan></text>
+      <rect class="b" x="248" y="184" width="148" height="32" rx="9"/><text x="322" y="205" text-anchor="middle">de lado <tspan class="ac">20%</tspan></text>
+      <rect class="b" x="248" y="246" width="148" height="32" rx="9"/><text x="322" y="267" text-anchor="middle">sozinho <tspan class="ac">60%</tspan></text>
+      <rect class="b" x="248" y="286" width="148" height="32" rx="9"/><text x="322" y="307" text-anchor="middle">longe <tspan class="ac">40%</tspan></text>
+    </svg>
+    <figcaption>As porcentagens da segunda coluna valem depois da palavra da primeira coluna. Ex.: "caiu feio" tem 80% de chance <b>se</b> o modelo já escreveu "caiu".</figcaption>
+  </figure>
+  <p class="enun">A probabilidade de uma frase inteira é a multiplicação das probabilidades de cada escolha. O <b>modo guloso</b> (temperatura zero) pega sempre a palavra com maior porcentagem naquele passo.</p>
+  <ol class="regras">
+    <li>Qual a probabilidade, em %, da frase que o <b>modo guloso</b> escreve?</li>
+    <li>Qual a probabilidade, em %, da frase <b>mais provável de todas</b> que o modelo consegue escrever?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="frase-provavel" autocomplete="off">
+    <div class="campos">
+      <label>1. Frase do modo guloso (%)<input data-tipo="numero" inputmode="decimal" placeholder="ex.: 12"></label>
+      <label>2. Frase mais provável (%)<input data-tipo="numero" inputmode="decimal" placeholder="ex.: 12"></label>
+    </div>
+    <p class="formato">Só o número, sem o símbolo de %. Vírgula ou ponto tanto faz.</p>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>50% é 0,5. A frase "O robô parou longe" tem probabilidade 0,2 × 0,4 = 0,08, ou seja, 8%.</li>
+    <li hidden>O modo guloso decide a primeira palavra sem olhar a segunda coluna. Depois, decide a segunda só entre os filhos da palavra que escolheu.</li>
+    <li hidden>Para a pergunta 2, calcule as sete frases possíveis e pegue a maior. Ela não começa pela palavra mais provável.</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Por que o melhor passo não é a melhor frase</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">Entenda como os modelos de linguagem funcionam por dentro, de tokens a temperatura, no curso <a href="https://inematds.github.io/ia-do-zero-curso/">IA do zero</a>. Para ver modelos que transformam texto em movimento de robô, veja <a href="https://inematds.github.io/vla/">VLA: visão, linguagem e ação</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../sensor-solo/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"60c2fe7679bfd57168174a36a9315242fada9f9fd65b639418ce6962ee7c6781","iv":"zEkgelj4GfmZWAXb","exp":"RB7ryjDf4VWBk6knUHdOtfAq1D+aCSf+qqqkw72cWIiz6Y7xzBLlnVadnXGSs+GQIWouyqVntKUTRAi3VA2azR8y+wtVgQnDcjqLW/T3ZAn8Bm2ywifDyvkrCLorkShiN0spVoV+bmkwesIBY0UuPJXOczqiqYQ3MUqrwNbwRAQahLNEyTn+OFi3seA3qv3n5CsgvgftVcjXwGc0RXLhYIkzx4QVmr1bQd3kQlGSmU+BzoltIkh8ErwJT/bgUCdQGfpmGJbOk3gg7Unr+5Ev+LIt1rQnekwPxKkZ24TVEE2nTkTqUpEmbIfwcW2qUHZw3tC1IXlIkVjWPReUeIRWf8rKX2NaIGPkf9yYzZ45nMjYQoTCbmD+ecZshRWOuwE0NCOEUlH21ToI3poWAiBPej7mqyMlZhM8APxb43mJH4cXHt4C5u8QRdmV8AWNe5jal8fmo5Ze5YIfgKvC8n18edtswq7BgIgsDbtDZ/8aLbReBhTlerboJKiUsqMud8gIcL3PkvUD2Pv7NA7XdsS/k5GFx//obxH3Q3wwsDvOgfm21RiYlrpLsz1JKuhSAlz0qWSkUhjipDvlHQ4wDWx1iWWMXW4OjiSSfGuDD1jhBUcEcBMSyyfenpoUk0wDnA16DS3IZHdiyNt+82DDQneiYWmK4qks35NrKTCIvOAOWLpJELmYhrjUghPMojDIYCYD8cEN32qnUgCfFFiKJf/er8ullFLtYSu1uvTOegoD9JpM0wd42+3fQwC5E440LKZuCIwV4X4Pbgh8JNSXZDUA2MmaUfEXTXyMsKF35EUh95Ke+NvMLOX+NzKvizbliS4LN2onZlbrJtIy6ng+9fCjLuD1CHy9DEC/126+m38UCrajWpneJn5hVZXMF8NOVPLHyjn3h/kQRUh8txI8AIiJXy6PjKDu0fBifczrAgjr0lJyp4/YROEKrUAN3La1TpBHRFCZATWMpKzcHOxuFlOUESORMga2JDOPflBzDuw2FfbPgUeTQsL0Ftifh4RHolkRhHRzPNZBBPIGJ/mAEkbefbwLNlsRcEf6mjkWDD+X2GlT9tgQr7ZaSSxSK7EsJ1M6Ouw0SilAZi45/IjfhwNsGmrGgo4fVhDhqLSMf7hDshp9kh1de4+FnsLkbphwZCYGWGvGIdKhpJbYyS9uCU3+Vq3e1eeqZqMJU0+dDBwwqY2ox/2aUVAhCaieZsVuXJffbkTY/DF53UhY5eIHwN0orjUjAQr7XI0Y3kwnj6Oc7bs/+AjY5YfPvf5M"}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

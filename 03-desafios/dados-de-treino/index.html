@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quanto pesa uma demonstração · Desafios</title>
+<meta name="description" content="Desafio do braço SO-101: o gêmeo digital grava o braço 50 vezes por segundo. Quantos números cabem em 50 demonstrações para treinar uma IA? INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../cinematica/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 7 · SO-101 · dados para IA · ★★</span>
+  <h1>Quanto pesa <em>uma demonstração</em></h1>
+  <p class="lead">Para uma IA aprender a mexer o braço, ela precisa de exemplos: demonstrações gravadas do braço fazendo a tarefa. O gêmeo digital do SO-101 gera essas demonstrações no simulador. Calcule o tamanho delas.</p>
+</section>
+
+<section>
+  <p class="sec">O que é gravado</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 180" role="img" aria-label="Linha do tempo de um episódio de 8 segundos, com uma amostra a cada 20 milissegundos. Cada amostra guarda as posições medidas dos motores e os comandos enviados a eles.">
+      <path class="s" d="M20 60H380"/>
+      <path class="s" d="M20 50v20M60 50v20M100 50v20M140 50v20M180 50v20M220 50v20M260 50v20M300 50v20M340 50v20M380 50v20"/>
+      <text class="m" x="20" y="34">0 s</text><text class="m" x="380" y="34" text-anchor="end">8 s</text>
+      <text class="m" x="200" y="34" text-anchor="middle">1 amostra a cada 20 ms</text>
+      <rect class="bx" x="40" y="96" width="150" height="66" rx="10"/><text class="t" x="115" y="122" text-anchor="middle">posições</text><text class="m" x="115" y="146" text-anchor="middle">o que o motor mediu</text>
+      <rect class="bx" x="210" y="96" width="150" height="66" rx="10"/><text class="t" x="285" y="122" text-anchor="middle">comandos</text><text class="m" x="285" y="146" text-anchor="middle">o que foi mandado</text>
+      <path class="l" d="M140 70L115 96M140 70L285 96"/>
+    </svg>
+    <figcaption>Cada amostra guarda um número de posição e um número de comando <b>para cada motor</b>, incluindo o da garra.</figcaption>
+  </figure>
+  <p class="enun">Dados do projeto: o braço tem <b>6 motores</b> (5 juntas e a garra). O gêmeo grava <b>a 50 Hz</b>, ou seja, 50 amostras por segundo. Cada amostra guarda, para cada motor, a posição medida e o comando enviado. Considere uma demonstração (um "episódio") de <b>8 segundos</b>, sem imagens de câmera.</p>
+  <ol class="regras">
+    <li>Quantos números tem <b>um</b> episódio?</li>
+    <li>Quantos números têm <b>50</b> episódios?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="dados-de-treino" autocomplete="off">
+    <div class="campos">
+      <label>1. Um episódio<input data-tipo="numero" inputmode="numeric" placeholder="números"></label>
+      <label>2. Cinquenta episódios<input data-tipo="numero" inputmode="numeric" placeholder="números"></label>
+    </div>
+    <p class="formato">Pode escrever com ou sem ponto de milhar: 12000, 12.000 e 12 000 valem o mesmo.</p>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Comece pelas amostras: quantas cabem em 8 segundos a 50 por segundo?</li>
+    <li hidden>Cada amostra tem duas coisas por motor. Com 6 motores, são quantos números por amostra?</li>
+    <li hidden>Os erros mais comuns: esquecer a garra (usar 5 motores) ou esquecer os comandos (contar só as posições).</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Do segundo ao dataset</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">O comando <code>episodios</code> do gêmeo grava 50 demonstrações em uns 9 segundos e exporta no formato do LeRobot. Veja no <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Para entender as políticas que aprendem com esses dados, veja <a href="https://inematds.github.io/vla/">VLA: visão, linguagem e ação</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../cinematica/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"79af232b00cb2b302aca7369d515b84616bf2535bdb307a5471e48309009c31f","iv":"2maG/kWyv3c5dFu+","exp":"7kECD0jCpfmNw8uJHDQO/rb06v4d4L6x7h9aVyeCljF71gJJxqkOJjpRqHBCI8KHFXOhX+b2AFzHarh3J+JhKKeXqOxc96hGsUnbXA9Ee9gQou0KdV/pBCISSAl1hqMm/hnzjUApUsr69CEJoT5eNqJOk4AYhORabGYqdlZyhSky8qHKmOL9ot2n0WdS56yjS6ZqHVe+PiNB1bWPp8wChUSD5gH5218YiFLQ1P1kg1dbWNJMo6+tw3agp5/vWhFrQgrF8dRJbtmO9/OlD9dt0DRLtHBxT3tg0IySYKlg39oQxiwo1ST11DROcWcRw4VsP5LpyNbaHPad7j3pRumIRNB/PweI2pPnXjHh+S1henC5ATa+IC+p+/dry7oEmYiXpcibiEAlxZXq2V9ziAQwaRfH3pjDMxhiZBa0BP2AKChppBVf9HyhRDW/iIzV/EAvBo5SZTr1LShJmFib9msG5dIipyjTRceKk8dQWpNsmpg1u4xWvQLnk6Y3rqGwwupQTecIaU8stNtYPyJOUhvlwaey0gJGKmmwAbgqXx1uITuFxYaROy66RqACHmc36ktXJzcJRzMze8g7wEmfKc5FeD4eEZTuakR1fnhmaOuVaHYuogFC8Twxp1mKVFjNGFLubbecD5GfB3EWrr9o3k1F0QGG11/aDLpA92+VEMSv3YMj8liGAG+TdCui96Hwqqbs0OSbPTmvucGs6dhqCcujWFI/Dn0MQx3anLLqRsA4/YfaFCmhWrd2ru+NYdERMFTeWPMjoF4X6q+Hs4LDKz8jsGN3SD1SPcNT0puTwduSrZr1n+O6Y6PNcCmK+uixqrfbwca5o+E5Ia7M9IPPMH1OCkpjlZR0pxSXZ/TAXAGJMwBLppLROY/X4b/wpm/CPRbH+dS24zrzDy58liH31LfArD/uQn7c03zoW/lq7uH5kmpS57gFfcbJyBZPnY4HA6RYjiGEP7tX+ZhiD8lFIjT8jIDBx73ze4LPpnI4+pnsLzHp2OFfFuSlSf/x9LaWtlPOmARRmhLz+ckouxBm6eb4fWmWhl4gcUixz9WPs/OwFkW+uXSHuPKC0on+rLdCXyR5jEiAcOJb/rOtZrOCGSynQH1nucBKuFxv1pxDrLarT2L4sh42qc/FGnMuDqSmwLjsHi5YQ/mnwUpn489ELX2E2v/sIGYO0qXRrXFahFr+sTe2WmbAc74CuRHms1RHkCpyFwR8nMWA9ZjRgVP0gLAVr5p/Mcng9H6YwP3XFekIqNmjm79m2xOZKhaZozif3GAhIow/wZd9gQfbE1X+gxv/3ZX8JLna6NTahd/dPmZ/lYoVABaCgOhbVkNjaWQk/+l/nfLlqaauRk68Ez2vwv6aLo6olieJkdlNrbywpIUmS4NZ+hD0IZPDmq1LHa945IcvkgJx7bC0CcDGndDcMaivYH6VpyvbrZJH1f4ELCksoJt/qi4D8E5nutYUrExfqb3gxjgye+dr/d2YIj6wAZvkixHnjfkep2n51yxTv3DwDnXbPRGyFnBM7NTCN+bwuFj908U8Et9HS856L0Z8neAaYhUoqUzLeNhcOrpD279yQd5ZcxZiS61++H40vMdTFg=="}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

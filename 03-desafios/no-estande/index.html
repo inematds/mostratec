@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>O mapa dos motores · Desafios</title>
+<meta name="description" content="Desafio no estande: olhe o braço robô SO-101 da mesa, numere os seis motores e descubra qual faz cada movimento. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../graus-de-liberdade/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 4 · SO-101 · no estande · ★</span>
+  <h1>O mapa <em>dos motores</em></h1>
+  <p class="lead">Este se resolve olhando o <b>braço robô da mesa</b>. Ele tem seis motores, um em cada junta. Siga o braço com os olhos, da base até a garra, numere os motores e descubra qual deles faz cada movimento.</p>
+</section>
+
+<section>
+  <p class="sec">Como numerar</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 260" role="img" aria-label="Desenho de lado do braço SO-101 sobre a mesa: base, ombro, cotovelo, pulso e garra. Cada junta tem um motor, marcado por um círculo. O motor da base é o número 1; os outros estão sem número.">
+      <path class="mesa" d="M10 236H390"/>
+      <rect class="b" x="40" y="206" width="80" height="30" rx="6"/>
+      <path class="g" d="M80 196L120 96L250 80L300 122"/>
+      <path class="s" d="M300 122l18 26M300 122l-4 32"/>
+      <circle class="j" cx="80" cy="221" r="13"/><text class="t" x="80" y="227" text-anchor="middle">1</text>
+      <circle class="j" cx="80" cy="190" r="9"/>
+      <circle class="j" cx="120" cy="96" r="11"/>
+      <circle class="j" cx="250" cy="80" r="11"/>
+      <circle class="j" cx="278" cy="102" r="9"/>
+      <circle class="j" cx="300" cy="122" r="8"/>
+      <text class="m" x="140" y="228">base: gira sobre a mesa</text>
+      <text class="m" x="20" y="150">ombro</text>
+      <text class="m" x="120" y="66">cotovelo</text>
+      <text class="m" x="262" y="56">pulso</text>
+      <text class="m" x="326" y="160">garra</text>
+    </svg>
+    <figcaption>Desenho simplificado, de lado. No braço real, cada motor é uma caixinha com cabo, encaixada na junta. O motor 1 é o da base, o mais perto da mesa. Siga contando na direção da garra.</figcaption>
+  </figure>
+  <p class="enun">Se a equipe do estande estiver com o braço ligado, peça para ver cada movimento devagar. Se não, observe as juntas e resolva com o desenho e o <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Não mexa no braço sem alguém da equipe por perto.</p>
+  <ol class="regras">
+    <li>Qual motor <b>levanta o braço inteiro</b>, como quem ergue a mão para fazer uma pergunta?</li>
+    <li>Qual motor faz o <b>"tchau"</b>: dobra só a mão para cima e para baixo?</li>
+    <li>Qual motor <b>gira a garra como uma chave</b> na fechadura, sem mudar a posição dela?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="no-estande" autocomplete="off">
+    <div class="campos">
+      <label>1. Levanta o braço<input data-tipo="numero" inputmode="numeric" placeholder="1 a 6"></label>
+      <label>2. Faz o "tchau"<input data-tipo="numero" inputmode="numeric" placeholder="1 a 6"></label>
+      <label>3. Gira como chave<input data-tipo="numero" inputmode="numeric" placeholder="1 a 6"></label>
+    </div>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>São seis motores: base, ombro, cotovelo, dois no pulso e um na garra. A garra abre e fecha, então ela não é a resposta de nenhuma pergunta.</li>
+    <li hidden>O motor 1 só gira o braço para os lados, como um farol. Levantar é o trabalho do próximo.</li>
+    <li hidden>O pulso tem dois motores: o primeiro dobra (como acenar), o segundo gira em torno do próprio eixo (como apertar um parafuso).</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Os seis motores do SO-101</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">O braço da mesa tem um gêmeo no simulador MuJoCo, com os mesmos seis motores. Rode no seu computador com o <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Para entender robôs com mais juntas, como humanoides, veja a <a href="https://inematds.github.io/HG1/">Academia de Humanoides</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../graus-de-liberdade/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"d5c0639db02415614eed314188283dfdf20a1636fa65caff70d7128120526633","iv":"97LoLK8X0SEXm9uP","exp":"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"}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

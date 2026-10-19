@@ -19,7 +19,7 @@ Decisão do Nei em 17/10/2026.
 | Robôs para montar | robô que anda, assistente de voz, robô vigia | `01-robo-que-anda/` |
 | Seu futuro em imagem | perguntas rápidas → imagem de impacto | `06-avatar-foto-demo/` (versão sem foto) |
 | Desenho que ganha vida | upload do desenho → animação na tela | `09-atracao/` (a discutir) |
-| Desafios para quem é bom | desafios com resposta no site | `02` (a definir) |
+| Desafios para quem é bom | 8 desafios (5 com o braço SO-101), resposta conferida no site | `03-desafios/` |
 | Braço SO-101 | guia do gêmeo digital | repo `robotica-so101` |
 
 ## Em aberto

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Onde está o pulso? · Desafios</title>
+<meta name="description" content="Desafio de cinemática direta com o braço SO-101: dois ângulos, dois elos, seno e cosseno. Descubra a posição do pulso. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../indice-traicoeiro/">Recomeçar</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 8 · SO-101 · cinemática direta · ★★★</span>
+  <h1>Onde está <em>o pulso?</em></h1>
+  <p class="lead">O simulador sabe onde está a garra porque faz uma conta: parte da base e soma os elos do braço, cada um no seu ângulo. Faça essa conta numa versão simplificada do SO-101, visto de lado, e diga onde o <b>pulso</b> está.</p>
+</section>
+
+<section>
+  <p class="sec">O braço, de lado</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 290" role="img" aria-label="Braço visto de lado. O ombro fica 12 centímetros acima da mesa. O elo do ombro ao cotovelo tem 10 centímetros e sobe a 53 graus da horizontal. No cotovelo, o antebraço de 15 centímetros dobra 90 graus para baixo em relação ao primeiro elo e termina no pulso.">
+      <path class="mesa" d="M10 262H390"/>
+      <rect class="b" x="40" y="236" width="40" height="26" rx="4"/>
+      <path class="g" d="M60 236V140"/>
+      <path class="l" d="M60 140H220"/>
+      <path class="g" d="M60 140L120 60L240 150"/>
+      <path class="s" d="M96 140A36 36 0 0 0 82 112"/>
+      <text class="ac" x="102" y="128">53°</text>
+      <path class="s" d="M129.6 67.2L122.4 76.8L112.8 69.6"/>
+      <text class="ac" x="110" y="102">90°</text>
+      <circle class="j" cx="60" cy="140" r="8"/>
+      <circle class="j" cx="120" cy="60" r="8"/>
+      <circle class="bx" cx="240" cy="150" r="9"/>
+      <text class="t" x="252" y="140">pulso</text>
+      <text x="18" y="96">10 cm</text>
+      <text x="190" y="96">15 cm</text>
+      <text class="m" x="72" y="206">12 cm</text>
+      <path class="l" d="M30 140V262M22 140h16M22 262h16"/>
+      <text class="m" x="74" y="168">ombro</text>
+      <text class="m" x="96" y="40">cotovelo</text>
+    </svg>
+    <figcaption>Modelo simplificado com números redondos (no SO-101 real os elos têm cerca de 11,6 cm e 13,5 cm). O ombro está 12 cm acima da mesa, na mesma vertical da base.</figcaption>
+  </figure>
+  <p class="enun">O elo do ombro ao cotovelo tem <b>10 cm</b> e está levantado <b>53°</b> acima da horizontal. No cotovelo, o antebraço de <b>15 cm</b> está dobrado <b>90° para baixo</b> em relação ao primeiro elo (o ângulo entre os dois elos é reto). Use:</p>
+  <div class="tabela"><table><thead><tr><th>ângulo</th><th>cos</th><th>sen</th></tr></thead><tbody>
+    <tr><td><b>53°</b></td><td>0,6</td><td>0,8</td></tr>
+    <tr><td><b>37°</b></td><td>0,8</td><td>0,6</td></tr>
+  </tbody></table></div>
+  <ol class="regras">
+    <li>A que distância horizontal da base está o pulso, em cm?</li>
+    <li>A que altura acima da mesa está o pulso, em cm?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="cinematica" autocomplete="off">
+    <div class="campos">
+      <label>1. Distância da base (cm)<input data-tipo="numero" inputmode="decimal" placeholder="cm"></label>
+      <label>2. Altura acima da mesa (cm)<input data-tipo="numero" inputmode="decimal" placeholder="cm"></label>
+    </div>
+    <p class="formato">Os valores da tabela dão números exatos. Vírgula ou ponto tanto faz.</p>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Trate cada elo como uma seta. Uma seta de comprimento L no ângulo θ (a partir da horizontal) anda L × cos θ na horizontal e L × sen θ na vertical.</li>
+    <li hidden>O primeiro elo está a 53°. O segundo está dobrado 90° para baixo em relação ao primeiro: em relação à horizontal, ele fica em 53° − 90°. Quanto dá?</li>
+    <li hidden>O antebraço aponta 37° abaixo da horizontal: ele avança, mas desce. Não esqueça de somar os 12 cm do ombro na altura.</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Cinemática direta: some as setas</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">No gêmeo do SO-101, essa conta roda em 3D com as 5 juntas e serve para levar a garra ao cubo. Veja no <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Cinemática, controle e visão para robôs estão no curso <a href="https://inematds.github.io/robot/">Robótica do Zero ao Expert</a> e na <a href="https://inematds.github.io/HG1/">Academia de Humanoides</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../">Ver meu placar</a><a class="btn" href="https://inematds.github.io/robotica-so101/guia/">Guia do SO-101</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"81a66bdbbdb247418b53d8deac8cbfd3afe7b01040213c303e322274246f5e2d","iv":"LOOY5e8UdJSiyih7","exp":"OF22tZy4CK7E112RMUBZBeDyNoiuGtXyZnNqPZoDDeNYodPawXanyJhShOFEyXkCTux1fsxEUu2Yp7uJT3C/3eHEYtCgmRn4MRrOtZGLbuqlT4H2DxijDvHH6r9FtulFqVyOHP615SjB8CoZoFd5QxFWrVOA0dLxFJPPf6osixIdRydmFoQwINTeAgkzmqrEBqjYPZjf20d81bB72NUQl7NFCMYa4+SpSWLJNprR6d7g5OalnQDez0zxy9Ef7FIIqkXv0ll99t2d1o2gZE+31OvOHvPG6QOdHIPvitQmS49K1dAhi4FHr+PI4Ynz3kaJzQWGdvDTzaUj6QywaRisrkXDsnz/wxLotq0bJTbxyxKpet50XDI0zxjHFw7CgRpfZLZm/3qVEz4omFVSE13R8mx1sYFHw+oMvglue4B12FiiCsJ6QcJ0T1NfU+IeEI5kzm6J0iQuCD4VuYSB7C//bt5VlwBTMisA3gNx4yK+P4lxko/iN/RTsDq0DDzWpCmYbCOul++KFVU+9a8uY3DdPfDxjQARSDUjUVw/jePXmxxDy9dW9uFY6AXSoOAmmmPjct0FWgaKsWiLmeZ911HG+r1ak7kQ7uoabGFccVY3kqK4sC0wzOheAKioTZz0MZDGbmaTh+sLvtj0MHnQKZrtiPnQGrMGC1d5GmYXiZT0FGJv9J/xBZosatOmgFedYXg7dNB/nciCjBAZ9qmCLhsDfnOa/BL141CUEA+2+kKQ1TbuBnSl5+L0ftqckzqI/5ruP/gMMdBXYUbtfRCNjLhFNccwy6/BxTZL2nw1bsbnW3TM6r7IxOpj7+3bPfGKlbF1M4BSZ1bYIZBr2QPlqy41Ccbjm4Cm/EQ4Awbu3xjOde/GjT+wL7YazdfyTiGQVJ9xySSherSpg1xRRod3PFl1i79sTVHh/u/a+BmJ31n7NFdHBS1+NdKkHl8cJZouGQPfJFpW2sB1BfNeKCx2DcnPoZy/77xPDyGg5Qs9gieGOqxJgx6124TTdWwslfDrqPzN2iseupzyEE+b7nuzto2lMyyP9EV4cPnmiCxsiOaXrZ7cyb4hGyYnN0ZMr6wGjj/mtyxg2BYzOap8+oWF/+Zf2Czf57WiLl0TCS7R44OIeQ8o8/kut+T3qJ4VcrSEj5dZFFp0U2vS6+Bbww/gCAmoBobFPH6vuSlDEaQBUBgjVBtRAWGMiA8YHJyyCp4bHpP+7KIuPYNb4RwFAuiECu4PtZnvMnL6m5E2KJaaJ6Oe9EhkshQbsQZrBeXbkejHZGWu4vbkMbBBuv28A3941osQM2Zog5w4ZZXSWuFmGU+9OjX2SQ71+imADXVc0cc8K954HcPUaxoocAOCPrSillWQ1Wa1lMrY2XtEtAtjgQuVZdYLD2OLccgr6BAktvtIRZ06IMotsDuqYp2VIRh8uGAiCQveXKTYcTgxD6DOnbxy6ZUQZ/ATbwKoV0cmkWh3F+WhUR4Otoel4/t55dEhjv1Me/HznuzprK0JJW0q64ZasVpjzAa1qm1SR9VC1zYsdsdW3YFmhI4g5APFHbUgia2lrlenDTDnPwjo7/JwgkDA1zNPycXcy5SqHdQ2T+lew17YUaPNVKm8roY/5IdSVArDPWKwM8rJ4GS6ugk8ntzO3siWETPgDFxErA75z9Ns6P/Q/rheh5uI5Fs77jIP2w=="}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desafios para quem é bom</title>
+<meta name="description" content="Oito desafios de lógica, IA, eletrônica com ESP32 e o braço robô SO-101. Resolva no celular e confira a resposta no próprio site. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../assets/pagina.css">
+<link rel="stylesheet" href="desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios">
+    <a href="./" aria-current="page">Desafios</a>
+    <a href="#braco">Braço SO-101</a>
+    <a href="#como">Como funciona</a>
+    <a href="../">Estande</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">MOSTRATEC 2026 · Desafios para quem é bom</span>
+  <h1>Oito problemas que <em>não se resolvem no chute</em></h1>
+  <p class="lead">Lógica, inteligência artificial, eletrônica com ESP32 e o <b>braço robô SO-101</b> que está na mesa do estande. Você resolve no papel ou de cabeça e confere a resposta aqui mesmo. Errou? Tem dica, uma de cada vez. Acertou? Abre a explicação.</p>
+  <div class="acoes">
+    <a class="btn pri" href="#lista">Ver os desafios</a>
+    <a class="btn" href="no-estande/">Começar pelo braço da mesa</a>
+  </div>
+</section>
+
+<section id="lista">
+  <p class="sec">Seu placar</p>
+  <div id="placar" aria-live="polite">
+    <span class="num">0 de 8</span>
+    <span class="barra" aria-hidden="true"><i></i></span>
+    <button class="btn" id="zerar" type="button">Zerar placar</button>
+  </div>
+  <p class="nivel" style="margin-top:8px">O placar fica só neste aparelho. Não pedimos nome, e-mail nem nada.</p>
+
+  <h2 style="margin-top:26px">Lógica, IA e eletrônica</h2>
+  <div class="grade">
+    <a class="card" href="indice-traicoeiro/" data-desafio="indice-traicoeiro">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6M14 4l-4 16"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>1. O índice traiçoeiro</h3>
+      <p>Oito linhas de Python. Qual número sai no fim? Quase todo mundo erra a primeira volta do laço.</p>
+      <span class="nivel">Lógica · <span class="estrelas">★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="frase-provavel/" data-desafio="frase-provavel">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="20" cy="4" r="2"/><circle cx="20" cy="10" r="2"/><path d="M6 11l4-4M6 13l4 4M14 6l4-2M14 7l4 2"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>2. A frase mais provável</h3>
+      <p>Um modelo de linguagem escolhe palavra por palavra. Escolher sempre a melhor palavra dá a melhor frase?</p>
+      <span class="nivel">IA · <span class="estrelas">★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="sensor-solo/" data-desafio="sensor-solo">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/><rect x="9" y="9" width="6" height="6"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>3. O sensor que passou do limite</h3>
+      <p>O código real da irrigação com ESP32. O que o painel mostra quando a terra fica mais seca que a calibração?</p>
+      <span class="nivel">Eletrônica · ESP32 · <span class="estrelas">★★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+  </div>
+
+  <h2 id="braco" style="margin-top:34px">O braço robô SO-101</h2>
+  <p class="ler">O braço da mesa tem um gêmeo digital: uma cópia virtual dele roda no simulador de física, treina e grava dados antes de o braço real mexer um motor. Estes cinco desafios usam os números de verdade do projeto.</p>
+  <div class="grade">
+    <a class="card" href="no-estande/" data-desafio="no-estande">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h8M7 21v-4M7 17l4-7 6 2M17 12l3-4M20 8l1-2M20 8l2 1"/><circle cx="7" cy="17" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="17" cy="12" r="1.5"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>4. No estande: o mapa dos motores</h3>
+      <p>Olhe o braço da mesa e conte os motores. Qual deles aponta, qual acena e qual gira a garra como chave?</p>
+      <span class="nivel">SO-101 · no estande · <span class="estrelas">★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="graus-de-liberdade/" data-desafio="graus-de-liberdade">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M5 5l14 14"/><circle cx="12" cy="12" r="3"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>5. Graus de liberdade</h3>
+      <p>Quantas juntas, quantas dobram no mesmo plano e quanto falta para a garra ir a qualquer lugar de qualquer jeito.</p>
+      <span class="nivel">SO-101 · <span class="estrelas">★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="pega-e-solta/" data-desafio="pega-e-solta">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="15" width="6" height="6" rx="1"/><path d="M15 21h6M14 18h8M12 9a4 4 0 0 1 8 0v3"/><path d="M6 15V7h6"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>6. Pega e solta</h3>
+      <p>Seis comandos, quatro regras. Monte a sequência mais curta para levar o cubo até a bandeja sem derrubar nada.</p>
+      <span class="nivel">SO-101 · <span class="estrelas">★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="dados-de-treino/" data-desafio="dados-de-treino">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>7. Quanto pesa uma demonstração</h3>
+      <p>O gêmeo grava o braço 50 vezes por segundo. Quantos números cabem em 50 demonstrações para treinar uma IA?</p>
+      <span class="nivel">SO-101 · dados para IA · <span class="estrelas">★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+    <a class="card" href="cinematica/" data-desafio="cinematica">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M6 21v-3M6 18l4-8 9 4"/><path d="M14 18a4 4 0 0 0-2-5" stroke-dasharray="2 2"/><circle cx="6" cy="18" r="1.5"/><circle cx="10" cy="10" r="1.5"/></svg>
+      <span class="selo">Resolvido</span>
+      <h3>8. Onde está o pulso?</h3>
+      <p>Dois ângulos, dois elos, uma conta de seno e cosseno. A mesma que o simulador faz milhares de vezes por segundo.</p>
+      <span class="nivel">SO-101 · cinemática direta · <span class="estrelas">★★★</span></span>
+      <span class="vai">Resolver →</span>
+    </a>
+  </div>
+</section>
+
+<section id="como">
+  <p class="sec">Como funciona</p>
+  <h2>Sem cadastro, sem servidor, <em>sem cola no código</em></h2>
+  <ol class="passos">
+    <li><b>Escolha um desafio</b> e resolva onde quiser: papel, calculadora, cabeça. Pode ser em dupla.</li>
+    <li><b>Digite a resposta.</b> Tanto faz maiúscula, acento, vírgula ou ponto: o site acerta o formato para você.</li>
+    <li><b>Errou?</b> Abra uma dica de cada vez. Elas apontam o caminho, não a resposta.</li>
+    <li><b>Acertou?</b> Abre a explicação: a conta completa, o erro mais comum e onde isso aparece num robô ou num modelo de IA de verdade.</li>
+  </ol>
+  <p class="dica"><b>Curioso para saber como o site confere sem mostrar a resposta?</b> A página guarda só uma "impressão digital" (hash SHA-256) da resposta certa. O navegador calcula a impressão do que você digitou e compara. A explicação está trancada com uma chave que só a resposta certa gera. Abrir o código-fonte não ajuda.</p>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <h2>Do desafio ao projeto</h2>
+  <div class="grade">
+    <a class="card" href="https://inematds.github.io/robotica-so101/guia/">
+      <h3>Gêmeo digital do SO-101</h3>
+      <p>Rode a simulação do braço no seu computador: pega e solta, prova de planos e dados de treino.</p>
+      <span class="vai">Abrir o guia →</span>
+    </a>
+    <a class="card" href="../11-solucoes-praticas/">
+      <h3>Soluções que vendem</h3>
+      <p>Sete projetos com ESP32 para montar e vender, com circuito, código e ficha de negócio.</p>
+      <span class="vai">Ver as soluções →</span>
+    </a>
+    <a class="card" href="https://inematds.github.io/robot/">
+      <h3>Robótica do Zero ao Expert</h3>
+      <p>Do primeiro LED no ESP32 ao robô que desvia de obstáculos, com visão e voz.</p>
+      <span class="vai">Abrir o curso →</span>
+    </a>
+    <a class="card" href="https://inematds.github.io/vla/">
+      <h3>VLA: visão, linguagem e ação</h3>
+      <p>Os modelos que olham pela câmera, entendem uma ordem em texto e movem o robô.</p>
+      <span class="vai">Abrir o curso →</span>
+    </a>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Estande INEMA</a>
+</div></footer>
+<script src="desafio.js"></script>
+</body>
+</html>

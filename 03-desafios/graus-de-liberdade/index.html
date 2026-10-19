@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Graus de liberdade · Desafios</title>
+<meta name="description" content="Desafio do braço SO-101: conte as juntas, descubra quais dobram no mesmo plano e quantos graus de liberdade faltam para a garra ir a qualquer lugar. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../pega-e-solta/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 5 · SO-101 · ★★</span>
+  <h1>Graus <em>de liberdade</em></h1>
+  <p class="lead">Grau de liberdade é cada jeito independente de algo se mexer. Uma caneta solta no ar tem <b>6</b>: pode andar para frente/trás, para os lados e para cima/baixo, e pode girar em torno de três eixos. Quanto o braço SO-101 tem, e quanto falta?</p>
+</section>
+
+<section>
+  <p class="sec">Os 6 graus de um objeto livre</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 220" role="img" aria-label="Um objeto livre tem 6 graus de liberdade: 3 de posição (x, y e z) e 3 de orientação (giro em torno de cada eixo).">
+      <path class="s" d="M100 140H180M100 140V60M100 140L52 182"/>
+      <path class="s" d="M174 134l6 6-6 6M94 66l6-6 6 6M56 172l-4 10 10-3"/>
+      <text x="188" y="145">x</text><text x="94" y="50">z</text><text x="30" y="180">y</text>
+      <text class="t ac" x="100" y="24" text-anchor="middle">3 de posição</text>
+      <path class="s" d="M300 60a40 14 0 1 1-1 0"/>
+      <path class="s" d="M300 140V60"/>
+      <path class="s" d="M262 100a14 40 0 1 1 0 1"/>
+      <text class="t ac" x="300" y="24" text-anchor="middle">3 de orientação</text>
+      <text class="m" x="300" y="200" text-anchor="middle">girar em torno de x, y e z</text>
+      <text class="m" x="100" y="214" text-anchor="middle">andar em x, y e z</text>
+    </svg>
+    <figcaption>Para pôr a garra em <b>qualquer</b> posição e <b>qualquer</b> orientação, o braço precisa controlar esses 6 números.</figcaption>
+  </figure>
+  <p class="enun">O SO-101 tem seis motores: base, ombro, cotovelo, dobra do pulso, giro do pulso e a garra. Para as perguntas abaixo, a garra (abrir e fechar) <b>não conta</b> como junta do braço, porque não muda onde a garra está.</p>
+  <ol class="regras">
+    <li>Quantas juntas o braço tem, sem contar a garra?</li>
+    <li>Dessas, quantas giram em torno de eixos <b>paralelos</b>, ou seja, dobram todas no mesmo plano vertical?</li>
+    <li>Quantos graus de liberdade <b>faltam</b> ao braço para pôr a garra em qualquer posição e qualquer orientação?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="graus-de-liberdade" autocomplete="off">
+    <div class="campos">
+      <label>1. Juntas do braço<input data-tipo="numero" inputmode="numeric" placeholder="número"></label>
+      <label>2. Juntas paralelas<input data-tipo="numero" inputmode="numeric" placeholder="número"></label>
+      <label>3. Graus que faltam<input data-tipo="numero" inputmode="numeric" placeholder="número"></label>
+    </div>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Cada junta do braço acrescenta um grau de liberdade. Conte os motores e tire o da garra.</li>
+    <li hidden>Olhe o braço de lado (ou o desenho do <a href="../no-estande/">desafio 4</a>). Quais juntas dobram como uma dobradiça de porta deitada, todas para o mesmo lado? A base gira em outro eixo, e o giro do pulso também.</li>
+    <li hidden>Um objeto livre precisa de 6. Compare com o número da pergunta 1.</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Cinco juntas para seis números</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">Veja como o gêmeo do SO-101 decide a inclinação da garra quando falta um grau de liberdade no <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Robôs com dezenas de graus de liberdade, como humanoides, estão na <a href="https://inematds.github.io/HG1/">Academia de Humanoides</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../pega-e-solta/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"6cbd880e3c4b0487f3ba43cbb2ae1fab7597607d213ed58e7ef776e52f6cecf3","iv":"oZbDE0qbYOxl0m+8","exp":"9mmPv5UvAl+r620gmVQamPD8p+QsWP1JuXnIokVYhXW3yAm1vOKwV2lRDEArPbh7PyhUyi5gKwL7Ym07mV8x/f67/QO3rDxjJaBNsCbjnU/DXtfu0AVolyN19zRYTEbuCIjq0c3bhjh4XKnzeZS58tt0AfNXztag3k+2EwQ5WzqY1pZCyJ0rVu7siF3/XIlIP78YyMdZnP1haHBA1SVdXkF8X9iXx5T7JvQNXG/mGGoBwGjpWscHrDAVu+r/c2Zl2PV745zi5oQncGm6hiwyTOR2VKv0uYZKQ3H+jZbtERi4aR6MujzTNuFYwIPk/yw2gvr62gaIatQ1YrUtU7584iygPrE01B5enewnbC7uxWrsLnzK3yQyreZZCPmbaOk2mIp9LADuKaumOyJkLU9pah2/R8BP1Q1F7s9ICd2JskYi+Q8LUsDQbaqYPwmvA40loLNlIuKTrZRTJtC6aBcsL5QaaWWP1IHW4LS4OlVj1z+513lel4raf7UNYy9MXQHxKVwEXjcSlp/aLlqRDV7h1X3NgvCfbroiZjIVOfuS5A75BBfiyhNxN9ffVECCrYcTApk2KNZRkYJxlrtAeUg7pT8YBr54sXldZnvCjgHR+ANuk2ny+9THwx8RKVhyNPEiIWSwLtp3csFOWET3QXaMByc7Wqq6Bz0HGFl4AGmQKmzT/su6PMgRSliq+Vl/ydgYMyE/wVG4MOq/rNMBLykhdmXRUAJZByY0m7042GrctxyQHe8yzTvbvBWwZuVyuX2kF7dM/TmfmS+uMGO/g5HSNVmrNGI9cjwEhfkYJO4at66ymHvcoUdBDcUJto2cBADmNMLetlMWTByuRg6q5vuz+MEbdFq7XUIGIhkMFYCPf14Mb108hfPm8i4ZYLZHL6s718Pp6iq1lVls23VljlIqg+8ESDcO7oAUS9DysJTyM1LmNISsmbhi82RYlKYGlkpjC8weJcZocLEj7gJjFRBHB/SJ3+AsT/eZ5teGLjyKEWsM8rwxKnT9IPRX18O9C7MgN3QQ5g9mwB4imSx0eLujJflSH0DAqJTrgecxgP1Aq0/+yFUET6KPEhKMY7OqUbkl/eW4DYd56XycgLXXq2o1OmTZASJpL++jOwRin33aaAwZeNxPEGzPFmC7Ps/YfMBs7LvGeQ52Kz4BEPzrPqsbE3A97uUn0IvWUWkU5bCITtLYiNNzsiJiT5RpF3Z0HG5hHXBLPRUjiAqReUlgDBmaeQwciemiN9HTwL7Z75jCeG5+wC01fdxOD/JpbqmPL5lbMostM3+dVk2vvgj4ianHVVE72l9h9xfZ1G7SWoFxKIZYyI5gAycx5PVvF6LywEoqGUkalyiZXrmbpWr0C1pYs9mh69yZ4SYaAv32Yl+cof/dNZgJc62QPLC1eQVCtS87y/GyjWLu2JAmEwDX4KcHfz/4Mh5jl2muINIAHlqIze45mGyTVKZff3gMU1AaTk7HGeOMFroo5XoiEklBoMgA0e1KpI/AJ6BY1buluKH5hBaRykVE5alzhq60Uidb0iFKbooC+wAZ23RXQk4tDk1Jn8xxbftx4lVt27cJPytpJg12N2wXkvRmoJlt3zR77PFlMHgogZ5LgxNUgcRD2J7CkwOyCvGIQcgE5QkbZvUJBkKVYN07/ToUTKop8gearORV1qQULtaggsfoGzKu1oFF5OD+6q0vwdRFcWEEsmCpGwcKkoxSScf5XZsNLa/tZLOjxEIvGDW1SkEv7+pm9rtjjmk/XqYCeVHWIxyuv716bCbNOtTKkw=="}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

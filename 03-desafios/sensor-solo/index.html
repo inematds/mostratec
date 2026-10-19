@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>O sensor que passou do limite · Desafios</title>
+<meta name="description" content="Desafio de eletrônica com ESP32: o código real da irrigação inteligente. O que o painel mostra quando o sensor passa da calibração? INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../no-estande/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 3 · Eletrônica · ESP32 · ★★★</span>
+  <h1>O sensor que <em>passou do limite</em></h1>
+  <p class="lead">Este é o código de verdade da <a href="../../11-solucoes-praticas/irrigacao/">irrigação inteligente</a>: um ESP32 lê um sensor capacitivo de umidade do solo e mostra a porcentagem num painel. O número do sensor <b>cai</b> quando a terra molha. Calcule o que o ESP32 guarda em cada variável.</p>
+</section>
+
+<section>
+  <p class="sec">Como o sensor é lido</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 150" role="img" aria-label="Escala do sensor: 1400 é molhado e vale 100 por cento, 3300 é seco e vale 0 por cento. As leituras 2350 e 3500 estão marcadas na escala; 3500 fica além do seco.">
+      <path class="s" d="M30 70H360"/>
+      <path class="l" d="M360 70H392"/>
+      <circle class="j" cx="40" cy="70" r="6"/><text x="40" y="44" text-anchor="middle">1400</text><text class="m" x="40" y="100" text-anchor="middle">molhado</text><text class="m ac" x="40" y="120" text-anchor="middle">100%</text>
+      <circle class="j" cx="320" cy="70" r="6"/><text x="320" y="44" text-anchor="middle">3300</text><text class="m" x="320" y="100" text-anchor="middle">seco</text><text class="m ac" x="320" y="120" text-anchor="middle">0%</text>
+      <path class="s" d="M180 56v28"/><text class="t ac" x="180" y="44" text-anchor="middle">2350</text><text class="m" x="180" y="104" text-anchor="middle">leitura A</text>
+      <path class="s" d="M354 56v28"/><text class="t ac" x="362" y="22" text-anchor="middle">3500</text><text class="m" x="364" y="140" text-anchor="middle">leitura B</text>
+    </svg>
+    <figcaption>Valores de calibração do guia: sensor no ar dá 3300 (seco), no copo d'água dá 1400 (molhado). O ADC do ESP32 vai de 0 a 4095.</figcaption>
+  </figure>
+<pre><code>int SECO = 3300, MOLHADO = 1400;   // calibração
+
+void ler() {
+  int bruto = analogRead(PINO_SOLO);           // 0 a 4095
+  int pct = map(bruto, SECO, MOLHADO, 0, 100);
+  umidade = constrain(pct, 0, 100);            // vai para o painel
+}</code></pre>
+  <p class="enun">O <code>map()</code> do Arduino/ESP32 faz a conta com <b>números inteiros</b>:</p>
+<pre><code>long map(long x, long in_min, long in_max, long out_min, long out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}</code></pre>
+  <ol class="regras">
+    <li>Leitura A: <code>bruto = 2350</code>. Quanto vale <code>pct</code>?</li>
+    <li>Leitura B: o vaso ficou no sol e <code>bruto = 3500</code>. Quanto vale <code>pct</code>?</li>
+    <li>Ainda na leitura B, quanto vale <code>umidade</code> (o que o painel mostra)?</li>
+  </ol>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="sensor-solo" autocomplete="off">
+    <div class="campos">
+      <label>1. pct com 2350<input data-tipo="numero" inputmode="text" placeholder="inteiro"></label>
+      <label>2. pct com 3500<input data-tipo="numero" inputmode="text" placeholder="inteiro"></label>
+      <label>3. umidade com 3500<input data-tipo="numero" inputmode="text" placeholder="inteiro"></label>
+    </div>
+    <p class="formato">Números inteiros. Se der negativo, use o sinal de menos.</p>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Substitua na fórmula: <code>x</code> é o bruto, <code>in_min</code> é o SECO (3300), <code>in_max</code> é o MOLHADO (1400), <code>out_min</code> é 0 e <code>out_max</code> é 100. Repare que <code>in_max</code> é menor que <code>in_min</code>.</li>
+    <li hidden>Na divisão entre inteiros em C, a parte decimal é jogada fora, rumo ao zero: 7 / 2 dá 3 e −7 / 2 dá −3 (não −4).</li>
+    <li hidden><code>constrain(valor, 0, 100)</code> devolve 0 se o valor for menor que 0, 100 se for maior que 100, e o próprio valor no resto.</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>A regra de três que não trava sozinha</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">Monte a irrigação completa (sensor, relé, bomba e painel no celular) com o guia <a href="../../11-solucoes-praticas/irrigacao/">Irrigação inteligente</a>. Para começar no ESP32 do zero, o curso <a href="https://inematds.github.io/robot/">Robótica do Zero ao Expert</a> vai do primeiro LED ao robô com sensores.</p>
+  <div class="acoes"><a class="btn pri" href="../no-estande/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"5c5b66b2f1023784c3a090adfe8102cf25cad930c06b79df38d4f3ec665e57d7","iv":"fl9i/nr+xEXU/1oX","exp":"/2b+cdbSF8Sx0QonVnQU7vqacrfo6wZvATG/IBeo2LDGlDtHDh3Ro/rjIHT5h1JkAPFhUB9ElN3j74srg66aIpfc3dmUJaKe3efOPRRui+TcyqdI1QLuudru2RGpvOrD+HxsK0KiwL9hfHIlUmun8ylN6EWDW3ECJuBKO1Oh+BLjM1aIfdj9swrUZVDRsv5h1anaByKgSrli+ITleo/icItJfpNE8dvX8QEJqJXNWkia0yipL5vy2axCx6D91bS0awGXXKA580cs2lFTusYnOIs8gc+PSVyvT+DnZETUCBU+CiXJw6ct1ZLN1zGbSsj892fFkfkcYYxpzdSuGq+xzRPjaY3d0EJBwUZxZLKGWKz+SYZhXH3eO3yyY7r3wGdj3E8Jh0VPDQC+gyJlSZidJnzbyJzqhpxh76E0BvfIv6nh3fsLCtZ9REtY2zHPGVlCxgWAKtLXtWoVBfl/8W061C2638AZjk2C/PKQVGFYwvDJJYSfmQ2IFTY3ZKhrU3ha8bjnyP4b+s9rl/oFoKaebw34h881uS2eGZko/unG5bLQkauAPdl/SVSg03YpiAOxSYf56IvTbZImMQmmp8makny7F8y5xq74sntRfz375+21mOJz5wCSSOfQ2BiVK9HfSif6zJKGJECPuHsK0NuMveMlUGkUVxYZxPKicxlRLfCzlTdp2oXJJvSYmuLQMx9hxpB60D4+2pExX6hymIWd8KjbFW8Qtzb8dx1wf+yzuNXzNL+v9UQ3K26m38qVhKqPARBuq2JEMEPKbkRB2FBU58X0vcfAnuIc2nn6rna+NoaVdQUIKgBqJpPJrWogU4KG30/aqPnBBVE1C7vqBP3ZVqn3dBDzHDYTfdaOmhnR0Hj7MaXjpi/e/tN3Kr7IPaRgO6LIt7tPE/pmy/q8aYDFtmjhmuFWCZYZkU9KrMY7suBkgjaw1Lmt1jCf3VBTKzw6w/88kf4iWbxuEPew9n56CChQpPjQNXsfmpwTtbnBrNAZb3FypXZiuR78iXAFPvLCHUwrFxV6H0klBHwQLSujDx2w3u+zGy7xegN6cTHoF/X1XF/Ox3yCiRceEoXlv2yq5BlwIzfILCGrUlymwdTBAxODW7BxxUwqx143+YBKkGdrApTu79Lq0L8SOxV8deJnzotc0VLM8OgXATjq3/hz9e5gH9Ifhb4ECvU/2rIZvTfN5wK9YJiQZmV1J2bR1Uu2R7rthxXKIHiCi78pEkJbOgs0WNMtDUACU3LrbCobQBO2EcD9wobYfJTwGoJax8Lnk9Hqxw9Qoe9ZGr8/cPp4qKhyCp7dl6wDYxTuijIfpTYLFUnjh9HtSxhUkCzOeVQoA7jRu7p05ILozmlrptFf6z4uCvId2tvmPUhP/D8Ut8L2aMCtSptmqQA0vR97vfB8Q+AZo5zhjCnI"}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>

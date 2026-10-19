@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pega e solta · Desafios</title>
+<meta name="description" content="Desafio do braço SO-101: seis comandos, quatro regras. Monte a sequência mais curta para levar o cubo até a bandeja. INEMA na MOSTRATEC 2026.">
+<meta name="theme-color" content="#0c0c10">
+<link rel="stylesheet" href="../../assets/pagina.css">
+<link rel="stylesheet" href="../desafios.css">
+</head>
+<body>
+<header class="topo"><div class="wrap">
+  <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
+  <nav class="nav" aria-label="Desafios"><a href="../">Todos os desafios</a><a href="../dados-de-treino/">Próximo</a></nav>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <span class="chip">Desafio 6 · SO-101 · ★★</span>
+  <h1>Pega <em>e solta</em></h1>
+  <p class="lead">Você é o gerador de movimento do braço. Tem seis comandos e quatro regras de segurança. Escreva a <b>sequência mais curta</b> que leva o cubo até a bandeja.</p>
+</section>
+
+<section>
+  <p class="sec">A mesa</p>
+  <figure class="fig">
+    <svg class="dg" viewBox="0 0 400 200" role="img" aria-label="Vista de cima da mesa: o braço no centro, apontando para a frente. O cubo fica à esquerda e a bandeja à direita.">
+      <circle class="bx" cx="200" cy="150" r="26"/><text class="t" x="200" y="155" text-anchor="middle">base</text>
+      <path class="g" d="M200 124V60"/><text class="m" x="200" y="40" text-anchor="middle">o braço começa apontando para a frente</text>
+      <rect class="bx" x="44" y="92" width="34" height="34" rx="4"/><text x="61" y="150" text-anchor="middle">cubo</text>
+      <rect class="b" x="300" y="80" width="80" height="56" rx="8"/><rect class="b" x="308" y="88" width="64" height="40" rx="6"/><text x="340" y="160" text-anchor="middle">bandeja</text>
+      <path class="l" d="M176 140L86 112M224 140L296 112"/>
+    </svg>
+    <figcaption>Vista de cima. Início: braço no alto, garra fechada, base apontando para a frente (nem para o cubo, nem para a bandeja).</figcaption>
+  </figure>
+
+  <p class="sec">Os comandos</p>
+  <div class="cartas">
+    <div class="carta"><span class="let">A</span><span><b>Abrir a garra</b> (<code>gripper</code>)</span></div>
+    <div class="carta"><span class="let">B</span><span><b>Fechar a garra</b> (<code>gripper</code>)</span></div>
+    <div class="carta"><span class="let">C</span><span><b>Girar a base para o cubo</b> (<code>shoulder_pan</code>)</span></div>
+    <div class="carta"><span class="let">D</span><span><b>Girar a base para a bandeja</b> (<code>shoulder_pan</code>)</span></div>
+    <div class="carta"><span class="let">E</span><span><b>Descer até o alvo</b> (<code>shoulder_lift</code>, <code>elbow_flex</code>, <code>wrist_flex</code>)</span></div>
+    <div class="carta"><span class="let">F</span><span><b>Subir para a altura segura</b> (as mesmas três juntas)</span></div>
+  </div>
+
+  <p class="sec">As regras</p>
+  <ol class="regras">
+    <li>A base só gira com o braço <b>no alto</b>. Girando embaixo, o que estiver na garra arrasta na mesa.</li>
+    <li>A garra só abre quando já está <b>apontada para o alvo</b> (o cubo ou a bandeja), nunca no meio do caminho.</li>
+    <li>Para pegar, a garra precisa estar <b>aberta antes de descer</b>. Fechada, ela bate no cubo e empurra.</li>
+    <li>Não solte o cubo do alto: <b>desça até a bandeja</b> antes de abrir. E termine com o braço <b>no alto</b>.</li>
+  </ol>
+  <p class="enun">Um mesmo comando pode aparecer mais de uma vez. Responda com as letras, na ordem, por exemplo <code>FADE</code>.</p>
+</section>
+
+<section id="resposta">
+  <p class="sec">Sua resposta</p>
+  <form class="resolver" data-id="pega-e-solta" autocomplete="off">
+    <div class="campos">
+      <label>Sequência de comandos<input data-tipo="letras" autocapitalize="characters" spellcheck="false" placeholder="ex.: FADE"></label>
+    </div>
+    <p class="formato">Espaços, vírgulas e minúsculas tanto faz: "c, a, e" vale o mesmo que "CAE".</p>
+    <button class="btn pri" type="submit">Conferir</button>
+    <p class="retorno" aria-live="polite"></p>
+  </form>
+</section>
+
+<section>
+  <p class="sec">Dicas</p>
+  <ol class="dicas">
+    <li hidden>Divida em duas metades: pegar o cubo e entregar na bandeja. Cada metade tem um giro de base.</li>
+    <li hidden>A primeira metade termina com o cubo preso e o braço no alto. Quantos comandos ela tem? Dica dentro da dica: são cinco.</li>
+    <li hidden>A segunda metade tem quatro comandos e termina como a regra 4 manda. A sequência inteira tem nove letras.</li>
+  </ol>
+  <button class="btn mais-dica" type="button">Ver dica 1</button>
+</section>
+
+<section id="explicacao" hidden>
+  <p class="sec">Explicação</p>
+  <h2>Nove passos, nenhum a mais</h2>
+  <div class="exp"></div>
+</section>
+
+<section>
+  <p class="sec">Para ir além</p>
+  <p class="ler">No gêmeo do SO-101, o comando <code>provar</code> roda um plano como este dezenas de vezes, com a mesa um pouco diferente a cada vez, e diz qual passo falhou. Veja no <a href="https://inematds.github.io/robotica-so101/guia/">guia do SO-101</a>. Programação de robôs passo a passo está no curso <a href="https://inematds.github.io/robot/">Robótica do Zero ao Expert</a>.</p>
+  <div class="acoes"><a class="btn pri" href="../dados-de-treino/">Próximo desafio</a><a class="btn" href="../">Todos os desafios</a></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  INEMA na MOSTRATEC 2026 · cursos abertos e gratuitos no <a class="clube" href="https://inema.club/?src=mostratec">INEMA.CLUB</a><br>
+  27 a 29 de outubro de 2026 · FENAC, Novo Hamburgo/RS · <a href="../">Desafios para quem é bom</a>
+</div></footer>
+<script type="application/json" id="cofre">{"hash":"cfc7a6dc5262d1f202c405fad8a861d1ff7c4621b7c114db3bc8a41be5986d9f","iv":"JR4JCMoEIIuVivQi","exp":"QfmRz1obCTcHUdQk/Oaacqr5GudX2bl+kEyudxt2TlCjj0ekdv7UxAuIUty3rpPSU6DRwUwNWP2g1VEGnsEfph444sHQsA4DtAd9NIjH0/B+J6+b5Ri+XoJ++zVDW3/xgb7wdwJQ4dZ7jpqXga87VJUPxwgCNIPWJimngbdz3Iz0WE1VR26T5IRyQJBejU5yu9G+WxYPjXGVEWKR5EmQ97Te2rn23kn7TpPSA0jvrTRu3FE/Smyrscb7bhHLV0M3r3hC7hja35vNxneIblI9wUl4sFEih0oABtstTepql3xCCZnaqkNyVD25lfsaDoP0r+1AhF3krgWJRaAYjhwZ9JWb6oSbhP/42G5oLDe2DsaKTmnhagg9lcJzC9oZXF1M9xra7VkXFTIg10JdxrPU+06tOuQ8n4iE9n6swGkKQL54YnRu0fy8vfQekURq1xLBNBZTyqwTozWhxa7wg7Y/gmkY2EdM2iNFtczAb0wVCRExamnVMYZN8xjij3Q0lGG7nFNCrRblqj7eLmF0qVklCZgQ1YGwbjqLusn4rc3OqtpieYSHGHoGAhq/hTup8/vPstH1whbyiFY+nYyElyxq38bzgIZaY5GA9dq2vtImh8VWJLhg4FoaX2erEiriX0dVjyRB7Fjmpo+gi8TUZc989j5r2XpwKsz2eVfe0IWgpQhOnh++b2sXbui93bLVIm7GGXelB+OiFBD8tIvnJtLLYDAp2MEO5zt2644aAiRZnrNGlGO1lL8FNbU8RHPJq8xyJfrbOzR1fkfL6cNvioCun74vX5E/WiZgHK06c6NyEbrxRnBaa6vGpNiBkXeW0/uKk49M/vEujM/PRa07SRohuwSzY+13rChl3Qs4XrXomkGwqQ6Rl/1Q9s2hAoPeAbUHMsXpmE8s6nzbzE6ltfsoox1DEORyHb9Hvw1oIzKCuaobMdn8N/tCwxSfLtF+fY8bVrDLvrxgAC9gVYoNeLh2zu1nGlW5oJs0dTPwfFtuPznEMVTaUqC2PVUQhpObqrhVdtFdUQ7C6kyF2uRVkKvSpS0IREGjw43PQRcb7YgJXV1tv2cZuKLOHyQxjyLvgs4s7/edg6aU69oU8AGXY9MsTPwbYso44vB1HLPsyWGPmJTNC1+NwtkT4z0sD+ma+HGFLPYDA32qiKfVKsifXxg3Ji6oEoEYUVucaDLN9Z9ifVM2VPPyv6c7CjTOFPP/pLUZdrDaeAFDBWVFtAukYp5rUcPiQiqx/hRdUDo0zQFOz0BHfIOqJikGb9ic9Y4IrUyBxYrACltBVMbDjC1nPkYMoS/YMPKgS+xbrM0BcWls330nsqvgvRzeQzzOq13mqdtqFhKcmtX88snexIKeJokmY/1VJGjcvmHGn6keyLfveIHY8ofcNlFvwG7agIDZ9uQdArjTbFlbmTMqy5h4OczDyut00vdlCuDmi4I+JdezsWMTesWyxrHrHmJueyveaSmazHSXAc/x1DuOL4utWFOQ+YXliR0qdzXTV/8NfwTpeqkFBK48R6OQZjIok+EiYMFs3ys4a27cqyP0sJjRIr0UsQoOvosxd9+y9UniJ5oyIyGt29pJneSx8Nw1ncZ4E8sR37Vrwe7i59bnPlV319uC12BcZZbq35+inHfPmNM1E0sC+kOunU94iUp/g8ix42Sg/juvsbglyS/xceg2/97LP+/LIsep23S9zGGCVCeNzKG2mGI7bjr5LtPPrgBVSDCrDgViW3/Q25zeTYx7nWdIX23rzu2NV1VGe6BQpLH6FCZNcA=="}</script>
+<script src="../desafio.js"></script>
+</body>
+</html>
