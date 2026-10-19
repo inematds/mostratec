@@ -72,9 +72,9 @@
   "descricao": "Crianças criam e leem histórias interativas com personagens animados e cenários.",
   "datas": "criado 04/03/2026 · último commit 10/03/2026",
   "situacao": "no ar",
-  "nota": "Só a página-guia está no ar; o app em si está fora (Vercel 402). Dá para publicar no GitHub Pages com 1 a 2 dias de trabalho.",
-  "link": "https://inematds.github.io/animabooksf/guia/",
-  "rotulo": "Abrir o guia",
+  "nota": "App no ar no GitHub Pages desde 19/10 (v1.3.0): as criações ficam salvas no navegador de cada aparelho, com exportar/importar cópia. Guia em inematds.github.io/animabooksf/guia/.",
+  "link": "https://inematds.github.io/animabooksf/",
+  "rotulo": "Abrir o app",
   "capa": "capas/proj-animabooksf.jpg"
  },
  {
