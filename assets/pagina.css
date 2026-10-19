@@ -30,6 +30,7 @@ p{margin:0 0 14px}
 .nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;font-size:14px}
 .nav a{color:var(--mut);text-decoration:none;padding:6px 10px;border-radius:10px}
 .nav a:hover,.nav a[aria-current]{color:var(--txt);background:var(--bg2)}
+.nav .capa-link{color:var(--amb);font-weight:700}
 
 /* hero */
 .hero{padding:44px 0 26px}
