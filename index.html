@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>INEMA na MOSTRATEC</title>
-<meta name="description" content="INEMA na MOSTRATEC 2026 (27 a 29/10, FENAC): jogos para criar, soluções que vendem, robôs para montar, desafios, desenho que ganha vida, braço SO-101 e o seu futuro em imagem. Tudo aberto e gratuito, pelo QR Code.">
+<meta name="description" content="INEMA na MOSTRATEC 2026 (27 a 29/10, FENAC): jogos para criar, soluções que vendem, robôs para montar, desafios, desenho que ganha vida, braço SO-101, o seu futuro em imagem, 119 jogos educativos e a escola INEMA Academia. Tudo aberto e gratuito, pelo QR Code.">
 <meta name="theme-color" content="#0c0c10">
 <link rel="canonical" href="https://mostratec.inema.club/">
 <meta property="og:title" content="INEMA na MOSTRATEC 2026">
@@ -27,21 +27,21 @@
 .servico .tag{background:var(--sky);color:#06131c}
 /* celular: quem já está no celular não precisa do QR */
 @media(max-width:640px){.qr{display:none}.bloco .corpo{grid-template-columns:1fr}}
-/* ?tv=1: TV do estande, os 11 blocos numa tela (4×3), título + QR */
+/* ?tv=1: TV do estande, os 13 blocos numa tela (5×3), título + QR */
 body.tv .topo,body.tv footer,body.tv .lead,body.tv .vai{display:none}
 body.tv .wrap{width:96vw}
 body.tv .hero{padding:1.8vh 0 1.6vh;display:flex;align-items:center;gap:2vw;flex-wrap:wrap}
 body.tv h1{font-size:2.5vw;margin:0}
 body.tv .chip{font-size:1vw}
-body.tv .blocos{grid-template-columns:repeat(4,1fr);gap:1.2vw;margin:0}
+body.tv .blocos{grid-template-columns:repeat(5,1fr);gap:1vw;margin:0}
 body.tv .bloco .foto{aspect-ratio:auto;height:11vh}
 body.tv .bloco .corpo{padding:1vw 1.1vw;gap:1vw}
-body.tv .bloco h3{font-size:1.45vw}
+body.tv .bloco h3{font-size:1.25vw}
 body.tv .bloco p{display:none}
 body.tv .hero{flex-wrap:nowrap}
 body.tv h1{font-size:2.1vw;white-space:nowrap}
 body.tv .bloco .tag{font-size:.75vw}
-body.tv .qr{width:7vw;padding:.4vw}
+body.tv .qr{width:6vw;padding:.35vw}
 body.tv .bloco.estande{border-color:var(--amb)}
 .bloco.estande{display:none}
 body.tv .bloco.estande{display:flex}
@@ -50,7 +50,7 @@ body.tv .bloco.estande{display:flex}
 <body>
 <header class="topo"><div class="wrap">
   <a class="marca" href="https://inema.club/?src=mostratec">INEMA<b>.</b>CLUB</a>
-  <nav class="nav" aria-label="Estande"><a href="10-fabrica-de-jogos/">Jogos</a><a href="11-solucoes-praticas/">Soluções</a><a href="01-robo-que-anda/">Robôs</a><a href="03-desafios/">Desafios</a><a href="https://desenho.inema.pro/">Desenho</a><a href="06-avatar-foto-demo/quiz/">Seu futuro</a><a href="https://eventos.inema.pro/do-chat-ao-agente/">Agentes</a><a href="https://eventos.inema.pro/ia-cultivada/">IA Cultivada</a><a href="https://eventos.inema.pro/videos/">Vídeos</a></nav>
+  <nav class="nav" aria-label="Estande"><a href="10-fabrica-de-jogos/">Jogos</a><a href="11-solucoes-praticas/">Soluções</a><a href="01-robo-que-anda/">Robôs</a><a href="03-desafios/">Desafios</a><a href="https://desenho.inema.pro/">Desenho</a><a href="06-avatar-foto-demo/quiz/">Seu futuro</a><a href="https://eventos.inema.pro/do-chat-ao-agente/">Agentes</a><a href="https://eventos.inema.pro/ia-cultivada/">IA Cultivada</a><a href="https://eventos.inema.pro/videos/">Vídeos</a><a href="12-jogos-eai/">Jogos e Educação</a><a href="https://inematds.github.io/inemaacademia/">Academia</a></nav>
 </div></header>
 
 <main class="wrap">
@@ -110,6 +110,16 @@ body.tv .bloco.estande{display:flex}
       <div class="foto"><img src="assets/img/videos.webp" alt="Vídeos e filmes feitos com IA" loading="lazy"><span class="tag">Vídeos</span></div>
       <div class="corpo"><div><h3>Vídeos e filmes com IA</h3><p>Do tema ao vídeo publicado: todos os sistemas de vídeo do INEMA num lugar só.</p><span class="vai">Assistir →</span></div>
         <div class="qr"><img src="assets/qr/videos.svg" alt="QR de Vídeos e filmes com IA"></div></div></a>
+
+    <a class="bloco" href="12-jogos-eai/">
+      <div class="foto"><img src="assets/img/jogos-educacao.webp" alt="Capas de jogos educativos do EAI" loading="lazy"><span class="tag">Jogos</span></div>
+      <div class="corpo"><div><h3>Jogos e Educação</h3><p>119 jogos no celular (79 educativos) e apps de educação, como o AnimaBooks: a criança cria a própria história animada.</p><span class="vai">Jogar →</span></div>
+        <div class="qr"><img src="assets/qr/jogos-educacao.svg" alt="QR de Jogos e Educação"></div></div></a>
+
+    <a class="bloco" href="https://inematds.github.io/inemaacademia/" target="_blank" rel="noopener">
+      <div class="foto"><img src="assets/img/academia.webp" alt="INEMA Academia: ensino fundamental interativo" loading="lazy"><span class="tag">Escola</span></div>
+      <div class="corpo"><div><h3>INEMA Academia</h3><p>Escola do 6º ao 9º ano pela BNCC: lições, exercícios corrigidos na hora, XP e tutor de IA.</p><span class="vai">Conhecer →</span></div>
+        <div class="qr"><img src="assets/qr/academia.svg" alt="QR do INEMA Academia"></div></div></a>
 
     <a class="bloco estande" href="./">
       <div class="foto"><img src="assets/img/estande.webp" alt="" loading="lazy"><span class="tag">Tudo aqui</span></div>
