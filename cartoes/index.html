@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cartões de mesa · MOSTRATEC</title>
+<meta name="description" content="Cartões de mesa com QR para imprimir (A4, 4 por folha): Do chat ao agente, IA Cultivada, Vídeos e filmes com IA e Leve tudo no celular.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Tokens do ~/projetos/inema-design/DESIGN.md (mesmos do assets/pagina.css) */
+:root{--bg:#0c0c10;--card:#16161e;--line:#272730;--txt:#e9e9ee;--mut:#9a9aa6;--amb:#FACC15;--amb-ink:#1a1206}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;background:#fff}
+.folha{width:210mm;height:297mm;display:grid;grid-template-columns:98mm 98mm;grid-template-rows:139mm 139mm;gap:5mm;justify-content:center;align-content:center}
+.cartao{position:relative;background:var(--bg);color:var(--txt);border-radius:4mm;overflow:hidden;display:flex;flex-direction:column;font-family:Inter,sans-serif;outline:.2mm dashed #bbb;outline-offset:1.2mm}
+.foto{height:55mm;position:relative;flex:none}
+.foto img{width:100%;height:100%;object-fit:cover;display:block}
+.tag{position:absolute;left:4mm;top:4mm;background:var(--amb);color:var(--amb-ink);font:700 7.5pt/1 Sora,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:1.6mm 2.6mm;border-radius:99mm}
+.corpo{flex:1;display:flex;flex-direction:column;align-items:center;padding:3.2mm 6mm 4mm;text-align:center}
+h2{font:800 17pt/1.1 Sora,sans-serif;margin:0 0 1.6mm;letter-spacing:-.01em}
+h2 em{font-style:normal;color:var(--amb)}
+p{margin:0;color:var(--mut);font-size:8.6pt;line-height:1.4}
+.qr{background:#fff;border-radius:3mm;padding:2.4mm;width:44mm;margin:3mm 0 2.2mm}
+.qr img{display:block;width:100%}
+.aponte{font:700 9pt Sora,sans-serif;color:var(--amb)}
+.url{font-size:7.4pt;color:var(--mut);margin-top:.6mm}
+.rodape{margin-top:auto;font:600 7pt Sora,sans-serif;color:var(--mut);letter-spacing:.04em}
+.rodape b{color:var(--txt)}.rodape i{font-style:normal;color:var(--amb)}
+</style>
+</head>
+<body>
+<div class="folha">
+  <div class="cartao">
+    <div class="foto"><img src="img/agentes.jpg" alt=""></div>
+    <div class="corpo">
+      <h2>Do chat ao <em>agente</em></h2>
+      <p>Do primeiro chat a criar os seus agentes de IA. 4 sequências, um degrau por vez.</p>
+      <div class="qr"><img src="../assets/qr/agentes.svg" alt="QR"></div>
+      <div class="aponte">Aponte a câmera</div>
+      <div class="url">eventos.inema.pro/do-chat-ao-agente</div>
+      <div class="rodape"><b>INEMA<i>.</i>CLUB</b> · aberto e gratuito</div>
+    </div>
+  </div>
+  <div class="cartao">
+    <div class="foto"><img src="img/cultivada.jpg" alt=""></div>
+    <div class="corpo">
+      <h2>IA <em>Cultivada</em></h2>
+      <p>Não se programa, se cultiva: você cria o processo que ensina a IA a se comportar.</p>
+      <div class="qr"><img src="../assets/qr/cultivada.svg" alt="QR"></div>
+      <div class="aponte">Aponte a câmera</div>
+      <div class="url">eventos.inema.pro/ia-cultivada</div>
+      <div class="rodape"><b>INEMA<i>.</i>CLUB</b> · aberto e gratuito</div>
+    </div>
+  </div>
+  <div class="cartao">
+    <div class="foto"><img src="img/videos.jpg" alt=""></div>
+    <div class="corpo">
+      <h2>Vídeos e filmes <em>com IA</em></h2>
+      <p>Do tema ao vídeo publicado: todos os sistemas de vídeo do INEMA num lugar só.</p>
+      <div class="qr"><img src="../assets/qr/videos.svg" alt="QR"></div>
+      <div class="aponte">Aponte a câmera</div>
+      <div class="url">eventos.inema.pro/videos</div>
+      <div class="rodape"><b>INEMA<i>.</i>CLUB</b> · aberto e gratuito</div>
+    </div>
+  </div>
+  <div class="cartao">
+    <div class="foto"><img src="../assets/img/estande.webp" alt=""><span class="tag">Tudo aqui</span></div>
+    <div class="corpo">
+      <h2>Leve <em>tudo</em> no celular</h2>
+      <p>Jogos, soluções, robôs, desafios, formações e vídeos: todos os projetos do estande.</p>
+      <div class="qr"><img src="../assets/qr/estande.svg" alt="QR"></div>
+      <div class="aponte">Aponte a câmera</div>
+      <div class="url">mostratec.inema.club</div>
+      <div class="rodape"><b>INEMA<i>.</i>CLUB</b> · aberto e gratuito</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
