@@ -108,8 +108,8 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
 
     # arte por IA (serviço artista): com ARTISTA_REAL=1 espera o serviço de verdade; senão faz o papel dele
     artista_real = os.environ.get("ARTISTA_REAL") == "1"
-    assert st.get("arte_gerando") is True, st
-    if not artista_real:
+    if not artista_real:  # com o artista real a arte pode ficar pronta antes da animação
+        assert st.get("arte_gerando") is True, st
         assert c.get("/api/artista/proximo").status_code == 401, "artista sem senha"
         job = c.get("/api/artista/proximo", auth=op)
         assert job.status_code == 200 and job.json()["id"] == i, job.text
