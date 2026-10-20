@@ -18,6 +18,8 @@ services:
       RETENCAO_HORAS: ${RETENCAO_HORAS:-24}
       APAGAR_TUDO_AS: ${APAGAR_TUDO_AS:-23:30}
       MAX_MB: ${MAX_MB:-10}
+      ARTE: ${ARTE:-1}                 # versão filme (serviço artista no host, ver README)
+      ARTE_TIMEOUT: ${ARTE_TIMEOUT:-300}
       TZ: America/Sao_Paulo
     volumes:
       - dados:/dados

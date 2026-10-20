@@ -14,6 +14,8 @@
   .ator{position:relative;z-index:1;height:92%;aspect-ratio:1;transition:opacity .4s}
   .ator img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
   .ator.andar{animation:atravessa 8s linear infinite}
+  .ator.arte{height:96%;align-self:center}
+  .ator.arte img{mix-blend-mode:normal;border-radius:1.6vh}
   @keyframes atravessa{0%{transform:translateX(-60%)}50%{transform:translateX(60%)}50.01%{transform:translateX(60%) scaleX(-1)}100%{transform:translateX(-60%) scaleX(-1)}}
   .nome{position:absolute;z-index:2;left:3%;top:4%;font:800 clamp(24px,4.4vh,56px)/1.1 Sora,sans-serif;color:#1a1206}
   .acao{position:absolute;z-index:2;right:3%;top:4%;font:700 clamp(16px,2.6vh,30px) Sora,sans-serif;color:#7a5a12;text-transform:uppercase;letter-spacing:.12em}
@@ -47,14 +49,14 @@
 <div class="fila" id="fila"></div>
 <div class="rodape">cursos abertos e gratuitos no INEMA.CLUB</div>
 <script>
-const NOMES = {andar: 'andando', pular: 'pulando', dancar: 'dançando'};
+const NOMES = {andar: 'andando', pular: 'pulando', dancar: 'dançando', arte: 'versão filme'};
 const $ = (x) => document.getElementById(x);
 let itens = [], idx = 0, passo = 0, assinatura = null;
 async function atualizar() {
   try {
     const j = await (await fetch('/api/tv', {cache: 'no-store'})).json();
     $('url').textContent = j.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const nova = j.itens.map(i => i.id).join(',');
+    const nova = j.itens.map(i => i.id + (i.arte ? '+' : '')).join(',');
     if (nova !== assinatura) {
       const novos = j.itens.filter(i => !itens.some(v => v.id === i.id));
       itens = j.itens; assinatura = nova;
@@ -63,6 +65,7 @@ async function atualizar() {
     }
   } catch (e) {}
 }
+function passos(it) { const p = Object.keys(it.gifs); if (it.arte) p.push('arte'); return p; }
 function montarFila() {
   const f = $('fila'); f.replaceChildren();
   for (const i of itens.slice(0, 14)) {
@@ -75,17 +78,17 @@ function montarFila() {
 function mostrar() {
   if (!itens.length) return;
   const it = itens[idx % itens.length];
-  const movs = Object.keys(it.gifs);
+  const movs = passos(it);
   const mv = movs[passo % movs.length];
   $('vazio').hidden = true; $('ator').hidden = false;
-  $('gif').src = it.gifs[mv]; $('gif').alt = (it.apelido || 'Desenho') + ' ' + (NOMES[mv] || mv);
+  $('gif').src = mv === 'arte' ? it.arte : it.gifs[mv]; $('gif').alt = (it.apelido || 'Desenho') + ' ' + (NOMES[mv] || mv);
   $('ator').className = 'ator ' + mv;
   $('nome').textContent = it.apelido || '';
   $('acao').textContent = NOMES[mv] || mv;
 }
 setInterval(() => {
   if (!itens.length) return;
-  const movs = Object.keys(itens[idx % itens.length].gifs);
+  const movs = passos(itens[idx % itens.length]);
   passo++;
   if (passo >= movs.length) { passo = 0; idx = (idx + 1) % itens.length; }
   mostrar();

@@ -12,7 +12,7 @@
   .lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
   .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
   .item.aguardando{border-color:var(--amb)}
-  .vis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .vis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .vis img{width:100%;aspect-ratio:1;object-fit:contain;background:#f6f1e3;border-radius:8px}
   .meta{font-size:13px;color:var(--mut)}
   .meta b{color:var(--txt)}
@@ -54,23 +54,29 @@ function bt(txt, fn, pri) { const b = document.createElement('button'); b.classN
 async function carregar() {
   const j = await (await fetch('/api/operador/fila', {cache: 'no-store'})).json();
   const cont = {}; j.itens.forEach(i => cont[i.estado] = (cont[i.estado] || 0) + 1);
-  $('resumo').textContent = `Motor: ${j.motor} · aguardando ${cont.aguardando || 0} · processando ${cont.processando || 0} · na TV ${cont.aprovado || 0} · apaga com ${j.retencao_horas} h` + (j.apagar_tudo_as ? ` e todo dia às ${j.apagar_tudo_as}` : '');
+  $('resumo').textContent = `Motor: ${j.motor} · aguardando ${cont.aguardando || 0} · processando ${cont.processando || 0} · na TV ${cont.aprovado || 0} · apaga com ${j.retencao_horas} h` + (j.apagar_tudo_as ? ` e todo dia às ${j.apagar_tudo_as}` : '') + (j.arte ? ` · artista IA ${j.artista_ok ? 'ligado' : 'DESLIGADO'}` : '');
   const L = $('lista'); L.replaceChildren();
   for (const i of j.itens.filter(i => filtro === 'todos' || i.estado === filtro)) {
     const c = document.createElement('article'); c.className = 'item ' + i.estado;
     const vis = document.createElement('div'); vis.className = 'vis';
     const f = document.createElement('img'); f.src = i.foto; f.alt = 'foto enviada'; f.loading = 'lazy'; vis.append(f);
     const g = document.createElement('img'); g.alt = 'animação'; g.src = i.gifs.andar || Object.values(i.gifs)[0] || ''; if (g.src) vis.append(g);
+    if (i.arte_url) { const a = document.createElement('img'); a.alt = 'versão filme (IA)'; a.src = i.arte_url; a.loading = 'lazy'; vis.append(a); }
     const m = document.createElement('div'); m.className = 'meta';
     const est = document.createElement('div'); est.className = 'estado ' + i.estado; est.textContent = i.estado;
     const ap = document.createElement('div'); ap.append('Apelido: ', Object.assign(document.createElement('b'), {textContent: i.apelido || '(sem)'}));
     const inf = document.createElement('div'); inf.textContent = `${quando(i.criado)} · motor ${i.motor || '-'} · ${i.tempo_s ?? '-'} s` + (i.aviso ? ' · ' + i.aviso : '') + (i.erro ? ' · ' + i.erro : '');
-    m.append(est, ap, inf);
+    const ar = i.arte || {};
+    const arte = document.createElement('div');
+    if (ar.estado) arte.textContent = 'Arte: ' + ({pendente: 'na fila', gerando: 'gerando...', pronta: 'pronta (' + (ar.gerador || '?') + ', ' + (ar.tempo_s ?? '-') + ' s)', falhou: 'falhou · ' + (ar.motivo || ''), retirada: 'retirada'}[ar.estado] || ar.estado);
+    m.append(est, ap, inf, arte);
     const bts = document.createElement('div'); bts.className = 'bts';
     if (['aguardando', 'recusado', 'retirado'].includes(i.estado)) bts.append(bt('Aprovar', () => acao(i.id, 'aprovar'), true));
     if (i.estado === 'aguardando') bts.append(bt('Recusar', () => acao(i.id, 'recusar')));
     if (i.estado === 'aprovado') bts.append(bt('Tirar da TV', () => acao(i.id, 'retirar')));
     if (i.motor === 'ad' || i.estado === 'erro') bts.append(bt('Refazer no leve', () => acao(i.id, 'leve')));
+    if (ar.estado === 'pronta') bts.append(bt('Tirar arte', () => acao(i.id, 'tirar-arte')));
+    if (['pronta', 'falhou', 'retirada'].includes(ar.estado)) bts.append(bt('Refazer arte', () => acao(i.id, 'refazer-arte')));
     bts.append(bt('Apagar', () => confirm('Apagar este desenho?') && acao(i.id, 'apagar')));
     c.append(vis, m, bts); L.append(c);
   }

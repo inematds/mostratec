@@ -1,0 +1,26 @@
+# Serviço artista do Desenho Vivo (arte por IA: Agnes e Codex).
+# Instalar: cp artista/desenho-artista.service /etc/systemd/system/ && systemctl daemon-reload
+#           systemctl enable --now desenho-artista
+# Log:      journalctl -u desenho-artista -f
+[Unit]
+Description=Desenho Vivo - artista (Agnes/Codex)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/desenho-vivo
+# Mesmo .env do app: OPERADOR_SENHA, AGNES_API_KEY, ARTE_GERADORES
+EnvironmentFile=/opt/desenho-vivo/.env
+Environment=DV_URL=http://127.0.0.1:8000
+Environment=PYTHONUNBUFFERED=1
+# Codex instalado pelo npm global; login da assinatura em /root/.codex
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/root
+ExecStart=/usr/bin/python3 /opt/desenho-vivo/artista/artista.py
+Restart=always
+RestartSec=5
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

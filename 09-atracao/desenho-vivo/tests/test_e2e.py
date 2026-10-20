@@ -50,6 +50,7 @@ def esperar(cond, segundos, passo=0.5, msg="tempo esgotado"):
 
 
 def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
+    ESPERA = float(os.environ.get("ESPERA_S", 400 if motor == "ad" else 60))  # máquina carregada: aumente
     tmp = Path(tempfile.mkdtemp())
     foto = tmp / "desenho.jpg"
     salvar(str(foto))
@@ -79,7 +80,7 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
     assert r.status_code == 200, r.text
     i = r.json()["id"]
     st = esperar(lambda: (lambda j: j if j["estado"] != "processando" else None)(c.get(f"/api/d/{i}").json()),
-                 400 if motor == "ad" else 60, msg="processamento não terminou")
+                 ESPERA, msg="processamento não terminou")
     res["tempo_processamento_s"] = round(time.time() - t0, 2)
     assert st["estado"] == "aguardando", st
     assert "gifs" not in st
@@ -105,8 +106,47 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
     assert fj.status_code == 200
     assert len(Image.open(io.BytesIO(fj.content)).getexif()) == 0, "EXIF/GPS não foi removido"
 
+    # arte por IA (serviço artista): com ARTISTA_REAL=1 espera o serviço de verdade; senão faz o papel dele
+    artista_real = os.environ.get("ARTISTA_REAL") == "1"
+    assert st.get("arte_gerando") is True, st
+    if not artista_real:
+        assert c.get("/api/artista/proximo").status_code == 401, "artista sem senha"
+        job = c.get("/api/artista/proximo", auth=op)
+        assert job.status_code == 200 and job.json()["id"] == i, job.text
+        assert c.get("/api/artista/proximo", auth=op).status_code == 204, "entregou o mesmo desenho duas vezes"
+        assert c.get(job.json()["foto"], auth=op).status_code == 200
+        png = io.BytesIO()
+        Image.new("RGB", (1300, 1300), (30, 120, 200)).save(png, "PNG")
+        r = c.post(f"/api/artista/{i}/arte", auth=op, files={"arte": ("arte.png", png.getvalue(), "image/png")},
+                   data={"gerador": "falso", "tempo_s": "1.5"})
+        assert r.status_code == 200, r.text
+        assert c.post(f"/api/artista/{i}/arte", auth=op, files={"arte": ("a.png", png.getvalue(), "image/png")}
+                      ).status_code == 409, "aceitou arte que não estava esperando"
+    assert c.get(f"/arquivos/{i}/arte.jpg").status_code == 404, "arte pública antes de aprovar"
+
     # aprova
     assert c.post(f"/api/operador/{i}/aprovar", auth=op).status_code == 200
+    if artista_real:
+        t1 = time.time()
+        esperar(lambda: c.get(f"/api/d/{i}").json().get("arte"), 300, passo=3, msg="artista real não entregou a arte")
+        res["arte_real_s"] = round(time.time() - t1, 1)
+    st = c.get(f"/api/d/{i}").json()
+    assert st.get("arte") and not st.get("arte_gerando"), st
+    a = c.get(st["arte"])
+    assert a.status_code == 200 and a.headers["content-type"] == "image/jpeg", a.status_code
+    res["arte"] = {"bytes": len(a.content), "tamanho": Image.open(io.BytesIO(a.content)).size}
+    assert max(res["arte"]["tamanho"]) <= 1024, res["arte"]
+    if not artista_real:
+        assert c.post(f"/api/operador/{i}/tirar-arte", auth=op).status_code == 200
+        assert "arte" not in c.get(f"/api/d/{i}").json() and c.get(st["arte"]).status_code == 404
+        assert c.post(f"/api/operador/{i}/refazer-arte", auth=op).status_code == 200
+        assert c.get(f"/api/d/{i}").json().get("arte_gerando") is True
+        assert c.get("/api/artista/proximo", auth=op).json()["id"] == i
+        assert c.post(f"/api/artista/{i}/falhou", auth=op, data={"motivo": "teste"}).status_code == 200
+        st3 = c.get(f"/api/d/{i}").json()
+        assert "arte" not in st3 and not st3.get("arte_gerando"), st3
+        assert c.get("/api/operador/fila", auth=op).json()["itens"][0]["arte"]["estado"] == "falhou"
+    res["arte_fluxo"] = "ok"
     st = c.get(f"/api/d/{i}").json()
     assert st["estado"] == "aprovado" and st["gifs"], st
     tv = c.get("/api/tv").json()
@@ -147,7 +187,7 @@ def rodar(base: str, senha: str, dados: Path | None, motor: str) -> dict:
     r = c.post("/api/enviar", files={"foto": ("b.jpg", branco.getvalue(), "image/jpeg")}, data={"aceite": "1"})
     j2 = r.json()["id"]
     st2 = esperar(lambda: (lambda j: j if j["estado"] != "processando" else None)(c.get(f"/api/d/{j2}").json()),
-                  400 if motor == "ad" else 60)
+                  ESPERA)
     assert st2["estado"] == "erro", st2
 
     # limpeza (só quando a pasta de dados é local)

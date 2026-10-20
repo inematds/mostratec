@@ -13,6 +13,9 @@
   .palco figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
   .palco img{width:100%;border-radius:10px;display:block;background:#f6f1e3}
   .palco figcaption{color:var(--mut);font-size:14px;margin-top:6px}
+  .palco figure.arte{grid-column:1/-1}
+  .palco figure.arte img{max-width:560px;margin:0 auto;background:#111}
+  .palco .feito{padding:24px 10px;color:var(--mut)}
   .espera{display:flex;gap:14px;align-items:center;font-size:18px}
   .roda{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--amb);border-radius:50%;animation:g 1s linear infinite;flex:none}
   @keyframes g{to{transform:rotate(360deg)}}
@@ -35,7 +38,7 @@
 const id = location.pathname.split('/').pop();
 const NOMES = {andar: 'andando', pular: 'pulando', dancar: 'dançando'};
 const $ = (x) => document.getElementById(x);
-let fim = false;
+let fim = false, assin = '';
 async function ver() {
   try {
     const r = await fetch('/api/d/' + encodeURIComponent(id), {cache: 'no-store'});
@@ -43,10 +46,21 @@ async function ver() {
     if (!r.ok) { mostrar('Não encontrei este desenho', j.erro || 'Ele pode já ter sido apagado.', true); return; }
     if (j.estado === 'processando') $('estado').textContent = 'Dando vida ao personagem...';
     else if (j.estado === 'aguardando') $('estado').textContent = 'Pronto! A equipe do estande está conferindo' + (j.posicao ? ' (você é o ' + j.posicao + 'º da fila).' : '.');
-    else if (j.estado === 'aprovado') {
+    else if (j.estado === 'aprovado' && assin !== (assin = 'a' + (j.arte || '') + (j.arte_gerando ? 'g' : ''))) {
       $('titulo').textContent = j.apelido ? j.apelido + ' ganhou vida' : 'Seu desenho ganhou vida';
       $('espera').hidden = true;
       const p = $('palco'); p.hidden = false; p.replaceChildren();
+      if (j.arte) {
+        const fig = document.createElement('figure'); fig.className = 'arte';
+        const img = document.createElement('img'); img.src = j.arte; img.alt = 'Seu personagem em versão filme, feito por IA';
+        const cap = document.createElement('figcaption');
+        const a = document.createElement('a'); a.href = j.arte; a.download = 'desenho-versao-filme.jpg'; a.textContent = 'versão filme (feita por IA) · baixar';
+        cap.append(a); fig.append(img, cap); p.append(fig);
+      } else if (j.arte_gerando) {
+        const fig = document.createElement('figure'); fig.className = 'arte';
+        const d = document.createElement('div'); d.className = 'feito'; d.textContent = 'A IA está fazendo a versão filme do seu personagem. Ela aparece aqui em cerca de um minuto.';
+        fig.append(d); p.append(fig);
+      }
       for (const [mv, url] of Object.entries(j.gifs || {})) {
         const fig = document.createElement('figure');
         const img = document.createElement('img'); img.src = url; img.alt = 'Seu personagem ' + (NOMES[mv] || mv);
@@ -55,8 +69,9 @@ async function ver() {
         cap.append(a); fig.append(img, cap); p.append(fig);
       }
       $('dica').textContent = 'Olhe para a TV do estande: seu personagem está lá. Para guardar, toque em "baixar" (o link some no fim do dia).';
-      fim = true;
-    } else if (j.estado === 'recusado' || j.estado === 'retirado') mostrar('Esse não foi para a TV', 'A equipe não aprovou este desenho. Que tal fazer outro?', true);
+      fim = !j.arte_gerando; // continua olhando até a versão filme chegar
+    } else if (j.estado === 'aprovado') { /* nada mudou */ }
+    else if (j.estado === 'recusado' || j.estado === 'retirado') mostrar('Esse não foi para a TV', 'A equipe não aprovou este desenho. Que tal fazer outro?', true);
     else if (j.estado === 'erro') mostrar('Não achei o personagem', 'Tente de novo com traço mais forte, a folha inteira na foto e boa luz.', true);
   } catch (e) { $('estado').textContent = 'Sem conexão, tentando de novo...'; }
   if (!fim) setTimeout(ver, 3000);

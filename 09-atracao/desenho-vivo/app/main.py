@@ -48,6 +48,8 @@ APAGAR_TUDO_AS = os.environ.get("APAGAR_TUDO_AS", "").strip()  # "HH:MM" (fuso d
 MAX_MB = float(os.environ.get("MAX_MB", "10"))
 FILA_MAX = int(os.environ.get("FILA_MAX", "60"))
 TV_MAX = int(os.environ.get("TV_MAX", "30"))
+ARTE = os.environ.get("ARTE", "1") not in ("0", "", "nao", "false")  # arte por IA (serviço artista, fora do contêiner)
+ARTE_TIMEOUT = float(os.environ.get("ARTE_TIMEOUT", "300"))  # artista sumiu no meio: oferece de novo
 SENHA = os.environ.get("OPERADOR_SENHA", "")
 if not SENHA:
     SENHA = secrets.token_urlsafe(12)
@@ -55,12 +57,13 @@ if not SENHA:
 
 DADOS.mkdir(parents=True, exist_ok=True)
 RE_ID = re.compile(r"^[A-Za-z0-9_-]{8,40}$")
-ARQS_PUBLICOS = {"andar.gif", "pular.gif", "dancar.gif", "acenar.gif"}
+ARQS_PUBLICOS = {"andar.gif", "pular.gif", "dancar.gif", "acenar.gif", "arte.jpg"}
 MOVS = ["andar", "pular", "dancar"]
 
 app = FastAPI(title="Desenho Vivo", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=AQUI / "static"), name="static")
 basic = HTTPBasic(realm="operador")
+artista_visto = 0.0  # última vez que o serviço artista pediu trabalho
 fila: asyncio.Queue[str] = asyncio.Queue()
 trava_meta = asyncio.Lock()
 
@@ -305,6 +308,8 @@ async def enviar(request: Request, foto: UploadFile = File(...), apelido: str = 
     d.mkdir()
     (d / "foto.jpg").write_bytes(jpeg_limpo(img))
     meta = {"id": i, "criado": time.time(), "estado": "processando", "apelido": limpar_apelido(apelido)}
+    if ARTE:  # a arte (serviço artista) começa junto com a animação
+        meta["arte"] = {"estado": "pendente"}
     gravar_meta(i, meta)
     await fila.put(i)
     return {"id": i, "url": f"/d/{i}"}
@@ -316,6 +321,11 @@ def publico(m: dict) -> dict:
     if m["estado"] == "aprovado":
         out["gifs"] = {mv: f"/arquivos/{m['id']}/{mv}.gif?v={int(m.get('aprovado_em', 0))}"
                        for mv in m.get("movimentos", [])}
+        arte = m.get("arte") or {}
+        if arte.get("estado") == "pronta":
+            out["arte"] = f"/arquivos/{m['id']}/arte.jpg?v={int(arte.get('pronta_em', 0))}"
+    if m["estado"] in ("processando", "aguardando", "aprovado") and (m.get("arte") or {}).get("estado") in ("pendente", "gerando"):
+        out["arte_gerando"] = True
     if m["estado"] == "erro":
         out["erro"] = m.get("erro", "")
     return out
@@ -341,7 +351,8 @@ def arquivo(i: str, nome: str):
     p = pasta(i) / nome
     if not p.exists():
         raise HTTPException(404)
-    return FileResponse(p, media_type="image/gif", headers={"Cache-Control": "max-age=3600"})
+    tipo = "image/jpeg" if nome.endswith(".jpg") else "image/gif"
+    return FileResponse(p, media_type=tipo, headers={"Cache-Control": "max-age=3600"})
 
 
 @app.get("/api/tv")
@@ -393,7 +404,7 @@ async def curtir(i: str, request: Request):
 @app.get("/saude")
 def saude():
     return {"ok": True, "motor": MOTOR, "motor_ad_ok": motor_ad_ok() if MOTOR == "ad" else None,
-            "fila": fila.qsize()}
+            "fila": fila.qsize(), "arte": ARTE, "artista_ok": time.time() - artista_visto < 60}
 
 
 # ---------- API do operador ----------
@@ -404,8 +415,11 @@ def op_fila():
         x = dict(m)
         x["gifs"] = {mv: f"/operador/arquivo/{m['id']}/{mv}.gif" for mv in m.get("movimentos", [])}
         x["foto"] = f"/operador/arquivo/{m['id']}/foto.jpg"
+        if (m.get("arte") or {}).get("estado") == "pronta":
+            x["arte_url"] = f"/operador/arquivo/{m['id']}/arte.jpg?v={int(m['arte'].get('pronta_em', 0))}"
         itens.append(x)
-    return {"itens": itens, "motor": MOTOR, "retencao_horas": RETENCAO_HORAS, "apagar_tudo_as": APAGAR_TUDO_AS}
+    return {"itens": itens, "motor": MOTOR, "retencao_horas": RETENCAO_HORAS, "apagar_tudo_as": APAGAR_TUDO_AS,
+            "arte": ARTE, "artista_ok": time.time() - artista_visto < 60}
 
 
 @app.get("/operador/arquivo/{i}/{nome}", dependencies=[Depends(operador)])
@@ -444,12 +458,76 @@ async def op_acao(i: str, acao: str):
         m = await mudar(i, estado="aguardando", motor="leve", tempo_s=round(time.time() - t0, 2),
                         aviso="refeito no motor leve pelo operador",
                         movimentos=[mv for mv in MOVS if (d / f"{mv}.gif").exists()])
+    elif acao == "tirar-arte":
+        (pasta(i) / "arte.jpg").unlink(missing_ok=True)
+        m = await mudar(i, arte={"estado": "retirada"})
+    elif acao == "refazer-arte":
+        if m["estado"] in ("processando", "erro"):
+            raise HTTPException(409, f"Não dá para gerar arte no estado {m['estado']}.")
+        (pasta(i) / "arte.jpg").unlink(missing_ok=True)
+        m = await mudar(i, arte={"estado": "pendente"})
     elif acao == "apagar":
         apagar(i)
         return {"ok": True}
     else:
         raise HTTPException(400)
     return {"ok": True, "estado": m["estado"]}
+
+
+# ---------- API do serviço artista (arte por IA: Agnes ou Codex, roda fora do contêiner) ----------
+@app.get("/api/artista/proximo", dependencies=[Depends(operador)])
+async def artista_proximo():
+    """Entrega o desenho mais antigo com arte pendente (ou travada há mais de ARTE_TIMEOUT) e marca 'gerando'."""
+    global artista_visto
+    artista_visto = time.time()
+    if not ARTE:
+        return Response(status_code=204)
+    async with trava_meta:
+        for m in todos():
+            a = m.get("arte") or {}
+            if m["estado"] not in ("processando", "aguardando", "aprovado"):
+                continue
+            travada = a.get("estado") == "gerando" and time.time() - a.get("inicio", 0) > ARTE_TIMEOUT
+            if a.get("estado") == "pendente" or travada:
+                m["arte"] = {"estado": "gerando", "inicio": time.time(), "tentativas": a.get("tentativas", 0) + 1}
+                gravar_meta(m["id"], m)
+                return {"id": m["id"], "foto": f"/operador/arquivo/{m['id']}/foto.jpg"}
+    return Response(status_code=204)
+
+
+@app.post("/api/artista/{i}/arte", dependencies=[Depends(operador)])
+async def artista_arte(i: str, arte: UploadFile = File(...), gerador: str = Form(""), tempo_s: str = Form("")):
+    m = ler_meta(i)
+    if m is None:
+        raise HTTPException(404)
+    if (m.get("arte") or {}).get("estado") != "gerando":
+        raise HTTPException(409, "esta arte não está mais esperando (retirada ou refeita)")
+    dados = await arte.read(int(MAX_MB * 1024 * 1024 * 3) + 1)
+    try:
+        img = Image.open(io.BytesIO(dados)).convert("RGB")
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(415, "arte não é imagem") from e
+    img.thumbnail((1024, 1024))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=88)
+    (pasta(i) / "arte.jpg").write_bytes(buf.getvalue())
+    try:
+        t = round(float(tempo_s), 1)
+    except ValueError:
+        t = None
+    await mudar(i, arte={"estado": "pronta", "pronta_em": time.time(), "gerador": gerador[:20], "tempo_s": t})
+    log.info("arte de %s pronta (%s, %s s)", i, gerador, t)
+    return {"ok": True}
+
+
+@app.post("/api/artista/{i}/falhou", dependencies=[Depends(operador)])
+async def artista_falhou(i: str, motivo: str = Form("")):
+    m = ler_meta(i)
+    if m is None:
+        raise HTTPException(404)
+    await mudar(i, arte={"estado": "falhou", "motivo": motivo[:200]})
+    log.warning("arte de %s falhou: %s", i, motivo[:200])
+    return {"ok": True}
 
 
 @app.post("/api/operador/apagar-tudo", dependencies=[Depends(operador)])

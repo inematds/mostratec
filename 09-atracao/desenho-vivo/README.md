@@ -10,7 +10,7 @@ celular dela e, depois que a equipe aprova, na **TV do estande**.
 - A foto é regravada sem metadados (o EXIF de celular traz GPS).
 - Nada vai para a TV sem aprovação do operador.
 - Tudo é apagado sozinho: o que tiver mais de 24 h e, além disso, tudo todo dia às 23:30 (configurável).
-- Nenhuma API externa. Os dois motores de animação rodam no próprio servidor.
+- Os dois motores de animação rodam no próprio servidor. A **versão filme** (arte por IA) usa a Agnes AI e, de reserva, o Codex (assinatura): só a foto do papel, já sem EXIF, sai do servidor. Isso está escrito no aviso da página de envio.
 
 ## Páginas
 
@@ -24,6 +24,19 @@ celular dela e, depois que a equipe aprova, na **TV do estande**.
 | `/saude` | monitoramento | `{"ok":true,"motor":...,"motor_ad_ok":...}` |
 
 O QR da TV aponta para `URL_PUBLICA`. Para a mesa, imprima o mesmo QR (abra `/qr.png` e salve).
+
+## Versão filme (arte por IA)
+
+Além dos 3 GIFs, cada desenho ganha uma **versão filme**: o mesmo personagem em ilustração 3D numa cidade do futuro.
+Ela começa junto com a animação, assim que a foto chega, e só aparece em público (celular, TV, galeria) depois da aprovação.
+
+- Quem faz é o serviço **artista** (`artista/artista.py`, só biblioteca padrão do Python), que roda **no host da VPS**, fora do contêiner, porque o Codex precisa do login da assinatura em `/root/.codex`.
+- Ordem dos geradores em `ARTE_GERADORES` (padrão `agnes,codex`). Medido em 20/10/2026: Agnes `agnes-image-2.1-flash` img2img = **23–33 s**, US$ 0, fiel ao desenho (forma, cores, número de braços e pernas). Codex `image_gen` = 1–3 min e depende do saldo da assinatura (estava sem saldo nesse dia).
+- Prompt da Agnes em **inglês** (em português o filtro dela recusa pedido legítimo). Cerca de 1/3 das chamadas dá 503; o artista tenta de novo até 5 vezes.
+- Se todos falharem, a arte fica como `falhou` e a pessoa recebe só os GIFs. Painel do operador: ver a arte, **Tirar arte** e **Refazer arte**. O resumo do topo mostra se o artista está ligado.
+- O app oferece cada desenho a um artista por vez; se o artista sumir no meio, o desenho volta para a fila depois de `ARTE_TIMEOUT` (300 s).
+- Testar o gerador sem o app: `python3 artista/artista.py --teste foto.jpg` (grava `foto-arte-<gerador>.png`).
+- Notas medidas da Agnes (parâmetros, defeitos conhecidos, vídeo): `/opt/agnes` na VPS (cópia de `videos-agnes`, `imagens-agnes` e `NOTAS-API.md`).
 
 ## Motores de animação (plugáveis)
 
@@ -66,6 +79,10 @@ desenho-vivo/
 | `MAX_MB` | `10` | tamanho máximo da foto |
 | `FILA_MAX` | `60` | máximo de desenhos processando + aguardando; acima disso pede para tentar em 1 minuto |
 | `TV_MAX` | `30` | quantos aprovados a TV mostra |
+| `ARTE` | `1` | `0` desliga a versão filme |
+| `ARTE_TIMEOUT` | `300` | segundos até devolver à fila um desenho que o artista pegou e não entregou |
+| `AGNES_API_KEY` | — | chave da Agnes, lida só pelo serviço artista (no `.env`, fora do git) |
+| `ARTE_GERADORES` | `agnes,codex` | ordem dos geradores do artista |
 
 ## Rodar e testar no computador
 
@@ -114,7 +131,12 @@ A VPS ainda não foi escolhida. Sugestão de domínio: `desenho.inema.pro` (só 
 6. **HTTPS**: copie `Caddyfile.exemplo` para `/etc/caddy/Caddyfile`, troque o domínio e `systemctl reload caddy`. O Caddy pega o certificado sozinho.
 7. **Conferir**: `URL_BASE=https://desenho.inema.pro OPERADOR_SENHA=... python tests/test_e2e.py` (de qualquer máquina com as dependências). Depois abra `/tv` na TV do estande em tela cheia (F11) e `/operador` no celular ou notebook da equipe.
 8. **Firewall**: libere só 22, 80 e 443 (`ufw allow 22,80,443/tcp && ufw enable`).
-9. **Depois da feira**: `docker compose down -v` apaga o volume com os desenhos.
+9. **Artista (versão filme)**: `AGNES_API_KEY=...` e `ARTE_GERADORES=agnes,codex` no `.env`; para o Codex, `npm i -g @openai/codex` e `codex login --device-auth` (uma vez, com a conta da assinatura). Depois:
+   ```bash
+   cp artista/desenho-artista.service /etc/systemd/system/ && systemctl daemon-reload
+   systemctl enable --now desenho-artista && journalctl -u desenho-artista -f
+   ```
+10. **Depois da feira**: `docker compose down -v` apaga o volume com os desenhos.
 
 ### Arquitetura: esta máquina é ARM64, a VPS provavelmente é x86_64
 
@@ -152,6 +174,7 @@ Disco: imagem do app 330 MB, imagem do `motor-ad` 3,5 GB (+ ~3 GB de cache duran
 - O visitante marca que entendeu: o desenho vai para a TV e é apagado no fim do dia.
 - O operador vê a foto original e a animação antes de aprovar. Recuse foto de pessoa, nome escrito, palavrão, qualquer coisa fora de lugar. Na dúvida, recuse.
 - O servidor não guarda IP (sem log de acesso), não pede dado pessoal e regrava a foto sem EXIF.
+- A foto do papel (sem EXIF) vai para a Agnes AI (ou o Codex) para fazer a versão filme. A arte passa pela mesma aprovação; o operador pode tirá-la.
 - Links `/d/<id>` são aleatórios (16 caracteres) e morrem com a limpeza.
 - Botão "Apagar tudo agora" no painel para encerrar o dia mais cedo.
 
@@ -162,5 +185,5 @@ Disco: imagem do app 330 MB, imagem do `motor-ad` 3,5 GB (+ ~3 GB de cache duran
 - **Limitação do Animated Drawings:** ele guarda só o maior pedaço do desenho. No desenho de teste, a cabeça (separada do corpo por 1 cm) sumiu. Por isso a dica "tudo ligado" na página e o botão **Refazer no leve** no painel. Personagem que não é humanoide (bicho de 4 patas, carro) não é detectado e cai no leve sozinho.
 - **Base do Dockerfile original do AD não constrói mais** (Debian 11, o `debian-security` devolve 404 em out/2026). O `motor-ad/Dockerfile` usa `python:3.8.20-slim-bookworm`.
 - Pesos `.mar` vêm do release v0.0.1 do repo da Meta (MIT). Conferir se a equipe quer guardar uma cópia, caso o release saia do ar.
-- Escolher a VPS, apontar o DNS, imprimir o QR da mesa (`/qr.png`) e testar `/tv` na TV real em tela cheia (sem descanso de tela).
+- No ar desde 19/10/2026 na VPS6 (Hostinger, `desenho.inema.pro`). Falta imprimir o QR da mesa (`/qr.png`) e testar `/tv` na TV real em tela cheia (sem descanso de tela).
 - Não há limite por IP (na feira todo mundo sai pelo mesmo IP do Wi-Fi); o controle é o teto global da fila (`FILA_MAX`) e a aprovação manual.
